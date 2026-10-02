@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// base: ruta del repositorio en GitHub Pages
+// base: GitHub Pages sirve el sitio en /votaciones-festival-vallenato/;
+// la imagen Docker (VPS, votaciones.juandiegows.com) lo construye con VITE_BASE=/
 export default defineConfig({
   plugins: [react()],
-  base: '/votaciones-festival-vallenato/',
+  base: process.env.VITE_BASE || '/votaciones-festival-vallenato/',
 });

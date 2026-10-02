@@ -24,8 +24,9 @@ votaciones-festival-vallenato/
 │   ├── BRANDING.md       Identidad visual (paleta, tipografías, reglas de uso)
 │   └── entrega-1/        Informe PDF, diagramas y capturas del prototipo
 ├── app/
-│   └── web/              Aplicación web (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
-└── .github/workflows/    Despliegue de la web en GitHub Pages
+│   ├── web/              Frontend (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
+│   └── api/              Backend Django REST Framework + MySQL (entregas 2 a 4, próximamente)
+└── .github/workflows/    GitHub Pages + imagen Docker de la web (ghcr.io)
 ```
 
 ## Entregas
@@ -37,7 +38,8 @@ votaciones-festival-vallenato/
 
 ## Web
 
-- **Demo en línea:** https://juandiegows.github.io/votaciones-festival-vallenato/
+- **Producción (VPS):** https://votaciones.juandiegows.com
+- **GitHub Pages:** https://juandiegows.github.io/votaciones-festival-vallenato/
 - Instrucciones, rutas y credenciales de prueba: [`app/web/README.md`](app/web/README.md)
 
 ```bash
@@ -46,11 +48,14 @@ npm install
 npm run dev
 ```
 
-## Arquitectura de referencia
+## Arquitectura
 
-| Componente | Tecnología |
+Arquitectura **desacoplada**: el frontend React consume una API REST construida con Django.
+
+| Capa | Tecnología |
 |---|---|
-| Backend | Python + Django (patrón MVT) |
+| Frontend (`app/web`) | React + Vite, Bootstrap 5, HTML5, CSS3, JavaScript |
+| Backend (`app/api`) | Python + Django + Django REST Framework (modelos y reglas de negocio) |
 | Base de datos | MySQL |
-| Frontend | HTML5, CSS3, Bootstrap, JavaScript |
-| Integración | Aplicación independiente enlazada desde el sitio del Festival (subdominio pendiente de validación) |
+| Despliegue | Imagen Docker (nginx) en VPS detrás de Cloudflare · GitHub Pages para la demo |
+| Integración | Enlace desde el sitio oficial del Festival (subdominio institucional pendiente de validación) |

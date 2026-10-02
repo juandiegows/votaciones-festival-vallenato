@@ -1,5 +1,6 @@
 # app
 
-Código fuente del sistema.
+Código fuente del sistema (arquitectura desacoplada).
 
-- [`web/`](web/) — aplicación web (React + Vite + Bootstrap).
+- [`web/`](web/) — frontend React + Vite + Bootstrap.
+- `api/` — backend Django REST Framework + MySQL (desde la Entrega 2).
