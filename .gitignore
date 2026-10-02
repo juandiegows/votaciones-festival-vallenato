@@ -1,0 +1,20 @@
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.log
+
+# Python / Django (entregas futuras)
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.sqlite3
+media/
+staticfiles/
+
+# Sistema
+.DS_Store
+Thumbs.db
+~$*

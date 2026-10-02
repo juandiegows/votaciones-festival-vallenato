@@ -1,0 +1,64 @@
+/*
+ * Identidad visual – tokens de marca
+ * Colores tomados de festivalvallenato.com (CSS computado + imagen del hero), revisado el 2 oct 2026.
+ * El prototipo académico NO usa el logo oficial ni fotografías del Festival.
+ * Documentación: docs/BRANDING.md y la ruta #/marca.
+ */
+:root {
+  /* Primarios */
+  --flv-rojo: #dd3333;          /* Rojo Festival: botones, enlaces, nav activo, acentos */
+  --flv-negro: #000000;         /* Negro Tarima: navbar, hero, pie de página */
+  --flv-dorado: #d7ac70;        /* Dorado Leyenda: títulos y detalles SOLO sobre fondos oscuros */
+
+  /* Secundarios */
+  --flv-dorado-claro: #e9d294;  /* Dorado claro: cuenta regresiva */
+  --flv-crema: #fce6cc;         /* Crema: fondos suaves, avisos informativos */
+  --flv-ocre: #7d2710;          /* Ocre Valledupar: degradado del hero */
+  --flv-carbon: #1c1711;        /* Carbón: superficies oscuras */
+
+  /* Neutros */
+  --flv-gris-texto: #555555;
+  --flv-gris-borde: #e9e9e9;
+  --flv-fondo: #f8f8f8;
+  --flv-blanco: #ffffff;
+
+  /* Funcionales (derivados para accesibilidad; no son colores del cliente) */
+  --flv-rojo-hover: #b71c1c;
+  --flv-dorado-texto: #8a6a2e;
+  --flv-rojo-sobre-oscuro: #ff5a5a;
+  --flv-estado-abierta: #2e7d32;
+  --flv-estado-programada: #8a6a2e;
+  --flv-estado-cerrada: #555555;
+
+  --flv-degradado-hero: linear-gradient(135deg, #000000 0%, #2a0b08 55%, #7d2710 100%);
+
+  /* Tipografía */
+  --flv-fuente-titulos: 'Raleway', 'Poppins', system-ui, sans-serif;
+  --flv-fuente-texto: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Mapeo a Bootstrap 5 */
+  --bs-body-bg: var(--flv-fondo);
+  --bs-body-color: var(--flv-gris-texto);
+  --bs-body-font-family: var(--flv-fuente-texto);
+  --bs-emphasis-color: var(--flv-negro);
+  --bs-heading-color: var(--flv-negro);
+  --bs-border-color: var(--flv-gris-borde);
+  --bs-primary: var(--flv-rojo);
+  --bs-primary-rgb: 221, 51, 51;
+  --bs-success: var(--flv-estado-abierta);
+  --bs-success-rgb: 46, 125, 50;
+  --bs-danger: var(--flv-rojo-hover);
+  --bs-danger-rgb: 183, 28, 28;
+  --bs-warning: var(--flv-dorado);
+  --bs-warning-rgb: 215, 172, 112;
+  --bs-secondary-color: var(--flv-gris-texto);
+  --bs-link-color: var(--flv-rojo);
+  --bs-link-color-rgb: 221, 51, 51;
+  --bs-link-hover-color: var(--flv-rojo-hover);
+  --bs-link-hover-color-rgb: 183, 28, 28;
+  --bs-focus-ring-color: rgba(221, 51, 51, 0.35);
+  --bs-form-invalid-color: var(--flv-rojo-hover);
+  --bs-form-invalid-border-color: var(--flv-rojo-hover);
+  --bs-form-valid-color: var(--flv-estado-abierta);
+  --bs-border-radius: 0.5rem;
+}
