@@ -9,7 +9,7 @@
  * generan los datos, para que siempre existan votaciones abiertas, programadas
  * y cerradas al navegar el prototipo.
  */
-import { generarCodigoComprobante } from '../utils/helpers.js';
+import { generarCodigoComprobante, slugificar } from '../utils/helpers.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -48,6 +48,8 @@ export function crearDatosSemilla() {
     },
   ];
 
+  const anioActivo = ediciones[0].anio;
+
   const categorias = [
     { id: 1, edicionId: 1, nombre: 'Música', descripcion: 'Votaciones del público sobre las canciones que suenan en el Festival.', icono: 'music-note-beamed', activa: true, orden: 1 },
     { id: 2, edicionId: 1, nombre: 'Piloneras', descripcion: 'Las comparsas que llenan de color el desfile de Piloneras.', icono: 'people-fill', activa: true, orden: 2 },
@@ -55,6 +57,10 @@ export function crearDatosSemilla() {
     { id: 4, edicionId: 1, nombre: 'Agrupaciones', descripcion: 'Conjuntos vallenatos que se presentan en las tarimas del Festival.', icono: 'boombox-fill', activa: true, orden: 4 },
     { id: 5, edicionId: 1, nombre: 'Reconocimientos del público', descripcion: 'Personajes que el público quiere destacar en esta edición.', icono: 'award-fill', activa: true, orden: 5 },
   ];
+
+  categorias.forEach((c) => {
+    c.slug = slugificar(c.nombre);
+  });
 
   const base = { votosPorUsuario: 1, cerradaManualmente: false, publicada: true, resultadosPublicados: false };
 
@@ -69,6 +75,16 @@ export function crearDatosSemilla() {
     // Borrador sin publicar: tiene una sola opción (sirve para demostrar RN-06)
     { ...base, id: 8, categoriaId: 1, titulo: 'Mejor acordeonero aficionado', descripcion: 'Votación en preparación. Requiere al menos 2 opciones para publicarse.', fechaApertura: relativa(30), fechaCierre: relativa(40), mostrarResultados: 'al cerrar', imagen: 'music-note', publicada: false },
   ];
+
+  votaciones.forEach((v) => {
+    v.slug = slugificar(v.titulo);
+  });
+
+  // Muestras instrumentales ORIGINALES generadas para el proyecto (public/audio/muestras/), en el orden de las opciones.
+  const muestras = {
+    1: ['brisas-del-guatapuri', 'luna-de-valledupar', 'el-pilon-de-mi-tierra', 'sabanas-del-cesar', 'caminos-de-la-sierra'],
+    2: ['corazon-sabanero', 'recuerdos-de-mi-pueblo', 'la-brisa-y-el-acordeon', 'cantor-de-mi-tierra'],
+  };
 
   const nombresOpciones = {
     1: [
@@ -128,7 +144,7 @@ export function crearDatosSemilla() {
         votacionId: Number(votacionId),
         nombre,
         descripcion,
-        enlaceMultimedia: Number(votacionId) === 1 ? 'https://example.org/muestra-simulada' : '',
+        enlaceMultimedia: muestras[votacionId] ? `/audio/muestras/${muestras[votacionId][i]}.mp3` : '',
         orden: i + 1,
       });
     });
@@ -181,7 +197,7 @@ export function crearDatosSemilla() {
         votacionId: votacion.id,
         opcionId: ops[idx].id,
         fechaHora: new Date(desde + rnd() * (hasta - desde)).toISOString(),
-        codigoComprobante: generarCodigoComprobante(),
+        codigoComprobante: generarCodigoComprobante(anioActivo),
       });
     });
   });

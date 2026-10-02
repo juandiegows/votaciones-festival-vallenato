@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { RequiereAdmin, RequiereSesion } from './components/Guards.jsx';
+import { IrAEdicionActiva, RedireccionCategoria, RedireccionVotacion } from './components/Redirecciones.jsx';
 import Inicio from './pages/Inicio.jsx';
 import Registro from './pages/Registro.jsx';
 import Login from './pages/Login.jsx';
@@ -18,7 +19,10 @@ import AdminVotaciones from './pages/admin/AdminVotaciones.jsx';
 import AdminOpciones from './pages/admin/AdminOpciones.jsx';
 import AdminResultados from './pages/admin/AdminResultados.jsx';
 import AdminEdiciones from './pages/admin/AdminEdiciones.jsx';
+import AdminAuditoria from './pages/admin/AdminAuditoria.jsx';
 
+// Las rutas fijas (registro, login, admin…) tienen prioridad sobre /:anio. La web nunca usa
+// /api, /django-admin ni /static: en producción esas rutas las atiende Django.
 export default function App() {
   return (
     <Routes>
@@ -27,12 +31,12 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="registro" element={<Registro />} />
         <Route path="login" element={<Login />} />
-        <Route path="categorias" element={<Categorias />} />
-        <Route path="categorias/:id" element={<CategoriaVotaciones />} />
-        <Route path="votaciones/:id" element={<VotacionDetalle />} />
         <Route path="marca" element={<Marca />} />
+        <Route path="categorias" element={<IrAEdicionActiva />} />
+        <Route path="categorias/:id" element={<RedireccionCategoria />} />
+        <Route path="votaciones/:id" element={<RedireccionVotacion />} />
+        <Route path="votaciones/:id/comprobante" element={<RedireccionVotacion comprobante />} />
         {/* Votante autenticado */}
-        <Route path="votaciones/:id/comprobante" element={<RequiereSesion><Comprobante /></RequiereSesion>} />
         <Route path="mis-votos" element={<RequiereSesion><MisVotos /></RequiereSesion>} />
         {/* Administración */}
         <Route path="admin" element={<RequiereAdmin><AdminLayout /></RequiereAdmin>}>
@@ -42,7 +46,13 @@ export default function App() {
           <Route path="votaciones" element={<AdminVotaciones />} />
           <Route path="votaciones/:id/opciones" element={<AdminOpciones />} />
           <Route path="resultados" element={<AdminResultados />} />
+          <Route path="auditoria" element={<AdminAuditoria />} />
         </Route>
+        {/* URL amigables por edición: /{año}/{categoría}/{votación} */}
+        <Route path=":anio" element={<Categorias />} />
+        <Route path=":anio/:categoriaSlug" element={<CategoriaVotaciones />} />
+        <Route path=":anio/:categoriaSlug/:votacionSlug" element={<VotacionDetalle />} />
+        <Route path=":anio/:categoriaSlug/:votacionSlug/comprobante" element={<RequiereSesion><Comprobante /></RequiereSesion>} />
         <Route path="*" element={<NoEncontrado />} />
       </Route>
     </Routes>

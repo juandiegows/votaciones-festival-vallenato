@@ -3,43 +3,35 @@ import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import EstadoBadge from '../../components/EstadoBadge.jsx';
 import ResultadosChart from '../../components/ResultadosChart.jsx';
-import { calcularResultados, descargarCSV, formatearFechaHora, resultadosVisibles } from '../../utils/helpers.js';
+import { formatearFechaHora, resultadosVisibles } from '../../utils/helpers.js';
+import { useResultados } from '../../hooks/useResultados.js';
 
 export default function AdminResultados() {
-  const { votaciones, opciones, votos, categorias, guardarEntidad } = useApp();
+  const { votaciones, categorias, guardarEntidad, exportarResultadosCSV } = useApp();
   const conDatos = votaciones.filter((v) => v.publicada);
   const [seleccion, setSeleccion] = useState(conDatos[0]?.id || '');
-  const [mensaje, setMensaje] = useState('');
+  const [mensaje, setMensaje] = useState(null);
+  const [procesando, setProcesando] = useState(false);
 
   const votacion = votaciones.find((v) => v.id === Number(seleccion));
-  const lista = votacion ? opciones.filter((o) => o.votacionId === votacion.id) : [];
-  const votosVotacion = votacion ? votos.filter((v) => v.votacionId === votacion.id) : [];
-  const { total, filas } = calcularResultados(lista, votosVotacion);
+  const { cargando, total, filas, error } = useResultados(votacion?.id, { admin: true });
   const ganadoras = filas.filter((f) => f.ganador);
   const categoria = categorias.find((c) => c.id === votacion?.categoriaId);
 
-  const exportar = () => {
-    const filasCsv = [
-      ['Edición', 'Festival de la Leyenda Vallenata 2027'],
-      ['Categoría', categoria?.nombre],
-      ['Votación', votacion.titulo],
-      ['Estado', votacion.estado],
-      ['Generado', formatearFechaHora(new Date().toISOString())],
-      [],
-      ['Posición', 'Opción', 'Votos', 'Porcentaje'],
-      ...filas.map((f, i) => [i + 1, f.nombre, f.cantidad, `${f.porcentaje.toFixed(2)} %`]),
-      [],
-      ['Total', '', total, '100 %'],
-    ];
-    const nombre = `resultados-${votacion.titulo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}.csv`;
-    descargarCSV(nombre, filasCsv);
-    setMensaje(`Archivo ${nombre} descargado.`);
+  const exportar = async () => {
+    setProcesando(true);
+    const r = await exportarResultadosCSV(votacion.id);
+    setProcesando(false);
+    setMensaje(r.ok ? { tipo: 'success', texto: `Archivo ${r.nombre} descargado.` } : { tipo: 'danger', texto: r.error });
   };
 
-  const alternarPublicacion = () => {
+  const alternarPublicacion = async () => {
     const nuevo = !votacion.resultadosPublicados;
-    guardarEntidad('votaciones', { id: votacion.id, resultadosPublicados: nuevo }, `${nuevo ? 'Publicó' : 'Retiró'} los resultados de "${votacion.titulo}"`);
-    setMensaje(nuevo ? 'Resultados publicados para el público (RF-15).' : 'Publicación manual de resultados retirada.');
+    setProcesando(true);
+    const r = await guardarEntidad('votaciones', { id: votacion.id, resultadosPublicados: nuevo }, `${nuevo ? 'Publicó' : 'Retiró'} los resultados de "${votacion.titulo}"`);
+    setProcesando(false);
+    if (!r.ok) return setMensaje({ tipo: 'danger', texto: r.error });
+    setMensaje({ tipo: 'success', texto: nuevo ? 'Resultados publicados para el público (RF-15).' : 'Publicación manual de resultados retirada.' });
   };
 
   return (
@@ -47,7 +39,7 @@ export default function AdminResultados() {
       <PageHeader titulo="Consulta de resultados" subtitulo="Conteo por opción, exportación y publicación (RF-14, RF-15)." />
       <div className="card-flv p-3 mb-3">
         <label htmlFor="sel-votacion" className="form-label">Selecciona una votación</label>
-        <select id="sel-votacion" className="form-select" value={seleccion} onChange={(e) => { setSeleccion(e.target.value); setMensaje(''); }}>
+        <select id="sel-votacion" className="form-select" value={seleccion} onChange={(e) => { setSeleccion(e.target.value); setMensaje(null); }}>
           {categorias.map((c) => {
             const vs = conDatos.filter((v) => v.categoriaId === c.id);
             if (!vs.length) return null;
@@ -71,7 +63,13 @@ export default function AdminResultados() {
                 </div>
                 <EstadoBadge estado={votacion.estado} />
               </div>
-              <ResultadosChart opciones={lista} votos={votosVotacion} cerrada={votacion.estado === 'cerrada'} />
+              {error ? (
+                <div className="alert alert-danger mb-0" role="alert">{error}</div>
+              ) : cargando && !filas.length ? (
+                <p className="mb-0" role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando resultados…</p>
+              ) : (
+                <ResultadosChart total={total} filas={filas} cerrada={votacion.estado === 'cerrada'} />
+              )}
             </section>
           </div>
           <div className="col-xl-4">
@@ -88,18 +86,18 @@ export default function AdminResultados() {
             </section>
             <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-acciones">
               <h2 id="titulo-acciones" className="h6">Acciones</h2>
-              <button className="btn btn-primary w-100 mb-3" onClick={exportar}>
+              <button className="btn btn-primary w-100 mb-3" onClick={exportar} disabled={procesando}>
                 <i className="bi bi-filetype-csv me-1" aria-hidden="true"></i>Exportar CSV
               </button>
               <div className="form-check form-switch">
-                <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
+                <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
                 <label className="form-check-label fw-semibold" htmlFor="publicar-res">Publicar resultados</label>
               </div>
               <p id="publicar-ayuda" className="small text-secondary-flv mt-2 mb-1">
                 Configuración: «{votacion.mostrarResultados}». Visibles al público ahora:{' '}
                 <strong>{resultadosVisibles(votacion) ? 'Sí' : 'No'}</strong> (RN-07).
               </p>
-              {mensaje && <div className="alert alert-success small py-2 mt-2 mb-0" role="status">{mensaje}</div>}
+              {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2 mt-2 mb-0`} role="status">{mensaje.texto}</div>}
             </section>
           </div>
         </div>

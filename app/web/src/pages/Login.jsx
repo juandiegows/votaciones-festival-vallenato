@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import Modal from '../components/Modal.jsx';
 import { validarCorreo } from '../utils/helpers.js';
+import { CREDENCIALES_DEMO } from '../data/credencialesDemo.js';
 
 export default function Login() {
   const { iniciarSesion } = useApp();
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [recuperar, setRecuperar] = useState(false);
   const [correoRecuperar, setCorreoRecuperar] = useState('');
   const [recuperado, setRecuperado] = useState(false);
@@ -16,10 +18,14 @@ export default function Login() {
   const location = useLocation();
   const aviso = location.state?.aviso;
 
-  const enviar = (e) => {
+  const enviar = async (e) => {
     e.preventDefault();
+    if (enviando) return;
     if (!correo || !contrasena) return setError('Ingresa tu correo y tu contraseña.');
-    const r = iniciarSesion(correo, contrasena);
+    setEnviando(true);
+    setError('');
+    const r = await iniciarSesion(correo, contrasena);
+    setEnviando(false);
     if (!r.ok) return setError(r.error);
     const destino = location.state?.desde || (r.usuario.rol === 'administrador' ? '/admin' : '/categorias');
     navigate(destino, { replace: true });
@@ -58,8 +64,12 @@ export default function Login() {
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
-              <button type="submit" className="btn btn-primary btn-lg w-100">
-                <i className="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Ingresar
+              <button type="submit" className="btn btn-primary btn-lg w-100" disabled={enviando}>
+                {enviando ? (
+                  <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Ingresando…</>
+                ) : (
+                  <><i className="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Ingresar</>
+                )}
               </button>
             </form>
             <p className="text-center mt-3">
@@ -69,12 +79,11 @@ export default function Login() {
             <div className="border rounded-3 p-3 bg-light small" aria-label="Credenciales de demostración">
               <p className="fw-semibold mb-2"><i className="bi bi-key me-1" aria-hidden="true"></i>Credenciales de demostración</p>
               <div className="d-flex flex-column gap-2">
-                <button type="button" className="btn btn-sm btn-outline-primary text-start" onClick={() => usarDemo('votante@festival.test', 'Voto2027*')}>
-                  <strong>Votante:</strong> votante@festival.test / Voto2027*
-                </button>
-                <button type="button" className="btn btn-sm btn-outline-primary text-start" onClick={() => usarDemo('admin@festival.test', 'Admin2027*')}>
-                  <strong>Administrador:</strong> admin@festival.test / Admin2027*
-                </button>
+                {CREDENCIALES_DEMO.map((c) => (
+                  <button key={c.correo} type="button" className="btn btn-sm btn-outline-primary text-start" onClick={() => usarDemo(c.correo, c.contrasena)}>
+                    <strong>{c.rol}:</strong> {c.correo} / {c.contrasena}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

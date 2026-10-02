@@ -17,24 +17,27 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from . import servicios
-from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Votacion, Voto
+from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
 from .permissions import EsAdministrador
 from .serializers import (
     CategoriaSerializer,
     EdicionSerializer,
     ErrorReglaSerializer,
     LoginSerializer,
+    OpcionListadoPublicoSerializer,
     OpcionSerializer,
     PublicarResultadosSerializer,
     RegistroAuditoriaSerializer,
     RegistroSerializer,
     ResultadosSerializer,
     TokenRespuestaSerializer,
+    UsuarioAdminSerializer,
     UsuarioSerializer,
     VotacionDetalleSerializer,
     VotacionPublicaSerializer,
     VotacionSerializer,
     VotarSerializer,
+    VotoAdminSerializer,
     VotoSerializer,
 )
 
@@ -110,7 +113,8 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(summary="Categorías activas (RF-04)", parameters=[
-        OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la edición activa")]),
+        OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la edición activa"),
+        OpenApiParameter("anio", OpenApiTypes.INT, description="Año de la edición (URL amigable /{año})")]),
     retrieve=extend_schema(summary="Detalle de categoría"),
 )
 @extend_schema(tags=["Consulta pública"])
@@ -119,17 +123,23 @@ class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategoriaSerializer
 
     def get_queryset(self):
-        consulta = Categoria.objects.filter(activa=True)
+        consulta = Categoria.objects.filter(activa=True).select_related("edicion")
         edicion = self.request.query_params.get("edicion")
+        anio = self.request.query_params.get("anio")
         if edicion:
             return consulta.filter(edicion_id=edicion)
+        if anio:
+            return consulta.filter(edicion__anio=anio)
         return consulta.filter(edicion__estado=Edicion.Estado.ACTIVA)
 
 
 @extend_schema_view(
     list=extend_schema(summary="Votaciones publicadas (RF-05)", parameters=[
         OpenApiParameter("categoria", OpenApiTypes.INT, description="ID de la categoría"),
-        OpenApiParameter("estado", OpenApiTypes.STR, enum=["programada", "abierta", "cerrada"])]),
+        OpenApiParameter("estado", OpenApiTypes.STR, enum=["programada", "abierta", "cerrada"]),
+        OpenApiParameter("anio", OpenApiTypes.INT, description="Año de la edición"),
+        OpenApiParameter("categoria_slug", OpenApiTypes.STR, description="Slug de la categoría"),
+        OpenApiParameter("slug", OpenApiTypes.STR, description="Slug de la votación")]),
     retrieve=extend_schema(summary="Detalle con opciones y votos del usuario (RF-06)"),
 )
 @extend_schema(tags=["Consulta pública"])
@@ -141,13 +151,38 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         consulta = Votacion.objects.filter(publicada=True, categoria__activa=True).select_related(
             "categoria__edicion"
         )
-        categoria = self.request.query_params.get("categoria")
-        if categoria:
-            consulta = consulta.filter(categoria_id=categoria)
-        return consulta
+        filtros = {
+            "categoria_id": self.request.query_params.get("categoria"),
+            "categoria__edicion__anio": self.request.query_params.get("anio"),
+            "categoria__slug": self.request.query_params.get("categoria_slug"),
+            "slug": self.request.query_params.get("slug"),
+        }
+        return consulta.filter(**{campo: valor for campo, valor in filtros.items() if valor})
 
     def get_serializer_class(self):
-        return VotacionDetalleSerializer if self.action == "retrieve" else VotacionPublicaSerializer
+        if self.action in ("retrieve", "por_ruta"):
+            return VotacionDetalleSerializer
+        return VotacionPublicaSerializer
+
+    @extend_schema(
+        summary="Detalle por URL amigable /{año}/{categoría}/{votación} (RF-06)",
+        parameters=[
+            OpenApiParameter("anio", OpenApiTypes.INT, required=True, description="Año de la edición"),
+            OpenApiParameter("categoria", OpenApiTypes.STR, required=True, description="Slug de la categoría"),
+            OpenApiParameter("votacion", OpenApiTypes.STR, required=True, description="Slug de la votación"),
+        ],
+        responses={200: VotacionDetalleSerializer, 404: OpenApiResponse(description="No existe o no está publicada")},
+    )
+    @action(detail=False, url_path="por-ruta")
+    def por_ruta(self, request):
+        anio = request.query_params.get("anio", "")
+        votacion = get_object_or_404(
+            Votacion.objects.filter(publicada=True, categoria__activa=True).select_related("categoria__edicion"),
+            categoria__edicion__anio=int(anio) if anio.isdigit() else -1,
+            categoria__slug=request.query_params.get("categoria", ""),
+            slug=request.query_params.get("votacion", ""),
+        )
+        return Response(self.get_serializer(votacion).data)
 
     def list(self, request, *args, **kwargs):
         votaciones = list(self.get_queryset())
@@ -182,13 +217,29 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(servicios.calcular_resultados(votacion))
 
 
+@extend_schema_view(
+    list=extend_schema(summary="Opciones activas de las votaciones publicadas (RF-06)", parameters=[
+        OpenApiParameter("votacion", OpenApiTypes.INT, description="ID de la votación")]),
+    retrieve=extend_schema(summary="Detalle de opción"),
+)
+@extend_schema(tags=["Consulta pública"])
+class OpcionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = OpcionListadoPublicoSerializer
+
+    def get_queryset(self):
+        consulta = Opcion.objects.filter(activa=True, votacion__publicada=True, votacion__categoria__activa=True)
+        votacion = self.request.query_params.get("votacion")
+        return consulta.filter(votacion_id=votacion) if votacion else consulta
+
+
 @extend_schema(tags=["Votación"], summary="Mis votos y comprobantes (RF-09)")
 class MisVotosView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = VotoSerializer
 
     def get_queryset(self):
-        return Voto.objects.filter(usuario=self.request.user).select_related("votacion", "opcion")
+        return Voto.objects.filter(usuario=self.request.user).select_related("votacion__categoria__edicion", "opcion")
 
 
 class AuditadoMixin:
@@ -225,10 +276,20 @@ class AuditadoMixin:
 
 @extend_schema(tags=["Administración"])
 class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
+    """Solo puede haber una edición activa: al activar una, las demás pasan a cerradas."""
+
     permission_classes = [EsAdministrador]
     serializer_class = EdicionSerializer
     queryset = Edicion.objects.all()
     entidad = "edicion"
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        servicios.cerrar_otras_ediciones(serializer.instance)
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        servicios.cerrar_otras_ediciones(serializer.instance)
 
 
 @extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT)]))
@@ -239,7 +300,7 @@ class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
     entidad = "categoria"
 
     def get_queryset(self):
-        consulta = Categoria.objects.all()
+        consulta = Categoria.objects.select_related("edicion")
         edicion = self.request.query_params.get("edicion")
         return consulta.filter(edicion_id=edicion) if edicion else consulta
 
@@ -336,6 +397,38 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
     def validar_eliminacion(self, opcion):
         servicios.validar_eliminacion(opcion)
+
+
+@extend_schema_view(
+    list=extend_schema(summary="Votos registrados para indicadores (sin datos del votante)", parameters=[
+        OpenApiParameter("votacion", OpenApiTypes.INT, description="ID de la votación")]),
+    retrieve=extend_schema(summary="Detalle de voto (sin datos del votante)"),
+)
+@extend_schema(tags=["Administración"])
+class AdminVotoViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [EsAdministrador]
+    serializer_class = VotoAdminSerializer
+
+    def get_queryset(self):
+        consulta = Voto.objects.all()
+        votacion = self.request.query_params.get("votacion")
+        return consulta.filter(votacion_id=votacion) if votacion else consulta
+
+
+@extend_schema_view(
+    list=extend_schema(summary="Usuarios registrados (sin contraseñas)", parameters=[
+        OpenApiParameter("rol", OpenApiTypes.STR, enum=["votante", "administrador"])]),
+    retrieve=extend_schema(summary="Detalle de usuario"),
+)
+@extend_schema(tags=["Administración"])
+class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [EsAdministrador]
+    serializer_class = UsuarioAdminSerializer
+
+    def get_queryset(self):
+        consulta = Usuario.objects.order_by("id")
+        rol = self.request.query_params.get("rol")
+        return consulta.filter(rol=rol) if rol else consulta
 
 
 class PaginacionAuditoria(PageNumberPagination):

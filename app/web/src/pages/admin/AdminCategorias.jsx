@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
+import { PATRON_SLUG } from '../../utils/helpers.js';
 
 const ICONOS = ['music-note-beamed', 'people-fill', 'stars', 'boombox-fill', 'award-fill', 'mic-fill', 'camera-fill', 'heart-fill', 'trophy-fill'];
 
@@ -11,30 +12,49 @@ export default function AdminCategorias() {
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
   const [eliminar, setEliminar] = useState(null);
+  const [procesando, setProcesando] = useState(false);
+  const [mensajeFormulario, setMensajeFormulario] = useState('');
 
   const lista = [...categorias].sort((a, b) => a.edicionId - b.edicionId || a.orden - b.orden);
 
   const nueva = () => {
-    setErrores({});
-    setForm({ edicionId: edicionActiva.id, nombre: '', descripcion: '', icono: ICONOS[0], activa: true, orden: categorias.length + 1 });
+    abrirFormulario({ edicionId: edicionActiva?.id || ediciones[0]?.id || '', nombre: '', slug: '', descripcion: '', icono: ICONOS[0], activa: true, orden: categorias.length + 1 });
   };
 
-  const guardar = (e) => {
+  const guardar = async (e) => {
     e.preventDefault();
+    if (procesando) return;
     const errs = {};
     if (form.nombre.trim().length < 3) errs.nombre = 'El nombre debe tener al menos 3 caracteres.';
+    if (form.slug && !PATRON_SLUG.test(form.slug)) errs.slug = 'Usa solo minúsculas sin tildes, números y guiones (p. ej. «musica»).';
     if (!form.descripcion.trim()) errs.descripcion = 'La descripción es obligatoria.';
     if (!form.edicionId) errs.edicionId = 'Toda categoría debe pertenecer a una edición (RN-01).';
     setErrores(errs);
     if (Object.keys(errs).length) return;
-    const datos = { ...form, edicionId: Number(form.edicionId), orden: Number(form.orden) };
-    guardarEntidad('categorias', datos, `${form.id ? 'Actualizó' : 'Creó'} la categoría "${form.nombre}"`);
+    const datos = { ...form, edicionId: Number(form.edicionId), orden: Number(form.orden), slug: form.slug.trim() };
+    setProcesando(true);
+    const r = await guardarEntidad('categorias', datos, `${form.id ? 'Actualizó' : 'Creó'} la categoría "${form.nombre}"`);
+    setProcesando(false);
+    if (!r.ok) {
+      setErrores(r.errores || {});
+      setMensajeFormulario(r.error);
+      return;
+    }
     setMensaje({ tipo: 'success', texto: `Categoría «${form.nombre}» ${form.id ? 'actualizada' : 'creada'} correctamente.` });
     setForm(null);
   };
 
-  const alternar = (c) => {
-    guardarEntidad('categorias', { ...c, activa: !c.activa }, `${c.activa ? 'Desactivó' : 'Activó'} la categoría "${c.nombre}"`);
+  const abrirFormulario = (valores) => {
+    setErrores({});
+    setMensajeFormulario('');
+    setForm(valores);
+  };
+
+  const alternar = async (c) => {
+    setProcesando(true);
+    const r = await guardarEntidad('categorias', { id: c.id, activa: !c.activa }, `${c.activa ? 'Desactivó' : 'Activó'} la categoría "${c.nombre}"`);
+    setProcesando(false);
+    if (!r.ok) return setMensaje({ tipo: 'danger', texto: r.error });
     setMensaje({ tipo: 'info', texto: `Categoría «${c.nombre}» ${c.activa ? 'desactivada: ya no se muestra al público' : 'activada'}.` });
   };
 
@@ -78,19 +98,19 @@ export default function AdminCategorias() {
                 <td>{c.orden}</td>
                 <td>
                   <i className={`bi bi-${c.icono} me-2 text-rojo`} aria-hidden="true"></i>
-                  <strong>{c.nombre}</strong>
+                  <strong>{c.nombre}</strong> <code className="small text-secondary-flv">/{c.slug}</code>
                   <div className="small text-secondary-flv d-none d-md-block">{c.descripcion}</div>
                 </td>
                 <td className="small">{ediciones.find((e) => e.id === c.edicionId)?.anio}</td>
                 <td>{votaciones.filter((v) => v.categoriaId === c.id).length}</td>
                 <td>
                   <div className="form-check form-switch mb-0">
-                    <input className="form-check-input" type="checkbox" role="switch" id={`activa-${c.id}`} checked={c.activa} onChange={() => alternar(c)} />
+                    <input className="form-check-input" type="checkbox" role="switch" id={`activa-${c.id}`} checked={c.activa} disabled={procesando} onChange={() => alternar(c)} />
                     <label className="form-check-label small" htmlFor={`activa-${c.id}`}>{c.activa ? 'Activa' : 'Inactiva'}</label>
                   </div>
                 </td>
                 <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => { setErrores({}); setForm({ ...c }); }} aria-label={`Editar ${c.nombre}`}>
+                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...c, slug: c.slug || '' })} aria-label={`Editar ${c.nombre}`}>
                     <i className="bi bi-pencil" aria-hidden="true"></i>
                   </button>
                   <button className="btn btn-sm btn-outline-danger" onClick={() => pedirEliminar(c)} aria-label={`Eliminar ${c.nombre}`}>
@@ -110,12 +130,13 @@ export default function AdminCategorias() {
         pie={
           <>
             <button className="btn btn-outline-secondary" onClick={() => setForm(null)}>Cancelar</button>
-            <button className="btn btn-primary" type="submit" form="form-categoria">Guardar</button>
+            <button className="btn btn-primary" type="submit" form="form-categoria" disabled={procesando}>{procesando ? 'Guardando…' : 'Guardar'}</button>
           </>
         }
       >
         {form && (
           <form id="form-categoria" noValidate onSubmit={guardar}>
+            {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
             <div className="mb-3">
               <label className="form-label" htmlFor="cat-edicion">Edición</label>
               <select id="cat-edicion" className={`form-select ${errores.edicionId ? 'is-invalid' : ''}`} value={form.edicionId} onChange={(e) => setForm({ ...form, edicionId: e.target.value })}>
@@ -127,6 +148,11 @@ export default function AdminCategorias() {
               <label className="form-label" htmlFor="cat-nombre">Nombre</label>
               <input id="cat-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
               {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
+            </div>
+            <div className="mb-3">
+              <label className="form-label" htmlFor="cat-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
+              <input id="cat-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el nombre" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="cat-slug-ayuda" />
+              {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="cat-slug-ayuda" className="form-text">Aparece en la dirección pública, p. ej. /{ediciones.find((ed) => ed.id === Number(form.edicionId))?.anio}/{form.slug || 'musica'}. Déjalo vacío para generarlo automáticamente.</div>}
             </div>
             <div className="mb-3">
               <label className="form-label" htmlFor="cat-desc">Descripción</label>
@@ -162,9 +188,12 @@ export default function AdminCategorias() {
             <button className="btn btn-outline-secondary" onClick={() => setEliminar(null)}>Cancelar</button>
             <button
               className="btn btn-peligro"
-              onClick={() => {
-                eliminarEntidad('categorias', eliminar.id, `Eliminó la categoría "${eliminar.nombre}"`);
-                setMensaje({ tipo: 'success', texto: `Categoría «${eliminar.nombre}» eliminada.` });
+              disabled={procesando}
+              onClick={async () => {
+                setProcesando(true);
+                const r = await eliminarEntidad('categorias', eliminar.id, `Eliminó la categoría "${eliminar.nombre}"`);
+                setProcesando(false);
+                setMensaje(r.ok ? { tipo: 'success', texto: `Categoría «${eliminar.nombre}» eliminada.` } : { tipo: 'danger', texto: r.error });
                 setEliminar(null);
               }}
             >

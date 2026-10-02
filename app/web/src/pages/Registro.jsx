@@ -24,6 +24,7 @@ export default function Registro() {
   const [errores, setErrores] = useState({});
   const [enviado, setEnviado] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [verPolitica, setVerPolitica] = useState(false);
   const [verClave, setVerClave] = useState(false);
   const navigate = useNavigate();
@@ -36,8 +37,9 @@ export default function Registro() {
     if (enviado) setErrores(validar(nuevo));
   };
 
-  const enviar = (e) => {
+  const enviar = async (e) => {
     e.preventDefault();
+    if (enviando) return;
     setEnviado(true);
     const errs = validar(form);
     setErrores(errs);
@@ -45,8 +47,16 @@ export default function Registro() {
       document.getElementById(Object.keys(errs)[0])?.focus();
       return;
     }
-    const r = registrarUsuario(form);
-    if (!r.ok) return setErrorGeneral(r.error);
+    setEnviando(true);
+    setErrorGeneral('');
+    const r = await registrarUsuario(form);
+    setEnviando(false);
+    if (!r.ok) {
+      // Errores por campo devueltos por el servidor (p. ej. contraseña demasiado común)
+      const deCampo = Object.fromEntries(Object.entries(r.errores || {}).filter(([k]) => k in INICIAL));
+      if (Object.keys(deCampo).length) setErrores(deCampo);
+      return setErrorGeneral(r.error);
+    }
     navigate(location.state?.desde || '/categorias', { replace: true });
   };
 
@@ -122,8 +132,12 @@ export default function Registro() {
                 )}
               </div>
 
-              <button type="submit" className="btn btn-primary btn-lg w-100">
-                <i className="bi bi-person-check me-2" aria-hidden="true"></i>Crear cuenta
+              <button type="submit" className="btn btn-primary btn-lg w-100" disabled={enviando}>
+                {enviando ? (
+                  <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Creando cuenta…</>
+                ) : (
+                  <><i className="bi bi-person-check me-2" aria-hidden="true"></i>Crear cuenta</>
+                )}
               </button>
             </form>
             <p className="text-center mt-3 mb-0">

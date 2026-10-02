@@ -4,6 +4,8 @@ import HeroAcordeon from '../components/HeroAcordeon.jsx';
 import VotacionCard from '../components/VotacionCard.jsx';
 import { formatearFecha } from '../utils/helpers.js';
 import { votacionesPublicas } from '../utils/visibilidad.js';
+import { useRutas } from '../hooks/useRutas.js';
+import SinEdicion from '../components/SinEdicion.jsx';
 
 const PASOS = [
   { icono: 'person-plus', titulo: 'Regístrate', texto: 'Crea tu cuenta con tu correo y acepta la política de tratamiento de datos.' },
@@ -14,7 +16,9 @@ const PASOS = [
 
 export default function Inicio() {
   const datos = useApp();
-  const { edicionActiva, opciones, categorias, votos, votosDeUsuario } = datos;
+  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario } = datos;
+  const rutas = useRutas();
+  if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);
   const abiertas = publicas.filter((v) => v.estado === 'abierta');
   const diasFestival = Math.max(0, Math.ceil((new Date(`${edicionActiva.fechaInicio}T00:00:00`) - Date.now()) / 86400000));
@@ -22,7 +26,10 @@ export default function Inicio() {
     [diasFestival, 'días para el Festival'],
     [abiertas.length, 'votaciones abiertas'],
     [categorias.filter((c) => c.activa && c.edicionId === edicionActiva.id).length, 'categorías'],
-    [votos.length, 'votos registrados'],
+    // El total de votos solo es público en el modo demostración; con la API se muestran las programadas
+    totalVotos === null
+      ? [publicas.filter((v) => v.estado === 'programada').length, 'votaciones programadas']
+      : [totalVotos, 'votos registrados'],
   ];
 
   return (
@@ -41,7 +48,7 @@ export default function Inicio() {
                 comparsas y agrupaciones favoritas desde cualquier dispositivo.
               </p>
               <div className="d-flex flex-wrap gap-2">
-                <Link to="/categorias" className="btn btn-primary btn-lg">
+                <Link to={rutas.edicion(edicionActiva)} className="btn btn-primary btn-lg">
                   <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Ver votaciones
                 </Link>
                 <Link to="/registro" className="btn btn-outline-light btn-lg">Crear cuenta</Link>
@@ -96,7 +103,7 @@ export default function Inicio() {
       <section className="container pb-4" aria-labelledby="destacadas">
         <div className="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
           <h2 id="destacadas" className="seccion-titulo mb-0">Votaciones abiertas</h2>
-          <Link to="/categorias" className="enlace-mas">Ver todas las categorías <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
+          <Link to={rutas.edicion(edicionActiva)} className="enlace-mas">Ver todas las categorías <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
         </div>
         {abiertas.length === 0 ? (
           <p>No hay votaciones abiertas en este momento.</p>

@@ -5,18 +5,18 @@ import EstadoBadge from '../../components/EstadoBadge.jsx';
 import { formatearFechaHora } from '../../utils/helpers.js';
 
 export default function AdminPanel() {
-  const { votaciones, votos, usuarios, categorias, auditoria, edicionActiva, usuario } = useApp();
+  const { votaciones, votos, usuarios, categorias, auditoria, edicionActiva, usuario, modo } = useApp();
   const abiertas = votaciones.filter((v) => v.publicada && v.estado === 'abierta');
   const kpis = [
     { label: 'Votaciones abiertas', valor: abiertas.length, icono: 'unlock', clase: '' },
     { label: 'Total de votos', valor: votos.length, icono: 'check2-all', clase: 'oro' },
     { label: 'Votantes registrados', valor: usuarios.filter((u) => u.rol === 'votante').length, icono: 'people', clase: 'terracota' },
-    { label: 'Categorías activas', valor: categorias.filter((c) => c.activa).length, icono: 'grid', clase: 'oscuro' },
+    { label: 'Categorías activas', valor: categorias.filter((c) => c.activa && c.edicionId === edicionActiva?.id).length, icono: 'grid', clase: 'oscuro' },
   ];
 
   return (
     <>
-      <PageHeader titulo="Panel de administración" subtitulo={`Hola, ${usuario.nombres}. ${edicionActiva.nombre}.`} />
+      <PageHeader titulo="Panel de administración" subtitulo={`Hola, ${usuario.nombres}. ${edicionActiva ? `${edicionActiva.nombre}.` : 'No hay una edición activa: configura una en «Ediciones».'}`} />
       <section aria-label="Indicadores" className="row g-3 mb-4">
         {kpis.map((k) => (
           <div className="col-6 col-xl-3" key={k.label}>
@@ -34,7 +34,7 @@ export default function AdminPanel() {
       <div className="row g-4">
         <div className="col-xl-7">
           <section className="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-auditoria">
-            <h2 id="titulo-auditoria" className="h5"><i className="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span className="small fw-normal text-secondary-flv">(auditoría simulada – RF-16)</span></h2>
+            <h2 id="titulo-auditoria" className="h5"><i className="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span className="small fw-normal text-secondary-flv">({modo === 'api' ? 'auditoría' : 'auditoría simulada'} – RF-16)</span></h2>
             <ul className="list-group list-group-flush">
               {auditoria.slice(0, 8).map((a) => (
                 <li className="list-group-item px-0" key={a.id}>
@@ -43,6 +43,7 @@ export default function AdminPanel() {
                 </li>
               ))}
             </ul>
+            <Link to="/admin/auditoria" className="enlace-mas d-inline-block mt-2">Ver toda la auditoría <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
           </section>
         </div>
         <div className="col-xl-5">

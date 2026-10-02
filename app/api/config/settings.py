@@ -120,13 +120,16 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:8095,http://localhost:5195,https://votaciones.juandiegows.com,https://juandiegows.github.io",
+    "http://localhost:8095,http://localhost:5195,http://localhost:5197,https://votaciones.juandiegows.com,https://juandiegows.github.io",
 )
 
+# La web lee el nombre del archivo CSV exportado (descarga con fetch + token).
+CORS_EXPOSE_HEADERS = ["Content-Disposition"]
+
 SPECTACULAR_SETTINGS = {
-    "TITLE": "API – Sistema Web de Votaciones FLV 2027",
+    "TITLE": "API – Sistema Web de Votaciones del Festival de la Leyenda Vallenata",
     "DESCRIPTION": (
-        "API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata 2027 "
+        "API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata "
         "(proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → "
         "Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` "
         "obtenido en `/api/auth/login/` o `/api/auth/registro/`."

@@ -3,7 +3,8 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Navbar() {
-  const { usuario, esAdmin, cerrarSesion } = useApp();
+  const { usuario, esAdmin, cerrarSesion, edicionActiva } = useApp();
+  const [saliendo, setSaliendo] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [menuUsuario, setMenuUsuario] = useState(false);
   const location = useLocation();
@@ -22,8 +23,10 @@ export default function Navbar() {
     return () => document.removeEventListener('click', fuera);
   }, []);
 
-  const salir = () => {
-    cerrarSesion();
+  const salir = async () => {
+    setSaliendo(true);
+    await cerrarSesion();
+    setSaliendo(false);
     navigate('/');
   };
 
@@ -38,7 +41,7 @@ export default function Navbar() {
             <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" strokeWidth="3" fill="none" strokeLinejoin="round" />
           </svg>
           <span>
-            Votaciones FLV 2027
+            Votaciones FLV{edicionActiva ? ` ${edicionActiva.anio}` : ''}
             <small>Prototipo académico</small>
           </span>
         </Link>
@@ -88,7 +91,7 @@ export default function Navbar() {
                 <li><hr className="dropdown-divider" /></li>
                 <li><Link className="dropdown-item" to="/mis-votos"><i className="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</Link></li>
                 {esAdmin && <li><Link className="dropdown-item" to="/admin"><i className="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel admin</Link></li>}
-                <li><button className="dropdown-item" type="button" onClick={salir}><i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Cerrar sesión</button></li>
+                <li><button className="dropdown-item" type="button" onClick={salir} disabled={saliendo}><i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{saliendo ? 'Cerrando sesión…' : 'Cerrar sesión'}</button></li>
               </ul>
             </div>
           )}

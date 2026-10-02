@@ -1,7 +1,7 @@
-// Reglas de visibilidad pública (RN-01: votación → categoría activa → edición activa)
-export function votacionesPublicas({ votaciones, categorias, edicionActiva }) {
+// Reglas de visibilidad pública (votación → categoría activa → edición indicada; por defecto, la activa)
+export function votacionesPublicas({ votaciones, categorias, edicionActiva }, edicion = edicionActiva) {
   const categoriasVisibles = new Set(
-    categorias.filter((c) => c.activa && c.edicionId === edicionActiva?.id).map((c) => c.id)
+    categorias.filter((c) => c.activa && c.edicionId === edicion?.id).map((c) => c.id)
   );
   return votaciones.filter((v) => v.publicada && categoriasVisibles.has(v.categoriaId));
 }

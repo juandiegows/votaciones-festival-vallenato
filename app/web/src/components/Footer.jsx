@@ -4,12 +4,15 @@ import { useApp } from '../context/AppContext.jsx';
 import Modal from './Modal.jsx';
 
 export default function Footer() {
-  const { restablecer } = useApp();
+  const { restablecer, edicionActiva, modo } = useApp();
   const [confirmar, setConfirmar] = useState(false);
+  const [procesando, setProcesando] = useState(false);
   const navigate = useNavigate();
 
-  const ejecutar = () => {
-    restablecer();
+  const ejecutar = async () => {
+    setProcesando(true);
+    await restablecer();
+    setProcesando(false);
     setConfirmar(false);
     navigate('/');
   };
@@ -18,14 +21,15 @@ export default function Footer() {
     <footer className="footer-flv mt-5">
       <div className="aviso-prototipo text-center py-2 px-3">
         <i className="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
-        Prototipo académico – Areandina · Desarrollo Web 2026 · Datos simulados
+        Prototipo académico – Areandina · Desarrollo Web 2026 ·{' '}
+        {modo === 'api' ? 'Datos ilustrativos de demostración' : 'Datos simulados'}
       </div>
       <div className="container py-4">
         <div className="row g-4">
           <div className="col-md-5">
             <p className="font-titulo fw-bold text-white mb-1">Sistema Web de Votaciones</p>
             <p className="small mb-0">
-              Festival de la Leyenda Vallenata 2027 · Valledupar, Cesar (Colombia). Diseño académico original: no
+              {edicionActiva?.nombre || 'Festival de la Leyenda Vallenata'} · Valledupar, Cesar (Colombia). Diseño académico original: no
               representa la marca oficial del Festival ni de la Fundación.
             </p>
           </div>
@@ -41,9 +45,17 @@ export default function Footer() {
           </div>
           <div className="col-6 col-md-4">
             <p className="fw-semibold text-white mb-2">Demostración</p>
-            <button type="button" className="btn btn-sm btn-outline-light" onClick={() => setConfirmar(true)}>
-              <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer datos de demostración
-            </button>
+            {restablecer ? (
+              <button type="button" className="btn btn-sm btn-outline-light" onClick={() => setConfirmar(true)}>
+                <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer datos de demostración
+              </button>
+            ) : (
+              <p className="small mb-0">
+                <i className="bi bi-hdd-network me-1" aria-hidden="true"></i>
+                Los datos se guardan en el servidor del sistema. Restablecer la demostración solo está disponible en la
+                versión con datos simulados.
+              </p>
+            )}
           </div>
         </div>
         <hr className="border-secondary" />
@@ -60,7 +72,7 @@ export default function Footer() {
         pie={
           <>
             <button className="btn btn-outline-secondary" onClick={() => setConfirmar(false)}>Cancelar</button>
-            <button className="btn btn-peligro" onClick={ejecutar}>Sí, restablecer</button>
+            <button className="btn btn-peligro" onClick={ejecutar} disabled={procesando}>Sí, restablecer</button>
           </>
         }
       >

@@ -1,15 +1,16 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import Avatar from '../components/Avatar.jsx';
-import ResultadosChart from '../components/ResultadosChart.jsx';
+import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
-import { formatearFechaHora, resultadosVisibles } from '../utils/helpers.js';
+import { formatearFechaHora } from '../utils/helpers.js';
+import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
 export default function Comprobante() {
-  const { id } = useParams();
-  const { votaciones, opciones, votos, usuario, votosDeUsuario } = useApp();
-  const votacion = votaciones.find((v) => v.id === Number(id));
+  const { opciones, usuario, votosDeUsuario, edicionActiva } = useApp();
+  const { edicion, votacion } = useRutaPublica();
+  const rutas = useRutas();
   if (!votacion) return <NoEncontrado />;
   const voto = votosDeUsuario(votacion.id)[0];
 
@@ -17,20 +18,19 @@ export default function Comprobante() {
     return (
       <div className="container py-5 text-center">
         <h1 className="h3">Aún no has votado en «{votacion.titulo}»</h1>
-        <Link to={`/votaciones/${votacion.id}`} className="btn btn-primary mt-2">Ir a la votación</Link>
+        <Link to={rutas.votacion(votacion)} className="btn btn-primary mt-2">Ir a la votación</Link>
       </div>
     );
   }
 
-  const opcion = opciones.find((o) => o.id === voto.opcionId);
-  const lista = opciones.filter((o) => o.votacionId === votacion.id);
+  const opcion = opciones.find((o) => o.id === voto.opcionId) || { nombre: voto.opcionNombre || 'Opción registrada' };
 
   return (
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo="Comprobante de voto"
         subtitulo="Mensaje posterior a la votación (RF-09)"
-        migas={[{ label: 'Inicio', to: '/' }, { label: votacion.titulo, to: `/votaciones/${votacion.id}` }, { label: 'Comprobante' }]}
+        migas={[{ label: 'Inicio', to: '/' }, { label: votacion.titulo, to: rutas.votacion(votacion) }, { label: 'Comprobante' }]}
       />
       <div className="row g-4">
         <div className="col-lg-6">
@@ -62,28 +62,14 @@ export default function Comprobante() {
                 <i className="bi bi-printer me-1" aria-hidden="true"></i>Imprimir
               </button>
               <Link to="/mis-votos" className="btn btn-outline-primary"><i className="bi bi-receipt me-1" aria-hidden="true"></i>Mis votos</Link>
-              <Link to="/categorias" className="btn btn-primary">Seguir votando</Link>
+              <Link to={rutas.edicion(edicionActiva || edicion)} className="btn btn-primary">Seguir votando</Link>
             </div>
           </section>
         </div>
         <div className="col-lg-6">
           <section className="card-flv p-4 h-100" aria-labelledby="titulo-res">
             <h2 id="titulo-res" className="h5"><i className="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
-            {resultadosVisibles(votacion) ? (
-              <>
-                <p className="small text-secondary-flv">Resultados en tiempo real (RN-07).</p>
-                <ResultadosChart opciones={lista} votos={votos.filter((v) => v.votacionId === votacion.id)} cerrada={votacion.estado === 'cerrada'} />
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <i className="bi bi-hourglass-split fs-1 text-dorado-texto" aria-hidden="true"></i>
-                <p className="mt-2 mb-0">
-                  {votacion.mostrarResultados === 'no publicar'
-                    ? 'Los resultados de esta votación no se publicarán al público (RN-07).'
-                    : 'Resultados se publicarán al cierre de la votación (RN-07).'}
-                </p>
-              </div>
-            )}
+            <ResultadosVotacion votacion={votacion} nota="Resultados en tiempo real (RN-07)." />
           </section>
         </div>
       </div>

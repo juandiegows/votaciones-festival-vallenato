@@ -1,8 +1,6 @@
-import { calcularResultados } from '../utils/helpers.js';
-
-// Gráfico de barras horizontales en CSS (sin librerías)
-export default function ResultadosChart({ opciones, votos, cerrada = false }) {
-  const { total, filas } = calcularResultados(opciones, votos);
+// Gráfico de barras horizontales en CSS (sin librerías).
+// Recibe resultados ya calculados: { total, filas: [{ id, nombre, cantidad, porcentaje, ganador }] }
+export default function ResultadosChart({ total, filas, cerrada = false }) {
   return (
     <div>
       <p className="mb-3">

@@ -232,3 +232,16 @@ a:hover { color: var(--flv-rojo-hover); }
 .admin-nav .nav-link:not(.active) { color: var(--flv-negro) !important; }
 .admin-nav .nav-link.active { color: #fff !important; }
 .modal-content, .dropdown-menu { --bs-modal-bg: #fff; --bs-dropdown-bg: #fff; background-color: #fff; }
+
+/* Opción con muestra multimedia: el reproductor va debajo de la tarjeta (fuera del <label>) */
+.opcion-con-medio { display: flex; flex-direction: column; height: 100%; }
+.opcion-con-medio .opcion-card { height: auto; flex-grow: 1; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.opcion-con-medio .reproductor-opcion {
+  border: 2px solid var(--flv-gris-borde); border-top: 0; border-radius: 0 0 .75rem .75rem;
+  background: var(--flv-crema); padding: .5rem .9rem .6rem;
+}
+.opcion-input:checked ~ .reproductor-opcion { border-color: var(--flv-rojo); }
+.reproductor audio { height: 2.5rem; display: block; }
+.reproductor audio:focus-visible, .reproductor-embebido:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
+.reproductor-embebido { border: 0; border-radius: .5rem; display: block; }
+.reproductor-nota { font-size: .75rem; color: var(--flv-gris-texto); margin-top: .3rem; }

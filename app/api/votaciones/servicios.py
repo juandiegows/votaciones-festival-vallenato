@@ -4,7 +4,7 @@ import string
 from django.db import transaction
 from django.db.models import Count
 
-from .models import Opcion, RegistroAuditoria, Votacion, Voto
+from .models import Edicion, Opcion, RegistroAuditoria, Votacion, Voto
 
 ALFABETO_COMPROBANTE = string.ascii_uppercase + string.digits
 
@@ -136,3 +136,12 @@ def validar_eliminacion(objeto):
             codigo="tiene_votos",
             status=409,
         )
+
+
+def cerrar_otras_ediciones(edicion):
+    """Mantiene una sola edición activa: si esta queda activa, las demás se cierran."""
+    if edicion.estado != Edicion.Estado.ACTIVA:
+        return 0
+    return Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).exclude(pk=edicion.pk).update(
+        estado=Edicion.Estado.CERRADA
+    )

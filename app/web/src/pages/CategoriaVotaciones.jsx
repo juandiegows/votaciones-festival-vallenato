@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import VotacionCard from '../components/VotacionCard.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
 import { votacionesPublicas } from '../utils/visibilidad.js';
+import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
 const FILTROS = [
   ['todas', 'Todas'],
@@ -14,14 +14,14 @@ const FILTROS = [
 ];
 
 export default function CategoriaVotaciones() {
-  const { id } = useParams();
   const datos = useApp();
-  const { categorias, opciones, votosDeUsuario } = datos;
+  const { opciones, votosDeUsuario } = datos;
   const [filtro, setFiltro] = useState('todas');
-  const categoria = categorias.find((c) => c.id === Number(id) && c.activa);
-  if (!categoria) return <NoEncontrado mensaje="La categoría no existe o no está activa." />;
+  const { edicion, categoria } = useRutaPublica();
+  const rutas = useRutas();
+  if (!categoria || !categoria.activa) return <NoEncontrado mensaje="La categoría no existe o no está activa." />;
 
-  const todas = votacionesPublicas(datos).filter((v) => v.categoriaId === categoria.id);
+  const todas = votacionesPublicas(datos, edicion).filter((v) => v.categoriaId === categoria.id);
   const lista = filtro === 'todas' ? todas : todas.filter((v) => v.estado === filtro);
 
   return (
@@ -29,7 +29,7 @@ export default function CategoriaVotaciones() {
       <PageHeader
         titulo={categoria.nombre}
         subtitulo={`Votaciones disponibles (RF-05) · ${categoria.descripcion}`}
-        migas={[{ label: 'Inicio', to: '/' }, { label: 'Categorías', to: '/categorias' }, { label: categoria.nombre }]}
+        migas={[{ label: 'Inicio', to: '/' }, { label: `Edición ${edicion.anio}`, to: rutas.edicion(edicion) }, { label: categoria.nombre }]}
       />
       <fieldset className="mb-4">
         <legend className="small fw-semibold mb-2">Filtrar por estado</legend>

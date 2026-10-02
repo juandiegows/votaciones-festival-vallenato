@@ -4,18 +4,22 @@ import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import EstadoBadge from '../../components/EstadoBadge.jsx';
-import { OPCIONES_MOSTRAR_RESULTADOS, formatearFechaHora, isoALocal, localAIso } from '../../utils/helpers.js';
+import { OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso } from '../../utils/helpers.js';
 
 const ICONOS = ['music-note-beamed', 'vinyl-fill', 'people-fill', 'stars', 'boombox-fill', 'music-player-fill', 'award-fill', 'music-note', 'mic-fill'];
 
 export default function AdminVotaciones() {
-  const { votaciones, categorias, opciones, votos, guardarEntidad, eliminarEntidad } = useApp();
+  const { votaciones, categorias, ediciones, opciones, votos, guardarEntidad, eliminarEntidad } = useApp();
+  // Con varias ediciones los nombres de categoría se repiten: se muestran con el año
+  const etiquetaCategoria = (c) => `${c.nombre} (${ediciones.find((e) => e.id === c.edicionId)?.anio ?? '—'})`;
   const [filtroCat, setFiltroCat] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
   const [aEliminar, setAEliminar] = useState(null);
+  const [procesando, setProcesando] = useState(false);
+  const [mensajeFormulario, setMensajeFormulario] = useState('');
 
   const numOpciones = (id) => opciones.filter((o) => o.votacionId === id).length;
   const numVotos = (id) => votos.filter((v) => v.votacionId === id).length;
@@ -28,10 +32,12 @@ export default function AdminVotaciones() {
 
   const nueva = () => {
     setErrores({});
+    setMensajeFormulario('');
     const ahora = new Date();
     setForm({
       categoriaId: categorias[0]?.id || '',
       titulo: '',
+      slug: '',
       descripcion: '',
       fechaApertura: isoALocal(new Date(ahora.getTime() + 86400000).toISOString()),
       fechaCierre: isoALocal(new Date(ahora.getTime() + 8 * 86400000).toISOString()),
@@ -46,12 +52,15 @@ export default function AdminVotaciones() {
 
   const editar = (v) => {
     setErrores({});
-    setForm({ ...v, fechaApertura: isoALocal(v.fechaApertura), fechaCierre: isoALocal(v.fechaCierre) });
+    setMensajeFormulario('');
+    setForm({ ...v, slug: v.slug || '', fechaApertura: isoALocal(v.fechaApertura), fechaCierre: isoALocal(v.fechaCierre) });
   };
 
-  const guardar = (e) => {
+  const guardar = async (e) => {
     e.preventDefault();
+    if (procesando) return;
     const errs = {};
+    if (form.slug && !PATRON_SLUG.test(form.slug)) errs.slug = 'Usa solo minúsculas sin tildes, números y guiones (p. ej. «cancion-favorita»).';
     if (!form.categoriaId) errs.categoriaId = 'Toda votación debe pertenecer a una categoría (RN-01).';
     if (form.titulo.trim().length < 5) errs.titulo = 'El título debe tener al menos 5 caracteres.';
     if (!form.descripcion.trim()) errs.descripcion = 'La descripción es obligatoria.';
@@ -71,8 +80,17 @@ export default function AdminVotaciones() {
       votosPorUsuario: Number(form.votosPorUsuario),
       fechaApertura: localAIso(form.fechaApertura),
       fechaCierre: localAIso(form.fechaCierre),
+      slug: form.slug.trim(),
     };
-    const g = guardarEntidad('votaciones', datos, `${form.id ? 'Actualizó' : 'Creó'} la votación "${form.titulo}"`);
+    setProcesando(true);
+    const r = await guardarEntidad('votaciones', datos, `${form.id ? 'Actualizó' : 'Creó'} la votación "${form.titulo}"`);
+    setProcesando(false);
+    if (!r.ok) {
+      setErrores(r.errores || {});
+      setMensajeFormulario(r.error);
+      return;
+    }
+    const g = r.entidad;
     setMensaje({
       tipo: 'success',
       texto: form.id ? `Votación «${form.titulo}» actualizada.` : `Votación «${form.titulo}» creada como borrador. Agrega al menos 2 opciones para publicarla (RN-06).`,
@@ -81,18 +99,31 @@ export default function AdminVotaciones() {
     setForm(null);
   };
 
-  const alternarPublicada = (v) => {
-    if (!v.publicada && numOpciones(v.id) < 2) {
-      setMensaje({ tipo: 'danger', texto: `No se puede publicar «${v.titulo}»: tiene ${numOpciones(v.id)} opción(es) y se requieren al menos 2 (RN-06).`, opcionesId: v.id });
+  // La regla de mínimo dos opciones la valida la capa de datos (y el servidor en el modo API)
+  const alternarPublicada = async (v) => {
+    setProcesando(true);
+    const r = await guardarEntidad('votaciones', { id: v.id, publicada: !v.publicada }, `${v.publicada ? 'Despublicó' : 'Publicó'} la votación "${v.titulo}"`);
+    setProcesando(false);
+    if (!r.ok) {
+      setMensaje({ tipo: 'danger', texto: `No se puede ${v.publicada ? 'despublicar' : 'publicar'} «${v.titulo}»: ${r.error}`, opcionesId: v.publicada ? null : v.id });
       return;
     }
-    guardarEntidad('votaciones', { id: v.id, publicada: !v.publicada }, `${v.publicada ? 'Despublicó' : 'Publicó'} la votación "${v.titulo}"`);
     setMensaje({ tipo: 'success', texto: `Votación «${v.titulo}» ${v.publicada ? 'retirada del sitio público' : 'publicada'}.` });
   };
 
-  const cerrar = (v) => {
-    guardarEntidad('votaciones', { id: v.id, cerradaManualmente: true }, `Cerró manualmente la votación "${v.titulo}"`);
-    setMensaje({ tipo: 'info', texto: `Votación «${v.titulo}» cerrada. Ya no recibe votos.` });
+  const cerrar = async (v) => {
+    setProcesando(true);
+    const r = await guardarEntidad('votaciones', { id: v.id, cerradaManualmente: true }, `Cerró manualmente la votación "${v.titulo}"`);
+    setProcesando(false);
+    setMensaje(r.ok ? { tipo: 'info', texto: `Votación «${v.titulo}» cerrada. Ya no recibe votos.` } : { tipo: 'danger', texto: r.error });
+    setAEliminar(null);
+  };
+
+  const eliminar = async (v) => {
+    setProcesando(true);
+    const r = await eliminarEntidad('votaciones', v.id, `Eliminó la votación "${v.titulo}"`);
+    setProcesando(false);
+    setMensaje(r.ok ? { tipo: 'success', texto: `Votación «${v.titulo}» eliminada.` } : { tipo: 'danger', texto: r.error });
     setAEliminar(null);
   };
 
@@ -122,7 +153,7 @@ export default function AdminVotaciones() {
             <label htmlFor="f-cat" className="form-label small mb-1">Categoría</label>
             <select id="f-cat" className="form-select form-select-sm" value={filtroCat} onChange={(e) => setFiltroCat(e.target.value)}>
               <option value="">Todas</option>
-              {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              {categorias.map((c) => <option key={c.id} value={c.id}>{etiquetaCategoria(c)}</option>)}
             </select>
           </div>
           <div className="col-sm-6">
@@ -155,7 +186,7 @@ export default function AdminVotaciones() {
             {lista.map((v) => (
               <tr key={v.id}>
                 <td>
-                  <strong>{v.titulo}</strong>
+                  <strong>{v.titulo}</strong> <code className="small text-secondary-flv">/{v.slug}</code>
                   <div className="small text-secondary-flv">{catNombre(v.categoriaId)} · Resultados: {v.mostrarResultados}</div>
                 </td>
                 <td className="small text-nowrap">
@@ -181,7 +212,7 @@ export default function AdminVotaciones() {
                     <Link className="btn btn-sm btn-outline-primary" to={`/admin/votaciones/${v.id}/opciones`} aria-label={`Opciones de ${v.titulo}`} title="Opciones">
                       <i className="bi bi-list-ol" aria-hidden="true"></i>
                     </Link>
-                    <button className={`btn btn-sm ${v.publicada ? 'btn-outline-secondary' : 'btn-dorado'}`} onClick={() => alternarPublicada(v)} aria-label={`${v.publicada ? 'Despublicar' : 'Publicar'} ${v.titulo}`} title={v.publicada ? 'Despublicar' : 'Publicar'}>
+                    <button className={`btn btn-sm ${v.publicada ? 'btn-outline-secondary' : 'btn-dorado'}`} disabled={procesando} onClick={() => alternarPublicada(v)} aria-label={`${v.publicada ? 'Despublicar' : 'Publicar'} ${v.titulo}`} title={v.publicada ? 'Despublicar' : 'Publicar'}>
                       <i className={`bi ${v.publicada ? 'bi-eye-slash' : 'bi-megaphone'}`} aria-hidden="true"></i>
                     </button>
                     <button className="btn btn-sm btn-outline-danger" onClick={() => pedirEliminar(v)} aria-label={`Eliminar ${v.titulo}`} title="Eliminar">
@@ -206,17 +237,18 @@ export default function AdminVotaciones() {
         pie={
           <>
             <button className="btn btn-outline-secondary" onClick={() => setForm(null)}>Cancelar</button>
-            <button className="btn btn-primary" type="submit" form="form-votacion">Guardar</button>
+            <button className="btn btn-primary" type="submit" form="form-votacion" disabled={procesando}>{procesando ? 'Guardando…' : 'Guardar'}</button>
           </>
         }
       >
         {form && (
           <form id="form-votacion" noValidate onSubmit={guardar}>
+            {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
             <div className="row g-3">
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-cat">Categoría</label>
                 <select id="v-cat" className={`form-select ${errores.categoriaId ? 'is-invalid' : ''}`} value={form.categoriaId} onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}>
-                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  {categorias.map((c) => <option key={c.id} value={c.id}>{etiquetaCategoria(c)}</option>)}
                 </select>
                 {errores.categoriaId && <div className="invalid-feedback">{errores.categoriaId}</div>}
               </div>
@@ -230,6 +262,11 @@ export default function AdminVotaciones() {
                 <label className="form-label" htmlFor="v-titulo">Título</label>
                 <input id="v-titulo" className={`form-control ${errores.titulo ? 'is-invalid' : ''}`} value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
                 {errores.titulo && <div className="invalid-feedback">{errores.titulo}</div>}
+              </div>
+              <div className="col-12">
+                <label className="form-label" htmlFor="v-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
+                <input id="v-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el título" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="v-slug-ayuda" />
+                {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="v-slug-ayuda" className="form-text">Última parte de la dirección pública de la votación. Déjalo vacío para generarlo automáticamente.</div>}
               </div>
               <div className="col-12">
                 <label className="form-label" htmlFor="v-desc">Descripción</label>
@@ -282,7 +319,7 @@ export default function AdminVotaciones() {
             <>
               <button className="btn btn-outline-secondary" onClick={() => setAEliminar(null)}>Entendido</button>
               {aEliminar?.estado !== 'cerrada' && (
-                <button className="btn btn-peligro" onClick={() => cerrar(aEliminar)}>
+                <button className="btn btn-peligro" disabled={procesando} onClick={() => cerrar(aEliminar)}>
                   <i className="bi bi-lock me-1" aria-hidden="true"></i>Cerrar votación
                 </button>
               )}
@@ -290,14 +327,7 @@ export default function AdminVotaciones() {
           ) : (
             <>
               <button className="btn btn-outline-secondary" onClick={() => setAEliminar(null)}>Cancelar</button>
-              <button
-                className="btn btn-peligro"
-                onClick={() => {
-                  eliminarEntidad('votaciones', aEliminar.id, `Eliminó la votación "${aEliminar.titulo}"`);
-                  setMensaje({ tipo: 'success', texto: `Votación «${aEliminar.titulo}» eliminada.` });
-                  setAEliminar(null);
-                }}
-              >
+              <button className="btn btn-peligro" disabled={procesando} onClick={() => eliminar(aEliminar)}>
                 Eliminar
               </button>
             </>

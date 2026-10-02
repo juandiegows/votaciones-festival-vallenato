@@ -7,12 +7,15 @@ publico = DefaultRouter()
 publico.register("ediciones", views.EdicionPublicaViewSet, basename="edicion")
 publico.register("categorias", views.CategoriaPublicaViewSet, basename="categoria")
 publico.register("votaciones", views.VotacionPublicaViewSet, basename="votacion")
+publico.register("opciones", views.OpcionPublicaViewSet, basename="opcion")
 
 admin = DefaultRouter()
 admin.register("ediciones", views.AdminEdicionViewSet, basename="admin-edicion")
 admin.register("categorias", views.AdminCategoriaViewSet, basename="admin-categoria")
 admin.register("votaciones", views.AdminVotacionViewSet, basename="admin-votacion")
 admin.register("opciones", views.AdminOpcionViewSet, basename="admin-opcion")
+admin.register("votos", views.AdminVotoViewSet, basename="admin-voto")
+admin.register("usuarios", views.AdminUsuarioViewSet, basename="admin-usuario")
 admin.register("auditoria", views.AdminAuditoriaViewSet, basename="admin-auditoria")
 
 urlpatterns = [

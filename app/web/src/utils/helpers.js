@@ -26,12 +26,41 @@ export function resultadosVisibles(votacion) {
   return false;
 }
 
-/** Código de comprobante con formato FLV27-XXXXXX */
-export function generarCodigoComprobante() {
+/** Código de comprobante FLV{aa}-XXXXXX, con los dos últimos dígitos del año de la edición (como la API). */
+export function generarCodigoComprobante(anio) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let codigo = '';
   for (let i = 0; i < 6; i++) codigo += chars[Math.floor(Math.random() * chars.length)];
-  return `FLV27-${codigo}`;
+  return `FLV${String(Number(anio) % 100).padStart(2, '0')}-${codigo}`;
+}
+
+/** Slug para URL amigables: minúsculas, sin tildes, palabras separadas por guiones («Canción» → «cancion»). */
+export function slugificar(texto) {
+  return String(texto || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/[\s-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Slug único dentro de `existentes` (agrega -2, -3… si se repite), igual que la API. */
+export function slugUnico(texto, existentes) {
+  const usados = new Set(existentes);
+  const base = slugificar(texto) || 'item';
+  let candidato = base;
+  for (let n = 2; usados.has(candidato); n++) candidato = `${base}-${n}`;
+  return candidato;
+}
+
+export const PATRON_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Enlace multimedia válido: URL http(s) absoluta o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/x.mp3). */
+export function validarEnlaceMultimedia(valor) {
+  if (!valor) return true;
+  return /^https?:\/\/\S+$/.test(valor) || /^\/(?!\/)\S*$/.test(valor);
 }
 
 const fmtFecha = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });

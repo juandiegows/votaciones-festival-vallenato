@@ -6,6 +6,7 @@ const ENLACES = [
   { to: '/admin/categorias', label: 'Categorías', icono: 'grid' },
   { to: '/admin/votaciones', label: 'Votaciones', icono: 'check2-square' },
   { to: '/admin/resultados', label: 'Resultados', icono: 'bar-chart' },
+  { to: '/admin/auditoria', label: 'Auditoría', icono: 'clock-history' },
 ];
 
 export default function AdminLayout() {

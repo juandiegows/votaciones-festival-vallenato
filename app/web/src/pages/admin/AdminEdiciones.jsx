@@ -9,9 +9,19 @@ export default function AdminEdiciones() {
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
+  const [procesando, setProcesando] = useState(false);
+  const [mensajeFormulario, setMensajeFormulario] = useState('');
+  const siguienteAnio = Math.max(new Date().getFullYear(), ...ediciones.map((ed) => ed.anio)) + 1;
 
-  const guardar = (e) => {
+  const abrirFormulario = (valores) => {
+    setErrores({});
+    setMensajeFormulario('');
+    setForm(valores);
+  };
+
+  const guardar = async (e) => {
     e.preventDefault();
+    if (procesando) return;
     const errs = {};
     if (form.nombre.trim().length < 5) errs.nombre = 'Ingresa el nombre de la edición.';
     if (!/^\d{4}$/.test(String(form.anio))) errs.anio = 'Año de 4 dígitos.';
@@ -20,32 +30,42 @@ export default function AdminEdiciones() {
     setErrores(errs);
     if (Object.keys(errs).length) return;
     const datos = { ...form, anio: Number(form.anio) };
+    setProcesando(true);
+    let r;
     if (datos.estado === 'activa') {
-      // Solo una edición activa a la vez
+      // Solo una edición activa a la vez: al activar esta, las demás se cierran
       const id = datos.id;
       const lista = ediciones.map((ed) => (ed.id === id ? { ...ed, ...datos } : { ...ed, estado: 'cerrada' }));
       const final = id ? lista : [...lista, { ...datos, id: Math.max(0, ...ediciones.map((x) => x.id)) + 1 }];
-      reemplazarColeccion('ediciones', final, `${id ? 'Actualizó' : 'Creó'} la edición "${datos.nombre}" (activa)`);
+      r = await reemplazarColeccion('ediciones', final, `${id ? 'Actualizó' : 'Creó'} la edición "${datos.nombre}" (activa)`);
     } else {
-      guardarEntidad('ediciones', datos, `${datos.id ? 'Actualizó' : 'Creó'} la edición "${datos.nombre}"`);
+      r = await guardarEntidad('ediciones', datos, `${datos.id ? 'Actualizó' : 'Creó'} la edición "${datos.nombre}"`);
+    }
+    setProcesando(false);
+    if (!r.ok) {
+      setErrores(r.errores || {});
+      setMensajeFormulario(r.error);
+      return;
     }
     setMensaje({ tipo: 'success', texto: `Edición «${datos.nombre}» guardada.` });
     setForm(null);
   };
 
-  const eliminar = (ed) => {
+  const eliminar = async (ed) => {
     if (categorias.some((c) => c.edicionId === ed.id)) {
       setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${ed.nombre}»: tiene categorías asociadas (RN-01).` });
       return;
     }
-    eliminarEntidad('ediciones', ed.id, `Eliminó la edición "${ed.nombre}"`);
-    setMensaje({ tipo: 'success', texto: `Edición «${ed.nombre}» eliminada.` });
+    setProcesando(true);
+    const r = await eliminarEntidad('ediciones', ed.id, `Eliminó la edición "${ed.nombre}"`);
+    setProcesando(false);
+    setMensaje(r.ok ? { tipo: 'success', texto: `Edición «${ed.nombre}» eliminada.` } : { tipo: 'danger', texto: r.error });
   };
 
   return (
     <>
       <PageHeader titulo="Gestión de ediciones" subtitulo="Cada edición agrupa categorías y votaciones (RF-10).">
-        <button className="btn btn-primary" onClick={() => { setErrores({}); setForm({ nombre: '', anio: 2028, fechaInicio: '', fechaFin: '', estado: 'cerrada' }); }}>
+        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada' })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>
       </PageHeader>
@@ -77,8 +97,8 @@ export default function AdminEdiciones() {
                 <td>{categorias.filter((c) => c.edicionId === ed.id).length}</td>
                 <td><span className={`badge badge-estado ${ed.estado === 'activa' ? 'estado-abierta' : 'estado-cerrada'}`}>{ed.estado === 'activa' ? 'Activa' : 'Cerrada'}</span></td>
                 <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => { setErrores({}); setForm({ ...ed }); }} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
                 </td>
               </tr>
             ))}
@@ -93,15 +113,16 @@ export default function AdminEdiciones() {
         pie={
           <>
             <button className="btn btn-outline-secondary" onClick={() => setForm(null)}>Cancelar</button>
-            <button className="btn btn-primary" type="submit" form="form-edicion">Guardar</button>
+            <button className="btn btn-primary" type="submit" form="form-edicion" disabled={procesando}>{procesando ? 'Guardando…' : 'Guardar'}</button>
           </>
         }
       >
         {form && (
           <form id="form-edicion" noValidate onSubmit={guardar}>
+            {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
             <div className="mb-3">
               <label className="form-label" htmlFor="e-nombre">Nombre</label>
-              <input id="e-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Festival de la Leyenda Vallenata 2028" />
+              <input id="e-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder={`Festival de la Leyenda Vallenata ${siguienteAnio}`} />
               {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
             </div>
             <div className="row g-3">

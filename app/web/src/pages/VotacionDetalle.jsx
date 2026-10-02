@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import EstadoBadge from '../components/EstadoBadge.jsx';
 import Countdown from '../components/Countdown.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Modal from '../components/Modal.jsx';
-import ResultadosChart from '../components/ResultadosChart.jsx';
+import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
+import ReproductorMultimedia from '../components/ReproductorMultimedia.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
-import { formatearFechaHora, resultadosVisibles } from '../utils/helpers.js';
+import { formatearFechaHora } from '../utils/helpers.js';
+import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
-const claveSeleccion = (id) => `flv27_seleccion_${id}`;
+const claveSeleccion = (id) => `flv_seleccion_${id}`;
 
 function leerSeleccion(id) {
   try {
@@ -21,19 +23,18 @@ function leerSeleccion(id) {
 }
 
 export default function VotacionDetalle() {
-  const { id } = useParams();
-  const votacionId = Number(id);
-  const { votaciones, categorias, opciones, votos, usuario, esAdmin, votosDeUsuario, emitirVoto } = useApp();
-  const [seleccion, setSeleccion] = useState(() => leerSeleccion(votacionId));
+  const { opciones, usuario, esAdmin, votosDeUsuario, emitirVoto } = useApp();
+  const { edicion, categoria, votacion } = useRutaPublica();
+  const rutas = useRutas();
+  const [seleccion, setSeleccion] = useState(() => (votacion ? leerSeleccion(votacion.id) : null));
   const [confirmando, setConfirmando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const votacion = votaciones.find((v) => v.id === votacionId);
   if (!votacion || (!votacion.publicada && !esAdmin)) return <NoEncontrado mensaje="La votación no existe o aún no ha sido publicada." />;
 
-  const categoria = categorias.find((c) => c.id === votacion.categoriaId);
-  const lista = opciones.filter((o) => o.votacionId === votacion.id).sort((a, b) => a.orden - b.orden);
+  const lista = opciones.filter((o) => o.votacionId === votacion.id && o.activa !== false).sort((a, b) => a.orden - b.orden);
   const misVotos = votosDeUsuario(votacion.id);
   const yaVoto = misVotos.length >= votacion.votosPorUsuario;
   const abierta = votacion.estado === 'abierta';
@@ -58,14 +59,16 @@ export default function VotacionDetalle() {
     }
     // RN-02: solo usuarios autenticados; se redirige al login y luego se regresa aquí
     if (!usuario) {
-      navigate('/login', { state: { desde: `/votaciones/${votacion.id}`, aviso: 'Inicia sesión o regístrate para registrar tu voto. Guardamos tu selección.' } });
+      navigate('/login', { state: { desde: rutas.votacion(votacion), aviso: 'Inicia sesión o regístrate para registrar tu voto. Guardamos tu selección.' } });
       return;
     }
     setConfirmando(true);
   };
 
-  const confirmar = () => {
-    const r = emitirVoto(votacion.id, seleccion);
+  const confirmar = async () => {
+    setEnviando(true);
+    const r = await emitirVoto(votacion.id, seleccion);
+    setEnviando(false);
     setConfirmando(false);
     if (!r.ok) return setError(r.error);
     try {
@@ -73,7 +76,7 @@ export default function VotacionDetalle() {
     } catch {
       /* ignorar */
     }
-    navigate(`/votaciones/${votacion.id}/comprobante`);
+    navigate(rutas.comprobante(votacion));
   };
 
   let mensajeEstado = null;
@@ -84,11 +87,11 @@ export default function VotacionDetalle() {
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo={votacion.titulo}
-        subtitulo={`Detalle de la votación (RF-06) · Categoría ${categoria?.nombre}`}
+        subtitulo={`Detalle de la votación (RF-06) · Categoría ${categoria.nombre}`}
         migas={[
           { label: 'Inicio', to: '/' },
-          { label: 'Categorías', to: '/categorias' },
-          { label: categoria?.nombre, to: `/categorias/${categoria?.id}` },
+          { label: `Edición ${edicion.anio}`, to: rutas.edicion(edicion) },
+          { label: categoria.nombre, to: rutas.categoria(categoria) },
           { label: votacion.titulo },
         ]}
       />
@@ -131,7 +134,7 @@ export default function VotacionDetalle() {
               <div className="flex-grow-1">
                 <strong>Ya votaste en esta votación.</strong> Tu voto fue registrado y no se puede modificar (RN-04, RN-05).
               </div>
-              <Link to={`/votaciones/${votacion.id}/comprobante`} className="btn btn-sm btn-success">Ver comprobante</Link>
+              <Link to={rutas.comprobante(votacion)} className="btn btn-sm btn-success">Ver comprobante</Link>
             </div>
           )}
           {mensajeEstado && (
@@ -147,7 +150,7 @@ export default function VotacionDetalle() {
               {lista.map((o) => {
                 const marcada = yaVoto ? misVotos[0].opcionId === o.id : seleccion === o.id;
                 return (
-                  <div className="col-md-6" key={o.id}>
+                  <div className={`col-md-6 ${o.enlaceMultimedia ? 'opcion-con-medio' : ''}`} key={o.id}>
                     <input
                       type="radio"
                       className="opcion-input"
@@ -163,14 +166,11 @@ export default function VotacionDetalle() {
                       <span>
                         <span className="d-block fw-semibold">{o.nombre}</span>
                         <span className="d-block small text-secondary-flv">{o.descripcion}</span>
-                        {o.enlaceMultimedia && (
-                          <span className="d-block small mt-1 text-rojo-oscuro">
-                            <i className="bi bi-play-circle me-1" aria-hidden="true"></i>Muestra multimedia (simulada)
-                          </span>
-                        )}
                       </span>
                       <span className="opcion-check" aria-hidden="true">{marcada && <i className="bi bi-check-lg"></i>}</span>
                     </label>
+                    {/* Fuera del <label>: usar el reproductor no cambia la opción elegida */}
+                    {o.enlaceMultimedia && <ReproductorMultimedia enlace={o.enlaceMultimedia} titulo={o.nombre} className="reproductor-opcion" />}
                   </div>
                 );
               })}
@@ -191,15 +191,7 @@ export default function VotacionDetalle() {
 
           <section className="card-flv p-4 mt-4" aria-labelledby="titulo-resultados">
             <h2 id="titulo-resultados" className="h5"><i className="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
-            {resultadosVisibles(votacion) ? (
-              <ResultadosChart opciones={lista} votos={votos.filter((v) => v.votacionId === votacion.id)} cerrada={votacion.estado === 'cerrada'} />
-            ) : (
-              <p className="mb-0 text-secondary-flv">
-                {votacion.mostrarResultados === 'no publicar'
-                  ? 'Los resultados de esta votación no se publican al público (RN-07).'
-                  : 'Los resultados se publicarán al cierre de la votación (RN-07).'}
-              </p>
-            )}
+            <ResultadosVotacion votacion={votacion} />
           </section>
         </div>
       </div>
@@ -210,9 +202,13 @@ export default function VotacionDetalle() {
         onCerrar={() => setConfirmando(false)}
         pie={
           <>
-            <button className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={confirmar}>
-              <i className="bi bi-check-circle me-1" aria-hidden="true"></i>Confirmar voto
+            <button className="btn btn-outline-secondary" onClick={() => setConfirmando(false)} disabled={enviando}>Cancelar</button>
+            <button className="btn btn-primary" onClick={confirmar} disabled={enviando}>
+              {enviando ? (
+                <><span className="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Registrando voto…</>
+              ) : (
+                <><i className="bi bi-check-circle me-1" aria-hidden="true"></i>Confirmar voto</>
+              )}
             </button>
           </>
         }
