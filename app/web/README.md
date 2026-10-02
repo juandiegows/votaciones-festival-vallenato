@@ -10,7 +10,7 @@ Prototipo navegable (UX/UI) para la **Entrega 1 – Eje 1** del curso *Desarroll
 
 El prototipo respeta los **colores de marca del Festival** (tomados de festivalvallenato.com, revisado el 2 oct 2026): Rojo Festival `#DD3333`, Negro Tarima `#000000` y Dorado Leyenda `#D7AC70`, con secundarios, neutros y colores funcionales para accesibilidad AA. Tipografías **Raleway 800** (títulos) y **Poppins** (texto). No se usa el logo oficial.
 
-- Paleta completa, contrastes y reglas de uso: [`docs/BRANDING.md`](../docs/BRANDING.md)
+- Paleta completa, contrastes y reglas de uso: [`docs/BRANDING.md`](../../docs/BRANDING.md)
 - Tokens CSS: [`src/styles/brand.css`](src/styles/brand.css)
 - Guía interactiva en el prototipo: ruta `#/marca` (enlazada en el pie de página)
 

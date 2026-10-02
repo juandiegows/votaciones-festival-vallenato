@@ -1,3 +1,5 @@
 # app
 
-Aplicación Django + MySQL. Se desarrollará a partir de la Entrega 2.
+Código fuente del sistema.
+
+- [`web/`](web/) — aplicación web (React + Vite + Bootstrap).

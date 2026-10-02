@@ -23,8 +23,8 @@ votaciones-festival-vallenato/
 ├── docs/                 Documentación del proyecto
 │   ├── BRANDING.md       Identidad visual (paleta, tipografías, reglas de uso)
 │   └── entrega-1/        Informe PDF, diagramas y capturas del prototipo
-├── web/                  Aplicación web (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
-├── app/                  Aplicación Django + MySQL (entregas 2 a 4, próximamente)
+├── app/
+│   └── web/              Aplicación web (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
 └── .github/workflows/    Despliegue de la web en GitHub Pages
 ```
 
@@ -38,10 +38,10 @@ votaciones-festival-vallenato/
 ## Web
 
 - **Demo en línea:** https://juandiegows.github.io/votaciones-festival-vallenato/
-- Instrucciones, rutas y credenciales de prueba: [`web/README.md`](web/README.md)
+- Instrucciones, rutas y credenciales de prueba: [`app/web/README.md`](app/web/README.md)
 
 ```bash
-cd web
+cd app/web
 npm install
 npm run dev
 ```
