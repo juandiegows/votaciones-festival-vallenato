@@ -10,11 +10,11 @@ organizada bajo la jerarquía **Edición → Categoría → Votación → Opció
 
 ## Equipo
 
-| Integrante | Rol |
-|---|---|
-| Juan Mejía Maestre | Coordinación y diseño UX/UI |
-| Sebastián Bautista Martínez | Análisis y modelado |
-| María Labarca Briceño | Investigación y documentación |
+| Integrante | Rol | GitHub |
+|---|---|---|
+| Juan Mejía Maestre | Coordinación y diseño UX/UI | [@juandiegows](https://github.com/juandiegows) |
+| Sebastián Bautista Martínez | Análisis y modelado | [@sbautista15](https://github.com/sbautista15) |
+| María Labarca Briceño | Investigación y documentación | [@mlabarca-jpg](https://github.com/mlabarca-jpg) |
 
 ## Estructura del monorepositorio
 
