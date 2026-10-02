@@ -23,9 +23,9 @@ votaciones-festival-vallenato/
 ├── docs/                 Documentación del proyecto
 │   ├── BRANDING.md       Identidad visual (paleta, tipografías, reglas de uso)
 │   └── entrega-1/        Informe PDF, diagramas y capturas del prototipo
-├── prototipo/            Prototipo navegable (React + Vite + Bootstrap, sin backend)
+├── web/                  Aplicación web (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
 ├── app/                  Aplicación Django + MySQL (entregas 2 a 4, próximamente)
-└── .github/workflows/    Despliegue del prototipo en GitHub Pages
+└── .github/workflows/    Despliegue de la web en GitHub Pages
 ```
 
 ## Entregas
@@ -35,13 +35,13 @@ votaciones-festival-vallenato/
 | 1 | Análisis, requerimientos, casos de uso, modelo conceptual y prototipo navegable | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
 | 2 – 4 | Desarrollo con Django (MVT) y MySQL | Pendiente |
 
-## Prototipo
+## Web
 
 - **Demo en línea:** https://juandiegows.github.io/votaciones-festival-vallenato/
-- Instrucciones, rutas y credenciales de prueba: [`prototipo/README.md`](prototipo/README.md)
+- Instrucciones, rutas y credenciales de prueba: [`web/README.md`](web/README.md)
 
 ```bash
-cd prototipo
+cd web
 npm install
 npm run dev
 ```
