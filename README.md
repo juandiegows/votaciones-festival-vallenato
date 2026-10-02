@@ -48,6 +48,23 @@ npm install
 npm run dev
 ```
 
+## Docker (entorno local)
+
+Requiere Docker Desktop. Desde la raíz del repositorio:
+
+```bash
+docker compose up -d --build          # web compilada con nginx  → http://localhost:8095
+docker compose --profile dev up -d    # + modo desarrollo (Vite, recarga en caliente) → http://localhost:5195
+docker compose --profile dev down     # detener todo
+```
+
+| Servicio | Contenedor | URL | Uso |
+|---|---|---|---|
+| `web` | `votaciones_web_local` | http://localhost:8095 | Misma imagen que producción (nginx) |
+| `web-dev` | `votaciones_web_dev` | http://localhost:5195 | Desarrollo: los cambios en `app/web/src` se ven al instante |
+
+El backend (`app/api`, Django REST + MySQL) se agregará al `docker-compose.yml` desde la Entrega 2.
+
 ## Arquitectura
 
 Arquitectura **desacoplada**: el frontend React consume una API REST construida con Django.

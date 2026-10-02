@@ -1,0 +1,38 @@
+# Entorno local con Docker.
+#   docker compose up -d --build        -> web compilada (nginx)       http://localhost:8095
+#   docker compose --profile dev up     -> web en modo desarrollo (Vite, recarga en caliente) http://localhost:5195
+# El backend (app/api, Django REST + MySQL) se agregará aquí desde la Entrega 2.
+name: votaciones-flv
+
+services:
+  web:
+    build:
+      context: ./app/web
+    image: votaciones-flv-web:local
+    container_name: votaciones_web_local
+    ports:
+      - "127.0.0.1:8095:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web-dev:
+    profiles: ["dev"]
+    image: node:22-alpine
+    container_name: votaciones_web_dev
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      VITE_BASE: /
+      CHOKIDAR_USEPOLLING: "true"   # detecta cambios en volúmenes montados desde Windows
+    ports:
+      - "127.0.0.1:5195:5173"
+    volumes:
+      - ./app/web:/app
+      - web_node_modules:/app/node_modules
+
+volumes:
+  web_node_modules:
