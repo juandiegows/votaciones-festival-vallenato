@@ -1,7 +1,7 @@
 # Entorno local con Docker.
 #   docker compose up -d --build        -> web compilada (nginx)       http://localhost:8095
 #   docker compose --profile dev up     -> web en modo desarrollo (Vite, recarga en caliente) http://localhost:5195
-# El backend (app/api, Django REST + MySQL) se agregará aquí desde la Entrega 2.
+#   API Django                        -> http://localhost:8096   (MySQL expuesto en 127.0.0.1:3317)
 name: votaciones-flv
 
 services:
@@ -34,5 +34,48 @@ services:
       - ./app/web:/app
       - web_node_modules:/app/node_modules
 
+  db:
+    image: mysql:8.4
+    container_name: votaciones_db_local
+    environment:
+      MYSQL_DATABASE: votaciones_flv
+      MYSQL_USER: votaciones
+      MYSQL_PASSWORD: votaciones_local
+      MYSQL_ROOT_PASSWORD: root_local
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "127.0.0.1:3317:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -proot_local --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./app/api
+    image: votaciones-flv-api:local
+    container_name: votaciones_api_local
+    environment:
+      DJANGO_SECRET_KEY: dev-local-no-usar-en-produccion
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DB_ENGINE: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: votaciones_flv
+      DB_USER: votaciones
+      DB_PASSWORD: votaciones_local
+    ports:
+      - "127.0.0.1:8096:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   web_node_modules:
+  db_data:
