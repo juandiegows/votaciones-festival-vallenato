@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> Borrador : POST /api/admin/votaciones/
+    Borrador --> Programada : publicar (≥ 2 opciones, RN-06) antes de la apertura
+    Borrador --> Abierta : publicar dentro del periodo
+    Programada --> Abierta : llega fecha_apertura
+    Abierta --> Cerrada : llega fecha_cierre
+    Abierta --> Cerrada : POST cerrar (cierre anticipado)
+    Cerrada --> [*]
+    note right of Abierta : Único estado que acepta votos (RN-03)

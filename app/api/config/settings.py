@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "drf_spectacular",
     "votaciones",
 ]
 
@@ -109,6 +110,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "login": os.getenv("THROTTLE_LOGIN", "10/min"),
         "votar": os.getenv("THROTTLE_VOTAR", "30/min"),
@@ -120,3 +122,23 @@ CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
     "http://localhost:8095,http://localhost:5195,https://votaciones.juandiegows.com,https://juandiegows.github.io",
 )
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API – Sistema Web de Votaciones FLV 2027",
+    "DESCRIPTION": (
+        "API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata 2027 "
+        "(proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → "
+        "Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` "
+        "obtenido en `/api/auth/login/` o `/api/auth/registro/`."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "TAGS": [
+        {"name": "Autenticación", "description": "Registro, inicio y cierre de sesión (RF-01, RF-02)."},
+        {"name": "Consulta pública", "description": "Ediciones, categorías, votaciones y resultados (RF-04 a RF-06, RF-15)."},
+        {"name": "Votación", "description": "Emisión de voto y comprobantes (RF-07 a RF-09)."},
+        {"name": "Administración", "description": "Gestión de ediciones, categorías, votaciones, opciones y resultados (RF-10 a RF-14)."},
+        {"name": "Auditoría", "description": "Registro de acciones administrativas (RF-16, RN-12)."},
+    ],
+}

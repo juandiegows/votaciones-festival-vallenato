@@ -1,0 +1,78 @@
+erDiagram
+    direction LR
+    EDICION ||--|{ CATEGORIA : agrupa
+    CATEGORIA ||--o{ VOTACION : contiene
+    VOTACION ||--|{ OPCION : ofrece
+    VOTACION ||--o{ VOTO : registra
+    OPCION ||--o{ VOTO : recibe
+    USUARIO ||--o{ VOTO : emite
+    USUARIO ||--o{ REGISTRO_AUDITORIA : genera
+    EDICION {
+        bigint id PK
+        varchar nombre
+        smallint anio UK
+        date fecha_inicio
+        date fecha_fin
+        varchar estado "activa | cerrada"
+    }
+    CATEGORIA {
+        bigint id PK
+        bigint edicion_id FK
+        varchar nombre "único por edición"
+        text descripcion
+        varchar icono
+        bool activa
+        smallint orden
+    }
+    VOTACION {
+        bigint id PK
+        bigint categoria_id FK
+        varchar titulo
+        text descripcion
+        datetime fecha_apertura
+        datetime fecha_cierre "mayor que apertura"
+        smallint votos_por_usuario "mínimo 1"
+        varchar visibilidad_resultados "tiempo_real | al_cierre | no_publicar"
+        bool publicada
+        bool cerrada_manualmente
+        bool resultados_publicados
+    }
+    OPCION {
+        bigint id PK
+        bigint votacion_id FK
+        varchar nombre
+        text descripcion
+        varchar imagen
+        varchar enlace_multimedia
+        smallint orden
+        bool activa
+    }
+    USUARIO {
+        bigint id PK
+        varchar email UK
+        varchar password "hash PBKDF2"
+        varchar nombres
+        varchar apellidos
+        varchar rol "votante | administrador"
+        bool acepta_tratamiento_datos
+        datetime fecha_registro
+    }
+    VOTO {
+        bigint id PK
+        bigint usuario_id FK
+        bigint votacion_id FK
+        bigint opcion_id FK
+        datetime fecha_hora
+        varchar codigo_comprobante UK
+        varchar ip
+    }
+    REGISTRO_AUDITORIA {
+        bigint id PK
+        bigint usuario_id FK
+        varchar accion
+        varchar entidad
+        varchar entidad_id
+        json detalle
+        datetime fecha_hora
+        varchar ip
+    }

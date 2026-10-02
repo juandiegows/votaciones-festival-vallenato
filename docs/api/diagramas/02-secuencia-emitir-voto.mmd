@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor V as Votante
+    participant W as Web (React)
+    participant A as API Django (DRF)
+    participant S as servicios.emitir_voto
+    participant DB as MySQL
+    V->>W: Elige una opción y confirma
+    W->>A: POST /api/votaciones/{id}/votar/ {opcion} + Token
+    A->>A: Autentica el token (RN-02) y aplica throttling
+    A->>S: emitir_voto(usuario, votación, opción)
+    S->>DB: SELECT ... FOR UPDATE (bloquea la votación)
+    alt Votación no abierta (RN-03)
+        S-->>A: ReglaNegocioError votacion_no_abierta
+        A-->>W: 409
+    else Opción ajena o inactiva
+        S-->>A: ReglaNegocioError opcion_invalida
+        A-->>W: 400
+    else Límite de votos alcanzado (RN-04)
+        S-->>A: ReglaNegocioError limite_votos
+        A-->>W: 409
+    else Voto válido
+        S->>DB: INSERT voto con código de comprobante único
+        DB-->>S: OK (commit de la transacción)
+        S-->>A: Voto
+        A-->>W: 201 {codigo_comprobante, fecha_hora}
+        W-->>V: Comprobante y mensaje posterior (RN-05)
+    end

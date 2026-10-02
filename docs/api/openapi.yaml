@@ -1,0 +1,1927 @@
+openapi: 3.0.3
+info:
+  title: API – Sistema Web de Votaciones FLV 2027
+  version: 1.0.0
+  description: 'API REST del Sistema Web de Votaciones del Festival de la Leyenda
+    Vallenata 2027 (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición
+    → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization:
+    Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.'
+paths:
+  /api/admin/auditoria/:
+    get:
+      operationId: admin_auditoria_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRegistroAuditoriaList'
+          description: ''
+  /api/admin/auditoria/{id}/:
+    get:
+      operationId: admin_auditoria_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este registro de auditoría.
+        required: true
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroAuditoria'
+          description: ''
+  /api/admin/categorias/:
+    get:
+      operationId: admin_categorias_list
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+          description: ''
+    post:
+      operationId: admin_categorias_create
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+  /api/admin/categorias/{id}/:
+    get:
+      operationId: admin_categorias_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    put:
+      operationId: admin_categorias_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    patch:
+      operationId: admin_categorias_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    delete:
+      operationId: admin_categorias_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/admin/ediciones/:
+    get:
+      operationId: admin_ediciones_list
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edicion'
+          description: ''
+    post:
+      operationId: admin_ediciones_create
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/admin/ediciones/{id}/:
+    get:
+      operationId: admin_ediciones_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    put:
+      operationId: admin_ediciones_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    patch:
+      operationId: admin_ediciones_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    delete:
+      operationId: admin_ediciones_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/admin/opciones/:
+    get:
+      operationId: admin_opciones_list
+      parameters:
+      - in: query
+        name: votacion
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Opcion'
+          description: ''
+    post:
+      operationId: admin_opciones_create
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+  /api/admin/opciones/{id}/:
+    get:
+      operationId: admin_opciones_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    put:
+      operationId: admin_opciones_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    patch:
+      operationId: admin_opciones_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    delete:
+      operationId: admin_opciones_destroy
+      summary: Eliminar (solo sin votos, RN-09)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/admin/votaciones/:
+    get:
+      operationId: admin_votaciones_list
+      parameters:
+      - in: query
+        name: categoria
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Votacion'
+          description: ''
+    post:
+      operationId: admin_votaciones_create
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/admin/votaciones/{id}/:
+    get:
+      operationId: admin_votaciones_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    put:
+      operationId: admin_votaciones_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    patch:
+      operationId: admin_votaciones_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    delete:
+      operationId: admin_votaciones_destroy
+      summary: Eliminar (solo sin votos, RN-09)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/admin/votaciones/{id}/cerrar/:
+    post:
+      operationId: admin_votaciones_cerrar_create
+      summary: Cerrar votación anticipadamente
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/admin/votaciones/{id}/publicar/:
+    post:
+      operationId: admin_votaciones_publicar_create
+      summary: Publicar votación (RN-06)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/admin/votaciones/{id}/publicar-resultados/:
+    post:
+      operationId: admin_votaciones_publicar_resultados_create
+      summary: Publicar u ocultar resultados (RF-15)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/admin/votaciones/{id}/resultados/:
+    get:
+      operationId: admin_votaciones_resultados_retrieve
+      summary: Resultados completos (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resultados'
+          description: ''
+  /api/admin/votaciones/{id}/resultados/csv/:
+    get:
+      operationId: admin_votaciones_resultados_csv_retrieve
+      summary: Exportar resultados en CSV (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: Archivo CSV
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      summary: Iniciar sesión (RF-02)
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRespuesta'
+          description: ''
+        '400':
+          description: Credenciales incorrectas
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      summary: Cerrar sesión (invalida el token)
+      tags:
+      - Autenticación
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/registro/:
+    post:
+      operationId: auth_registro_create
+      summary: Registrar votante (RF-01, RN-10)
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRespuesta'
+          description: ''
+        '400':
+          description: Datos inválidos
+  /api/auth/yo/:
+    get:
+      operationId: auth_yo_retrieve
+      summary: Usuario autenticado
+      tags:
+      - Autenticación
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+  /api/categorias/:
+    get:
+      operationId: categorias_list
+      summary: Categorías activas (RF-04)
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición; por defecto, la edición activa
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+          description: ''
+  /api/categorias/{id}/:
+    get:
+      operationId: categorias_retrieve
+      summary: Detalle de categoría
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+  /api/ediciones/:
+    get:
+      operationId: ediciones_list
+      summary: Listar ediciones
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/ediciones/{id}/:
+    get:
+      operationId: ediciones_retrieve
+      summary: Detalle de edición
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/ediciones/vigente/:
+    get:
+      operationId: ediciones_vigente_retrieve
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/mis-votos/:
+    get:
+      operationId: mis_votos_list
+      summary: Mis votos y comprobantes (RF-09)
+      tags:
+      - Votación
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Voto'
+          description: ''
+  /api/votaciones/:
+    get:
+      operationId: votaciones_list
+      summary: Votaciones publicadas (RF-05)
+      parameters:
+      - in: query
+        name: categoria
+        schema:
+          type: integer
+        description: ID de la categoría
+      - in: query
+        name: estado
+        schema:
+          type: string
+          enum:
+          - abierta
+          - cerrada
+          - programada
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VotacionPublica'
+          description: ''
+  /api/votaciones/{id}/:
+    get:
+      operationId: votaciones_retrieve
+      summary: Detalle con opciones y votos del usuario (RF-06)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotacionDetalle'
+          description: ''
+  /api/votaciones/{id}/resultados/:
+    get:
+      operationId: votaciones_resultados_retrieve
+      summary: Resultados públicos según visibilidad (RF-15, RN-07)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resultados'
+          description: ''
+        '403':
+          description: Aún no son públicos
+  /api/votaciones/{id}/votar/:
+    post:
+      operationId: votaciones_votar_create
+      summary: Emitir voto (RF-07, RF-08; RN-02 a RN-05)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Votación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VotarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VotarRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Voto'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+components:
+  schemas:
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        edicion:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 120
+        descripcion:
+          type: string
+        icono:
+          type: string
+          maxLength: 60
+        activa:
+          type: boolean
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - edicion
+      - id
+      - nombre
+    CategoriaRequest:
+      type: object
+      properties:
+        edicion:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        descripcion:
+          type: string
+        icono:
+          type: string
+          maxLength: 60
+        activa:
+          type: boolean
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - edicion
+      - nombre
+    Edicion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 150
+        anio:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Año
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        estado:
+          $ref: '#/components/schemas/EdicionEstadoEnum'
+      required:
+      - anio
+      - fecha_fin
+      - fecha_inicio
+      - id
+      - nombre
+    EdicionEstadoEnum:
+      enum:
+      - activa
+      - cerrada
+      type: string
+      description: |-
+        * `activa` - Activa
+        * `cerrada` - Cerrada
+    EdicionRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        anio:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Año
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        estado:
+          $ref: '#/components/schemas/EdicionEstadoEnum'
+      required:
+      - anio
+      - fecha_fin
+      - fecha_inicio
+      - nombre
+    ErrorRegla:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Mensaje legible; cita la regla de negocio (RN-xx).
+        codigo:
+          type: string
+          description: votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes
+            · tiene_votos · registros_asociados
+      required:
+      - codigo
+      - detail
+    FilaResultado:
+      type: object
+      properties:
+        opcion_id:
+          type: integer
+        opcion:
+          type: string
+        votos:
+          type: integer
+        porcentaje:
+          type: number
+          format: double
+      required:
+      - opcion
+      - opcion_id
+      - porcentaje
+      - votos
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    Opcion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        votacion:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        enlace_multimedia:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+      required:
+      - id
+      - nombre
+      - votacion
+    OpcionPublica:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        enlace_multimedia:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - nombre
+    OpcionRequest:
+      type: object
+      properties:
+        votacion:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        enlace_multimedia:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+      required:
+      - nombre
+      - votacion
+    PaginatedRegistroAuditoriaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistroAuditoria'
+    PatchedCategoriaRequest:
+      type: object
+      properties:
+        edicion:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        descripcion:
+          type: string
+        icono:
+          type: string
+          maxLength: 60
+        activa:
+          type: boolean
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+    PatchedEdicionRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        anio:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Año
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        estado:
+          $ref: '#/components/schemas/EdicionEstadoEnum'
+    PatchedOpcionRequest:
+      type: object
+      properties:
+        votacion:
+          type: integer
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        enlace_multimedia:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+    PatchedVotacionRequest:
+      type: object
+      properties:
+        categoria:
+          type: integer
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        votos_por_usuario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        visibilidad_resultados:
+          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+    PublicarResultadosRequest:
+      type: object
+      properties:
+        publicar:
+          type: boolean
+          default: true
+    RegistroAuditoria:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        usuario:
+          type: string
+          readOnly: true
+        accion:
+          type: string
+          readOnly: true
+        entidad:
+          type: string
+          readOnly: true
+        entidad_id:
+          type: string
+          readOnly: true
+        detalle:
+          readOnly: true
+        fecha_hora:
+          type: string
+          format: date-time
+          readOnly: true
+        ip:
+          type: string
+          readOnly: true
+          nullable: true
+      required:
+      - accion
+      - detalle
+      - entidad
+      - entidad_id
+      - fecha_hora
+      - id
+      - ip
+      - usuario
+    RegistroRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Correo
+          maxLength: 254
+        nombres:
+          type: string
+          minLength: 1
+          maxLength: 100
+        apellidos:
+          type: string
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        acepta_tratamiento_datos:
+          type: boolean
+      required:
+      - apellidos
+      - email
+      - nombres
+      - password
+    Resultados:
+      type: object
+      properties:
+        votacion_id:
+          type: integer
+        votacion:
+          type: string
+        estado:
+          $ref: '#/components/schemas/ResultadosEstadoEnum'
+        total_votos:
+          type: integer
+        resultados:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilaResultado'
+      required:
+      - estado
+      - resultados
+      - total_votos
+      - votacion
+      - votacion_id
+    ResultadosEstadoEnum:
+      enum:
+      - borrador
+      - programada
+      - abierta
+      - cerrada
+      type: string
+      description: |-
+        * `borrador` - Borrador
+        * `programada` - Programada
+        * `abierta` - Abierta
+        * `cerrada` - Cerrada
+    RolEnum:
+      enum:
+      - votante
+      - administrador
+      type: string
+      description: |-
+        * `votante` - Votante
+        * `administrador` - Administrador
+    TokenRespuesta:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 'Usar como encabezado `Authorization: Token <token>`.'
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+      required:
+      - token
+      - usuario
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo
+        nombres:
+          type: string
+          readOnly: true
+        apellidos:
+          type: string
+          readOnly: true
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+        fecha_registro:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - apellidos
+      - email
+      - fecha_registro
+      - id
+      - nombres
+      - rol
+    VisibilidadResultadosEnum:
+      enum:
+      - tiempo_real
+      - al_cierre
+      - no_publicar
+      type: string
+      description: |-
+        * `tiempo_real` - En tiempo real
+        * `al_cierre` - Al cierre
+        * `no_publicar` - No publicar
+    Votacion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categoria:
+          type: integer
+        titulo:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        votos_por_usuario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        visibilidad_resultados:
+          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        estado:
+          type: string
+          readOnly: true
+        publicada:
+          type: boolean
+          readOnly: true
+        cerrada_manualmente:
+          type: boolean
+          readOnly: true
+        resultados_publicados:
+          type: boolean
+          readOnly: true
+        creada_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizada_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actualizada_en
+      - categoria
+      - cerrada_manualmente
+      - creada_en
+      - estado
+      - fecha_apertura
+      - fecha_cierre
+      - id
+      - publicada
+      - resultados_publicados
+      - titulo
+    VotacionDetalle:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categoria:
+          type: integer
+        categoria_nombre:
+          type: string
+          readOnly: true
+        titulo:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        votos_por_usuario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        visibilidad_resultados:
+          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        estado:
+          type: string
+          readOnly: true
+        opciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpcionPublica'
+          readOnly: true
+        mis_votos:
+          type: integer
+          readOnly: true
+      required:
+      - categoria
+      - categoria_nombre
+      - estado
+      - fecha_apertura
+      - fecha_cierre
+      - id
+      - mis_votos
+      - opciones
+      - titulo
+    VotacionPublica:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categoria:
+          type: integer
+        categoria_nombre:
+          type: string
+          readOnly: true
+        titulo:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        votos_por_usuario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        visibilidad_resultados:
+          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        estado:
+          type: string
+          readOnly: true
+      required:
+      - categoria
+      - categoria_nombre
+      - estado
+      - fecha_apertura
+      - fecha_cierre
+      - id
+      - titulo
+    VotacionRequest:
+      type: object
+      properties:
+        categoria:
+          type: integer
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        votos_por_usuario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        visibilidad_resultados:
+          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+      required:
+      - categoria
+      - fecha_apertura
+      - fecha_cierre
+      - titulo
+    VotarRequest:
+      type: object
+      properties:
+        opcion:
+          type: integer
+          minimum: 1
+      required:
+      - opcion
+    Voto:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        votacion:
+          type: integer
+          readOnly: true
+        votacion_titulo:
+          type: string
+          readOnly: true
+        opcion:
+          type: integer
+          readOnly: true
+        opcion_nombre:
+          type: string
+          readOnly: true
+        fecha_hora:
+          type: string
+          format: date-time
+          readOnly: true
+        codigo_comprobante:
+          type: string
+          readOnly: true
+      required:
+      - codigo_comprobante
+      - fecha_hora
+      - id
+      - opcion
+      - opcion_nombre
+      - votacion
+      - votacion_titulo
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
+tags:
+- name: Autenticación
+  description: Registro, inicio y cierre de sesión (RF-01, RF-02).
+- name: Consulta pública
+  description: Ediciones, categorías, votaciones y resultados (RF-04 a RF-06, RF-15).
+- name: Votación
+  description: Emisión de voto y comprobantes (RF-07 a RF-09).
+- name: Administración
+  description: Gestión de ediciones, categorías, votaciones, opciones y resultados
+    (RF-10 a RF-14).
+- name: Auditoría
+  description: Registro de acciones administrativas (RF-16, RN-12).

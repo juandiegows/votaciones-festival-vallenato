@@ -1,0 +1,24 @@
+flowchart LR
+    subgraph Cliente
+        N["Navegador<br/>móvil · escritorio"]
+    end
+    subgraph CF["Cloudflare (proxy, TLS)"]
+        D1["votaciones.juandiegows.com"]
+    end
+    subgraph VPS["VPS · Docker"]
+        E["edge_nginx<br/>proxy inverso"]
+        WEB["votaciones_web<br/>nginx + build React"]
+        API["votaciones_api<br/>Django + DRF + gunicorn"]
+        DB[("MySQL")]
+    end
+    N --> D1 --> E
+    E -- "/" --> WEB
+    E -- "/api" --> API
+    API --> DB
+    WEB -. "fetch JSON + Token" .-> API
+    classDef c1 fill:#FCE6CC,stroke:#DD3333,color:#1F2421
+    classDef c2 fill:#F6EBD3,stroke:#8A6A2E,color:#1F2421
+    classDef c3 fill:#EFEFEF,stroke:#555555,color:#1F2421
+    class N,D1 c1
+    class E,WEB,API c2
+    class DB c3

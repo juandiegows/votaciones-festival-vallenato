@@ -21,7 +21,8 @@ Entrega 2) → MySQL. En la Entrega 1 la web usa datos simulados en `localStorag
 
 ## Comandos
 - Web: `cd app/web && npm run dev` · `npm run build`
-- Docker local: `docker compose up -d --build` (http://localhost:8095) · `docker compose --profile dev up -d` (http://localhost:5195)
+- API: `cd app/api && python manage.py test votaciones` · esquema: `python manage.py spectacular --file ../../docs/api/openapi.yaml --validate`
+- Docker local: `docker compose up -d --build` (web http://localhost:8095 · API http://localhost:8096/api/docs/) · `docker compose --profile dev up -d` (http://localhost:5195)
 - Producción: https://votaciones.juandiegows.com (VPS, ver skill `desplegar`) · Demo: GitHub Pages.
 
 ## Agentes y skills

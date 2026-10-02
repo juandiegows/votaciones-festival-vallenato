@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
@@ -125,9 +126,11 @@ class VotacionDetalleSerializer(VotacionPublicaSerializer):
     class Meta(VotacionPublicaSerializer.Meta):
         fields = VotacionPublicaSerializer.Meta.fields + ["opciones", "mis_votos"]
 
+    @extend_schema_field(OpcionPublicaSerializer(many=True))
     def get_opciones(self, votacion):
         return OpcionPublicaSerializer(votacion.opciones.filter(activa=True), many=True).data
 
+    @extend_schema_field(serializers.IntegerField())
     def get_mis_votos(self, votacion):
         request = self.context.get("request")
         return votos_del_usuario(request.user, votacion) if request else 0
@@ -154,3 +157,34 @@ class RegistroAuditoriaSerializer(serializers.ModelSerializer):
         model = RegistroAuditoria
         fields = ["id", "usuario", "accion", "entidad", "entidad_id", "detalle", "fecha_hora", "ip"]
         read_only_fields = fields
+
+
+class TokenRespuestaSerializer(serializers.Serializer):
+    token = serializers.CharField(help_text="Usar como encabezado `Authorization: Token <token>`.")
+    usuario = UsuarioSerializer()
+
+
+class ErrorReglaSerializer(serializers.Serializer):
+    detail = serializers.CharField(help_text="Mensaje legible; cita la regla de negocio (RN-xx).")
+    codigo = serializers.CharField(
+        help_text="votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes · tiene_votos · registros_asociados"
+    )
+
+
+class FilaResultadoSerializer(serializers.Serializer):
+    opcion_id = serializers.IntegerField()
+    opcion = serializers.CharField()
+    votos = serializers.IntegerField()
+    porcentaje = serializers.FloatField()
+
+
+class ResultadosSerializer(serializers.Serializer):
+    votacion_id = serializers.IntegerField()
+    votacion = serializers.CharField()
+    estado = serializers.ChoiceField(choices=Votacion.Estado.choices)
+    total_votos = serializers.IntegerField()
+    resultados = FilaResultadoSerializer(many=True)
+
+
+class PublicarResultadosSerializer(serializers.Serializer):
+    publicar = serializers.BooleanField(default=True)

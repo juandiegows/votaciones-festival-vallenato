@@ -4,6 +4,8 @@ from django.db.models import ProtectedError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
@@ -20,10 +22,14 @@ from .permissions import EsAdministrador
 from .serializers import (
     CategoriaSerializer,
     EdicionSerializer,
+    ErrorReglaSerializer,
     LoginSerializer,
     OpcionSerializer,
+    PublicarResultadosSerializer,
     RegistroAuditoriaSerializer,
     RegistroSerializer,
+    ResultadosSerializer,
+    TokenRespuestaSerializer,
     UsuarioSerializer,
     VotacionDetalleSerializer,
     VotacionPublicaSerializer,
@@ -42,6 +48,8 @@ def respuesta_auth(usuario, codigo_http=status.HTTP_200_OK):
     return Response({"token": token.key, "usuario": UsuarioSerializer(usuario).data}, status=codigo_http)
 
 
+@extend_schema(tags=["Autenticación"], summary="Registrar votante (RF-01, RN-10)", request=RegistroSerializer,
+               responses={201: TokenRespuestaSerializer, 400: OpenApiResponse(description="Datos inválidos")})
 class RegistroView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
@@ -54,6 +62,8 @@ class RegistroView(APIView):
         return respuesta_auth(usuario, status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=["Autenticación"], summary="Iniciar sesión (RF-02)", request=LoginSerializer,
+               responses={200: TokenRespuestaSerializer, 400: OpenApiResponse(description="Credenciales incorrectas")})
 class LoginView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
@@ -65,6 +75,7 @@ class LoginView(APIView):
         return respuesta_auth(serializer.validated_data["usuario"])
 
 
+@extend_schema(tags=["Autenticación"], summary="Cerrar sesión (invalida el token)", request=None, responses={204: None})
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -73,6 +84,7 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=["Autenticación"], summary="Usuario autenticado")
 class PerfilView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UsuarioSerializer
@@ -81,6 +93,8 @@ class PerfilView(generics.RetrieveAPIView):
         return self.request.user
 
 
+@extend_schema_view(list=extend_schema(summary="Listar ediciones"), retrieve=extend_schema(summary="Detalle de edición"))
+@extend_schema(tags=["Consulta pública"])
 class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = EdicionSerializer
@@ -94,6 +108,12 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(EdicionSerializer(edicion).data)
 
 
+@extend_schema_view(
+    list=extend_schema(summary="Categorías activas (RF-04)", parameters=[
+        OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la edición activa")]),
+    retrieve=extend_schema(summary="Detalle de categoría"),
+)
+@extend_schema(tags=["Consulta pública"])
 class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = CategoriaSerializer
@@ -106,6 +126,13 @@ class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return consulta.filter(edicion__estado=Edicion.Estado.ACTIVA)
 
 
+@extend_schema_view(
+    list=extend_schema(summary="Votaciones publicadas (RF-05)", parameters=[
+        OpenApiParameter("categoria", OpenApiTypes.INT, description="ID de la categoría"),
+        OpenApiParameter("estado", OpenApiTypes.STR, enum=["programada", "abierta", "cerrada"])]),
+    retrieve=extend_schema(summary="Detalle con opciones y votos del usuario (RF-06)"),
+)
+@extend_schema(tags=["Consulta pública"])
 class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     throttle_scope = None
@@ -129,6 +156,8 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
             votaciones = [v for v in votaciones if v.estado == estado]
         return Response(self.get_serializer(votaciones, many=True).data)
 
+    @extend_schema(tags=["Votación"], summary="Emitir voto (RF-07, RF-08; RN-02 a RN-05)", request=VotarSerializer,
+                   responses={201: VotoSerializer, 400: ErrorReglaSerializer, 409: ErrorReglaSerializer})
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated],
             throttle_classes=[ScopedRateThrottle], throttle_scope="votar")
     def votar(self, request, pk=None):
@@ -143,6 +172,8 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
             return respuesta_regla(error)
         return Response(VotoSerializer(voto).data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(summary="Resultados públicos según visibilidad (RF-15, RN-07)",
+                   responses={200: ResultadosSerializer, 403: OpenApiResponse(description="Aún no son públicos")})
     @action(detail=True)
     def resultados(self, request, pk=None):
         votacion = self.get_object()
@@ -151,6 +182,7 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(servicios.calcular_resultados(votacion))
 
 
+@extend_schema(tags=["Votación"], summary="Mis votos y comprobantes (RF-09)")
 class MisVotosView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = VotoSerializer
@@ -191,6 +223,7 @@ class AuditadoMixin:
         pass
 
 
+@extend_schema(tags=["Administración"])
 class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = EdicionSerializer
@@ -198,6 +231,8 @@ class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     entidad = "edicion"
 
 
+@extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT)]))
+@extend_schema(tags=["Administración"])
 class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = CategoriaSerializer
@@ -209,6 +244,11 @@ class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
         return consulta.filter(edicion_id=edicion) if edicion else consulta
 
 
+@extend_schema_view(
+    list=extend_schema(parameters=[OpenApiParameter("categoria", OpenApiTypes.INT)]),
+    destroy=extend_schema(responses={204: None, 409: ErrorReglaSerializer}, summary="Eliminar (solo sin votos, RN-09)"),
+)
+@extend_schema(tags=["Administración"])
 class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = VotacionSerializer
@@ -222,6 +262,8 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     def validar_eliminacion(self, votacion):
         servicios.validar_eliminacion(votacion)
 
+    @extend_schema(summary="Publicar votación (RN-06)", request=None,
+                   responses={200: VotacionSerializer, 400: ErrorReglaSerializer})
     @action(detail=True, methods=["post"])
     def publicar(self, request, pk=None):
         votacion = self.get_object()
@@ -232,6 +274,7 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         servicios.auditar(request, "publicar", self.entidad, votacion.pk)
         return Response(VotacionSerializer(votacion).data)
 
+    @extend_schema(summary="Cerrar votación anticipadamente", request=None, responses={200: VotacionSerializer})
     @action(detail=True, methods=["post"])
     def cerrar(self, request, pk=None):
         votacion = self.get_object()
@@ -240,6 +283,8 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         servicios.auditar(request, "cerrar", self.entidad, votacion.pk)
         return Response(VotacionSerializer(votacion).data)
 
+    @extend_schema(summary="Publicar u ocultar resultados (RF-15)", request=PublicarResultadosSerializer,
+                   responses={200: VotacionSerializer})
     @action(detail=True, methods=["post"], url_path="publicar-resultados")
     def publicar_resultados(self, request, pk=None):
         votacion = self.get_object()
@@ -250,10 +295,13 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         )
         return Response(VotacionSerializer(votacion).data)
 
+    @extend_schema(summary="Resultados completos (RF-14)", responses={200: ResultadosSerializer})
     @action(detail=True)
     def resultados(self, request, pk=None):
         return Response(servicios.calcular_resultados(self.get_object()))
 
+    @extend_schema(summary="Exportar resultados en CSV (RF-14)",
+                   responses={(200, "text/csv"): OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo CSV")})
     @action(detail=True, url_path="resultados/csv")
     def resultados_csv(self, request, pk=None):
         votacion = self.get_object()
@@ -271,6 +319,11 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         return respuesta
 
 
+@extend_schema_view(
+    list=extend_schema(parameters=[OpenApiParameter("votacion", OpenApiTypes.INT)]),
+    destroy=extend_schema(responses={204: None, 409: ErrorReglaSerializer}, summary="Eliminar (solo sin votos, RN-09)"),
+)
+@extend_schema(tags=["Administración"])
 class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = OpcionSerializer
@@ -289,6 +342,7 @@ class PaginacionAuditoria(PageNumberPagination):
     page_size = 50
 
 
+@extend_schema(tags=["Auditoría"])
 class AdminAuditoriaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = RegistroAuditoriaSerializer
