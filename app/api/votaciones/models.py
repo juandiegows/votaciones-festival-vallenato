@@ -2,6 +2,20 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
+from django.utils.text import slugify
+
+
+def slug_unico(consulta, texto, max_length, excluir_pk=None):
+    """Slug sin tildes a partir de `texto`, único dentro de `consulta` (agrega -2, -3… si se repite)."""
+    base = (slugify(texto) or "item")[:max_length].strip("-")
+    if excluir_pk is not None:
+        consulta = consulta.exclude(pk=excluir_pk)
+    candidato, n = base, 2
+    while consulta.filter(slug=candidato).exists():
+        sufijo = f"-{n}"
+        candidato = f"{base[: max_length - len(sufijo)]}{sufijo}"
+        n += 1
+    return candidato
 
 
 class UsuarioManager(BaseUserManager):
@@ -92,6 +106,9 @@ class Edicion(models.Model):
 class Categoria(models.Model):
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="categorias")
     nombre = models.CharField(max_length=120)
+    slug = models.SlugField(
+        max_length=120, blank=True, help_text="Identificador para la URL pública; se genera desde el nombre si se deja vacío."
+    )
     descripcion = models.TextField(blank=True)
     icono = models.CharField(max_length=60, blank=True)
     activa = models.BooleanField(default=True)
@@ -104,10 +121,16 @@ class Categoria(models.Model):
         verbose_name_plural = "categorías"
         constraints = [
             models.UniqueConstraint(fields=["edicion", "nombre"], name="categoria_nombre_unico_por_edicion"),
+            models.UniqueConstraint(fields=["edicion", "slug"], name="categoria_slug_unico_por_edicion"),
         ]
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slug_unico(Categoria.objects.filter(edicion_id=self.edicion_id), self.nombre, 120, self.pk)
+        super().save(*args, **kwargs)
 
 
 class Votacion(models.Model):
@@ -124,6 +147,9 @@ class Votacion(models.Model):
 
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField(max_length=150)
+    slug = models.SlugField(
+        max_length=150, blank=True, help_text="Identificador para la URL pública; se genera desde el título si se deja vacío."
+    )
     descripcion = models.TextField(blank=True)
     imagen = models.URLField(blank=True)
     fecha_apertura = models.DateTimeField()
@@ -148,10 +174,16 @@ class Votacion(models.Model):
                 condition=Q(fecha_cierre__gt=F("fecha_apertura")), name="votacion_cierre_posterior_apertura"
             ),
             models.CheckConstraint(condition=Q(votos_por_usuario__gte=1), name="votacion_minimo_un_voto"),
+            models.UniqueConstraint(fields=["categoria", "slug"], name="votacion_slug_unico_por_categoria"),
         ]
 
     def __str__(self):
         return self.titulo
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slug_unico(Votacion.objects.filter(categoria_id=self.categoria_id), self.titulo, 150, self.pk)
+        super().save(*args, **kwargs)
 
     def estado_en(self, momento=None):
         momento = momento or timezone.now()
@@ -173,7 +205,9 @@ class Opcion(models.Model):
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     imagen = models.URLField(blank=True)
-    enlace_multimedia = models.URLField(blank=True)
+    enlace_multimedia = models.CharField(
+        max_length=300, blank=True, help_text="URL absoluta http(s) o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/x.mp3)."
+    )
     orden = models.PositiveSmallIntegerField(default=0)
     activa = models.BooleanField(default=True)
 
