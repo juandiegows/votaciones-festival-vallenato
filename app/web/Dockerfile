@@ -4,7 +4,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ENV VITE_BASE=/
+# VITE_API_URL vacío = modo de datos simulados; /api = API Django en el mismo dominio
+ARG VITE_API_URL=""
+ENV VITE_BASE=/ VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 FROM nginx:1.27-alpine

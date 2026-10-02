@@ -8,6 +8,8 @@ services:
   web:
     build:
       context: ./app/web
+      args:
+        VITE_API_URL: http://localhost:8096/api
     image: votaciones-flv-web:local
     container_name: votaciones_web_local
     ports:
@@ -27,6 +29,7 @@ services:
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
       VITE_BASE: /
+      VITE_API_URL: http://localhost:8096/api
       CHOKIDAR_USEPOLLING: "true"   # detecta cambios en volúmenes montados desde Windows
     ports:
       - "127.0.0.1:5195:5173"

@@ -32,6 +32,9 @@ jobs:
           cache-dependency-path: app/web/package-lock.json
       - run: npm ci
       - run: npm run build
+        env:
+          # Los datos (incluidos los de prueba) vienen de la API y la base de datos de la VPS
+          VITE_API_URL: https://votaciones.juandiegows.com/api
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

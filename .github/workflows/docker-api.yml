@@ -1,11 +1,11 @@
-name: Imagen Docker de la web (VPS)
+name: Imagen Docker de la API (VPS)
 
 on:
   push:
     branches: [main]
     paths:
-      - "app/web/**"
-      - ".github/workflows/docker-web.yml"
+      - "app/api/**"
+      - ".github/workflows/docker-api.yml"
   workflow_dispatch:
 
 permissions:
@@ -25,12 +25,10 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
-          context: app/web
+          context: app/api
           push: true
-          build-args: |
-            VITE_API_URL=/api
           tags: |
-            ghcr.io/juandiegows/votaciones-festival-vallenato-web:latest
-            ghcr.io/juandiegows/votaciones-festival-vallenato-web:${{ github.sha }}
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,mode=max,scope=web
+            ghcr.io/juandiegows/votaciones-festival-vallenato-api:latest
+            ghcr.io/juandiegows/votaciones-festival-vallenato-api:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
