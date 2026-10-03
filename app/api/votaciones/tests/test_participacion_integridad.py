@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from PIL import Image
 
-from votaciones.models import Opcion, RegistroAuditoria, Usuario, Votacion, Voto
+from votaciones.models import Opcion, RegistroAuditoria, Usuario, Voto
 
 from .base import BaseAPITest
 

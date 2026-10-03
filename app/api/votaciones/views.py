@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
-from rest_framework import generics, mixins, status, viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -51,6 +51,33 @@ from .serializers import (
     VotoAdminSerializer,
     VotoSerializer,
 )
+
+
+def filtrar_por_id(consulta, campo, valor):
+    """Filtra por un ID recibido en la URL; un valor no numérico devuelve una lista vacía en lugar de un error 500."""
+    if not valor:
+        return consulta
+    return consulta.filter(**{campo: int(valor)}) if valor.isdigit() else consulta.none()
+
+
+def edicion_activa():
+    return Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+
+
+def valor_publicar(request):
+    """Lee {"publicar": bool} validado: con bool() el texto "false" contaría como verdadero."""
+    serializer = PublicarResultadosSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return serializer.validated_data["publicar"]
+
+
+# Una celda que empieza por estos caracteres se ejecuta como fórmula al abrir el CSV en Excel o LibreOffice
+INICIO_FORMULA = ("=", "+", "-", "@", "\t", "\r")
+
+
+def celda_csv(valor):
+    texto = str(valor)
+    return f"'{texto}" if texto.startswith(INICIO_FORMULA) else texto
 
 
 def respuesta_regla(error):
@@ -151,7 +178,7 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False)
     def vigente(self, request):
-        edicion = Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+        edicion = edicion_activa()
         if not edicion:
             return Response({"detail": "No hay una edición activa."}, status=status.HTTP_404_NOT_FOUND)
         return Response(EdicionSerializer(edicion).data)
@@ -173,9 +200,9 @@ class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         edicion = self.request.query_params.get("edicion")
         anio = self.request.query_params.get("anio")
         if edicion:
-            return consulta.filter(edicion_id=edicion)
+            return filtrar_por_id(consulta, "edicion_id", edicion)
         if anio:
-            return consulta.filter(edicion__anio=anio)
+            return filtrar_por_id(consulta, "edicion__anio", anio)
         return consulta.filter(edicion__estado=Edicion.Estado.ACTIVA)
 
 
@@ -191,19 +218,17 @@ class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 @extend_schema(tags=["Consulta pública"])
 class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
-    throttle_scope = None
+    throttle_scope = None  # la acción «votar» lo define; DRF solo acepta en @action atributos que existan en la clase
 
     def get_queryset(self):
+        parametros = self.request.query_params
         consulta = Votacion.objects.filter(publicada=True, categoria__activa=True).select_related(
             "categoria__edicion"
         )
-        filtros = {
-            "categoria_id": self.request.query_params.get("categoria"),
-            "categoria__edicion__anio": self.request.query_params.get("anio"),
-            "categoria__slug": self.request.query_params.get("categoria_slug"),
-            "slug": self.request.query_params.get("slug"),
-        }
-        return consulta.filter(**{campo: valor for campo, valor in filtros.items() if valor})
+        consulta = filtrar_por_id(consulta, "categoria_id", parametros.get("categoria"))
+        consulta = filtrar_por_id(consulta, "categoria__edicion__anio", parametros.get("anio"))
+        textos = {"categoria__slug": parametros.get("categoria_slug"), "slug": parametros.get("slug")}
+        return consulta.filter(**{campo: valor for campo, valor in textos.items() if valor})
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "por_ruta"):
@@ -276,8 +301,7 @@ class OpcionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         consulta = Opcion.objects.filter(activa=True, votacion__publicada=True, votacion__categoria__activa=True)
-        votacion = self.request.query_params.get("votacion")
-        return consulta.filter(votacion_id=votacion) if votacion else consulta
+        return filtrar_por_id(consulta, "votacion_id", self.request.query_params.get("votacion"))
 
 
 @extend_schema(tags=["Votación"], summary="Mis votos y comprobantes (RF-09)")
@@ -359,7 +383,7 @@ class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="publicar-resultados")
     def publicar_resultados(self, request, pk=None):
         edicion = self.get_object()
-        publicar = bool(request.data.get("publicar", True))
+        publicar = valor_publicar(request)
         actualizadas = Votacion.objects.filter(categoria__edicion=edicion).update(resultados_publicados=publicar)
         servicios.auditar(request, "publicar_resultados", self.entidad, edicion.pk, {"publicar": publicar, "votaciones": actualizadas})
         return Response({"publicar": publicar, "actualizadas": actualizadas})
@@ -380,8 +404,7 @@ class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         consulta = Categoria.objects.select_related("edicion")
-        edicion = self.request.query_params.get("edicion")
-        return consulta.filter(edicion_id=edicion) if edicion else consulta
+        return filtrar_por_id(consulta, "edicion_id", self.request.query_params.get("edicion"))
 
 
 @extend_schema_view(
@@ -397,8 +420,7 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         consulta = Votacion.objects.select_related("categoria__edicion")
-        categoria = self.request.query_params.get("categoria")
-        return consulta.filter(categoria_id=categoria) if categoria else consulta
+        return filtrar_por_id(consulta, "categoria_id", self.request.query_params.get("categoria"))
 
     def validar_eliminacion(self, votacion):
         servicios.validar_eliminacion(votacion)
@@ -451,7 +473,7 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="publicar-resultados")
     def publicar_resultados(self, request, pk=None):
         votacion = self.get_object()
-        votacion.resultados_publicados = bool(request.data.get("publicar", True))
+        votacion.resultados_publicados = valor_publicar(request)
         votacion.save(update_fields=["resultados_publicados", "actualizada_en"])
         servicios.auditar(
             request, "publicar_resultados", self.entidad, votacion.pk, {"publicar": votacion.resultados_publicados}
@@ -476,7 +498,7 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         escritor = csv.writer(respuesta)
         escritor.writerow(["Opción", "Votos", "Porcentaje"])
         for fila in datos["resultados"]:
-            escritor.writerow([fila["opcion"], fila["votos"], fila["porcentaje"]])
+            escritor.writerow([celda_csv(fila["opcion"]), fila["votos"], fila["porcentaje"]])
         escritor.writerow(["Total", datos["total_votos"], 100 if datos["total_votos"] else 0])
         servicios.auditar(request, "exportar_resultados", self.entidad, votacion.pk)
         return respuesta
@@ -494,9 +516,7 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     campos_archivo = ("audio",)
 
     def get_queryset(self):
-        consulta = Opcion.objects.all()
-        votacion = self.request.query_params.get("votacion")
-        return consulta.filter(votacion_id=votacion) if votacion else consulta
+        return filtrar_por_id(Opcion.objects.all(), "votacion_id", self.request.query_params.get("votacion"))
 
     def validar_eliminacion(self, opcion):
         servicios.validar_eliminacion(opcion)
@@ -513,9 +533,7 @@ class AdminVotoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = VotoAdminSerializer
 
     def get_queryset(self):
-        consulta = Voto.objects.all()
-        votacion = self.request.query_params.get("votacion")
-        return consulta.filter(votacion_id=votacion) if votacion else consulta
+        return filtrar_por_id(Voto.objects.all(), "votacion_id", self.request.query_params.get("votacion"))
 
 
 @extend_schema_view(
@@ -541,7 +559,7 @@ class SitioView(APIView):
 
     def get(self, request):
         configuracion = ConfiguracionSitio.obtener()
-        activa = Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+        activa = edicion_activa()
         total = Voto.objects.filter(votacion__categoria__edicion=activa).count() if configuracion.mostrar_total_votos and activa else None
         return Response({
             "total_votos": total,
@@ -549,7 +567,7 @@ class SitioView(APIView):
             "redes": RedSocialSerializer(RedSocial.objects.filter(activa=True), many=True).data,
             # Solo los banners de la edición activa (la más reciente si hubiera varias)
             "banners": BannerInicioSerializer(
-                BannerInicio.objects.filter(activo=True, edicion=Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()),
+                BannerInicio.objects.filter(activo=True, edicion=activa),
                 many=True,
             ).data,
             "revistas": RevistaSerializer(Revista.objects.filter(activa=True), many=True).data,
@@ -564,21 +582,11 @@ class AdminBannerViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = BannerInicioSerializer
     entidad = "banner"
+    campos_archivo = ("imagen",)
 
     def get_queryset(self):
         consulta = BannerInicio.objects.select_related("edicion")
-        edicion = self.request.query_params.get("edicion")
-        return consulta.filter(edicion_id=edicion) if edicion else consulta
-
-    def perform_update(self, serializer):
-        anterior = serializer.instance.imagen.name
-        super().perform_update(serializer)
-        if anterior and anterior != serializer.instance.imagen.name:
-            serializer.instance.imagen.storage.delete(anterior)
-
-    def eliminar(self, banner):
-        banner.imagen.delete(save=False)
-        banner.delete()
+        return filtrar_por_id(consulta, "edicion_id", self.request.query_params.get("edicion"))
 
 
 @extend_schema(tags=["Administración"])
@@ -663,7 +671,7 @@ class AdminAuditoriaViewSet(viewsets.ReadOnlyModelViewSet):
         if edicion_id:
             edicion = get_object_or_404(Edicion, pk=int(edicion_id) if edicion_id.isdigit() else -1)
         else:
-            edicion = Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+            edicion = edicion_activa()
             if not edicion:
                 return Response({"detail": "No hay una edición activa."}, status=status.HTTP_404_NOT_FOUND)
         return Response(servicios.verificar_integridad(edicion))
