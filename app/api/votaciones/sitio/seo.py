@@ -47,11 +47,11 @@ def entradas_sitemap():
                 v for v in Votacion.objects.filter(categoria=categoria, publicada=True).order_by("fecha_apertura")
                 if _cerrada_visible(v, dias, ahora)
             ]
-            ultima = max((v.actualizada_en for v in votaciones), default=None)
+            ultima = max((v.actualizado_en for v in votaciones), default=None)
             entradas.append((ruta_categoria, ultima, "daily", "0.8"))
             for votacion in votaciones:
                 frecuencia = "hourly" if votacion.estado_en(ahora) == Votacion.Estado.ABIERTA else "weekly"
-                entradas.append((f"{ruta_categoria}/{votacion.slug}", votacion.actualizada_en, frecuencia, "0.7"))
+                entradas.append((f"{ruta_categoria}/{votacion.slug}", votacion.actualizado_en, frecuencia, "0.7"))
     return entradas
 
 

@@ -1,9 +1,10 @@
 from django.db import models
 
+from ..comun.models import ModeloTrazable
 from ..votacion.models import Edicion
 
 
-class BannerInicio(models.Model):
+class BannerInicio(ModeloTrazable):
     # El inicio solo muestra los banners de la edición activa
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="banners")
     # Título y subtítulo opcionales: sin textos la imagen se muestra completa, sin capa oscura encima
@@ -26,7 +27,7 @@ class BannerInicio(models.Model):
         return self.titulo or self.texto_alternativo
 
 
-class Revista(models.Model):
+class Revista(ModeloTrazable):
     """Revista institucional en PDF: el inicio la muestra como un libro que se hojea."""
 
     titulo = models.CharField(max_length=150)
@@ -46,7 +47,7 @@ class Revista(models.Model):
         return self.titulo
 
 
-class ConfiguracionSitio(models.Model):
+class ConfiguracionSitio(ModeloTrazable):
     """Datos de contacto del pie de página y modo del banner del inicio (un único registro, pk=1)."""
 
     class ModoBanner(models.TextChoices):
@@ -87,7 +88,7 @@ class ConfiguracionSitio(models.Model):
         return cls.objects.get_or_create(pk=1)[0]
 
 
-class RedSocial(models.Model):
+class RedSocial(ModeloTrazable):
     class Icono(models.TextChoices):
         FACEBOOK = "facebook", "Facebook"
         TWITTER_X = "twitter-x", "X"

@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from ..comun.admin import TrazableAdmin
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
 
 
@@ -9,18 +10,18 @@ class OpcionInline(admin.TabularInline):
 
 
 @admin.register(Edicion)
-class EdicionAdmin(admin.ModelAdmin):
+class EdicionAdmin(TrazableAdmin):
     list_display = ["nombre", "anio", "fecha_inicio", "fecha_fin", "estado"]
 
 
 @admin.register(Categoria)
-class CategoriaAdmin(admin.ModelAdmin):
+class CategoriaAdmin(TrazableAdmin):
     list_display = ["nombre", "edicion", "activa", "orden"]
     list_filter = ["edicion", "activa"]
 
 
 @admin.register(Votacion)
-class VotacionAdmin(admin.ModelAdmin):
+class VotacionAdmin(TrazableAdmin):
     list_display = ["titulo", "categoria", "fecha_apertura", "fecha_cierre", "publicada", "estado"]
     list_filter = ["categoria__edicion", "categoria", "publicada"]
     inlines = [OpcionInline]

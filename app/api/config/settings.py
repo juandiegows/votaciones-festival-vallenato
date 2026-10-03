@@ -60,6 +60,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Usuario actual para las columnas de soporte (creado_por / actualizado_por) de ModeloTrazable
+    "votaciones.comun.contexto.UsuarioActualMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

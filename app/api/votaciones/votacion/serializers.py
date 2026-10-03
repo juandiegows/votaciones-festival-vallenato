@@ -89,6 +89,9 @@ class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
     visibilidad_efectiva = serializers.CharField(read_only=True)
     votos_efectivos = serializers.IntegerField(source="votos_por_usuario_efectivo", read_only=True)
     pausada = serializers.BooleanField(read_only=True)
+    # Nombres públicos del contrato; en la tabla son las columnas de soporte de ModeloTrazable
+    creada_en = serializers.DateTimeField(source="creado_en", read_only=True)
+    actualizada_en = serializers.DateTimeField(source="actualizado_en", read_only=True)
 
     class Meta:
         model = Votacion
@@ -100,7 +103,7 @@ class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
             "estado", "publicada", "cerrada_manualmente",
             "resultados_publicados", "creada_en", "actualizada_en",
         ]
-        read_only_fields = ["publicada", "cerrada_manualmente", "resultados_publicados", "creada_en", "actualizada_en"]
+        read_only_fields = ["publicada", "cerrada_manualmente", "resultados_publicados"]
         extra_kwargs = {"slug": {"required": False}}
 
     def validate_icono_imagen(self, archivo):

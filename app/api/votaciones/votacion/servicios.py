@@ -65,7 +65,7 @@ def publicar_votacion(votacion):
             codigo="opciones_insuficientes",
         )
     votacion.publicada = True
-    votacion.save(update_fields=["publicada", "actualizada_en"])
+    votacion.save(update_fields=["publicada"])
     return votacion
 
 
@@ -78,20 +78,20 @@ def despublicar_votacion(votacion):
             status=409,
         )
     votacion.publicada = False
-    votacion.save(update_fields=["publicada", "actualizada_en"])
+    votacion.save(update_fields=["publicada"])
     return votacion
 
 
 def cerrar_votacion(votacion):
     """Cierre anticipado: la votación deja de recibir votos aunque no haya llegado su fecha de cierre."""
     votacion.cerrada_manualmente = True
-    votacion.save(update_fields=["cerrada_manualmente", "actualizada_en"])
+    votacion.save(update_fields=["cerrada_manualmente"])
     return votacion
 
 
 def publicar_resultados_votacion(votacion, publicar):
     votacion.resultados_publicados = publicar
-    votacion.save(update_fields=["resultados_publicados", "actualizada_en"])
+    votacion.save(update_fields=["resultados_publicados"])
     return votacion
 
 

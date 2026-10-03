@@ -6,9 +6,10 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from ..comun.consultas import slug_unico
+from ..comun.models import ModeloTrazable
 
 
-class Edicion(models.Model):
+class Edicion(ModeloTrazable):
     class Estado(models.TextChoices):
         ACTIVA = "activa", "Activa"
         CERRADA = "cerrada", "Cerrada"
@@ -54,7 +55,7 @@ class Edicion(models.Model):
         return self.nombre
 
 
-class Categoria(models.Model):
+class Categoria(ModeloTrazable):
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="categorias")
     nombre = models.CharField(max_length=120)
     slug = models.SlugField(
@@ -87,7 +88,7 @@ class Categoria(models.Model):
         super().save(*args, **kwargs)
 
 
-class Votacion(models.Model):
+class Votacion(ModeloTrazable):
     class Estado(models.TextChoices):
         BORRADOR = "borrador", "Borrador"
         PROGRAMADA = "programada", "Programada"
@@ -135,8 +136,6 @@ class Votacion(models.Model):
     publicada = models.BooleanField(default=False)
     cerrada_manualmente = models.BooleanField(default=False)
     resultados_publicados = models.BooleanField(default=False)
-    creada_en = models.DateTimeField(auto_now_add=True)
-    actualizada_en = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "votacion"
@@ -190,7 +189,7 @@ class Votacion(models.Model):
         return self.categoria.edicion.visibilidad_resultados
 
 
-class Opcion(models.Model):
+class Opcion(ModeloTrazable):
     votacion = models.ForeignKey(Votacion, on_delete=models.PROTECT, related_name="opciones")
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
