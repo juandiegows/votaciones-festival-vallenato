@@ -12,6 +12,7 @@ const ENLACES = [
   { to: '/panel/banner', label: 'Banner de inicio', icono: 'images', porEdicion: true },
   { to: '/panel/revista', label: 'Revista', icono: 'book' },
   { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
+  { to: '/panel/configuracion', label: 'Configuración', icono: 'gear', porEdicion: true },
   { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
 ];
 
@@ -40,9 +41,9 @@ function SelectorEdicion() {
 export default function AdminLayout() {
   return (
     <EdicionAdminProvider>
-      <div className="container-xl py-4">
-        <div className="row g-4">
-          <div className="col-lg-2">
+      <div className="container-fluid panel-ancho py-4">
+        <div className="panel-admin">
+          <aside className="panel-admin-menu">
             <nav aria-label="Menú de administración" className="card-flv p-2 admin-nav">
               <SelectorEdicion />
               <p className="small fw-semibold text-secondary-flv px-2 pt-1 mb-1 d-none d-lg-block">Administración</p>
@@ -56,8 +57,8 @@ export default function AdminLayout() {
                 ))}
               </ul>
             </nav>
-          </div>
-          <div className="col-lg-10">
+          </aside>
+          <div className="panel-admin-contenido">
             <Outlet />
           </div>
         </div>

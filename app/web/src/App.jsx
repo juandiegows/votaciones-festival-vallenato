@@ -22,6 +22,7 @@ import AdminEdiciones from './pages/admin/AdminEdiciones.jsx';
 import AdminAuditoria from './pages/admin/AdminAuditoria.jsx';
 import AdminBanner from './pages/admin/AdminBanner.jsx';
 import AdminSitio from './pages/admin/AdminSitio.jsx';
+import AdminConfiguracion from './pages/admin/AdminConfiguracion.jsx';
 import AdminRevista from './pages/admin/AdminRevista.jsx';
 
 // Las rutas fijas (registro, login, admin…) tienen prioridad sobre /:anio. La web nunca usa
@@ -53,6 +54,9 @@ export default function App() {
           <Route path="banner" element={<AdminBanner />} />
           <Route path="revista" element={<AdminRevista />} />
           <Route path="sitio" element={<AdminSitio />} />
+          <Route path="configuracion" element={<AdminConfiguracion />} />
+          {/* /panel/{sección}/configuracion u otra ruta desconocida del panel → la pantalla correcta */}
+          <Route path=":seccion/configuracion" element={<Navigate to="/panel/configuracion" replace />} />
           <Route path="marca" element={<Marca />} />
         </Route>
         {/* URL amigables por edición: /{año}/categorias/{categoría}/{votación} */}

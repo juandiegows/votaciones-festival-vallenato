@@ -32,7 +32,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-flv sticky-top" aria-label="Navegación principal">
-      <div className="container">
+      <div className={location.pathname.startsWith('/panel') ? 'container-fluid panel-ancho' : 'container'}>
         <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
           <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
             <rect width="64" height="64" rx="14" fill="#DD3333" />

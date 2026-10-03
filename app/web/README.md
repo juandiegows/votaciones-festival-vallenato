@@ -115,7 +115,7 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/registro` | Registro | RF-01, RN-10 |
 | `/login` | Inicio de sesión + recuperar contraseña (simulado) | RF-02, RF-03 |
 | `/{año}` (p. ej. `/2027`) | Categorías de la edición | RF-04 |
-| `/{año}/categorias/{categoría}` (p. ej. `/2027/categorias/musica`) | Votaciones de la categoría: programadas, abiertas y cerradas hasta N días después del cierre (N en `/panel/sitio`) | RF-05 |
+| `/{año}/categorias/{categoría}` (p. ej. `/2027/categorias/musica`) | Votaciones de la categoría: programadas, abiertas y cerradas hasta N días después del cierre (N en `/panel/configuracion`) | RF-05 |
 | `/{año}/categorias/{categoría}/{votación}` (p. ej. `/2027/categorias/musica/cancion-favorita-del-publico`) | Detalle, muestras multimedia y confirmación del voto | RF-06, RF-07 |
 | `/{año}/categorias/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
 | `/categorias` | Redirige a `/{año de la edición activa}` | — |
@@ -129,6 +129,7 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/panel/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
 | `/panel/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
 | `/panel/sitio` | Contacto y redes sociales del pie de página | — |
+| `/panel/configuracion` | Configuración del sitio público: visibilidad de resultados de la edición (cada votación puede personalizarla), días que siguen visibles las votaciones cerradas, presentación de categorías y modo del banner | RF-15, RN-07 |
 | `/panel/marca` | Guía de identidad visual (solo administrador; `/marca` redirige aquí) | — |
 
 Las rutas anteriores con ID (`/categorias/:id`, `/votaciones/:id`, `/votaciones/:id/comprobante`) redirigen a la URL

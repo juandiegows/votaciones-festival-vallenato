@@ -406,3 +406,43 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
   .revista-indicador { order: -1; flex: 1 0 100%; min-width: 0; }
   .revista-separador { display: none; }
 }
+
+/* ---------- Panel de administración a todo el ancho ---------- */
+.panel-ancho { max-width: 1800px; padding-inline: 1rem; }
+@media (min-width: 1400px) { .panel-ancho { padding-inline: 2rem; } }
+.panel-admin { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+.panel-admin-menu, .panel-admin-contenido { min-width: 0; }
+@media (min-width: 992px) {
+  .panel-admin { grid-template-columns: 15rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+  .panel-admin-menu { position: sticky; top: 5.5rem; }
+}
+.badge-ilustrativo { white-space: normal; text-align: start; }
+
+/* ---------- Configuración del panel ---------- */
+.configuracion-admin { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (min-width: 768px) { .configuracion-admin { grid-template-columns: 15rem minmax(0, 1fr); gap: 1.5rem; } }
+/* Móvil: franja deslizable sin barra visible; escritorio: columna sin desplazamiento */
+.config-secciones { overflow-x: auto; scrollbar-width: none; }
+.config-secciones::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+  .config-secciones { overflow: visible; }
+  .config-secciones .nav-link { width: 100%; }
+}
+.config-secciones .nav-link { color: var(--flv-negro); border-radius: .5rem; font-weight: 600; white-space: nowrap; text-align: start; }
+.config-secciones .nav-link:hover:not(.active) { background: var(--flv-crema); }
+.config-secciones .nav-link.active { background: var(--flv-crema); color: var(--flv-rojo-hover); box-shadow: inset 3px 0 0 var(--flv-rojo); }
+.fila-config { padding: 1.1rem 0; border-top: 1px solid var(--flv-gris-borde); }
+.estado-config { min-height: 1.25rem; }
+.opcion-config {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; height: 100%;
+  padding: .9rem .75rem; text-align: center; cursor: pointer; border: 1px solid var(--flv-gris-borde); border-radius: .6rem;
+  background: var(--flv-blanco); color: var(--flv-negro); transition: border-color .15s, background .15s;
+}
+.opcion-config .bi { font-size: 1.25rem; }
+.opcion-config:hover { border-color: var(--flv-dorado); }
+.btn-check:checked + .opcion-config { background: var(--flv-negro); border-color: var(--flv-negro); color: #fff; }
+.btn-check:checked + .opcion-config .opcion-config-desc { color: rgba(255,255,255,.8); }
+.btn-check:checked + .opcion-config .bi { color: var(--flv-dorado); }
+.btn-check:focus-visible + .opcion-config { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
+.btn-check:disabled + .opcion-config { opacity: .65; cursor: default; }
+.opcion-config-desc { color: var(--flv-gris-texto); line-height: 1.3; }
