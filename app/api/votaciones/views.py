@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from . import correo, servicios
+from . import correo, cuentas, servicios
 from .models import (
     BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Revista, Usuario, Votacion, Voto,
 )
@@ -28,6 +28,7 @@ from .serializers import (
     RevistaSerializer,
     SitioSerializer,
     CategoriaSerializer,
+    ConfirmarCorreoSerializer,
     EdicionSerializer,
     ErrorReglaSerializer,
     IntegridadSerializer,
@@ -72,8 +73,42 @@ class RegistroView(APIView):
         serializer = RegistroSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = serializer.save()
-        correo.enviar_al_confirmar(correo.enviar_bienvenida, usuario)
+        # La bienvenida sale cuando confirme el correo; hasta entonces puede navegar pero no votar
+        cuentas.enviar_confirmacion(usuario)
         return respuesta_auth(usuario, status.HTTP_201_CREATED)
+
+
+@extend_schema(tags=["Autenticación"], summary="Confirmar el correo con el enlace recibido",
+               request=ConfirmarCorreoSerializer,
+               responses={200: UsuarioSerializer, 400: ErrorReglaSerializer})
+class ConfirmarCorreoView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "confirmacion"
+
+    def post(self, request):
+        serializer = ConfirmarCorreoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            usuario, _ = cuentas.confirmar_correo(serializer.validated_data["token"])
+        except cuentas.TokenInvalido as error:
+            return Response({"detail": error.mensaje, "codigo": error.codigo}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(UsuarioSerializer(usuario).data)
+
+
+@extend_schema(tags=["Autenticación"], summary="Reenviar el correo de confirmación", request=None,
+               responses={202: OpenApiResponse(description="Correo programado"), 409: ErrorReglaSerializer})
+class ReenviarConfirmacionView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "confirmacion"
+
+    def post(self, request):
+        if request.user.correo_verificado:
+            return Response({"detail": "Tu correo ya está confirmado.", "codigo": "correo_ya_confirmado"},
+                            status=status.HTTP_409_CONFLICT)
+        cuentas.enviar_confirmacion(request.user)
+        return Response({"detail": f"Te enviamos un nuevo enlace a {request.user.email}."}, status=status.HTTP_202_ACCEPTED)
 
 
 @extend_schema(tags=["Autenticación"], summary="Iniciar sesión (RF-02)", request=LoginSerializer,

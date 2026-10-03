@@ -26,6 +26,8 @@ urlpatterns = [
     path("auth/login/", views.LoginView.as_view(), name="auth-login"),
     path("auth/logout/", views.LogoutView.as_view(), name="auth-logout"),
     path("auth/yo/", views.PerfilView.as_view(), name="auth-yo"),
+    path("auth/confirmar-correo/", views.ConfirmarCorreoView.as_view(), name="auth-confirmar-correo"),
+    path("auth/reenviar-confirmacion/", views.ReenviarConfirmacionView.as_view(), name="auth-reenviar-confirmacion"),
     path("mis-votos/", views.MisVotosView.as_view(), name="mis-votos"),
     path("sitio/", views.SitioView.as_view(), name="sitio"),
     # Administración bajo /api/gestion/: el WAF de producción (Cloudflare) bloquea cualquier ruta con /admin.

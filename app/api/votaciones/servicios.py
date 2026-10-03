@@ -53,6 +53,11 @@ def votos_del_usuario(usuario, votacion):
 
 @transaction.atomic
 def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
+    if not usuario.correo_verificado:
+        raise ReglaNegocioError(
+            "Confirma tu correo para poder votar. Revisa tu bandeja de entrada.", codigo="correo_sin_confirmar", status=403
+        )
+
     votacion = Votacion.objects.select_for_update().select_related("categoria__edicion").get(pk=votacion_id)
 
     if votacion.estado != Votacion.Estado.ABIERTA:

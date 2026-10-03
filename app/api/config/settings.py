@@ -152,6 +152,8 @@ CORREO_URL_SITIO = os.getenv("CORREO_URL_SITIO", "http://localhost:5195")
 DEFAULT_FROM_EMAIL = CORREO_REMITENTE
 # Entregar los correos del registro y del voto en un hilo aparte para no demorar la respuesta de la API
 CORREO_EN_SEGUNDO_PLANO = env_bool("CORREO_EN_SEGUNDO_PLANO", True)
+# Vigencia del enlace para confirmar el correo
+CORREO_CONFIRMACION_HORAS = int(os.getenv("CORREO_CONFIRMACION_HORAS", "48"))
 
 # Adaptador smtp (backend SMTP de Django)
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
@@ -180,6 +182,7 @@ REST_FRAMEWORK = {
         "login": os.getenv("THROTTLE_LOGIN", "10/min"),
         "votar": os.getenv("THROTTLE_VOTAR", "30/min"),
         "registro": os.getenv("THROTTLE_REGISTRO", "10/min"),
+        "confirmacion": os.getenv("THROTTLE_CONFIRMACION", "5/min"),
     },
 }
 

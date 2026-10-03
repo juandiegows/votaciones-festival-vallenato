@@ -1,4 +1,6 @@
 import json
+import time
+import re
 import urllib.error
 from io import BytesIO
 from unittest import mock
@@ -7,7 +9,7 @@ from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
-from votaciones import correo
+from votaciones import correo, cuentas
 from votaciones.correo.adaptadores import ErrorEnvioCorreo
 from votaciones.models import Usuario, Voto
 
@@ -126,6 +128,7 @@ class AdaptadoresCorreoTest(BaseAPITest):
 class CorreosEnFlujosTest(BaseAPITest):
     REGISTRO = {
         "email": "nuevo@festival.test", "nombres": "Carlos", "apellidos": "Pérez",
+        "tipo_documento": "CC", "numero_documento": "1065123456",
         "password": "Clave-Segura-2027", "acepta_tratamiento_datos": True,
     }
 
@@ -137,11 +140,18 @@ class CorreosEnFlujosTest(BaseAPITest):
         with self.captureOnCommitCallbacks(execute=True):
             return self.client.post(f"/api/votaciones/{votacion.pk}/votar/", {"opcion": opcion.pk}, format="json")
 
-    def test_registro_envia_bienvenida(self):
+    def test_registro_envia_confirmacion_y_al_confirmar_la_bienvenida(self):
         self.assertEqual(self.registrar().status_code, 201)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("bienvenida", mail.outbox[0].subject)
+        self.assertIn("Confirma tu correo", mail.outbox[0].subject)
         self.assertTrue(mail.outbox[0].to[0].endswith("<nuevo@festival.test>"))
+        token = re.search(r"confirmar-correo\?token=(\S+)", mail.outbox[0].body).group(1)
+        with self.captureOnCommitCallbacks(execute=True):
+            respuesta = self.client.post("/api/auth/confirmar-correo/", {"token": token}, format="json")
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.data["correo_verificado"])
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn("bienvenida", mail.outbox[1].subject)
 
     def test_registro_invalido_no_envia(self):
         self.assertEqual(self.registrar(acepta_tratamiento_datos=False).status_code, 400)
@@ -174,4 +184,57 @@ class CorreosEnFlujosTest(BaseAPITest):
         with mock.patch("votaciones.correo.servicio.threading.Thread") as hilo:
             self.registrar()
         hilo.return_value.start.assert_called_once()
-        self.assertEqual(hilo.call_args.kwargs["args"][2], "bienvenida")
+        self.assertEqual(hilo.call_args.kwargs["args"][2], "confirmar_correo")
+
+
+@override_settings(CORREO_ADAPTADOR="smtp", CORREO_EN_SEGUNDO_PLANO=False)
+class ConfirmacionCorreoTest(BaseAPITest):
+    URL = "/api/auth/confirmar-correo/"
+
+    def setUp(self):
+        super().setUp()
+        self.nuevo = Usuario.objects.create_user(
+            "sin.confirmar@festival.test", "Clave-Segura-2027", nombres="Sin", apellidos="Confirmar",
+            tipo_documento="CC", numero_documento="1065999999", acepta_tratamiento_datos=True,
+        )
+
+    def test_sin_confirmar_no_puede_votar(self):
+        self.autenticar(self.nuevo)
+        respuesta = self.client.post(f"/api/votaciones/{self.abierta.pk}/votar/", {"opcion": self.opcion_a.pk}, format="json")
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertEqual(respuesta.data["codigo"], "correo_sin_confirmar")
+        self.assertFalse(Voto.objects.filter(usuario=self.nuevo).exists())
+
+    def test_confirmar_habilita_el_voto(self):
+        respuesta = self.client.post(self.URL, {"token": cuentas.token_confirmacion(self.nuevo)}, format="json")
+        self.assertEqual(respuesta.status_code, 200)
+        self.autenticar(self.nuevo)
+        respuesta = self.client.post(f"/api/votaciones/{self.abierta.pk}/votar/", {"opcion": self.opcion_a.pk}, format="json")
+        self.assertEqual(respuesta.status_code, 201)
+
+    def test_token_alterado(self):
+        respuesta = self.client.post(self.URL, {"token": cuentas.token_confirmacion(self.nuevo) + "x"}, format="json")
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data["codigo"], "token_invalido")
+
+    @override_settings(CORREO_CONFIRMACION_HORAS=0)
+    def test_token_vencido(self):
+        token = cuentas.token_confirmacion(self.nuevo)
+        with mock.patch("django.core.signing.time.time", return_value=time.time() + 5):
+            respuesta = self.client.post(self.URL, {"token": token}, format="json")
+        self.assertEqual(respuesta.data["codigo"], "token_vencido")
+
+    def test_token_de_otro_correo_no_sirve(self):
+        token = cuentas.token_confirmacion(self.nuevo)
+        self.nuevo.email = "cambiado@festival.test"
+        self.nuevo.save()
+        self.assertEqual(self.client.post(self.URL, {"token": token}, format="json").status_code, 400)
+
+    def test_reenviar_confirmacion(self):
+        self.autenticar(self.nuevo)
+        with self.captureOnCommitCallbacks(execute=True):
+            respuesta = self.client.post("/api/auth/reenviar-confirmacion/")
+        self.assertEqual(respuesta.status_code, 202)
+        self.assertIn("Confirma tu correo", mail.outbox[0].subject)
+        self.autenticar(self.votante)
+        self.assertEqual(self.client.post("/api/auth/reenviar-confirmacion/").status_code, 409)

@@ -10,24 +10,31 @@ from rest_framework import serializers
 from .models import (
     BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Revista, Usuario, Votacion, Voto,
 )
+from . import cuentas
 from .servicios import votos_del_usuario
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ["id", "email", "nombres", "apellidos", "rol", "fecha_registro"]
+        fields = [
+            "id", "email", "nombres", "apellidos", "rol", "fecha_registro", "tipo_documento", "numero_documento",
+            "correo_verificado",
+        ]
         read_only_fields = fields
 
 
 class RegistroSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    tipo_documento = serializers.ChoiceField(choices=Usuario.TipoDocumento.choices)
+    numero_documento = serializers.CharField(max_length=30)
 
     class Meta:
         model = Usuario
-        fields = ["email", "nombres", "apellidos", "password", "acepta_tratamiento_datos"]
-        # La unicidad del correo se valida en validate_email (sin distinguir mayúsculas y con un mensaje claro)
+        fields = ["email", "nombres", "apellidos", "tipo_documento", "numero_documento", "password", "acepta_tratamiento_datos"]
+        # La unicidad del correo y del documento se valida a mano (mensajes claros, sin distinguir mayúsculas)
         extra_kwargs = {"email": {"validators": []}}
+        validators = []
 
     def validate_email(self, valor):
         valor = valor.lower()
@@ -43,11 +50,21 @@ class RegistroSerializer(serializers.ModelSerializer):
         return valor
 
     def validate(self, datos):
+        datos["numero_documento"] = numero = cuentas.normalizar_documento(datos["numero_documento"])
+        error = cuentas.error_formato_documento(datos["tipo_documento"], numero)
+        if error:
+            raise serializers.ValidationError({"numero_documento": error})
+        if Usuario.objects.filter(tipo_documento=datos["tipo_documento"], numero_documento=numero).exists():
+            raise serializers.ValidationError({"numero_documento": "Ya existe una cuenta con este documento."})
         validate_password(datos["password"], Usuario(email=datos.get("email"), nombres=datos.get("nombres", "")))
         return datos
 
     def create(self, datos):
         return Usuario.objects.create_user(**datos)
+
+
+class ConfirmarCorreoSerializer(serializers.Serializer):
+    token = serializers.CharField()
 
 
 class LoginSerializer(serializers.Serializer):
@@ -450,7 +467,10 @@ class VotoAdminSerializer(serializers.ModelSerializer):
 class UsuarioAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ["id", "email", "nombres", "apellidos", "rol", "is_active", "fecha_registro"]
+        fields = [
+            "id", "email", "nombres", "apellidos", "rol", "is_active", "fecha_registro", "tipo_documento",
+            "numero_documento", "correo_verificado",
+        ]
         read_only_fields = fields
 
 
