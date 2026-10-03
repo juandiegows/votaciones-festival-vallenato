@@ -3,11 +3,24 @@
 | Contenido | Ubicación |
 |---|---|
 | Informe (PDF) | [`Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf`](Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
-| Diagramas (casos de uso, modelo conceptual, flujo, arquitectura) | [`diagramas/`](diagramas/) |
+| Diagramas (casos de uso, modelo conceptual y entidad-relación, flujo, secuencia, arquitectura) | [`diagramas/`](diagramas/) |
+| Diagramas editables de cada caso de uso (Visio `.vsdx`, draw.io `.drawio` y `.png`) | [`diagramas/casos-de-uso/`](diagramas/casos-de-uso/) |
 | Capturas de la web (móvil y escritorio) | [`capturas/`](capturas/) |
 | Identidad visual | [`../BRANDING.md`](../BRANDING.md) |
 
 Fecha límite: 12 de octubre de 2026 · Profesor: Deivys Morales Uribe.
+
+## Diagramas de casos de uso
+
+Un archivo por caso especificado (CU-01 a CU-08) y uno para los complementarios (CU-09 a CU-13), en
+`diagramas/casos-de-uso/`:
+
+- `.vsdx`: se abre y edita en Microsoft Visio.
+- `.drawio`: se abre en [diagrams.net](https://app.diagrams.net) (gratis); desde ahí también se exporta a `.vsdx` o `.png`.
+- `.png`: la imagen que va en el informe.
+
+El modelo entidad-relación (`diagramas/06-modelo-entidad-relacion.png`) resume llaves y atributos principales; el modelo
+físico completo y el diagrama de secuencia en Mermaid están en [`../api/diagramas/`](../api/diagramas/).
 
 ## Capturas
 
