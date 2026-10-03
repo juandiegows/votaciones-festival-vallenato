@@ -377,7 +377,9 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 /* ==========================================================================
    Revista institucional del inicio (libro que se hojea con page-flip)
    ========================================================================== */
-.seccion-revista { background: var(--flv-carbon); color: var(--flv-blanco); }
+/* La hoja que gira (transformada en 3D) se sale de la sección mientras se anima y creaba scroll horizontal:
+   se recorta solo en horizontal (`clip` no crea contenedor de scroll); `hidden` es el respaldo sin soporte de `clip` */
+.seccion-revista { background: var(--flv-carbon); color: var(--flv-blanco); overflow: hidden; overflow-x: clip; overflow-y: visible; }
 .seccion-revista .seccion-titulo { color: var(--flv-dorado); }
 .seccion-titulo-centro { display: inline-block; }
 .seccion-titulo-centro::after { left: 50%; transform: translateX(-50%); }
@@ -385,7 +387,7 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 .revista-descripcion, .revista-ayuda { color: #d9d4cc; }
 .revista-libro { position: relative; max-width: 1240px; margin: 0 auto; outline: none; }
 .revista-libro:focus-visible { box-shadow: 0 0 0 3px var(--flv-dorado); border-radius: .5rem; }
-.revista-hojas { min-height: 12rem; }
+.revista-hojas { min-height: 12rem; max-width: 1240px; margin: 0 auto; }
 .revista-hoja { background: var(--flv-blanco); overflow: hidden; }
 .revista-hoja-contenido { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
 .revista-hoja-contenido canvas { width: 100%; height: 100%; display: block; }
@@ -400,8 +402,16 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 .btn-revista:disabled { color: rgba(255,255,255,.4); border-color: rgba(255,255,255,.15); }
 .revista-indicador { min-width: 11rem; text-align: center; font-weight: 600; }
 .revista-separador { width: 1px; height: 1.75rem; background: rgba(255,255,255,.25); margin: 0 .25rem; }
-.revista-pantalla-completa { max-width: none; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 1rem; background: var(--flv-carbon); }
-.revista-pantalla-completa .revista-hojas { width: min(100%, calc((100vh - 6rem) * 1.55)); margin: 0 auto; }
+/* Maximizada: el libro ocupa todo el alto disponible (menos los controles) y crece en ancho según la proporción del PDF */
+.revista-pantalla-completa {
+  max-width: none; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
+  justify-content: center; padding: .75rem; background: var(--flv-carbon); border-radius: 0;
+}
+.revista-pantalla-completa:not(:fullscreen) { position: fixed; inset: 0; z-index: 2000; }
+.revista-pantalla-completa .revista-hojas {
+  width: min(100%, calc((100dvh - 5.5rem) * var(--revista-ancho-por-alto, 1.55))); max-width: none; min-height: 0;
+}
+.revista-pantalla-completa .revista-controles { margin-top: .75rem; }
 @media (max-width: 575.98px) {
   .revista-indicador { order: -1; flex: 1 0 100%; min-width: 0; }
   .revista-separador { display: none; }

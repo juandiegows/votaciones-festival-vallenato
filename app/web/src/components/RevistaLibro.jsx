@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import urlWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PageFlip } from 'page-flip';
+import { urlDelSitio } from '../config.js';
 
 GlobalWorkerOptions.workerSrc = urlWorker;
 
-// Ancho en píxeles con que se dibuja cada página (nítida hasta ~450 px en pantallas 2x)
-const ANCHO_DIBUJO = 900;
+// Ancho en píxeles con que se dibuja cada página: el tamaño en pantalla × densidad de píxeles, entre estos límites
+const ANCHO_DIBUJO_MIN = 900;
+const ANCHO_DIBUJO_MAX = 2400;
 // Páginas dibujadas alrededor de la actual; las lejanas se liberan para no agotar la memoria
 const ATRAS = 2;
 const ADELANTE = 4;
@@ -29,18 +31,31 @@ export default function RevistaLibro({ url, titulo }) {
   const marco = useRef(null);
   const contenedor = useRef(null);
   const libro = useRef(null);
+  // Vuelve a dibujar las páginas visibles (al cambiar de tamaño, p. ej. al maximizar)
+  const redibujar = useRef(() => {});
   const [estado, setEstado] = useState({ cargando: true, error: null });
   const [pagina, setPagina] = useState(0);
   const [total, setTotal] = useState(0);
   const [vertical, setVertical] = useState(false);
-  const [pantallaCompleta, setPantallaCompleta] = useState(false);
+  // 'nativa' (API Fullscreen) o 'ventana' (sin la API, p. ej. iPhone: el libro cubre la ventana con CSS)
+  const [pantallaCompleta, setPantallaCompleta] = useState(null);
+  const [proporcion, setProporcion] = useState(1.3);
   const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     let cancelado = false;
     let flip = null;
     const host = contenedor.current;
-    const tarea = getDocument({ url });
+    // Sin estos recursos pdf.js no puede decodificar imágenes JPEG 2000/JBIG2 ni algunas fuentes (ver vite.config.js)
+    const recursos = urlDelSitio('/pdfjs/');
+    const tarea = getDocument({
+      url,
+      wasmUrl: `${recursos}wasm/`,
+      cMapUrl: `${recursos}cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `${recursos}standard_fonts/`,
+      iccUrl: `${recursos}iccs/`,
+    });
     const dibujadas = new Map();
     setEstado({ cargando: true, error: null });
     setPagina(0);
@@ -51,6 +66,7 @@ export default function RevistaLibro({ url, titulo }) {
         if (cancelado) return;
         const base = primera.getViewport({ scale: 1 });
         const proporcion = base.height / base.width;
+        setProporcion(proporcion);
 
         const hojas = Array.from({ length: pdf.numPages }, (_, i) => {
           const hoja = document.createElement('div');
@@ -69,12 +85,14 @@ export default function RevistaLibro({ url, titulo }) {
           const tareaPagina = pdf
             .getPage(i + 1)
             .then(async (p) => {
-              const vista = p.getViewport({ scale: ANCHO_DIBUJO / p.getViewport({ scale: 1 }).width });
+              const enPantalla = (hojas[i].offsetWidth || 450) * (window.devicePixelRatio || 1);
+              const ancho = Math.min(ANCHO_DIBUJO_MAX, Math.max(ANCHO_DIBUJO_MIN, Math.round(enPantalla)));
+              const vista = p.getViewport({ scale: ancho / p.getViewport({ scale: 1 }).width });
               const lienzo = document.createElement('canvas');
               lienzo.width = Math.floor(vista.width);
               lienzo.height = Math.floor(vista.height);
               await p.render({ canvas: lienzo, viewport: vista }).promise;
-              if (!cancelado && dibujadas.has(i)) hojas[i].firstChild.replaceChildren(lienzo);
+              if (!cancelado && dibujadas.get(i) === tareaPagina) hojas[i].firstChild.replaceChildren(lienzo);
             })
             .catch(() => dibujadas.delete(i));
           dibujadas.set(i, tareaPagina);
@@ -90,6 +108,20 @@ export default function RevistaLibro({ url, titulo }) {
           }
         };
 
+        // Las páginas cercanas se repiten a la nueva resolución (el lienzo anterior se ve mientras tanto) y las lejanas se liberan
+        redibujar.current = () => {
+          if (!flip) return;
+          flip.update();
+          const actual = flip.getCurrentPageIndex();
+          for (const i of [...dibujadas.keys()]) {
+            dibujadas.delete(i);
+            if (i < actual - ATRAS || i > actual + ADELANTE) {
+              hojas[i].firstChild.innerHTML = `<span class="revista-hoja-cargando">Página ${i + 1}</span>`;
+            }
+          }
+          alrededorDe(actual);
+        };
+
         const raiz = document.createElement('div');
         host.replaceChildren(raiz);
         const ancho = 450;
@@ -99,9 +131,10 @@ export default function RevistaLibro({ url, titulo }) {
           height: alto,
           size: 'stretch',
           minWidth: 200,
-          maxWidth: 620,
+          // Sin tope propio: el ancho lo limita el CSS (.revista-hojas), así el libro crece al maximizarlo
+          maxWidth: 4000,
           minHeight: Math.round(200 * proporcion),
-          maxHeight: Math.round(620 * proporcion),
+          maxHeight: Math.round(4000 * proporcion),
           showCover: true,
           usePortrait: true,
           mobileScrollSupport: true,
@@ -127,6 +160,7 @@ export default function RevistaLibro({ url, titulo }) {
     return () => {
       cancelado = true;
       libro.current = null;
+      redibujar.current = () => {};
       try {
         flip?.destroy();
       } catch {
@@ -138,10 +172,25 @@ export default function RevistaLibro({ url, titulo }) {
   }, [url, intento]);
 
   useEffect(() => {
-    const alCambiar = () => setPantallaCompleta(document.fullscreenElement === marco.current);
+    const alCambiar = () =>
+      setPantallaCompleta((actual) => (document.fullscreenElement === marco.current ? 'nativa' : actual === 'ventana' ? 'ventana' : null));
     document.addEventListener('fullscreenchange', alCambiar);
     return () => document.removeEventListener('fullscreenchange', alCambiar);
   }, []);
+
+  // Al maximizar o restaurar cambia el tamaño del libro: page-flip se reacomoda y las páginas se dibujan de nuevo
+  useEffect(() => {
+    const id = requestAnimationFrame(() => redibujar.current());
+    if (pantallaCompleta === 'ventana') {
+      const previo = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        cancelAnimationFrame(id);
+        document.body.style.overflow = previo;
+      };
+    }
+    return () => cancelAnimationFrame(id);
+  }, [pantallaCompleta]);
 
   const anterior = () => libro.current?.flipPrev();
   const siguiente = () => libro.current?.flipNext();
@@ -152,11 +201,17 @@ export default function RevistaLibro({ url, titulo }) {
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       siguiente();
+    } else if (e.key === 'Escape' && pantallaCompleta === 'ventana') {
+      setPantallaCompleta(null);
     }
   };
   const alternarPantallaCompleta = () => {
-    if (document.fullscreenElement) document.exitFullscreen?.();
-    else marco.current?.requestFullscreen?.();
+    if (pantallaCompleta === 'ventana') setPantallaCompleta(null);
+    else if (document.fullscreenElement) document.exitFullscreen?.();
+    else if (marco.current?.requestFullscreen) {
+      marco.current.requestFullscreen().catch(() => setPantallaCompleta('ventana'));
+    } else setPantallaCompleta('ventana');
+    marco.current?.focus();
   };
 
   const listo = !estado.cargando && !estado.error;
@@ -166,6 +221,8 @@ export default function RevistaLibro({ url, titulo }) {
     <div
       ref={marco}
       className={`revista-libro ${pantallaCompleta ? 'revista-pantalla-completa' : ''}`}
+      // Ancho máximo del libro por cada unidad de alto: una página en vertical, dos en horizontal
+      style={{ '--revista-ancho-por-alto': (vertical ? 1 : 2) / proporcion }}
       role="region"
       aria-roledescription="libro"
       aria-label={titulo}
