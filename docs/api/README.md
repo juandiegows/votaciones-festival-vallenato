@@ -181,7 +181,7 @@ con audio, unos 100 votantes ficticios y las cuentas `admin@festival.test` y `vo
 `DJANGO_DEBUG` sus contraseñas se toman de `DEMO_CLAVE_ADMIN` y `DEMO_CLAVE_VOTANTE` (obligatorias).
 
 Estado de una votación: `borrador` → (`programada`) → `abierta` → `cerrada`
-(ver [diagrama de estados](diagramas/04-estados-votacion.png)).
+(ver [diagrama de estados](../diagramas/comportamiento/estados-votacion.png)).
 
 ## Ejemplo de flujo
 
@@ -207,18 +207,13 @@ curl -s $B/mis-votos/ -H "Authorization: Token <token>"
 
 ## Diagramas
 
-| Diagrama | Archivo | Fuente Mermaid |
-|---|---|---|
-| Modelo de datos físico | [`01-modelo-datos.png`](diagramas/01-modelo-datos.png) | [`.mmd`](diagramas/01-modelo-datos.mmd) |
-| Secuencia: emitir voto | [`02-secuencia-emitir-voto.png`](diagramas/02-secuencia-emitir-voto.png) | [`.mmd`](diagramas/02-secuencia-emitir-voto.mmd) |
-| Componentes y despliegue (propuesta) | [`03-componentes-despliegue.png`](diagramas/03-componentes-despliegue.png) | [`.mmd`](diagramas/03-componentes-despliegue.mmd) |
-| Estados de una votación | [`04-estados-votacion.png`](diagramas/04-estados-votacion.png) | [`.mmd`](diagramas/04-estados-votacion.mmd) |
-
-El diagrama de despliegue muestra la arquitectura objetivo. Hoy en la VPS solo está publicada la web; la API
-se publicará en una entrega posterior.
+Los diagramas de la API están con los demás del proyecto en [`docs/diagramas/`](../diagramas/README.md):
+[modelo físico](../diagramas/datos/modelo-fisico.png), [secuencia del voto](../diagramas/comportamiento/secuencia-voto.png),
+[estados de una votación](../diagramas/comportamiento/estados-votacion.png) y
+[componentes y despliegue](../diagramas/arquitectura/despliegue.png), cada uno con su fuente `.mmd`.
 
 ## Mantener esta documentación
 
 - El esquema se genera desde el código: `python manage.py spectacular --file ../../docs/api/openapi.yaml --validate`.
 - Las descripciones de cada endpoint están en los decoradores `@extend_schema` de `app/api/votaciones/views.py`.
-- Si cambia un modelo, actualiza `diagramas/01-modelo-datos.mmd` y regenera la imagen.
+- Si cambia un modelo, actualiza `docs/diagramas/datos/modelo-fisico.mmd` y `entidad-relacion.mmd` y regenera las imágenes.

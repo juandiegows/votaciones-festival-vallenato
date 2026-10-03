@@ -22,7 +22,7 @@ Portada · Tabla de contenido · Integrantes · Contexto · Benchmarking · Prob
 5. La arquitectura descrita coincide con la del repositorio (desacoplada: React + Django REST + MySQL).
 
 ## Publicación
-Guarda el PDF final en `docs/entrega-N/` junto con `diagramas/` y `capturas/`, actualiza `docs/entrega-N/README.md` y la tabla de entregas del `README.md` raíz, y haz commit con la skill `commit-equipo`.
+Guarda el PDF final en `docs/entrega-N/` junto con `capturas/` (los diagramas van en `docs/diagramas/`, con su fuente editable), actualiza `docs/entrega-N/README.md` y la tabla de entregas del `README.md` raíz, y haz commit con la skill `commit-equipo`.
 
 ## Checklist del docente
 PDF completo · integrantes identificados · mínimos cumplidos (≥3 benchmarking, ≥6 RF, ≥6 RNF, ≥6 RN, ≥10 preguntas, ≥6 CU, ≥6 riesgos) · diagramas · enlace funcionando · conclusiones · fuentes · ortografía revisada · todos los integrantes comprenden la propuesta.

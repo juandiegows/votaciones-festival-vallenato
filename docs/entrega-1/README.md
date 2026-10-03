@@ -3,26 +3,25 @@
 | Contenido | Ubicación |
 |---|---|
 | Informe (PDF) | [`Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf`](Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
-| Diagramas (casos de uso, modelo conceptual y entidad-relación, flujo, secuencia, arquitectura) | [`diagramas/`](diagramas/) |
-| Diagramas editables de cada caso de uso (Visio `.vsdx`, draw.io `.drawio` y `.png`) | [`diagramas/casos-de-uso/`](diagramas/casos-de-uso/) |
+| Diagramas con su fuente editable (casos de uso en Visio y draw.io; el resto en Mermaid) | [`../diagramas/`](../diagramas/README.md) |
 | Capturas de la web (móvil y escritorio) | [`capturas/`](capturas/) |
 | Identidad visual | [`../BRANDING.md`](../BRANDING.md) |
 
 Fecha límite: 12 de octubre de 2026 · Profesor: Deivys Morales Uribe.
 
-## Diagramas de casos de uso
+## Diagramas
 
-Un archivo por caso especificado (CU-01 a CU-08) y uno para los complementarios (CU-09 a CU-13), en
-`diagramas/casos-de-uso/`:
+Están en [`docs/diagramas/`](../diagramas/README.md), compartidos con la guía de la API. Los del informe:
 
-- `.vsdx`: se abre y edita en Microsoft Visio.
-- `.drawio`: se abre en [diagrams.net](https://app.diagrams.net) (gratis); desde ahí también se exporta a `.vsdx` o `.png`.
-- `.png`: la imagen que va en el informe.
-
-Los demás diagramas de `diagramas/` traen su fuente junto a la imagen: `.mmd` (Mermaid; se edita en
-[mermaid.live](https://mermaid.live) o en VS Code) y `01-casos-de-uso.svg` para el diagrama general de casos de uso
-(se abre en Visio, Inkscape o el navegador). El modelo entidad-relación (`06`) resume llaves y atributos principales;
-el modelo físico completo está en [`../api/diagramas/`](../api/diagramas/).
+| Figura del informe | Archivo |
+|---|---|
+| Diagrama general de casos de uso | `casos-de-uso/general` (`.svg`) |
+| Un diagrama por caso de uso (CU-01 a CU-08 y CU-09 a CU-13) | `casos-de-uso/CU-xx` (`.vsdx` y `.drawio`) |
+| Modelo conceptual | `datos/modelo-conceptual` (`.mmd`) |
+| Modelo entidad-relación | `datos/entidad-relacion` (`.mmd`) |
+| Flujo principal | `comportamiento/flujo-principal` (`.mmd`) |
+| Secuencia del flujo principal | `comportamiento/secuencia-voto` (`.mmd`) |
+| Arquitectura de la aplicación e integración | `arquitectura/aplicacion`, `arquitectura/integracion` (`.mmd`) |
 
 ## Capturas
 

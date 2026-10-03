@@ -22,8 +22,9 @@ organizada bajo la jerarquía **Edición → Categoría → Votación → Opció
 votaciones-festival-vallenato/
 ├── docs/                 Documentación del proyecto
 │   ├── BRANDING.md       Identidad visual (paleta, tipografías, reglas de uso)
-│   ├── api/              Documentación de la API (guía, OpenAPI y diagramas)
-│   └── entrega-1/        Informe PDF, diagramas y capturas del prototipo
+│   ├── diagramas/        Todos los diagramas con su fuente (casos de uso, datos, comportamiento, arquitectura)
+│   ├── api/              Documentación de la API (guía y OpenAPI)
+│   └── entrega-1/        Informe PDF y capturas del prototipo
 ├── app/
 │   ├── web/              Frontend (React + Vite + Bootstrap; usa la API o, sin ella, datos simulados)
 │   └── api/              Backend Django REST Framework + MySQL (modelos, endpoints y pruebas)
