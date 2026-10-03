@@ -63,6 +63,7 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 | GET | `/api/votaciones/{id}/` | Detalle con opciones activas y `mis_votos` del usuario (RF-06) |
 | GET | `/api/opciones/?votacion={id}` | Opciones activas de votaciones publicadas |
 | GET | `/api/votaciones/{id}/resultados/` | Resultados si la visibilidad lo permite (RF-15, RN-07) |
+| GET | `/api/sitio/` | Contacto, redes y banners activos **de la edición activa** |
 
 ### Votación
 
@@ -75,22 +76,28 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| CRUD | `/api/admin/ediciones/` | Gestión de ediciones (RF-10) |
-| CRUD | `/api/admin/categorias/?edicion={id}` | Gestión de categorías (RF-11) |
+| CRUD | `/api/admin/ediciones/` | Gestión de ediciones (RF-10); `presentacion_categorias`: `tarjetas`, `lista`, `mosaico`, `compacta` o `destacada` |
+| GET | `/api/admin/ediciones/{id}/resumen/` | Votos por categoría → votación → opción de la edición (tablero de resultados) |
+| CRUD | `/api/admin/categorias/?edicion={id}` | Gestión de categorías (RF-11); ícono de la lista (`icono`) o subido (`icono_imagen`, multipart) |
 | CRUD | `/api/admin/votaciones/?categoria={id}` | Gestión de votaciones (RF-12); se crean como **borrador** |
 | POST | `/api/admin/votaciones/{id}/publicar/` | Publica si hay al menos dos opciones activas (RN-06) |
+| POST | `/api/admin/votaciones/{id}/despublicar/` | Retira la votación del sitio; `409 votacion_abierta` mientras está abierta |
 | POST | `/api/admin/votaciones/{id}/cerrar/` | Cierre anticipado |
+| GET | `/api/admin/votaciones/{id}/participacion/` | Quién votó, **nunca por qué opción** (ver «Participación») |
 | POST | `/api/admin/votaciones/{id}/publicar-resultados/` | `{ "publicar": true\|false }` (RF-15) |
 | GET | `/api/admin/votaciones/{id}/resultados/` | Resultados completos, siempre visibles para el administrador (RF-14) |
 | GET | `/api/admin/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
-| CRUD | `/api/admin/opciones/?votacion={id}` | Gestión de opciones (RF-13) |
+| CRUD | `/api/admin/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart) y `texto_audio` (letra o transcripción) |
 | GET | `/api/admin/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
 | GET | `/api/admin/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
-| GET | `/api/admin/auditoria/` | Registro de auditoría paginado, 50 por página (RF-16, RN-12) |
+| CRUD | `/api/admin/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
+| GET | `/api/admin/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
+| GET | `/api/admin/auditoria/integridad/?edicion={id}` | Verifica que los votos cuadren en cada votación (por defecto, la edición activa) |
 
 `CRUD` = `GET` lista, `POST` crear, `GET/PUT/PATCH/DELETE` sobre `{id}/`. Eliminar una votación u opción con
 votos responde `409` (RN-09); eliminar una edición o categoría con elementos asociados también responde `409`.
-Toda creación, modificación, eliminación, publicación, cierre y exportación queda en la auditoría.
+Toda creación, modificación, eliminación, publicación, despublicación, cierre y exportación queda en la auditoría
+(al eliminar se guarda el nombre del elemento en `detalle`).
 
 ## Reglas de negocio en la API
 
@@ -107,7 +114,8 @@ Toda creación, modificación, eliminación, publicación, cierre y exportación
 | RN-10 Aceptar el tratamiento de datos | Validación del registro |
 | RN-12 Auditoría de acciones administrativas | Tabla `registro_auditoria` |
 
-Una votación publicada no se puede despublicar: si es necesario, se cierra. Al activar una edición, las demás
+Una votación **abierta** no se puede despublicar (`409 votacion_abierta`): se espera al cierre o se cierra primero;
+programadas y cerradas sí se pueden retirar del sitio con `/despublicar/`. Al activar una edición, las demás
 quedan cerradas automáticamente, así el sitio público muestra siempre una sola edición vigente.
 
 ### URLs amigables y ediciones futuras
@@ -122,6 +130,37 @@ incluyen `slug`, `edicion_anio` y `categoria_slug`. El código del comprobante u
 
 `enlace_multimedia` acepta una URL `http(s)` (YouTube, Spotify, SoundCloud o un archivo de audio) o una ruta del
 sitio que empiece por `/` (por ejemplo, `/audio/muestras/brisas-del-guatapuri.mp3`).
+
+Además del enlace, cada opción puede tener un **archivo de audio subido** (`audio`: MP3, OGG, WAV, M4A o WebM,
+máximo 10 MB) y su **texto** (`texto_audio`, letra o transcripción para quien no pueda escuchar). Se envían como
+`multipart/form-data`; la respuesta devuelve la ruta del sitio (`/media/audios/…`). Enviar `audio` vacío o `null`
+quita el archivo. Lo mismo aplica a `icono_imagen` de categorías y votaciones (JPG, PNG o WebP, máximo 1 MB).
+
+### Presentación al público
+
+`Edicion.presentacion_categorias` (`tarjetas`, `lista`, `mosaico`, `compacta`, `destacada`) define cómo se ven las
+categorías, y `Votacion.presentacion_opciones` (`tarjetas`, `lista`, `mosaico`, `compacta`, `reproductor`) cómo se
+ven las opciones. Ambos campos se exponen también en los endpoints públicos.
+
+### Participación (quién votó, sin revelar por qué)
+
+`GET /api/admin/votaciones/{id}/participacion/` responde
+`{votacion_id, votacion, estado, umbral, total_votos, total_votantes, disponible, motivo, votantes[], ocultos}`, con
+`votantes = [{usuario_id, nombres, apellidos, email, fecha}]`. Para que no se pueda deducir el voto de las primeras
+personas comparando la lista con los resultados en tiempo real:
+
+- Con la votación **cerrada** se muestran todos los votantes.
+- **Abierta con menos de 10 votantes**: la lista no se muestra (`disponible: false`).
+- **Abierta con 10 o más**: se revelan en bloques de 10 (los primeros 10, 20, 30… en votar); el resto queda en `ocultos`.
+- La lista siempre va en orden alfabético y con la fecha sin hora; nunca incluye la opción ni el comprobante.
+
+### Integridad de los votos
+
+`GET /api/admin/auditoria/integridad/?edicion={id}` revisa cada votación y devuelve `ok` y `alertas` cuando: la
+suma por opción no coincide con el total (`suma_por_opcion` ≠ `total_votos`), algún usuario supera el límite
+(`usuarios_excedidos`), hay votos por opciones de otra votación (`votos_opcion_ajena`) o desactivadas
+(`votos_inactivos`), votos fuera del periodo (`votos_fuera_de_plazo`) o comprobantes repetidos
+(`comprobantes_duplicados`). Incluye un `resumen` con el total de votos, votantes únicos y votaciones con alertas.
 
 ### Datos de prueba
 

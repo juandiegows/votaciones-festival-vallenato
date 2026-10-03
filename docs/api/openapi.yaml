@@ -10,13 +10,29 @@ paths:
   /api/admin/auditoria/:
     get:
       operationId: admin_auditoria_list
+      summary: Registro de acciones (50 por página)
       parameters:
+      - in: query
+        name: accion
+        schema:
+          type: string
+        description: crear, actualizar, eliminar, publicar, despublicar, cerrar…
+      - in: query
+        name: entidad
+        schema:
+          type: string
+        description: edicion, categoria, votacion, opcion, banner…
       - name: page
         required: false
         in: query
         description: Un número de página dentro del conjunto de resultados paginado.
         schema:
           type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Busca en el correo o nombre del usuario y en el ID de la entidad
       tags:
       - Auditoría
       security:
@@ -49,11 +65,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistroAuditoria'
           description: ''
+  /api/admin/auditoria/integridad/:
+    get:
+      operationId: admin_auditoria_integridad_retrieve
+      description: Comprueba en cada votación que la suma por opción coincida con
+        el total, que nadie supere el límite de votos y que no haya votos por opciones
+        ajenas o inactivas, fuera de plazo o con comprobantes repetidos.
+      summary: Verificación de integridad de los votos de una edición
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición; por defecto, la activa
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integridad'
+          description: ''
+        '404':
+          description: No hay edición
   /api/admin/banners/:
     get:
       operationId: admin_banners_list
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición
       tags:
       - Administración
       security:
@@ -69,7 +117,7 @@ paths:
           description: ''
     post:
       operationId: admin_banners_create
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
       tags:
       - Administración
@@ -97,7 +145,7 @@ paths:
   /api/admin/banners/{id}/:
     get:
       operationId: admin_banners_retrieve
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
       parameters:
       - in: path
@@ -119,7 +167,7 @@ paths:
           description: ''
     put:
       operationId: admin_banners_update
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
       parameters:
       - in: path
@@ -153,7 +201,7 @@ paths:
           description: ''
     patch:
       operationId: admin_banners_partial_update
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
       parameters:
       - in: path
@@ -186,7 +234,7 @@ paths:
           description: ''
     delete:
       operationId: admin_banners_destroy
-      description: Banners del inicio. La imagen se envía como multipart/form-data
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
         (JPG, PNG o WebP, máximo 3 MB).
       parameters:
       - in: path
@@ -205,6 +253,8 @@ paths:
   /api/admin/categorias/:
     get:
       operationId: admin_categorias_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: query
         name: edicion
@@ -225,6 +275,8 @@ paths:
           description: ''
     post:
       operationId: admin_categorias_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       tags:
       - Administración
       requestBody:
@@ -251,6 +303,8 @@ paths:
   /api/admin/categorias/{id}/:
     get:
       operationId: admin_categorias_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -271,6 +325,8 @@ paths:
           description: ''
     put:
       operationId: admin_categorias_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -303,6 +359,8 @@ paths:
           description: ''
     patch:
       operationId: admin_categorias_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -334,6 +392,8 @@ paths:
           description: ''
     delete:
       operationId: admin_categorias_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -566,9 +626,35 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/admin/ediciones/{id}/resumen/:
+    get:
+      operationId: admin_ediciones_resumen_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Resumen de votos por categoría, votación y opción
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenEdicion'
+          description: ''
   /api/admin/opciones/:
     get:
       operationId: admin_opciones_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: query
         name: votacion
@@ -589,6 +675,8 @@ paths:
           description: ''
     post:
       operationId: admin_opciones_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       tags:
       - Administración
       requestBody:
@@ -615,6 +703,8 @@ paths:
   /api/admin/opciones/{id}/:
     get:
       operationId: admin_opciones_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -635,6 +725,8 @@ paths:
           description: ''
     put:
       operationId: admin_opciones_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -667,6 +759,8 @@ paths:
           description: ''
     patch:
       operationId: admin_opciones_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -698,6 +792,8 @@ paths:
           description: ''
     delete:
       operationId: admin_opciones_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Eliminar (solo sin votos, RN-09)
       parameters:
       - in: path
@@ -722,6 +818,8 @@ paths:
   /api/admin/redes/:
     get:
       operationId: admin_redes_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       tags:
       - Administración
       security:
@@ -737,6 +835,8 @@ paths:
           description: ''
     post:
       operationId: admin_redes_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       tags:
       - Administración
       requestBody:
@@ -763,6 +863,8 @@ paths:
   /api/admin/redes/{id}/:
     get:
       operationId: admin_redes_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -783,6 +885,8 @@ paths:
           description: ''
     put:
       operationId: admin_redes_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -815,6 +919,8 @@ paths:
           description: ''
     patch:
       operationId: admin_redes_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -846,6 +952,8 @@ paths:
           description: ''
     delete:
       operationId: admin_redes_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -910,6 +1018,8 @@ paths:
   /api/admin/votaciones/:
     get:
       operationId: admin_votaciones_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: query
         name: categoria
@@ -930,6 +1040,8 @@ paths:
           description: ''
     post:
       operationId: admin_votaciones_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       tags:
       - Administración
       requestBody:
@@ -956,6 +1068,8 @@ paths:
   /api/admin/votaciones/{id}/:
     get:
       operationId: admin_votaciones_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -976,6 +1090,8 @@ paths:
           description: ''
     put:
       operationId: admin_votaciones_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -1008,6 +1124,8 @@ paths:
           description: ''
     patch:
       operationId: admin_votaciones_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       parameters:
       - in: path
         name: id
@@ -1039,6 +1157,8 @@ paths:
           description: ''
     delete:
       operationId: admin_votaciones_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Eliminar (solo sin votos, RN-09)
       parameters:
       - in: path
@@ -1063,6 +1183,8 @@ paths:
   /api/admin/votaciones/{id}/cerrar/:
     post:
       operationId: admin_votaciones_cerrar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Cerrar votación anticipadamente
       parameters:
       - in: path
@@ -1082,9 +1204,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/Votacion'
           description: ''
+  /api/admin/votaciones/{id}/despublicar/:
+    post:
+      operationId: admin_votaciones_despublicar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Despublicar votación (no se permite mientras está abierta)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/admin/votaciones/{id}/participacion/:
+    get:
+      operationId: admin_votaciones_participacion_retrieve
+      description: Antes del cierre la lista se revela en bloques de 10 votantes y
+        siempre en orden alfabético, con la fecha sin hora, para que no se pueda deducir
+        el voto de nadie.
+      summary: Quién votó, sin revelar por qué opción
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participacion'
+          description: ''
   /api/admin/votaciones/{id}/publicar/:
     post:
       operationId: admin_votaciones_publicar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Publicar votación (RN-06)
       parameters:
       - in: path
@@ -1113,6 +1292,8 @@ paths:
   /api/admin/votaciones/{id}/publicar-resultados/:
     post:
       operationId: admin_votaciones_publicar_resultados_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Publicar u ocultar resultados (RF-15)
       parameters:
       - in: path
@@ -1146,6 +1327,8 @@ paths:
   /api/admin/votaciones/{id}/resultados/:
     get:
       operationId: admin_votaciones_resultados_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Resultados completos (RF-14)
       parameters:
       - in: path
@@ -1168,6 +1351,8 @@ paths:
   /api/admin/votaciones/{id}/resultados/csv/:
     get:
       operationId: admin_votaciones_resultados_csv_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
       summary: Exportar resultados en CSV (RF-14)
       parameters:
       - in: path
@@ -1494,7 +1679,8 @@ paths:
   /api/sitio/:
     get:
       operationId: sitio_retrieve
-      summary: 'Contenido del sitio: contacto, redes y banners activos'
+      summary: 'Contenido del sitio: contacto, redes y banners activos de la edición
+        activa'
       tags:
       - Consulta pública
       security:
@@ -1693,6 +1879,11 @@ components:
         id:
           type: integer
           readOnly: true
+        edicion:
+          type: integer
+        edicion_anio:
+          type: integer
+          readOnly: true
         titulo:
           type: string
           maxLength: 120
@@ -1721,6 +1912,8 @@ components:
         activo:
           type: boolean
       required:
+      - edicion
+      - edicion_anio
       - id
       - imagen
       - texto_alternativo
@@ -1728,6 +1921,8 @@ components:
     BannerInicioRequest:
       type: object
       properties:
+        edicion:
+          type: integer
         titulo:
           type: string
           minLength: 1
@@ -1758,6 +1953,7 @@ components:
         activo:
           type: boolean
       required:
+      - edicion
       - imagen
       - texto_alternativo
       - titulo
@@ -1791,6 +1987,10 @@ components:
         icono:
           type: string
           maxLength: 60
+        icono_imagen:
+          type: string
+          format: uri
+          nullable: true
         activa:
           type: boolean
         orden:
@@ -1828,6 +2028,10 @@ components:
         icono:
           type: string
           maxLength: 60
+        icono_imagen:
+          type: string
+          format: binary
+          nullable: true
         activa:
           type: boolean
         orden:
@@ -1838,6 +2042,31 @@ components:
       required:
       - edicion
       - nombre
+    CategoriaResumen:
+      type: object
+      properties:
+        categoria_id:
+          type: integer
+        nombre:
+          type: string
+        icono:
+          type: string
+        icono_imagen:
+          type: string
+          nullable: true
+        total_votos:
+          type: integer
+        votaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/VotacionResumen'
+      required:
+      - categoria_id
+      - icono
+      - icono_imagen
+      - nombre
+      - total_votos
+      - votaciones
     ConfiguracionSitio:
       type: object
       properties:
@@ -1900,21 +2129,24 @@ components:
           type: string
           format: date
         estado:
-          $ref: '#/components/schemas/EdicionEstadoEnum'
+          $ref: '#/components/schemas/EstadoEdicionEnum'
+        presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionCategoriasEnum'
+          description: |-
+            Cómo se muestran las categorías de la edición al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
       required:
       - anio
       - fecha_fin
       - fecha_inicio
       - id
       - nombre
-    EdicionEstadoEnum:
-      enum:
-      - activa
-      - cerrada
-      type: string
-      description: |-
-        * `activa` - Activa
-        * `cerrada` - Cerrada
     EdicionRequest:
       type: object
       properties:
@@ -1935,7 +2167,18 @@ components:
           type: string
           format: date
         estado:
-          $ref: '#/components/schemas/EdicionEstadoEnum'
+          $ref: '#/components/schemas/EstadoEdicionEnum'
+        presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionCategoriasEnum'
+          description: |-
+            Cómo se muestran las categorías de la edición al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
       required:
       - anio
       - fecha_fin
@@ -1954,6 +2197,26 @@ components:
       required:
       - codigo
       - detail
+    EstadoEdicionEnum:
+      enum:
+      - activa
+      - cerrada
+      type: string
+      description: |-
+        * `activa` - Activa
+        * `cerrada` - Cerrada
+    EstadoVotacionEnum:
+      enum:
+      - borrador
+      - programada
+      - abierta
+      - cerrada
+      type: string
+      description: |-
+        * `borrador` - Borrador
+        * `programada` - Programada
+        * `abierta` - Abierta
+        * `cerrada` - Cerrada
     FilaResultado:
       type: object
       properties:
@@ -1991,6 +2254,101 @@ components:
         * `whatsapp` - WhatsApp
         * `spotify` - Spotify
         * `globe` - Sitio web
+    Integridad:
+      type: object
+      properties:
+        edicion_id:
+          type: integer
+        edicion:
+          type: string
+        generado:
+          type: string
+          format: date-time
+        ok:
+          type: boolean
+        resumen:
+          $ref: '#/components/schemas/IntegridadResumen'
+        votaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegridadVotacion'
+      required:
+      - edicion
+      - edicion_id
+      - generado
+      - ok
+      - resumen
+      - votaciones
+    IntegridadResumen:
+      type: object
+      properties:
+        total_votos:
+          type: integer
+        votantes_unicos:
+          type: integer
+        votaciones:
+          type: integer
+        votaciones_con_alertas:
+          type: integer
+      required:
+      - total_votos
+      - votaciones
+      - votaciones_con_alertas
+      - votantes_unicos
+    IntegridadVotacion:
+      type: object
+      properties:
+        votacion_id:
+          type: integer
+        titulo:
+          type: string
+        categoria:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoVotacionEnum'
+        votos_por_usuario:
+          type: integer
+        total_votos:
+          type: integer
+        suma_por_opcion:
+          type: integer
+        votantes_unicos:
+          type: integer
+        usuarios_excedidos:
+          type: integer
+          description: Usuarios con más votos de los permitidos.
+        votos_opcion_ajena:
+          type: integer
+          description: Votos por una opción de otra votación.
+        votos_inactivos:
+          type: integer
+          description: Votos por una opción desactivada.
+        votos_fuera_de_plazo:
+          type: integer
+        comprobantes_duplicados:
+          type: integer
+        ok:
+          type: boolean
+        alertas:
+          type: array
+          items:
+            type: string
+      required:
+      - alertas
+      - categoria
+      - comprobantes_duplicados
+      - estado
+      - ok
+      - suma_por_opcion
+      - titulo
+      - total_votos
+      - usuarios_excedidos
+      - votacion_id
+      - votantes_unicos
+      - votos_fuera_de_plazo
+      - votos_inactivos
+      - votos_opcion_ajena
+      - votos_por_usuario
     LoginRequest:
       type: object
       properties:
@@ -2030,6 +2388,13 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        audio:
+          type: string
+          format: uri
+          nullable: true
+        texto_audio:
+          type: string
+          description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -2066,12 +2431,21 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        audio:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        texto_audio:
+          type: string
+          description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
       required:
+      - audio
       - id
       - nombre
       - votacion
@@ -2098,12 +2472,21 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        audio:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        texto_audio:
+          type: string
+          description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
       required:
+      - audio
       - id
       - nombre
     OpcionRequest:
@@ -2129,6 +2512,13 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        audio:
+          type: string
+          format: binary
+          nullable: true
+        texto_audio:
+          type: string
+          description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -2139,6 +2529,23 @@ components:
       required:
       - nombre
       - votacion
+    OpcionResumen:
+      type: object
+      properties:
+        opcion_id:
+          type: integer
+        nombre:
+          type: string
+        votos:
+          type: integer
+        porcentaje:
+          type: number
+          format: double
+      required:
+      - nombre
+      - opcion_id
+      - porcentaje
+      - votos
     PaginatedRegistroAuditoriaList:
       type: object
       required:
@@ -2162,9 +2569,47 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RegistroAuditoria'
+    Participacion:
+      type: object
+      properties:
+        votacion_id:
+          type: integer
+        votacion:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoVotacionEnum'
+        umbral:
+          type: integer
+        total_votos:
+          type: integer
+        total_votantes:
+          type: integer
+        disponible:
+          type: boolean
+        motivo:
+          type: string
+        votantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VotanteParticipacion'
+        ocultos:
+          type: integer
+      required:
+      - disponible
+      - estado
+      - motivo
+      - ocultos
+      - total_votantes
+      - total_votos
+      - umbral
+      - votacion
+      - votacion_id
+      - votantes
     PatchedBannerInicioRequest:
       type: object
       properties:
+        edicion:
+          type: integer
         titulo:
           type: string
           minLength: 1
@@ -2219,6 +2664,10 @@ components:
         icono:
           type: string
           maxLength: 60
+        icono_imagen:
+          type: string
+          format: binary
+          nullable: true
         activa:
           type: boolean
         orden:
@@ -2268,7 +2717,18 @@ components:
           type: string
           format: date
         estado:
-          $ref: '#/components/schemas/EdicionEstadoEnum'
+          $ref: '#/components/schemas/EstadoEdicionEnum'
+        presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionCategoriasEnum'
+          description: |-
+            Cómo se muestran las categorías de la edición al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
     PatchedOpcionRequest:
       type: object
       properties:
@@ -2292,6 +2752,13 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        audio:
+          type: string
+          format: binary
+          nullable: true
+        texto_audio:
+          type: string
+          description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -2349,6 +2816,21 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        icono_imagen:
+          type: string
+          format: binary
+          nullable: true
+        presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionOpcionesEnum'
+          description: |-
+            Cómo se muestran las opciones de la votación al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
         fecha_apertura:
           type: string
           format: date-time
@@ -2362,6 +2844,34 @@ components:
           format: int64
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
+    PresentacionCategoriasEnum:
+      enum:
+      - tarjetas
+      - lista
+      - mosaico
+      - compacta
+      - destacada
+      type: string
+      description: |-
+        * `tarjetas` - Tarjetas
+        * `lista` - Lista
+        * `mosaico` - Mosaico
+        * `compacta` - Compacta
+        * `destacada` - Destacada
+    PresentacionOpcionesEnum:
+      enum:
+      - tarjetas
+      - lista
+      - mosaico
+      - compacta
+      - reproductor
+      type: string
+      description: |-
+        * `tarjetas` - Tarjetas
+        * `lista` - Lista
+        * `mosaico` - Mosaico
+        * `compacta` - Compacta
+        * `reproductor` - Reproductor
     PublicarResultadosRequest:
       type: object
       properties:
@@ -2491,7 +3001,7 @@ components:
         votacion:
           type: string
         estado:
-          $ref: '#/components/schemas/ResultadosEstadoEnum'
+          $ref: '#/components/schemas/EstadoVotacionEnum'
         total_votos:
           type: integer
         resultados:
@@ -2504,18 +3014,24 @@ components:
       - total_votos
       - votacion
       - votacion_id
-    ResultadosEstadoEnum:
-      enum:
-      - borrador
-      - programada
-      - abierta
-      - cerrada
-      type: string
-      description: |-
-        * `borrador` - Borrador
-        * `programada` - Programada
-        * `abierta` - Abierta
-        * `cerrada` - Cerrada
+    ResumenEdicion:
+      type: object
+      properties:
+        edicion_id:
+          type: integer
+        edicion:
+          type: string
+        total_votos:
+          type: integer
+        categorias:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoriaResumen'
+      required:
+      - categorias
+      - edicion
+      - edicion_id
+      - total_votos
     RolEnum:
       enum:
       - votante
@@ -2670,6 +3186,21 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        icono_imagen:
+          type: string
+          format: uri
+          nullable: true
+        presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionOpcionesEnum'
+          description: |-
+            Cómo se muestran las opciones de la votación al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
         fecha_apertura:
           type: string
           format: date-time
@@ -2755,6 +3286,22 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        icono_imagen:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionOpcionesEnum'
+          description: |-
+            Cómo se muestran las opciones de la votación al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
         fecha_apertura:
           type: string
           format: date-time
@@ -2787,6 +3334,7 @@ components:
       - estado
       - fecha_apertura
       - fecha_cierre
+      - icono_imagen
       - id
       - mis_votos
       - opciones
@@ -2830,6 +3378,22 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        icono_imagen:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+        presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionOpcionesEnum'
+          description: |-
+            Cómo se muestran las opciones de la votación al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
         fecha_apertura:
           type: string
           format: date-time
@@ -2854,6 +3418,7 @@ components:
       - estado
       - fecha_apertura
       - fecha_cierre
+      - icono_imagen
       - id
       - slug
       - titulo
@@ -2886,6 +3451,21 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        icono_imagen:
+          type: string
+          format: binary
+          nullable: true
+        presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/PresentacionOpcionesEnum'
+          description: |-
+            Cómo se muestran las opciones de la votación al público.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
         fecha_apertura:
           type: string
           format: date-time
@@ -2904,6 +3484,53 @@ components:
       - fecha_apertura
       - fecha_cierre
       - titulo
+    VotacionResumen:
+      type: object
+      properties:
+        votacion_id:
+          type: integer
+        titulo:
+          type: string
+        estado:
+          $ref: '#/components/schemas/EstadoVotacionEnum'
+        publicada:
+          type: boolean
+        total_votos:
+          type: integer
+        opciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpcionResumen'
+      required:
+      - estado
+      - opciones
+      - publicada
+      - titulo
+      - total_votos
+      - votacion_id
+    VotanteParticipacion:
+      type: object
+      properties:
+        usuario_id:
+          type: integer
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        fecha:
+          type: string
+          format: date
+          description: Día del primer voto (sin hora, para no correlacionar con los
+            resultados).
+      required:
+      - apellidos
+      - email
+      - fecha
+      - nombres
+      - usuario_id
     VotarRequest:
       type: object
       properties:
