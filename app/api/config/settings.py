@@ -154,6 +154,10 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {
+        "EstadoEdicionEnum": "votaciones.models.Edicion.Estado",
+        "EstadoVotacionEnum": "votaciones.models.Votacion.Estado",
+    },
     "TAGS": [
         {"name": "Autenticación", "description": "Registro, inicio y cierre de sesión (RF-01, RF-02)."},
         {"name": "Consulta pública", "description": "Ediciones, categorías, votaciones y resultados (RF-04 a RF-06, RF-15)."},

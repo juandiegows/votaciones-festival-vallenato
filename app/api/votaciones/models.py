@@ -82,11 +82,22 @@ class Edicion(models.Model):
         ACTIVA = "activa", "Activa"
         CERRADA = "cerrada", "Cerrada"
 
+    class PresentacionCategorias(models.TextChoices):
+        TARJETAS = "tarjetas", "Tarjetas"
+        LISTA = "lista", "Lista"
+        MOSAICO = "mosaico", "Mosaico"
+        COMPACTA = "compacta", "Compacta"
+        DESTACADA = "destacada", "Destacada"
+
     nombre = models.CharField(max_length=150)
     anio = models.PositiveSmallIntegerField("año", unique=True)
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVA)
+    presentacion_categorias = models.CharField(
+        max_length=15, choices=PresentacionCategorias.choices, default=PresentacionCategorias.TARJETAS,
+        help_text="Cómo se muestran las categorías de la edición al público.",
+    )
 
     class Meta:
         db_table = "edicion"
@@ -111,6 +122,9 @@ class Categoria(models.Model):
     )
     descripcion = models.TextField(blank=True)
     icono = models.CharField(max_length=60, blank=True)
+    icono_imagen = models.ImageField(
+        upload_to="iconos/", blank=True, help_text="Ícono propio subido desde el equipo; reemplaza al ícono de la lista."
+    )
     activa = models.BooleanField(default=True)
     orden = models.PositiveSmallIntegerField(default=0)
 
@@ -145,6 +159,13 @@ class Votacion(models.Model):
         AL_CIERRE = "al_cierre", "Al cierre"
         NO_PUBLICAR = "no_publicar", "No publicar"
 
+    class PresentacionOpciones(models.TextChoices):
+        TARJETAS = "tarjetas", "Tarjetas"
+        LISTA = "lista", "Lista"
+        MOSAICO = "mosaico", "Mosaico"
+        COMPACTA = "compacta", "Compacta"
+        REPRODUCTOR = "reproductor", "Reproductor"
+
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField(max_length=150)
     slug = models.SlugField(
@@ -152,6 +173,13 @@ class Votacion(models.Model):
     )
     descripcion = models.TextField(blank=True)
     imagen = models.URLField(blank=True)
+    icono_imagen = models.ImageField(
+        upload_to="iconos/", blank=True, help_text="Ícono propio subido desde el equipo; reemplaza al ícono de la lista."
+    )
+    presentacion_opciones = models.CharField(
+        max_length=15, choices=PresentacionOpciones.choices, default=PresentacionOpciones.TARJETAS,
+        help_text="Cómo se muestran las opciones de la votación al público.",
+    )
     fecha_apertura = models.DateTimeField()
     fecha_cierre = models.DateTimeField()
     votos_por_usuario = models.PositiveSmallIntegerField(default=1)
@@ -208,6 +236,8 @@ class Opcion(models.Model):
     enlace_multimedia = models.CharField(
         max_length=300, blank=True, help_text="URL absoluta http(s) o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/x.mp3)."
     )
+    audio = models.FileField(upload_to="audios/", blank=True, help_text="Archivo de audio subido (MP3, OGG, WAV, M4A o WebM).")
+    texto_audio = models.TextField(blank=True, help_text="Letra o transcripción del audio, para accesibilidad.")
     orden = models.PositiveSmallIntegerField(default=0)
     activa = models.BooleanField(default=True)
 

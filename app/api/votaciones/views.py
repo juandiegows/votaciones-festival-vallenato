@@ -1,6 +1,6 @@
 import csv
 
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -29,12 +29,15 @@ from .serializers import (
     CategoriaSerializer,
     EdicionSerializer,
     ErrorReglaSerializer,
+    IntegridadSerializer,
     LoginSerializer,
     OpcionListadoPublicoSerializer,
     OpcionSerializer,
+    ParticipacionSerializer,
     PublicarResultadosSerializer,
     RegistroAuditoriaSerializer,
     RegistroSerializer,
+    ResumenEdicionSerializer,
     ResultadosSerializer,
     TokenRespuestaSerializer,
     UsuarioAdminSerializer,
@@ -249,14 +252,22 @@ class MisVotosView(generics.ListAPIView):
 
 
 class AuditadoMixin:
+    """CRUD con registro de auditoría. `campos_archivo`: archivos subidos que se borran al reemplazarlos o eliminarlos."""
+
     entidad = ""
+    campos_archivo = ()
 
     def perform_create(self, serializer):
         objeto = serializer.save()
         servicios.auditar(self.request, "crear", self.entidad, objeto.pk, serializer.data)
 
     def perform_update(self, serializer):
+        anteriores = {campo: getattr(serializer.instance, campo).name for campo in self.campos_archivo}
         objeto = serializer.save()
+        for campo, anterior in anteriores.items():
+            archivo = getattr(objeto, campo)
+            if anterior and anterior != archivo.name:
+                archivo.storage.delete(anterior)
         servicios.auditar(self.request, "actualizar", self.entidad, objeto.pk, serializer.data)
 
     def destroy(self, request, *args, **kwargs):
@@ -264,6 +275,7 @@ class AuditadoMixin:
         try:
             self.validar_eliminacion(objeto)
             pk = objeto.pk
+            nombre = getattr(objeto, "titulo", None) or getattr(objeto, "nombre", None) or str(objeto)
             self.eliminar(objeto)
         except servicios.ReglaNegocioError as error:
             return respuesta_regla(error)
@@ -273,14 +285,18 @@ class AuditadoMixin:
                  "codigo": "registros_asociados"},
                 status=status.HTTP_409_CONFLICT,
             )
-        servicios.auditar(request, "eliminar", self.entidad, pk)
+        servicios.auditar(request, "eliminar", self.entidad, pk, {"nombre": nombre})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def validar_eliminacion(self, objeto):
         pass
 
     def eliminar(self, objeto):
+        archivos = [getattr(objeto, campo) for campo in self.campos_archivo]
         objeto.delete()
+        for archivo in archivos:
+            if archivo:
+                archivo.storage.delete(archivo.name)
 
 
 @extend_schema(tags=["Administración"])
@@ -300,6 +316,11 @@ class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         super().perform_update(serializer)
         servicios.cerrar_otras_ediciones(serializer.instance)
 
+    @extend_schema(summary="Resumen de votos por categoría, votación y opción", responses={200: ResumenEdicionSerializer})
+    @action(detail=True)
+    def resumen(self, request, pk=None):
+        return Response(servicios.resumen_edicion(self.get_object()))
+
 
 @extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT)]))
 @extend_schema(tags=["Administración"])
@@ -307,6 +328,7 @@ class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = CategoriaSerializer
     entidad = "categoria"
+    campos_archivo = ("icono_imagen",)
 
     def get_queryset(self):
         consulta = Categoria.objects.select_related("edicion")
@@ -323,6 +345,7 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = VotacionSerializer
     entidad = "votacion"
+    campos_archivo = ("icono_imagen",)
 
     def get_queryset(self):
         consulta = Votacion.objects.select_related("categoria__edicion")
@@ -343,6 +366,28 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
             return respuesta_regla(error)
         servicios.auditar(request, "publicar", self.entidad, votacion.pk)
         return Response(VotacionSerializer(votacion).data)
+
+    @extend_schema(summary="Despublicar votación (no se permite mientras está abierta)", request=None,
+                   responses={200: VotacionSerializer, 409: ErrorReglaSerializer})
+    @action(detail=True, methods=["post"])
+    def despublicar(self, request, pk=None):
+        votacion = self.get_object()
+        try:
+            servicios.despublicar_votacion(votacion)
+        except servicios.ReglaNegocioError as error:
+            return respuesta_regla(error)
+        servicios.auditar(request, "despublicar", self.entidad, votacion.pk, {"titulo": votacion.titulo})
+        return Response(VotacionSerializer(votacion).data)
+
+    @extend_schema(
+        summary="Quién votó, sin revelar por qué opción",
+        description="Antes del cierre la lista se revela en bloques de 10 votantes y siempre en orden alfabético, "
+                    "con la fecha sin hora, para que no se pueda deducir el voto de nadie.",
+        responses={200: ParticipacionSerializer},
+    )
+    @action(detail=True)
+    def participacion(self, request, pk=None):
+        return Response(servicios.participacion(self.get_object()))
 
     @extend_schema(summary="Cerrar votación anticipadamente", request=None, responses={200: VotacionSerializer})
     @action(detail=True, methods=["post"])
@@ -398,6 +443,7 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = OpcionSerializer
     entidad = "opcion"
+    campos_archivo = ("audio",)
 
     def get_queryset(self):
         consulta = Opcion.objects.all()
@@ -503,9 +549,48 @@ class PaginacionAuditoria(PageNumberPagination):
     page_size = 50
 
 
+@extend_schema_view(list=extend_schema(summary="Registro de acciones (50 por página)", parameters=[
+    OpenApiParameter("accion", OpenApiTypes.STR, description="crear, actualizar, eliminar, publicar, despublicar, cerrar…"),
+    OpenApiParameter("entidad", OpenApiTypes.STR, description="edicion, categoria, votacion, opcion, banner…"),
+    OpenApiParameter("q", OpenApiTypes.STR, description="Busca en el correo o nombre del usuario y en el ID de la entidad"),
+]))
 @extend_schema(tags=["Auditoría"])
 class AdminAuditoriaViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = RegistroAuditoriaSerializer
     pagination_class = PaginacionAuditoria
-    queryset = RegistroAuditoria.objects.select_related("usuario")
+
+    def get_queryset(self):
+        consulta = RegistroAuditoria.objects.select_related("usuario")
+        accion = self.request.query_params.get("accion")
+        entidad = self.request.query_params.get("entidad")
+        texto = (self.request.query_params.get("q") or "").strip()
+        if accion:
+            consulta = consulta.filter(accion=accion)
+        if entidad:
+            consulta = consulta.filter(entidad=entidad)
+        if texto:
+            consulta = consulta.filter(
+                Q(usuario__email__icontains=texto) | Q(usuario__nombres__icontains=texto)
+                | Q(usuario__apellidos__icontains=texto) | Q(entidad_id=texto)
+            )
+        return consulta
+
+    @extend_schema(
+        summary="Verificación de integridad de los votos de una edición",
+        description="Comprueba en cada votación que la suma por opción coincida con el total, que nadie supere el "
+                    "límite de votos y que no haya votos por opciones ajenas o inactivas, fuera de plazo o con "
+                    "comprobantes repetidos.",
+        parameters=[OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la activa")],
+        responses={200: IntegridadSerializer, 404: OpenApiResponse(description="No hay edición")},
+    )
+    @action(detail=False, pagination_class=None)
+    def integridad(self, request):
+        edicion_id = request.query_params.get("edicion") or ""
+        if edicion_id:
+            edicion = get_object_or_404(Edicion, pk=int(edicion_id) if edicion_id.isdigit() else -1)
+        else:
+            edicion = Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+            if not edicion:
+                return Response({"detail": "No hay una edición activa."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(servicios.verificar_integridad(edicion))

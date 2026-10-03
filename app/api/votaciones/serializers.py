@@ -64,10 +64,59 @@ class LoginSerializer(serializers.Serializer):
         return datos
 
 
+TAMANO_MAXIMO_IMAGEN = 3 * 1024 * 1024
+TAMANO_MAXIMO_ICONO = 1 * 1024 * 1024
+TAMANO_MAXIMO_AUDIO = 10 * 1024 * 1024
+FORMATOS_IMAGEN = {"JPEG", "PNG", "WEBP"}
+EXTENSIONES_AUDIO = (".mp3", ".ogg", ".wav", ".m4a", ".webm")
+
+
+class RutaArchivoMixin:
+    """Devuelve la ruta absoluta del sitio (/media/…), sin dominio. Un valor vacío o nulo quita el archivo."""
+
+    def to_representation(self, valor):
+        return valor.url if valor else None
+
+    def validate_empty_values(self, datos):
+        if datos in ("", None) and not self.required:
+            return True, ""
+        return super().validate_empty_values(datos)
+
+
+class RutaImagenField(RutaArchivoMixin, serializers.ImageField):
+    pass
+
+
+class RutaArchivoField(RutaArchivoMixin, serializers.FileField):
+    pass
+
+
+def validar_icono(archivo):
+    if not archivo:
+        return archivo
+    if archivo.size > TAMANO_MAXIMO_ICONO:
+        raise serializers.ValidationError("El ícono supera el tamaño máximo de 1 MB.")
+    formato = getattr(getattr(archivo, "image", None), "format", None)
+    if formato not in FORMATOS_IMAGEN:
+        raise serializers.ValidationError("Formato no permitido: usa una imagen JPG, PNG o WebP.")
+    return archivo
+
+
+def validar_audio(archivo):
+    if not archivo:
+        return archivo
+    if archivo.size > TAMANO_MAXIMO_AUDIO:
+        raise serializers.ValidationError("El audio supera el tamaño máximo de 10 MB.")
+    tipo = getattr(archivo, "content_type", "") or ""
+    if not archivo.name.lower().endswith(EXTENSIONES_AUDIO) or (tipo and not tipo.startswith(("audio/", "video/webm"))):
+        raise serializers.ValidationError("Formato no permitido: usa un archivo MP3, OGG, WAV, M4A o WebM.")
+    return archivo
+
+
 class EdicionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Edicion
-        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado"]
+        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias"]
 
     def validate(self, datos):
         inicio = datos.get("fecha_inicio", getattr(self.instance, "fecha_inicio", None))
@@ -131,11 +180,15 @@ class SlugOpcionalMixin:
 class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
     campo_ambito = "edicion"
     edicion_anio = serializers.IntegerField(source="edicion.anio", read_only=True)
+    icono_imagen = RutaImagenField(required=False, allow_null=True)
 
     class Meta:
         model = Categoria
-        fields = ["id", "edicion", "edicion_anio", "nombre", "slug", "descripcion", "icono", "activa", "orden"]
+        fields = ["id", "edicion", "edicion_anio", "nombre", "slug", "descripcion", "icono", "icono_imagen", "activa", "orden"]
         extra_kwargs = {"slug": {"required": False}}
+
+    def validate_icono_imagen(self, archivo):
+        return validar_icono(archivo)
 
     def validate(self, datos):
         self.validar_slug_unico(datos)
@@ -143,18 +196,27 @@ class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
 
 
 class OpcionSerializer(serializers.ModelSerializer):
+    audio = RutaArchivoField(required=False, allow_null=True)
+
     class Meta:
         model = Opcion
-        fields = ["id", "votacion", "nombre", "descripcion", "imagen", "enlace_multimedia", "orden", "activa"]
+        fields = [
+            "id", "votacion", "nombre", "descripcion", "imagen", "enlace_multimedia", "audio", "texto_audio", "orden", "activa",
+        ]
 
     def validate_enlace_multimedia(self, valor):
         return validar_enlace_multimedia(valor)
 
+    def validate_audio(self, archivo):
+        return validar_audio(archivo)
+
 
 class OpcionPublicaSerializer(serializers.ModelSerializer):
+    audio = RutaArchivoField(read_only=True)
+
     class Meta:
         model = Opcion
-        fields = ["id", "nombre", "descripcion", "imagen", "enlace_multimedia", "orden"]
+        fields = ["id", "nombre", "descripcion", "imagen", "enlace_multimedia", "audio", "texto_audio", "orden"]
 
 
 class OpcionListadoPublicoSerializer(OpcionPublicaSerializer):
@@ -167,16 +229,21 @@ class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
     estado = serializers.CharField(read_only=True)
     categoria_slug = serializers.CharField(source="categoria.slug", read_only=True)
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
+    icono_imagen = RutaImagenField(required=False, allow_null=True)
 
     class Meta:
         model = Votacion
         fields = [
-            "id", "categoria", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen", "fecha_apertura", "fecha_cierre",
+            "id", "categoria", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen", "icono_imagen",
+            "presentacion_opciones", "fecha_apertura", "fecha_cierre",
             "votos_por_usuario", "visibilidad_resultados", "estado", "publicada", "cerrada_manualmente",
             "resultados_publicados", "creada_en", "actualizada_en",
         ]
         read_only_fields = ["publicada", "cerrada_manualmente", "resultados_publicados", "creada_en", "actualizada_en"]
         extra_kwargs = {"slug": {"required": False}}
+
+    def validate_icono_imagen(self, archivo):
+        return validar_icono(archivo)
 
     def validate(self, datos):
         self.validar_slug_unico(datos)
@@ -192,12 +259,14 @@ class VotacionPublicaSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source="categoria.nombre", read_only=True)
     categoria_slug = serializers.CharField(source="categoria.slug", read_only=True)
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
+    icono_imagen = RutaImagenField(read_only=True)
 
     class Meta:
         model = Votacion
         fields = [
-            "id", "categoria", "categoria_nombre", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen", "fecha_apertura",
-            "fecha_cierre", "votos_por_usuario", "visibilidad_resultados", "estado",
+            "id", "categoria", "categoria_nombre", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen",
+            "icono_imagen", "presentacion_opciones", "fecha_apertura", "fecha_cierre", "votos_por_usuario",
+            "visibilidad_resultados", "estado",
         ]
 
 
@@ -236,17 +305,6 @@ class VotoSerializer(serializers.ModelSerializer):
             "opcion_nombre", "fecha_hora", "codigo_comprobante",
         ]
         read_only_fields = fields
-
-
-TAMANO_MAXIMO_IMAGEN = 3 * 1024 * 1024
-FORMATOS_IMAGEN = {"JPEG", "PNG", "WEBP"}
-
-
-class RutaImagenField(serializers.ImageField):
-    """Devuelve la ruta absoluta del sitio (/media/banners/x.webp), sin dominio."""
-
-    def to_representation(self, valor):
-        return valor.url if valor else None
 
 
 class BannerInicioSerializer(serializers.ModelSerializer):
@@ -340,3 +398,90 @@ class ResultadosSerializer(serializers.Serializer):
 
 class PublicarResultadosSerializer(serializers.Serializer):
     publicar = serializers.BooleanField(default=True)
+
+
+class VotanteParticipacionSerializer(serializers.Serializer):
+    usuario_id = serializers.IntegerField()
+    nombres = serializers.CharField()
+    apellidos = serializers.CharField()
+    email = serializers.EmailField()
+    fecha = serializers.DateField(help_text="Día del primer voto (sin hora, para no correlacionar con los resultados).")
+
+
+class ParticipacionSerializer(serializers.Serializer):
+    votacion_id = serializers.IntegerField()
+    votacion = serializers.CharField()
+    estado = serializers.ChoiceField(choices=Votacion.Estado.choices)
+    umbral = serializers.IntegerField()
+    total_votos = serializers.IntegerField()
+    total_votantes = serializers.IntegerField()
+    disponible = serializers.BooleanField()
+    motivo = serializers.CharField(allow_blank=True)
+    votantes = VotanteParticipacionSerializer(many=True)
+    ocultos = serializers.IntegerField()
+
+
+class OpcionResumenSerializer(serializers.Serializer):
+    opcion_id = serializers.IntegerField()
+    nombre = serializers.CharField()
+    votos = serializers.IntegerField()
+    porcentaje = serializers.FloatField()
+
+
+class VotacionResumenSerializer(serializers.Serializer):
+    votacion_id = serializers.IntegerField()
+    titulo = serializers.CharField()
+    estado = serializers.ChoiceField(choices=Votacion.Estado.choices)
+    publicada = serializers.BooleanField()
+    total_votos = serializers.IntegerField()
+    opciones = OpcionResumenSerializer(many=True)
+
+
+class CategoriaResumenSerializer(serializers.Serializer):
+    categoria_id = serializers.IntegerField()
+    nombre = serializers.CharField()
+    icono = serializers.CharField(allow_blank=True)
+    icono_imagen = serializers.CharField(allow_null=True)
+    total_votos = serializers.IntegerField()
+    votaciones = VotacionResumenSerializer(many=True)
+
+
+class ResumenEdicionSerializer(serializers.Serializer):
+    edicion_id = serializers.IntegerField()
+    edicion = serializers.CharField()
+    total_votos = serializers.IntegerField()
+    categorias = CategoriaResumenSerializer(many=True)
+
+
+class IntegridadVotacionSerializer(serializers.Serializer):
+    votacion_id = serializers.IntegerField()
+    titulo = serializers.CharField()
+    categoria = serializers.CharField()
+    estado = serializers.ChoiceField(choices=Votacion.Estado.choices)
+    votos_por_usuario = serializers.IntegerField()
+    total_votos = serializers.IntegerField()
+    suma_por_opcion = serializers.IntegerField()
+    votantes_unicos = serializers.IntegerField()
+    usuarios_excedidos = serializers.IntegerField(help_text="Usuarios con más votos de los permitidos.")
+    votos_opcion_ajena = serializers.IntegerField(help_text="Votos por una opción de otra votación.")
+    votos_inactivos = serializers.IntegerField(help_text="Votos por una opción desactivada.")
+    votos_fuera_de_plazo = serializers.IntegerField()
+    comprobantes_duplicados = serializers.IntegerField()
+    ok = serializers.BooleanField()
+    alertas = serializers.ListField(child=serializers.CharField())
+
+
+class IntegridadResumenSerializer(serializers.Serializer):
+    total_votos = serializers.IntegerField()
+    votantes_unicos = serializers.IntegerField()
+    votaciones = serializers.IntegerField()
+    votaciones_con_alertas = serializers.IntegerField()
+
+
+class IntegridadSerializer(serializers.Serializer):
+    edicion_id = serializers.IntegerField()
+    edicion = serializers.CharField()
+    generado = serializers.DateTimeField()
+    ok = serializers.BooleanField()
+    resumen = IntegridadResumenSerializer()
+    votaciones = IntegridadVotacionSerializer(many=True)
