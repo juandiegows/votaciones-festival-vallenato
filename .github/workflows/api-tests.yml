@@ -39,6 +39,7 @@ jobs:
       DB_USER: root
       DB_PASSWORD: root
       DJANGO_DEBUG: "false"
+      DJANGO_SECRET_KEY: clave-solo-para-pruebas-de-ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

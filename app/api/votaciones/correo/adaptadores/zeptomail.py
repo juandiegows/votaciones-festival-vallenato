@@ -25,6 +25,9 @@ class AdaptadorZeptoMail(AdaptadorCorreo):
         self.timeout = settings.ZEPTOMAIL_TIMEOUT
         if not self.token:
             raise ImproperlyConfigured("CORREO_ADAPTADOR=zeptomail requiere ZEPTOMAIL_TOKEN.")
+        # El token viaja en el encabezado: solo por HTTPS (urlopen también abriría file:// u otros esquemas)
+        if not self.url.startswith("https://"):
+            raise ImproperlyConfigured("ZEPTOMAIL_API_URL debe empezar por https://.")
 
     def cuerpo(self, mensaje: Mensaje) -> dict:
         datos = {
@@ -49,14 +52,14 @@ class AdaptadorZeptoMail(AdaptadorCorreo):
 
     def enviar(self, mensaje: Mensaje) -> None:
         token = self.token if self.token.startswith("Zoho-enczapikey") else f"Zoho-enczapikey {self.token}"
-        peticion = urllib.request.Request(
+        peticion = urllib.request.Request(  # noqa: S310 (https validado en __init__)
             self.url,
             data=json.dumps(self.cuerpo(mensaje)).encode("utf-8"),
             headers={"Authorization": token, "Content-Type": "application/json", "Accept": "application/json"},
             method="POST",
         )
         try:
-            with urllib.request.urlopen(peticion, timeout=self.timeout) as respuesta:
+            with urllib.request.urlopen(peticion, timeout=self.timeout) as respuesta:  # noqa: S310 (https validado)
                 respuesta.read()
         except urllib.error.HTTPError as error:
             detalle = error.read().decode("utf-8", "replace")[:500]

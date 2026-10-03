@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -27,9 +29,14 @@ def env_list(name, default=""):
     return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]
 
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-cambiar-en-produccion")
+CLAVE_DESARROLLO = "dev-insecure-cambiar-en-produccion"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or CLAVE_DESARROLLO
 DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+# Sin DEBUG (producción, CI) la clave es obligatoria: con la de desarrollo cualquiera podría firmar
+# los enlaces de confirmación de correo.
+if not DEBUG and SECRET_KEY == CLAVE_DESARROLLO:
+    raise ImproperlyConfigured("Define DJANGO_SECRET_KEY (clave larga y aleatoria) cuando DJANGO_DEBUG=false.")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -133,6 +140,11 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# Proxies de confianza delante de Django. La IP del cliente (auditoría, votos y límites de peticiones) se toma
+# de X-Forwarded-For contando estos saltos desde el final; con 0 se usa REMOTE_ADDR y el encabezado se ignora,
+# así nadie puede falsear su IP enviándolo. Producción (edge_nginx → Django): 1.
+NUM_PROXIES = int(os.getenv("DJANGO_NUM_PROXIES", "0"))
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Correo transaccional (votaciones/correo). CORREO_ADAPTADOR elige el proveedor: consola (desarrollo), smtp o
@@ -178,6 +190,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "NUM_PROXIES": NUM_PROXIES,
     "DEFAULT_THROTTLE_RATES": {
         "login": os.getenv("THROTTLE_LOGIN", "10/min"),
         "votar": os.getenv("THROTTLE_VOTAR", "30/min"),

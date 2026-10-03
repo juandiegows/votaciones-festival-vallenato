@@ -1,6 +1,8 @@
+import ipaddress
 import secrets
 import string
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Min, Q
 from django.utils import timezone
@@ -19,10 +21,20 @@ class ReglaNegocioError(Exception):
 
 
 def ip_cliente(request):
+    """
+    IP real del cliente. Solo se confía en X-Forwarded-For cuando hay proxies declarados (NUM_PROXIES) y se toma
+    la entrada que agregó el proxy más externo, no la primera (esa la puede escribir el propio cliente).
+    Devuelve None si el valor no es una IP válida.
+    """
+    ip = request.META.get("REMOTE_ADDR")
     reenviada = request.META.get("HTTP_X_FORWARDED_FOR")
-    if reenviada:
-        return reenviada.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+    if settings.NUM_PROXIES and reenviada:
+        saltos = [parte.strip() for parte in reenviada.split(",")]
+        ip = saltos[-min(settings.NUM_PROXIES, len(saltos))]
+    try:
+        return str(ipaddress.ip_address(ip))
+    except ValueError:
+        return None
 
 
 def auditar(request, accion, entidad, entidad_id="", detalle=None):
