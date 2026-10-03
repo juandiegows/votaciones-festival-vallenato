@@ -25,7 +25,7 @@ votaciones-festival-vallenato/
 │   ├── api/              Documentación de la API (guía, OpenAPI y diagramas)
 │   └── entrega-1/        Informe PDF, diagramas y capturas del prototipo
 ├── app/
-│   ├── web/              Frontend (React + Vite + Bootstrap; en la Entrega 1 con datos simulados)
+│   ├── web/              Frontend (React + Vite + Bootstrap; usa la API o, sin ella, datos simulados)
 │   └── api/              Backend Django REST Framework + MySQL (modelos, endpoints y pruebas)
 └── .github/workflows/    GitHub Pages + imagen Docker de la web (ghcr.io)
 ```
@@ -34,7 +34,7 @@ votaciones-festival-vallenato/
 
 | Entrega | Contenido | Estado |
 |---|---|---|
-| 1 | Análisis, requerimientos, casos de uso, modelo conceptual y prototipo navegable | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
+| 1 | Análisis, requerimientos, casos de uso, modelo conceptual, prototipo navegable y panel de administración ([capturas](docs/entrega-1/capturas/)) | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
 | 2 – 4 | Desarrollo con Django (MVT) y MySQL | Pendiente |
 
 ## Web
