@@ -310,6 +310,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistroAuditoria'
           description: ''
+  /api/gestion/auditoria/autoria/:
+    get:
+      operationId: gestion_auditoria_autoria_retrieve
+      description: Columnas de soporte (creado_por, creado_en, actualizado_por, actualizado_en)
+        de la edición, sus categorías, votaciones, opciones y banners, y del contenido
+        del sitio. Lo más reciente primero.
+      summary: 'Autoría de los registros: quién creó y quién modificó por última vez
+        cada uno'
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición; por defecto, la activa
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Autoria'
+          description: ''
+        '404':
+          description: No hay edición
   /api/gestion/auditoria/integridad/:
     get:
       operationId: gestion_auditoria_integridad_retrieve
@@ -2109,6 +2136,21 @@ paths:
           description: No existe o no está publicada
 components:
   schemas:
+    Autoria:
+      type: object
+      properties:
+        edicion_id:
+          type: integer
+        edicion:
+          type: string
+        registros:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistroAutoria'
+      required:
+      - edicion
+      - edicion_id
+      - registros
     BannerInicio:
       type: object
       properties:
@@ -3338,6 +3380,38 @@ components:
       - id
       - ip
       - usuario
+    RegistroAutoria:
+      type: object
+      properties:
+        entidad:
+          type: string
+          description: edicion, categoria, votacion, opcion, banner, revista, red_social,
+            configuracion
+        entidad_id:
+          type: integer
+        nombre:
+          type: string
+        creado_en:
+          type: string
+          format: date-time
+        creado_por:
+          type: string
+          nullable: true
+          description: Nulo si lo creó un proceso sin usuario (datos de demostración).
+        actualizado_en:
+          type: string
+          format: date-time
+        actualizado_por:
+          type: string
+          nullable: true
+      required:
+      - actualizado_en
+      - actualizado_por
+      - creado_en
+      - creado_por
+      - entidad
+      - entidad_id
+      - nombre
     RegistroRequest:
       type: object
       properties:

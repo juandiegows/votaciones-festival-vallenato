@@ -103,6 +103,7 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 | CRUD | `/api/gestion/revistas/` | Revista institucional en PDF (`archivo` en multipart, máximo 50 MB); el inicio la muestra como libro que se hojea |
 | GET | `/api/gestion/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
 | GET | `/api/gestion/auditoria/integridad/?edicion={id}` | Verifica que los votos cuadren en cada votación (por defecto, la edición activa) |
+| GET | `/api/gestion/auditoria/autoria/?edicion={id}` | Quién creó y quién modificó por última vez cada registro (por defecto, la edición activa) |
 
 `CRUD` = `GET` lista, `POST` crear, `GET/PUT/PATCH/DELETE` sobre `{id}/`. Eliminar una votación u opción con
 votos responde `409` (RN-09); eliminar una edición o categoría con elementos asociados también responde `409`.
@@ -173,6 +174,18 @@ suma por opción no coincide con el total (`suma_por_opcion` ≠ `total_votos`),
 (`usuarios_excedidos`), hay votos por opciones de otra votación (`votos_opcion_ajena`) o desactivadas
 (`votos_inactivos`), votos fuera del periodo (`votos_fuera_de_plazo`) o comprobantes repetidos
 (`comprobantes_duplicados`). Incluye un `resumen` con el total de votos, votantes únicos y votaciones con alertas.
+
+### Columnas de soporte y autoría
+
+Las tablas administrables (`edicion`, `categoria`, `votacion`, `opcion`, `banner_inicio`, `revista`, `red_social` y
+`configuracion_sitio`) tienen `creado_en`, `creado_por_id`, `actualizado_en` y `actualizado_por_id`. Nadie las envía:
+un interceptor (`UsuarioActualMiddleware`) guarda el request en curso y `ModeloTrazable` las llena al guardar, también
+en los `update()` masivos. Fuera de un request (`cargar_demo`, shell) los usuarios quedan en `null`. No se agregan a
+`voto` (ya tiene `usuario` y `fecha_hora`, y es inmutable), `usuario` ni `registro_auditoria`.
+
+La API pública no expone quién creó o modificó un registro. La administración lo consulta en
+`GET /api/gestion/auditoria/autoria/` (pestaña «Autoría de registros» de `/panel/auditoria`), y las votaciones de
+gestión conservan sus campos `creada_en` y `actualizada_en`.
 
 ### Datos de prueba
 

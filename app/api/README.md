@@ -18,6 +18,8 @@ app/api/
 │   │   ├── api.py           manejador de excepciones DRF, ip_cliente, ErrorReglaSerializer
 │   │   ├── campos.py        campos de archivo y validadores (imagen, audio, PDF, slug, enlace)
 │   │   ├── consultas.py     filtrar_por_id, slug_unico
+│   │   ├── models.py        ModeloTrazable: creado_en/_por, actualizado_en/_por
+│   │   ├── contexto.py      interceptor del usuario actual (middleware + ContextVar)
 │   │   ├── permisos.py      EsAdministrador
 │   │   └── esquema.py       hook de OpenAPI (oculta el alias /api/admin/)
 │   ├── cuentas/             Usuario: registro, sesión por token, confirmación del correo
@@ -29,7 +31,8 @@ app/api/
 │   ├── models.py            registra los modelos de todos los módulos
 │   ├── admin.py             registra el panel /django-admin/ de todos los módulos
 │   ├── urls.py              compone las rutas /api/… de todos los módulos
-│   ├── migrations/ · management/ (cargar_demo) · templates/ · static/
+│   ├── migrations/          una sola 0001_initial (se unieron las anteriores al empezar el proyecto)
+│   ├── management/ (cargar_demo) · templates/ · static/
 │   └── tests/               pruebas automatizadas
 ├── Dockerfile · entrypoint.sh (espera MySQL, migra y arranca gunicorn)
 └── requirements.txt
