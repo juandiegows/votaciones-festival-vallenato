@@ -25,7 +25,7 @@ const ENTIDADES = [
   ['opcion', 'Opciones'],
   ['banner', 'Banners'],
   ['red_social', 'Redes sociales'],
-  ['configuracion', 'Contacto'],
+  ['configuracion', 'Configuración del sitio'],
 ];
 
 function Participacion({ intervalo }) {

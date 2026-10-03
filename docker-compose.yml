@@ -74,6 +74,8 @@ services:
       DB_PASSWORD: votaciones_local
     ports:
       - "127.0.0.1:8096:8000"
+    volumes:
+      - api_media:/app/media   # archivos subidos desde el panel (banners, revista, íconos, audios): sobreviven al recrear la API
     depends_on:
       db:
         condition: service_healthy
@@ -82,3 +84,4 @@ services:
 volumes:
   web_node_modules:
   db_data:
+  api_media:
