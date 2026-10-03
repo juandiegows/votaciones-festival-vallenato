@@ -21,10 +21,24 @@ export const OPCIONES_MOSTRAR_RESULTADOS = ['al cerrar', 'en tiempo real', 'no p
 /** RN-07: ¿los resultados son visibles para el público? */
 export function resultadosVisibles(votacion) {
   if (votacion.resultadosPublicados) return true;
-  if (votacion.mostrarResultados === 'en tiempo real') return true;
-  if (votacion.mostrarResultados === 'al cerrar') return votacion.estado === 'cerrada';
+  const visibilidad = visibilidadResultados(votacion);
+  if (visibilidad === 'en tiempo real') return true;
+  if (visibilidad === 'al cerrar') return votacion.estado === 'cerrada';
   return false;
 }
+
+/** Visibilidad que aplica a una votación: la de su edición, salvo que la votación la personalice. */
+export const visibilidadResultados = (votacion) => votacion.resultadosEfectivos || votacion.mostrarResultados;
+
+/** Calcula la visibilidad efectiva a partir de la edición (modo demostración). */
+export const calcularVisibilidad = (votacion, edicion) =>
+  votacion.personalizarResultados ? votacion.mostrarResultados : edicion?.mostrarResultados || 'al cerrar';
+
+export const DESCRIPCION_RESULTADOS = {
+  'en tiempo real': 'El público ve el conteo mientras la votación está abierta.',
+  'al cerrar': 'El público ve los resultados cuando la votación cierra.',
+  'no publicar': 'El público no ve los resultados (solo la administración).',
+};
 
 /** Código de comprobante FLV{aa}-XXXXXX, con los dos últimos dígitos del año de la edición (como la API). */
 export function generarCodigoComprobante(anio) {

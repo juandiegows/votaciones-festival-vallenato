@@ -15,7 +15,7 @@ const urlDesdeIcono = (icono) => (icono ? (/^https?:\/\//.test(icono) ? icono : 
 const CAMPOS = {
   ediciones: {
     id: 'id', nombre: 'nombre', anio: 'anio', fechaInicio: 'fecha_inicio', fechaFin: 'fecha_fin', estado: 'estado',
-    presentacionCategorias: 'presentacion_categorias',
+    presentacionCategorias: 'presentacion_categorias', mostrarResultados: 'visibilidad_resultados',
   },
   categorias: {
     id: 'id', edicionId: 'edicion', edicionAnio: 'edicion_anio', nombre: 'nombre', slug: 'slug', descripcion: 'descripcion',
@@ -26,7 +26,7 @@ const CAMPOS = {
     slug: 'slug', descripcion: 'descripcion', imagen: 'imagen', fechaApertura: 'fecha_apertura', fechaCierre: 'fecha_cierre',
     votosPorUsuario: 'votos_por_usuario', mostrarResultados: 'visibilidad_resultados', estadoApi: 'estado',
     publicada: 'publicada', cerradaManualmente: 'cerrada_manualmente', resultadosPublicados: 'resultados_publicados',
-    iconoImagen: 'icono_imagen', presentacionOpciones: 'presentacion_opciones',
+    iconoImagen: 'icono_imagen', presentacionOpciones: 'presentacion_opciones', personalizarResultados: 'personalizar_resultados',
   },
   opciones: {
     id: 'id', votacionId: 'votacion', nombre: 'nombre', descripcion: 'descripcion', imagen: 'imagen',
@@ -57,7 +57,7 @@ const CAMPOS = {
 };
 
 // Campos que la API calcula o que solo cambian con acciones específicas (publicar, cerrar…)
-const SOLO_LECTURA = new Set(['id', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
+const SOLO_LECTURA = new Set(['id', 'resultadosEfectivos', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
 
 // Archivos subidos: solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {
@@ -84,6 +84,9 @@ export function desdeApi(coleccion, objeto) {
   });
   if (coleccion === 'votaciones') {
     salida.mostrarResultados = VISIBILIDAD_DESDE_API[objeto.visibilidad_resultados] || 'al cerrar';
+    // Visibilidad que aplica (la de la edición o la propia si se personaliza); el público solo recibe esta
+    salida.resultadosEfectivos = VISIBILIDAD_DESDE_API[objeto.visibilidad_efectiva || objeto.visibilidad_resultados] || 'al cerrar';
+    salida.personalizarResultados = !!objeto.personalizar_resultados;
     salida.imagen = iconoDesdeUrl(objeto.imagen);
     // Los listados públicos solo traen votaciones publicadas y no exponen las banderas internas.
     if (salida.publicada === undefined) salida.publicada = true;
@@ -92,6 +95,7 @@ export function desdeApi(coleccion, objeto) {
     }
     if (salida.resultadosPublicados === undefined) salida.resultadosPublicados = false;
   }
+  if (coleccion === 'ediciones') salida.mostrarResultados = VISIBILIDAD_DESDE_API[objeto.visibilidad_resultados] || 'al cerrar';
   const archivo = ARCHIVOS[coleccion];
   if (archivo) salida[archivo.web] = urlMedia(salida[archivo.web]);
   return salida;
@@ -105,6 +109,9 @@ export function haciaApi(coleccion, objeto) {
     if (SOLO_LECTURA.has(camel) || !mapa[camel] || valor === undefined) return;
     salida[mapa[camel]] = valor;
   });
+  if (coleccion === 'ediciones' && objeto.mostrarResultados !== undefined) {
+    salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';
+  }
   if (coleccion === 'votaciones') {
     if (objeto.mostrarResultados !== undefined) salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';
     if (objeto.imagen !== undefined) salida.imagen = urlDesdeIcono(objeto.imagen);

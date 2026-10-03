@@ -8,7 +8,7 @@ import IndicadorEnVivo from '../../components/admin/IndicadorEnVivo.jsx';
 import ResumenResultados from '../../components/admin/ResumenResultados.jsx';
 import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
-import { formatearFechaHora, resultadosVisibles } from '../../utils/helpers.js';
+import { formatearFechaHora, resultadosVisibles, visibilidadResultados } from '../../utils/helpers.js';
 import { useResultados } from '../../hooks/useResultados.js';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 
@@ -152,7 +152,7 @@ export default function AdminResultados() {
                 <label className="form-check-label fw-semibold" htmlFor="publicar-res">Publicar resultados</label>
               </div>
               <p id="publicar-ayuda" className="small text-secondary-flv mt-2 mb-1">
-                Configuración: «{votacion.mostrarResultados}». Visibles al público ahora:{' '}
+                Configuración: «{visibilidadResultados(votacion)}» ({votacion.personalizarResultados ? 'personalizada en la votación' : 'de la edición'}). Visibles al público ahora:{' '}
                 <strong>{votacion.publicada && resultadosVisibles(votacion) ? 'Sí' : 'No'}</strong>.
               </p>
               {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2 mt-2 mb-0`} role="status">{mensaje.texto}</div>}

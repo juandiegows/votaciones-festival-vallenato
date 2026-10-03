@@ -38,6 +38,7 @@ export function crearDatosSemilla() {
       fechaFin: '2027-05-02',
       estado: 'activa',
       presentacionCategorias: 'tarjetas',
+      mostrarResultados: 'al cerrar',
     },
     {
       id: 2,

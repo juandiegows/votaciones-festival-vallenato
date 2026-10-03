@@ -11,7 +11,7 @@ import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.
 import FormularioOpcion, { opcionNueva } from '../../components/admin/FormularioOpcion.jsx';
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import { PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
-import { OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso } from '../../utils/helpers.js';
+import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados } from '../../utils/helpers.js';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const ORDENES = [
@@ -72,7 +72,7 @@ export default function AdminVotaciones() {
     .filter((v) => !q || normalizar(`${v.titulo} ${v.descripcion} ${v.slug} ${opciones.filter((o) => o.votacionId === v.id).map((o) => o.nombre).join(' ')}`).includes(q))
     .filter((v) => !filtros.categoria || v.categoriaId === Number(filtros.categoria))
     .filter((v) => !filtros.estado || (filtros.estado === 'borrador' ? !v.publicada : v.publicada && v.estado === filtros.estado))
-    .filter((v) => !filtros.resultados || v.mostrarResultados === filtros.resultados)
+    .filter((v) => !filtros.resultados || visibilidadResultados(v) === filtros.resultados)
     .filter((v) => !filtros.votos || (filtros.votos === 'con' ? numVotos(v.id) > 0 : numVotos(v.id) === 0))
     .sort(comparar);
   const hayFiltros = filtros.texto || filtros.categoria || filtros.estado || filtros.resultados || filtros.votos;
@@ -94,7 +94,8 @@ export default function AdminVotaciones() {
       fechaApertura: isoALocal(new Date(ahora.getTime() + 86400000).toISOString()),
       fechaCierre: isoALocal(new Date(ahora.getTime() + 8 * 86400000).toISOString()),
       votosPorUsuario: 1,
-      mostrarResultados: 'al cerrar',
+      mostrarResultados: edicion?.mostrarResultados || 'al cerrar',
+      personalizarResultados: false,
       imagen: cat?.icono || 'music-note-beamed',
       iconoImagen: '',
       archivoIcono: null,
@@ -235,9 +236,13 @@ export default function AdminVotaciones() {
       <span className="small fw-semibold">
         Opciones <span className={numOpciones(v.id) < 2 ? 'text-danger' : 'text-secondary-flv'}>({numOpciones(v.id)})</span>
       </span>
-      <button type="button" className="btn btn-sm btn-primary py-0 px-2" onClick={() => agregarOpcion(v)} aria-label={`Agregar opción a ${v.titulo}`}>
-        <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
-      </button>
+      {v.estado === 'cerrada' ? (
+        <span className="small text-secondary-flv"><i className="bi bi-lock me-1" aria-hidden="true"></i>Cerrada: no admite opciones nuevas</span>
+      ) : (
+        <button type="button" className="btn btn-sm btn-primary py-0 px-2" onClick={() => agregarOpcion(v)} aria-label={`Agregar opción a ${v.titulo}`}>
+          <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
+        </button>
+      )}
       <span className="small text-secondary-flv ms-auto">
         <i className={`bi bi-${presentacionOpciones(v.presentacionOpciones).icono} me-1`} aria-hidden="true"></i>
         Se muestran como {presentacionOpciones(v.presentacionOpciones).etiqueta.toLowerCase()}
@@ -286,7 +291,7 @@ export default function AdminVotaciones() {
                     <span className="icono-circulo icono-sm"><IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} /></span>
                     <span>
                       <strong>{v.titulo}</strong> <code className="small text-secondary-flv">/{v.slug}</code>
-                      <span className="small text-secondary-flv d-block">{agrupar ? '' : `${categoriaDe(v.categoriaId)?.nombre} · `}Resultados: {v.mostrarResultados}</span>
+                      <span className="small text-secondary-flv d-block">{agrupar ? '' : `${categoriaDe(v.categoriaId)?.nombre} · `}Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</span>
                     </span>
                   </span>
                 </td>
@@ -323,7 +328,7 @@ export default function AdminVotaciones() {
             </div>
             <p className="small mb-2">{v.descripcion}</p>
             <div className="mb-2">{fechas(v)}</div>
-            <p className="small mb-2">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos · Resultados: {v.mostrarResultados}</p>
+            <p className="small mb-2">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos · Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</p>
             {verOpciones && <div className="border-top pt-2 mb-2">{bloqueOpciones(v)}</div>}
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-auto border-top pt-2">
               {avisoAbierta(v) || <span></span>}
@@ -578,10 +583,21 @@ export default function AdminVotaciones() {
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-mr">Mostrar resultados</label>
-                <select id="v-mr" className="form-select" value={form.mostrarResultados} onChange={(e) => setForm({ ...form, mostrarResultados: e.target.value })} aria-describedby="v-mr-ayuda">
+                <div className="form-check mb-1">
+                  <input id="v-mr-propia" className="form-check-input" type="checkbox" checked={!!form.personalizarResultados}
+                    onChange={(e) => setForm({ ...form, personalizarResultados: e.target.checked, mostrarResultados: e.target.checked ? form.mostrarResultados : edicion?.mostrarResultados || 'al cerrar' })} />
+                  <label className="form-check-label small" htmlFor="v-mr-propia">Personalizar en esta votación (no usar la de la edición)</label>
+                </div>
+                <select id="v-mr" className="form-select" disabled={!form.personalizarResultados}
+                  value={form.personalizarResultados ? form.mostrarResultados : edicion?.mostrarResultados || 'al cerrar'}
+                  onChange={(e) => setForm({ ...form, mostrarResultados: e.target.value })} aria-describedby="v-mr-ayuda">
                   {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div id="v-mr-ayuda" className="form-text">Visibilidad pública de los resultados.</div>
+                <div id="v-mr-ayuda" className="form-text">
+                  {form.personalizarResultados
+                    ? DESCRIPCION_RESULTADOS[form.mostrarResultados]
+                    : <>Hereda la configuración de la edición. <Link to="/panel/configuracion">Cambiarla en Configuración</Link>.</>}
+                </div>
               </div>
               <div className="col-12">
                 <fieldset>

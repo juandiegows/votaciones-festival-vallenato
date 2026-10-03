@@ -9,7 +9,7 @@ import Modal from '../components/Modal.jsx';
 import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
 import OpcionesVotacion from '../components/presentaciones/OpcionesVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
-import { formatearFechaHora } from '../utils/helpers.js';
+import { formatearFechaHora, visibilidadResultados } from '../utils/helpers.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
 const claveSeleccion = (id) => `flv_seleccion_${id}`;
@@ -110,7 +110,7 @@ export default function VotacionDetalle() {
               <dt>Votos por usuario</dt>
               <dd>{votacion.votosPorUsuario} <span className="text-secondary-flv">(pendiente de validación)</span></dd>
               <dt>Resultados</dt>
-              <dd className="mb-0">{votacion.mostrarResultados}</dd>
+              <dd className="mb-0">{visibilidadResultados(votacion)}</dd>
             </dl>
             {abierta && <Countdown hasta={votacion.fechaCierre} etiqueta="Cierra en" />}
             {votacion.estado === 'programada' && <Countdown hasta={votacion.fechaApertura} etiqueta="Abre en" />}
@@ -122,7 +122,7 @@ export default function VotacionDetalle() {
               <li>Solo se vota entre la fecha de apertura y la de cierre.</li>
               <li>Un voto por persona en esta votación.</li>
               <li>Una vez confirmado, el voto no se puede cambiar.</li>
-              <li>Los resultados se publican según la configuración: «{votacion.mostrarResultados}».</li>
+              <li>Los resultados se publican según la configuración: «{visibilidadResultados(votacion)}».</li>
             </ul>
           </section>
         </div>

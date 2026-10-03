@@ -7,6 +7,7 @@ import {
   formatearFechaHora,
   generarCodigoComprobante,
   resultadosVisibles,
+  calcularVisibilidad,
   siguienteId,
   slugUnico,
 } from '../utils/helpers.js';
@@ -74,10 +75,10 @@ export function MockProvider({ children }) {
 
   const usuario = datos.usuarios.find((u) => u.id === usuarioId) || null;
 
-  const votaciones = useMemo(
-    () => datos.votaciones.map((v) => ({ ...v, estado: calcularEstado(v, ahora) })),
-    [datos.votaciones, ahora]
-  );
+  const votaciones = useMemo(() => {
+    const edicionDe = (v) => datos.ediciones.find((e) => e.id === datos.categorias.find((c) => c.id === v.categoriaId)?.edicionId);
+    return datos.votaciones.map((v) => ({ ...v, estado: calcularEstado(v, ahora), resultadosEfectivos: calcularVisibilidad(v, edicionDe(v)) }));
+  }, [datos.votaciones, datos.categorias, datos.ediciones, ahora]);
 
   const misVotos = useMemo(
     () => (usuario ? datos.votos.filter((v) => v.usuarioId === usuario.id) : []),
@@ -156,6 +157,16 @@ export function MockProvider({ children }) {
   const ambitoSlug = { categorias: 'edicionId', votaciones: 'categoriaId' };
 
   const guardarEntidad = async (coleccion, entidadOriginal, accion) => {
+    if (coleccion === 'categorias') {
+      const destino = datos.ediciones.find((e) => e.id === Number(entidadOriginal.edicionId));
+      const anterior = datos.categorias.find((c) => c.id === entidadOriginal.id);
+      if (destino?.estado === 'cerrada' && anterior?.edicionId !== destino.id) {
+        return { ok: false, error: 'La edición está cerrada: no se pueden agregar categorías.' };
+      }
+    }
+    if (coleccion === 'opciones' && !entidadOriginal.id && votaciones.find((v) => v.id === entidadOriginal.votacionId)?.estado === 'cerrada') {
+      return { ok: false, error: 'La votación está cerrada: no se pueden agregar opciones.' };
+    }
     // Imagen, ícono o audio subido: en el modo demostración se guarda como data URL en este navegador
     const conf = ARCHIVOS[coleccion];
     const entidad = { ...entidadOriginal };
@@ -244,7 +255,7 @@ export function MockProvider({ children }) {
           ok: false,
           status: 403,
           error:
-            votacion.mostrarResultados === 'no publicar'
+            votacion.resultadosEfectivos === 'no publicar'
               ? 'Los resultados de esta votación no se publican al público.'
               : 'Los resultados se publicarán al cierre de la votación.',
         };

@@ -1,10 +1,11 @@
 import { useResultados } from '../hooks/useResultados.js';
+import { visibilidadResultados } from '../utils/helpers.js';
 import ResultadosChart from './ResultadosChart.jsx';
 
 // Resultados públicos de una votación: muestra el gráfico o el motivo por el que aún no son públicos.
 export default function ResultadosVotacion({ votacion, nota }) {
   // «En tiempo real» y abierta: se vuelve a consultar cada 15 s
-  const enVivo = votacion.mostrarResultados === 'en tiempo real' && votacion.estado === 'abierta';
+  const enVivo = visibilidadResultados(votacion) === 'en tiempo real' && votacion.estado === 'abierta';
   const { cargando, total, filas, error } = useResultados(votacion.id, { intervalo: enVivo ? 15000 : 0 });
 
   if (cargando && !filas.length && !error) {
