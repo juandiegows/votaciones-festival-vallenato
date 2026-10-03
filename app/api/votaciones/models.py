@@ -103,6 +103,10 @@ class Edicion(models.Model):
         max_length=15, choices=[("tiempo_real", "En tiempo real"), ("al_cierre", "Al cierre"), ("no_publicar", "No publicar")],
         default="al_cierre", help_text="Cuándo ve el público los resultados de las votaciones de la edición.",
     )
+    # Límite de votos por usuario de todas las votaciones de la edición (salvo las que lo personalizan)
+    votos_por_usuario = models.PositiveSmallIntegerField(default=1, help_text="Votos por usuario en cada votación de la edición.")
+    # Interruptor de emergencia: mientras esté activo nadie puede votar en la edición
+    votaciones_pausadas = models.BooleanField(default=False, help_text="Suspende temporalmente la recepción de votos de la edición.")
 
     class Meta:
         db_table = "edicion"
@@ -195,6 +199,8 @@ class Votacion(models.Model):
     personalizar_resultados = models.BooleanField(
         default=False, help_text="Usar la visibilidad de resultados propia en lugar de la de la edición."
     )
+    # Falso: hereda el límite de votos de la edición; verdadero: usa votos_por_usuario
+    personalizar_votos = models.BooleanField(default=False, help_text="Usar el límite de votos propio en lugar del de la edición.")
     publicada = models.BooleanField(default=False)
     cerrada_manualmente = models.BooleanField(default=False)
     resultados_publicados = models.BooleanField(default=False)
@@ -235,6 +241,15 @@ class Votacion(models.Model):
     @property
     def estado(self):
         return self.estado_en()
+
+    @property
+    def votos_por_usuario_efectivo(self):
+        """Límite de votos que aplica: el propio si se personaliza; si no, el de la edición."""
+        return self.votos_por_usuario if self.personalizar_votos else self.categoria.edicion.votos_por_usuario
+
+    @property
+    def pausada(self):
+        return self.categoria.edicion.votaciones_pausadas
 
     @property
     def visibilidad_efectiva(self):
@@ -347,6 +362,8 @@ class ConfiguracionSitio(models.Model):
     # Fijo: solo el primer banner activo; carrusel: todos los activos rotando
     modo_banner = models.CharField(max_length=10, choices=ModoBanner.choices, default=ModoBanner.CARRUSEL)
     # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre)
+    # Muestra en el inicio el total de votos de la edición activa
+    mostrar_total_votos = models.BooleanField(default=False, help_text="Mostrar al público el total de votos en el inicio.")
     dias_visible_cerradas = models.PositiveSmallIntegerField(
         default=7, null=True, blank=True,
         help_text="Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre visible).",

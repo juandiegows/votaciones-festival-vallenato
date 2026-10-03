@@ -117,7 +117,8 @@ def validar_audio(archivo):
 class EdicionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Edicion
-        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias", "visibilidad_resultados"]
+        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias", "visibilidad_resultados",
+                  "votos_por_usuario", "votaciones_pausadas"]
 
     def validate(self, datos):
         inicio = datos.get("fecha_inicio", getattr(self.instance, "fecha_inicio", None))
@@ -243,13 +244,16 @@ class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
     icono_imagen = RutaImagenField(required=False, allow_null=True)
     visibilidad_efectiva = serializers.CharField(read_only=True)
+    votos_efectivos = serializers.IntegerField(source="votos_por_usuario_efectivo", read_only=True)
+    pausada = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Votacion
         fields = [
             "id", "categoria", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen", "icono_imagen",
             "presentacion_opciones", "fecha_apertura", "fecha_cierre",
-            "votos_por_usuario", "visibilidad_resultados", "personalizar_resultados", "visibilidad_efectiva",
+            "votos_por_usuario", "personalizar_votos", "votos_efectivos", "pausada",
+            "visibilidad_resultados", "personalizar_resultados", "visibilidad_efectiva",
             "estado", "publicada", "cerrada_manualmente",
             "resultados_publicados", "creada_en", "actualizada_en",
         ]
@@ -275,13 +279,15 @@ class VotacionPublicaSerializer(serializers.ModelSerializer):
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
     icono_imagen = RutaImagenField(read_only=True)
     visibilidad_resultados = serializers.CharField(source="visibilidad_efectiva", read_only=True)
+    votos_por_usuario = serializers.IntegerField(source="votos_por_usuario_efectivo", read_only=True)
+    pausada = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Votacion
         fields = [
             "id", "categoria", "categoria_nombre", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen",
             "icono_imagen", "presentacion_opciones", "fecha_apertura", "fecha_cierre", "votos_por_usuario",
-            "visibilidad_resultados", "estado",
+            "visibilidad_resultados", "estado", "pausada",
         ]
 
 
@@ -364,7 +370,7 @@ class RevistaSerializer(serializers.ModelSerializer):
 class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
-        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "marca"]
+        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "marca"]
 
     # Valores permitidos del tema (deben coincidir con app/web/src/data/marca.js)
     TOKENS_COLOR = {
@@ -429,6 +435,7 @@ class SitioSerializer(serializers.Serializer):
     redes = RedSocialSerializer(many=True)
     banners = BannerInicioSerializer(many=True)
     revistas = RevistaSerializer(many=True)
+    total_votos = serializers.IntegerField(allow_null=True, help_text="Total de votos de la edición activa; nulo si no se muestra al público.")
 
 
 class VotoAdminSerializer(serializers.ModelSerializer):
@@ -464,7 +471,7 @@ class TokenRespuestaSerializer(serializers.Serializer):
 class ErrorReglaSerializer(serializers.Serializer):
     detail = serializers.CharField(help_text="Mensaje legible; cita la regla de negocio (RN-xx).")
     codigo = serializers.CharField(
-        help_text="votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes · tiene_votos · registros_asociados"
+        help_text="votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes · tiene_votos · registros_asociados · votaciones_pausadas"
     )
 
 

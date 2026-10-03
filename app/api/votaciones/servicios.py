@@ -60,12 +60,17 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
             "La votación no está abierta.", codigo="votacion_no_abierta", status=409
         )
 
+    if votacion.pausada:
+        raise ReglaNegocioError(
+            "Las votaciones están en pausa temporalmente. Intenta más tarde.", codigo="votaciones_pausadas", status=409
+        )
+
     try:
         opcion = votacion.opciones.get(pk=opcion_id, activa=True)
     except Opcion.DoesNotExist:
         raise ReglaNegocioError("La opción no pertenece a esta votación.", codigo="opcion_invalida")
 
-    if votos_del_usuario(usuario, votacion) >= votacion.votos_por_usuario:
+    if votos_del_usuario(usuario, votacion) >= votacion.votos_por_usuario_efectivo:
         raise ReglaNegocioError(
             "Ya alcanzaste el límite de votos de esta votación.", codigo="limite_votos", status=409
         )
@@ -244,7 +249,7 @@ def verificar_integridad(edicion):
         suma_por_opcion = Voto.objects.filter(opcion__votacion=votacion).count()
         votantes_unicos = votos.values("usuario").distinct().count()
         excedidos = (
-            votos.values("usuario").annotate(n=Count("id")).filter(n__gt=votacion.votos_por_usuario).count()
+            votos.values("usuario").annotate(n=Count("id")).filter(n__gt=votacion.votos_por_usuario_efectivo).count()
         )
         ajena = votos.exclude(opcion__votacion=votacion).count()
         inactivos = votos.filter(opcion__votacion=votacion, opcion__activa=False).count()
@@ -254,7 +259,7 @@ def verificar_integridad(edicion):
         if suma_por_opcion != total:
             alertas.append(f"La suma por opción ({suma_por_opcion}) no coincide con el total de votos ({total}).")
         if excedidos:
-            alertas.append(f"{excedidos} usuario(s) superan el límite de {votacion.votos_por_usuario} voto(s).")
+            alertas.append(f"{excedidos} usuario(s) superan el límite de {votacion.votos_por_usuario_efectivo} voto(s).")
         if ajena:
             alertas.append(f"{ajena} voto(s) apuntan a una opción de otra votación.")
         if inactivos:
@@ -265,7 +270,7 @@ def verificar_integridad(edicion):
             alertas.append(f"{duplicados} comprobante(s) repetido(s).")
         filas.append({
             "votacion_id": votacion.id, "titulo": votacion.titulo, "categoria": votacion.categoria.nombre,
-            "estado": votacion.estado, "votos_por_usuario": votacion.votos_por_usuario, "total_votos": total,
+            "estado": votacion.estado, "votos_por_usuario": votacion.votos_por_usuario_efectivo, "total_votos": total,
             "suma_por_opcion": suma_por_opcion, "votantes_unicos": votantes_unicos, "usuarios_excedidos": excedidos,
             "votos_opcion_ajena": ajena, "votos_inactivos": inactivos, "votos_fuera_de_plazo": fuera,
             "comprobantes_duplicados": duplicados, "ok": not alertas, "alertas": alertas,

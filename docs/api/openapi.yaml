@@ -820,6 +820,38 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/ediciones/{id}/publicar-resultados/:
+    post:
+      operationId: gestion_ediciones_publicar_resultados_create
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Publicar u ocultar los resultados de todas las votaciones de la edición
+        (RF-15)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: Número de votaciones actualizadas
   /api/gestion/ediciones/{id}/resumen/:
     get:
       operationId: gestion_ediciones_resumen_retrieve
@@ -2240,6 +2272,11 @@ components:
           nullable: true
           description: Días que una votación cerrada sigue visible en el sitio público
             (0 = se oculta al cerrar; vacío = siempre visible).
+        mostrar_total_votos:
+          type: boolean
+          description: Mostrar al público el total de votos en el inicio.
+        marca:
+          description: Colores y estilos de botón personalizados del sitio.
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -2271,6 +2308,11 @@ components:
           nullable: true
           description: Días que una votación cerrada sigue visible en el sitio público
             (0 = se oculta al cerrar; vacío = siempre visible).
+        mostrar_total_votos:
+          type: boolean
+          description: Mostrar al público el total de votos en el inicio.
+        marca:
+          description: Colores y estilos de botón personalizados del sitio.
     Edicion:
       type: object
       properties:
@@ -2313,6 +2355,14 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
+        votos_por_usuario:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          description: Votos por usuario en cada votación de la edición.
+        votaciones_pausadas:
+          type: boolean
+          description: Suspende temporalmente la recepción de votos de la edición.
       required:
       - anio
       - fecha_fin
@@ -2359,6 +2409,14 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
+        votos_por_usuario:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          description: Votos por usuario en cada votación de la edición.
+        votaciones_pausadas:
+          type: boolean
+          description: Suspende temporalmente la recepción de votos de la edición.
       required:
       - anio
       - fecha_fin
@@ -2373,7 +2431,7 @@ components:
         codigo:
           type: string
           description: votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes
-            · tiene_votos · registros_asociados
+            · tiene_votos · registros_asociados · votaciones_pausadas
       required:
       - codigo
       - detail
@@ -2887,6 +2945,11 @@ components:
           nullable: true
           description: Días que una votación cerrada sigue visible en el sitio público
             (0 = se oculta al cerrar; vacío = siempre visible).
+        mostrar_total_votos:
+          type: boolean
+          description: Mostrar al público el total de votos en el inicio.
+        marca:
+          description: Colores y estilos de botón personalizados del sitio.
     PatchedEdicionRequest:
       type: object
       properties:
@@ -2927,6 +2990,14 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
+        votos_por_usuario:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          description: Votos por usuario en cada votación de la edición.
+        votaciones_pausadas:
+          type: boolean
+          description: Suspende temporalmente la recepción de votos de la edición.
     PatchedOpcionRequest:
       type: object
       properties:
@@ -3055,6 +3126,9 @@ components:
           type: integer
           maximum: 65535
           minimum: 0
+        personalizar_votos:
+          type: boolean
+          description: Usar el límite de votos propio en lugar del de la edición.
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
         personalizar_resultados:
@@ -3322,11 +3396,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Revista'
+        total_votos:
+          type: integer
+          nullable: true
+          description: Total de votos de la edición activa; nulo si no se muestra
+            al público.
       required:
       - banners
       - configuracion
       - redes
       - revistas
+      - total_votos
     TokenRespuesta:
       type: object
       properties:
@@ -3481,6 +3561,15 @@ components:
           type: integer
           maximum: 65535
           minimum: 0
+        personalizar_votos:
+          type: boolean
+          description: Usar el límite de votos propio en lugar del de la edición.
+        votos_efectivos:
+          type: integer
+          readOnly: true
+        pausada:
+          type: boolean
+          readOnly: true
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
         personalizar_resultados:
@@ -3521,10 +3610,12 @@ components:
       - fecha_apertura
       - fecha_cierre
       - id
+      - pausada
       - publicada
       - resultados_publicados
       - titulo
       - visibilidad_efectiva
+      - votos_efectivos
     VotacionDetalle:
       type: object
       properties:
@@ -3587,13 +3678,15 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 65535
-          minimum: 0
+          readOnly: true
         visibilidad_resultados:
           type: string
           readOnly: true
         estado:
           type: string
+          readOnly: true
+        pausada:
+          type: boolean
           readOnly: true
         opciones:
           type: array
@@ -3615,9 +3708,11 @@ components:
       - id
       - mis_votos
       - opciones
+      - pausada
       - slug
       - titulo
       - visibilidad_resultados
+      - votos_por_usuario
     VotacionPublica:
       type: object
       properties:
@@ -3680,13 +3775,15 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 65535
-          minimum: 0
+          readOnly: true
         visibilidad_resultados:
           type: string
           readOnly: true
         estado:
           type: string
+          readOnly: true
+        pausada:
+          type: boolean
           readOnly: true
       required:
       - categoria
@@ -3698,9 +3795,11 @@ components:
       - fecha_cierre
       - icono_imagen
       - id
+      - pausada
       - slug
       - titulo
       - visibilidad_resultados
+      - votos_por_usuario
     VotacionRequest:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -3755,6 +3854,9 @@ components:
           type: integer
           maximum: 65535
           minimum: 0
+        personalizar_votos:
+          type: boolean
+          description: Usar el límite de votos propio en lugar del de la edición.
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
         personalizar_resultados:

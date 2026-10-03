@@ -33,6 +33,7 @@ class VotarTests(BaseAPITest):
 
     def test_limite_configurable(self):
         self.abierta.votos_por_usuario = 2
+        self.abierta.personalizar_votos = True
         self.abierta.save()
         self.autenticar(self.votante)
         self.assertEqual(self.votar(self.abierta, self.opcion_a).status_code, 201)

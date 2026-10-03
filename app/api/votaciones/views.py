@@ -317,6 +317,16 @@ class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         super().perform_update(serializer)
         servicios.cerrar_otras_ediciones(serializer.instance)
 
+    @extend_schema(summary="Publicar u ocultar los resultados de todas las votaciones de la edición (RF-15)",
+                   request=PublicarResultadosSerializer, responses={200: OpenApiResponse(description="Número de votaciones actualizadas")})
+    @action(detail=True, methods=["post"], url_path="publicar-resultados")
+    def publicar_resultados(self, request, pk=None):
+        edicion = self.get_object()
+        publicar = bool(request.data.get("publicar", True))
+        actualizadas = Votacion.objects.filter(categoria__edicion=edicion).update(resultados_publicados=publicar)
+        servicios.auditar(request, "publicar_resultados", self.entidad, edicion.pk, {"publicar": publicar, "votaciones": actualizadas})
+        return Response({"publicar": publicar, "actualizadas": actualizadas})
+
     @extend_schema(summary="Resumen de votos por categoría, votación y opción", responses={200: ResumenEdicionSerializer})
     @action(detail=True)
     def resumen(self, request, pk=None):
@@ -493,8 +503,12 @@ class SitioView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        configuracion = ConfiguracionSitio.obtener()
+        activa = Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()
+        total = Voto.objects.filter(votacion__categoria__edicion=activa).count() if configuracion.mostrar_total_votos and activa else None
         return Response({
-            "configuracion": ConfiguracionSitioSerializer(ConfiguracionSitio.obtener()).data,
+            "total_votos": total,
+            "configuracion": ConfiguracionSitioSerializer(configuracion).data,
             "redes": RedSocialSerializer(RedSocial.objects.filter(activa=True), many=True).data,
             # Solo los banners de la edición activa (la más reciente si hubiera varias)
             "banners": BannerInicioSerializer(
