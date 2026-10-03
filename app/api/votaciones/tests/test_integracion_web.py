@@ -2,7 +2,10 @@
 from datetime import date, timedelta
 from io import StringIO
 
-from django.core.management import call_command
+from unittest import mock
+
+from django.core.management import CommandError, call_command
+from django.test import override_settings
 from django.utils import timezone
 
 from votaciones.models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
@@ -94,6 +97,8 @@ class EdicionActivaUnicaTests(BaseAPITest):
         self.assertTrue(respuesta.data["codigo_comprobante"].startswith("FLV28-"))
 
 
+# Las claves documentadas solo se aceptan con DEBUG (desarrollo local)
+@override_settings(DEBUG=True)
 class CargarDemoTests(BaseAPITest):
     def setUp(self):
         # Base de datos vacía: el comando crea sus propios datos.
@@ -103,6 +108,23 @@ class CargarDemoTests(BaseAPITest):
         salida = StringIO()
         call_command("cargar_demo", *args, stdout=salida)
         return salida.getvalue()
+
+    @override_settings(DEBUG=False)
+    def test_sin_debug_exige_claves_propias(self):
+        with mock.patch.dict("os.environ", {}, clear=False) as entorno:
+            entorno.pop("DEMO_CLAVE_ADMIN", None)
+            entorno.pop("DEMO_CLAVE_VOTANTE", None)
+            with self.assertRaises(CommandError):
+                self.cargar()
+        self.assertFalse(Edicion.objects.exists())
+
+    @override_settings(DEBUG=False)
+    def test_sin_debug_usa_las_claves_del_entorno(self):
+        with mock.patch.dict("os.environ", {"DEMO_CLAVE_ADMIN": "Otra*Clave2027", "DEMO_CLAVE_VOTANTE": "Otra*Voto2027"}):
+            self.cargar()
+        admin = Usuario.objects.get(email="admin@festival.test")
+        self.assertTrue(admin.check_password("Otra*Clave2027"))
+        self.assertFalse(admin.check_password("Admin2027*"))
 
     def test_carga_datos_equivalentes_al_seed(self):
         self.assertIn("cargados", self.cargar())
@@ -231,6 +253,7 @@ class EnlaceMultimediaTests(BaseAPITest):
             self.assertEqual(self.guardar(enlace).status_code, 400, enlace)
 
 
+@override_settings(DEBUG=True)
 class CargarDemoRutasTests(BaseAPITest):
     def setUp(self):
         pass

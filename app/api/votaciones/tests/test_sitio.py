@@ -5,6 +5,7 @@ from io import StringIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.test import override_settings
 from PIL import Image
 
 from votaciones.models import BannerInicio, ConfiguracionSitio, Edicion, RedSocial, RegistroAuditoria, Revista, Votacion
@@ -189,6 +190,7 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertTrue(RegistroAuditoria.objects.filter(accion="eliminar", entidad="red_social").exists())
 
 
+@override_settings(DEBUG=True)
 class CargarDemoSitioYEdicionesPasadasTests(BaseAPITest):
     def setUp(self):
         pass

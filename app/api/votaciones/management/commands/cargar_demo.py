@@ -10,15 +10,20 @@ También crea un banner del inicio por edición (imágenes abstractas generadas 
 Uso:
     python manage.py cargar_demo              # carga si aún no existen (idempotente)
     python manage.py cargar_demo --reiniciar  # borra los datos de demostración y los vuelve a cargar
+
+Contraseñas: con DEBUG se usan las documentadas (Admin2027*, Voto2027*). Sin DEBUG (servidor público) son
+obligatorias DEMO_CLAVE_ADMIN y DEMO_CLAVE_VOTANTE, para que nadie entre al panel con una clave publicada.
 """
 import io
+import os
 import random
 import unicodedata
 from datetime import date, datetime, timedelta
 
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -264,8 +269,24 @@ class Command(BaseCommand):
             help="Elimina los datos de demostración existentes (y los votos en esas ediciones) antes de cargarlos.",
         )
 
+    @staticmethod
+    def clave(variable, documentada):
+        """Contraseña de una cuenta de demostración: la de la variable de entorno o, solo con DEBUG, la documentada."""
+        valor = os.getenv(variable, "")
+        if valor:
+            return valor
+        if settings.DEBUG:
+            return documentada
+        raise CommandError(
+            f"Sin DEBUG define {variable}: las claves de demostración están publicadas en la documentación."
+        )
+
     @transaction.atomic
     def handle(self, *args, **opciones):
+        self.claves = {
+            "admin": self.clave("DEMO_CLAVE_ADMIN", ADMIN["password"]),
+            "votante": self.clave("DEMO_CLAVE_VOTANTE", VOTANTE["password"]),
+        }
         anios = [e["anio"] for e in EDICIONES]
         if opciones["reiniciar"]:
             self.borrar(anios)
@@ -341,12 +362,12 @@ class Command(BaseCommand):
                         rol=Usuario.Rol.ADMINISTRADOR, is_staff=True, acepta_tratamiento_datos=True,
                         tipo_documento=Usuario.TipoDocumento.CC, numero_documento="1000000001", correo_verificado=True,
                         fecha_registro=relativa(-60))
-        admin.set_password(ADMIN["password"])
+        admin.set_password(self.claves["admin"])
         admin.save()
         votante = Usuario(email=VOTANTE["email"], nombres=VOTANTE["nombres"], apellidos=VOTANTE["apellidos"],
                           acepta_tratamiento_datos=True, tipo_documento=Usuario.TipoDocumento.CC,
                           numero_documento="1000000002", correo_verificado=True, fecha_registro=relativa(-20))
-        votante.set_password(VOTANTE["password"])
+        votante.set_password(self.claves["votante"])
         votante.save()
 
         # Votantes ficticios: comparten un mismo hash para que la carga sea rápida.
@@ -395,7 +416,7 @@ class Command(BaseCommand):
         fechas.append(relativa(-12))
         Voto.objects.bulk_create(votos, batch_size=500)
         # `fecha_hora` es auto_now_add: se ajusta después para repartir los votos en el periodo de cada votación.
-        fecha_por_codigo = {v.codigo_comprobante: f for v, f in zip(votos, fechas)}
+        fecha_por_codigo = {v.codigo_comprobante: f for v, f in zip(votos, fechas, strict=True)}
         guardados = list(Voto.objects.filter(codigo_comprobante__in=fecha_por_codigo))
         for voto in guardados:
             voto.fecha_hora = fecha_por_codigo[voto.codigo_comprobante]
