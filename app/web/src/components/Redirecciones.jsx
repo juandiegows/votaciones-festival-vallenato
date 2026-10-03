@@ -28,3 +28,9 @@ export function RedireccionVotacion({ comprobante = false }) {
   if (!votacion) return <NoEncontrado />;
   return <Navigate to={comprobante ? rutas.comprobante(votacion) : rutas.votacion(votacion)} replace />;
 }
+
+// /{año}/{categoría}[/…] → /{año}/categorias/{categoría}[/…]
+export function RedireccionRutaAnterior() {
+  const { anio, categoriaSlug, '*': resto } = useParams();
+  return <Navigate to={`/${anio}/categorias/${categoriaSlug}${resto ? `/${resto}` : ''}`} replace />;
+}

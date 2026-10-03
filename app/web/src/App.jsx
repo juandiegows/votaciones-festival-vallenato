@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { RequiereAdmin, RequiereSesion } from './components/Guards.jsx';
-import { IrAEdicionActiva, RedireccionCategoria, RedireccionVotacion } from './components/Redirecciones.jsx';
+import { IrAEdicionActiva, RedireccionCategoria, RedireccionRutaAnterior, RedireccionVotacion } from './components/Redirecciones.jsx';
 import Inicio from './pages/Inicio.jsx';
 import Registro from './pages/Registro.jsx';
 import Login from './pages/Login.jsx';
@@ -55,11 +55,14 @@ export default function App() {
           <Route path="sitio" element={<AdminSitio />} />
           <Route path="marca" element={<Marca />} />
         </Route>
-        {/* URL amigables por edición: /{año}/{categoría}/{votación} */}
+        {/* URL amigables por edición: /{año}/categorias/{categoría}/{votación} */}
         <Route path=":anio" element={<Categorias />} />
-        <Route path=":anio/:categoriaSlug" element={<CategoriaVotaciones />} />
-        <Route path=":anio/:categoriaSlug/:votacionSlug" element={<VotacionDetalle />} />
-        <Route path=":anio/:categoriaSlug/:votacionSlug/comprobante" element={<RequiereSesion><Comprobante /></RequiereSesion>} />
+        <Route path=":anio/categorias" element={<Navigate to=".." relative="path" replace />} />
+        <Route path=":anio/categorias/:categoriaSlug" element={<CategoriaVotaciones />} />
+        <Route path=":anio/categorias/:categoriaSlug/:votacionSlug" element={<VotacionDetalle />} />
+        <Route path=":anio/categorias/:categoriaSlug/:votacionSlug/comprobante" element={<RequiereSesion><Comprobante /></RequiereSesion>} />
+        {/* Compatibilidad con las URL anteriores sin «categorias»: /{año}/{categoría}[/{votación}[/comprobante]] */}
+        <Route path=":anio/:categoriaSlug/*" element={<RedireccionRutaAnterior />} />
         <Route path="*" element={<NoEncontrado />} />
       </Route>
     </Routes>

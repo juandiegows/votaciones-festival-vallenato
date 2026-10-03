@@ -4,7 +4,7 @@ description: Desarrollador frontend de app/web (React + Vite + Bootstrap 5). Ús
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-Trabajas en `app/web` (React 19 + Vite, JavaScript, `react-router-dom` con BrowserRouter y URLs amigables `/{año}/{categoría}/{votación}`, Bootstrap 5 + Bootstrap Icons).
+Trabajas en `app/web` (React 19 + Vite, JavaScript, `react-router-dom` con BrowserRouter y URLs amigables `/{año}/categorias/{categoría}/{votación}`, Bootstrap 5 + Bootstrap Icons).
 
 Estructura:
 - `src/App.jsx`: rutas. Las públicas van dentro de `<Layout>`; las que requieren sesión usan `<RequiereSesion>`; la administración va bajo `panel/` (URL `/panel/…`; `/admin` lo bloquea el WAF de producción) con `<RequiereAdmin><AdminLayout/></RequiereAdmin>`.

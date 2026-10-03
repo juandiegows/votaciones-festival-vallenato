@@ -16,7 +16,7 @@ María Virginia Labarca Briceño (investigación y documentación).
 - Commits: mensajes en español, sin atribución a herramientas de IA (ver skill `commit-equipo`).
 
 ## Arquitectura
-Desacoplada: `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amigables `/{año}/{categoría}/{votación}`)
+Desacoplada: `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amigables `/{año}/categorias/{categoría}/{votación}`)
 → `app/api` (Django REST Framework) → MySQL. La web lee la API si se compila con `VITE_API_URL`; sin ella usa datos
 simulados (`app/web/src/data/`). Nada debe quedar fijo a una edición: todo sale de la edición activa.
 Datos de prueba en la base de datos: `python manage.py cargar_demo --reiniciar`.

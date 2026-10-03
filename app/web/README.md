@@ -115,9 +115,9 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/registro` | Registro | RF-01, RN-10 |
 | `/login` | Inicio de sesión + recuperar contraseña (simulado) | RF-02, RF-03 |
 | `/{año}` (p. ej. `/2027`) | Categorías de la edición | RF-04 |
-| `/{año}/{categoría}` (p. ej. `/2027/musica`) | Votaciones de la categoría (filtro por estado) | RF-05 |
-| `/{año}/{categoría}/{votación}` (p. ej. `/2027/musica/cancion-favorita-del-publico`) | Detalle, muestras multimedia y confirmación del voto | RF-06, RF-07 |
-| `/{año}/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
+| `/{año}/categorias/{categoría}` (p. ej. `/2027/categorias/musica`) | Votaciones de la categoría: programadas, abiertas y cerradas hasta N días después del cierre (N en `/panel/sitio`) | RF-05 |
+| `/{año}/categorias/{categoría}/{votación}` (p. ej. `/2027/categorias/musica/cancion-favorita-del-publico`) | Detalle, muestras multimedia y confirmación del voto | RF-06, RF-07 |
+| `/{año}/categorias/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
 | `/categorias` | Redirige a `/{año de la edición activa}` | — |
 | `/mis-votos` | Mis votos | — |
 | `/panel` | Panel principal (KPI + actividad reciente) | RF-16 |

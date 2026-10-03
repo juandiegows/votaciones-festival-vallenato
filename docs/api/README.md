@@ -123,7 +123,7 @@ quedan cerradas automáticamente, así el sitio público muestra siempre una sol
 
 Las categorías y votaciones tienen `slug` (generado desde el nombre, editable por el administrador): único por
 edición en las categorías y único por categoría en las votaciones. La web usa rutas como
-`/2027/musica/cancion-favorita-del-publico`; en 2028 basta con crear y activar la nueva edición. Las respuestas
+`/2027/categorias/musica/cancion-favorita-del-publico`; en 2028 basta con crear y activar la nueva edición. Las respuestas
 incluyen `slug`, `edicion_anio` y `categoria_slug`. El código del comprobante usa el año de la edición (`FLV27-…`,
 `FLV28-…`).
 

@@ -4,9 +4,9 @@ import { useApp } from '../context/AppContext.jsx';
 
 // URL amigables (sin IDs):
 //   /{año}                                   categorías de la edición
-//   /{año}/{categoría}                       votaciones de la categoría
-//   /{año}/{categoría}/{votación}            detalle y voto
-//   /{año}/{categoría}/{votación}/comprobante
+//   /{año}/categorias/{categoría}                       votaciones de la categoría
+//   /{año}/categorias/{categoría}/{votación}            detalle y voto
+//   /{año}/categorias/{categoría}/{votación}/comprobante
 export const PATRON_ANIO = /^\d{4}$/;
 
 /** Constructores de rutas a partir de los objetos del contexto. */
@@ -14,11 +14,11 @@ export function useRutas() {
   const { ediciones, categorias } = useApp();
   return useMemo(() => {
     const anioDe = (edicionId) => ediciones.find((e) => e.id === edicionId)?.anio;
-    const categoria = (c) => `/${anioDe(c.edicionId)}/${c.slug}`;
+    const categoria = (c) => `/${anioDe(c.edicionId)}/categorias/${c.slug}`;
     const votacion = (v) => {
       const c = categorias.find((x) => x.id === v.categoriaId);
       if (c) return `${categoria(c)}/${v.slug}`;
-      return v.edicionAnio && v.categoriaSlug ? `/${v.edicionAnio}/${v.categoriaSlug}/${v.slug}` : '/';
+      return v.edicionAnio && v.categoriaSlug ? `/${v.edicionAnio}/categorias/${v.categoriaSlug}/${v.slug}` : '/';
     };
     return {
       edicion: (e) => `/${e.anio}`,
@@ -27,7 +27,7 @@ export function useRutas() {
       comprobante: (v) => `${votacion(v)}/comprobante`,
       /** Ruta del comprobante desde un voto (usa los datos de ruta que trae el voto si la votación no está cargada). */
       comprobanteDeVoto: (voto, v) =>
-        v ? `${votacion(v)}/comprobante` : voto.edicionAnio ? `/${voto.edicionAnio}/${voto.categoriaSlug}/${voto.votacionSlug}/comprobante` : '/mis-votos',
+        v ? `${votacion(v)}/comprobante` : voto.edicionAnio ? `/${voto.edicionAnio}/categorias/${voto.categoriaSlug}/${voto.votacionSlug}/comprobante` : '/mis-votos',
     };
   }, [ediciones, categorias]);
 }
