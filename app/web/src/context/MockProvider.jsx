@@ -15,6 +15,7 @@ import {
 } from '../utils/helpers.js';
 import { calcularParticipacion, calcularResumen, verificarIntegridad } from '../utils/analisis.js';
 import { AppContext, buscarEdicionActiva } from './contexto.js';
+import { normalizarDocumento } from '../utils/documento.js';
 
 // Archivos que el modo demostración guarda como data URL en este navegador
 const ARCHIVOS = {
@@ -124,11 +125,20 @@ export function MockProvider({ children }) {
     if (datos.usuarios.some((u) => u.correo.toLowerCase() === form.correo.trim().toLowerCase())) {
       return { ok: false, error: 'Ya existe una cuenta con este correo.', errores: { correo: 'Ya existe una cuenta con este correo.' } };
     }
+    const numeroDocumento = normalizarDocumento(form.numeroDocumento);
+    if (datos.usuarios.some((u) => u.tipoDocumento === form.tipoDocumento && u.numeroDocumento === numeroDocumento)) {
+      const error = 'Ya existe una cuenta con este documento.';
+      return { ok: false, error, errores: { numeroDocumento: error } };
+    }
     const nuevo = {
       id: siguienteId(datos.usuarios),
       nombres: form.nombres.trim(),
       apellidos: form.apellidos.trim(),
       correo: form.correo.trim().toLowerCase(),
+      tipoDocumento: form.tipoDocumento,
+      numeroDocumento,
+      // En la demostración no se envían correos: la cuenta queda confirmada al crearla
+      correoVerificado: true,
       contrasena: form.contrasena, // solo en el modo demostración
       rol: 'votante',
       aceptaTratamientoDatos: form.aceptaTratamientoDatos,
@@ -391,6 +401,9 @@ export function MockProvider({ children }) {
     iniciarSesion,
     cerrarSesion,
     registrarUsuario,
+    // Sin correos en la demostración: confirmar y reenviar no tienen nada que hacer
+    confirmarCorreo: async () => ({ ok: true, usuario }),
+    reenviarConfirmacion: async () => ({ ok: true, mensaje: 'En la demostración la cuenta ya está confirmada.' }),
     votosDeUsuario,
     emitirVoto,
     guardarEntidad,

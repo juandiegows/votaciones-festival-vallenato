@@ -54,7 +54,8 @@ const CAMPOS = {
   },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',
-    fechaRegistro: 'fecha_registro',
+    fechaRegistro: 'fecha_registro', tipoDocumento: 'tipo_documento', numeroDocumento: 'numero_documento',
+    correoVerificado: 'correo_verificado',
   },
 };
 

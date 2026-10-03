@@ -198,6 +198,8 @@ export function ApiProvider({ children }) {
       email: form.correo.trim().toLowerCase(),
       nombres: form.nombres.trim(),
       apellidos: form.apellidos.trim(),
+      tipo_documento: form.tipoDocumento,
+      numero_documento: form.numeroDocumento.trim(),
       password: form.contrasena,
       acepta_tratamiento_datos: form.aceptaTratamientoDatos,
     });
@@ -208,6 +210,21 @@ export function ApiProvider({ children }) {
       return { ok: false, error: r.error, errores };
     }
     return abrirSesion(r);
+  };
+
+  /** Confirma el correo con el token del enlace; si es la cuenta abierta, la marca como verificada. */
+  const confirmarCorreo = async (token) => {
+    const r = await api.post('/auth/confirmar-correo/', { token });
+    if (!r.ok) return { ok: false, error: r.error, codigo: r.codigo };
+    const confirmado = usuarioDesdeApi(r.datos);
+    setUsuario((u) => (u && u.id === confirmado.id ? { ...u, correoVerificado: true } : u));
+    return { ok: true, usuario: confirmado };
+  };
+
+  const reenviarConfirmacion = async () => {
+    const r = await api.post('/auth/reenviar-confirmacion/');
+    if (!r.ok) return { ok: false, error: r.error, codigo: r.codigo };
+    return { ok: true, mensaje: r.datos?.detail };
   };
 
   const cerrarSesion = async () => {
@@ -402,6 +419,8 @@ export function ApiProvider({ children }) {
     iniciarSesion,
     cerrarSesion,
     registrarUsuario,
+    confirmarCorreo,
+    reenviarConfirmacion,
     votosDeUsuario,
     emitirVoto,
     guardarEntidad,

@@ -195,8 +195,8 @@ export function crearDatosSemilla() {
   // NOTA: las contraseñas en texto plano son SOLO para el prototipo (mock).
   // En la versión real se almacenarán con hash (p. ej. PBKDF2 de Django).
   const usuarios = [
-    { id: 1, nombres: 'Administrador', apellidos: 'Festival', correo: 'admin@festival.test', contrasena: 'Admin2027*', rol: 'administrador', aceptaTratamientoDatos: true, fechaRegistro: relativa(-60) },
-    { id: 2, nombres: 'Valentina', apellidos: 'Ospino Carrillo', correo: 'votante@festival.test', contrasena: 'Voto2027*', rol: 'votante', aceptaTratamientoDatos: true, fechaRegistro: relativa(-20) },
+    { id: 1, nombres: 'Administrador', apellidos: 'Festival', correo: 'admin@festival.test', contrasena: 'Admin2027*', rol: 'administrador', aceptaTratamientoDatos: true, tipoDocumento: 'CC', numeroDocumento: '1000000001', correoVerificado: true, fechaRegistro: relativa(-60) },
+    { id: 2, nombres: 'Valentina', apellidos: 'Ospino Carrillo', correo: 'votante@festival.test', contrasena: 'Voto2027*', rol: 'votante', aceptaTratamientoDatos: true, tipoDocumento: 'CC', numeroDocumento: '1000000002', correoVerificado: true, fechaRegistro: relativa(-20) },
   ];
 
   // Votantes ficticios para que los resultados tengan datos
@@ -213,6 +213,9 @@ export function crearDatosSemilla() {
       correo: `${n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}.${a.toLowerCase().replace('ñ', 'n')}${i}@correo.test`,
       contrasena: 'Demo2027*',
       rol: 'votante',
+      tipoDocumento: 'CC',
+      numeroDocumento: String(1100000000 + i),
+      correoVerificado: true,
       aceptaTratamientoDatos: true,
       fechaRegistro: relativa(-Math.floor(rnd() * 40) - 1),
     });
