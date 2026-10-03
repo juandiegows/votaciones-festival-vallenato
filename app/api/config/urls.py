@@ -29,3 +29,12 @@ urlpatterns = [
     # Imágenes subidas: las sirve Django en todos los entornos (el proxy reenvía /media/ a la API)
     re_path(r"^media/(?P<path>.*)$", media, name="media"),
 ]
+
+if settings.DEBUG:
+    from votaciones.correo.vista_previa import vista_previa
+
+    # Vista previa de las plantillas de correo (solo desarrollo)
+    urlpatterns += [
+        path("api/correo/vista-previa/", vista_previa, name="correo-vista-previa"),
+        path("api/correo/vista-previa/<slug:plantilla>/", vista_previa, name="correo-vista-previa-plantilla"),
+    ]
