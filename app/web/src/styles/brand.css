@@ -62,3 +62,64 @@
   --bs-form-valid-color: var(--flv-estado-abierta);
   --bs-border-radius: 0.5rem;
 }
+
+/* ── Avisos (.alert) con la identidad del Festival ──────────────────────────────────────────────
+   Tarjeta blanca con franja de acento a la izquierda e ícono del color del aviso, en lugar de los
+   fondos pastel de Bootstrap. Texto en carbón (contraste AAA); el acento solo marca el tipo. */
+.alert {
+  --flv-alerta-acento: var(--flv-carbon);
+  --flv-alerta-tinte: var(--flv-blanco);
+  --bs-alert-color: var(--flv-carbon);
+  --bs-alert-bg: var(--flv-alerta-tinte);
+  --bs-alert-border-color: var(--flv-gris-borde);
+  --bs-alert-link-color: var(--flv-rojo-hover);
+  --bs-alert-padding-x: 1.1rem;
+  --bs-alert-padding-y: .85rem;
+  --bs-alert-border-radius: .65rem;
+  position: relative;
+  border-left: 4px solid var(--flv-alerta-acento);
+  box-shadow: 0 2px 10px rgba(28, 23, 17, .06);
+  line-height: 1.55;
+}
+.alert > .bi:first-child,
+.alert > :first-child > .bi:first-child { color: var(--flv-alerta-acento); font-size: 1.05em; }
+.alert strong { color: var(--flv-negro); }
+.alert .alert-link { font-weight: 600; }
+
+.alert-warning   { --flv-alerta-acento: var(--flv-dorado);           --flv-alerta-tinte: #fffaf3; }
+.alert-warning > .bi:first-child { color: var(--flv-dorado-texto); }
+.alert-danger    { --flv-alerta-acento: var(--flv-rojo-hover);       --flv-alerta-tinte: #fff7f6; }
+.alert-success   { --flv-alerta-acento: var(--flv-estado-abierta);   --flv-alerta-tinte: #f5faf5; }
+.alert-info      { --flv-alerta-acento: var(--flv-ocre);             --flv-alerta-tinte: var(--flv-blanco); }
+.alert-secondary { --flv-alerta-acento: var(--flv-gris-texto);       --flv-alerta-tinte: var(--flv-fondo); }
+
+/* Barra fija bajo el menú (p. ej. «Confirma tu correo»): banda carbón como el aviso del prototipo */
+.barra-aviso {
+  background: var(--flv-carbon);
+  color: var(--flv-blanco);
+  border-bottom: 3px solid var(--flv-dorado);
+  font-size: .9rem;
+}
+.barra-aviso .bi { color: var(--flv-dorado); }
+.barra-aviso strong { color: var(--flv-dorado-claro); }
+.barra-aviso .btn-barra {
+  border: 1px solid var(--flv-dorado);
+  color: var(--flv-dorado-claro);
+  background: transparent;
+  font-weight: 600;
+}
+.barra-aviso .btn-barra:hover,
+.barra-aviso .btn-barra:focus-visible { background: var(--flv-dorado); color: var(--flv-negro); }
+.barra-aviso .barra-error { color: var(--flv-rojo-sobre-oscuro); }
+
+/* Casillas y radios: el gris de borde general (#e9e9e9, 1.2:1) no se ve; WCAG 1.4.11 pide 3:1 en controles */
+.form-check-input {
+  width: 1.15em;
+  height: 1.15em;
+  border: 1.5px solid #8a7f72;   /* 4.0:1 sobre blanco */
+  background-color: var(--flv-blanco);
+}
+.form-check-input:hover { border-color: var(--flv-rojo-hover); }
+.form-check-input:checked { background-color: var(--flv-rojo); border-color: var(--flv-rojo); }
+.form-check-input:focus { border-color: var(--flv-rojo-hover); box-shadow: 0 0 0 .2rem rgba(221, 51, 51, .25); }
+.form-check-input.is-invalid { border-color: var(--flv-rojo-hover); }

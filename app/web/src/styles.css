@@ -146,7 +146,9 @@ a:hover { color: var(--flv-rojo-hover); }
 .estado-cerrada { background: var(--flv-estado-cerrada); }
 .badge-dorado { background: var(--flv-dorado); color: var(--flv-negro); font-weight: 700; }
 .badge-ilustrativo { background: var(--flv-crema); color: var(--flv-negro); border: 1px dashed var(--flv-dorado-texto); font-weight: 600; }
-.aviso-crema { background: var(--flv-crema); color: var(--flv-carbon); border: 1px solid #f0cfa5; }
+/* Aviso de contenido pendiente de validación: misma tarjeta que .alert-warning (ver brand.css) */
+.aviso-crema { --flv-alerta-acento: var(--flv-dorado); --flv-alerta-tinte: #fffaf3; }
+.aviso-crema > .bi:first-child { color: var(--flv-dorado-texto); }
 
 /* Opciones seleccionables (semántica radio) */
 .opcion-card {
