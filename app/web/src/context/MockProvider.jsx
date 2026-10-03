@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { cargarDatos, cargarSesion, guardarDatos, guardarSesion, restablecerDatos } from '../data/storage.js';
+import { CLAVE_DATOS, cargarDatos, cargarSesion, guardarDatos, guardarSesion, restablecerDatos } from '../data/storage.js';
 import {
   calcularEstado,
   calcularResultados,
@@ -10,9 +10,27 @@ import {
   siguienteId,
   slugUnico,
 } from '../utils/helpers.js';
+import { calcularParticipacion, calcularResumen, verificarIntegridad } from '../utils/analisis.js';
 import { AppContext, buscarEdicionActiva } from './contexto.js';
 
+// Archivos que el modo demostración guarda como data URL en este navegador
+const ARCHIVOS = {
+  banners: { campo: 'archivo', web: 'imagen' },
+  categorias: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
+  votaciones: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
+  opciones: { campo: 'archivoAudio', web: 'audio', quitar: 'quitarAudio' },
+};
+
+const leerComoDataUrl = (archivo) =>
+  new Promise((resolver, rechazar) => {
+    const lector = new FileReader();
+    lector.onload = () => resolver(lector.result);
+    lector.onerror = () => rechazar(lector.error);
+    lector.readAsDataURL(archivo);
+  });
+
 const POR_PAGINA_AUDITORIA = 50;
+const MAX_ARCHIVO_DEMO = 2 * 1024 * 1024;
 
 /**
  * Modo demostración: simula la capa de datos y autenticación en localStorage
@@ -34,6 +52,21 @@ export function MockProvider({ children }) {
     guardarDatos(datos);
     setVersion((v) => v + 1);
   }, [datos]);
+
+  // Tiempo real entre pestañas: un voto emitido en otra pestaña actualiza el panel de inmediato
+  useEffect(() => {
+    const alCambiar = (e) => {
+      if (e.key === CLAVE_DATOS && e.newValue) {
+        try {
+          setDatos(JSON.parse(e.newValue));
+        } catch {
+          /* ignorar datos corruptos */
+        }
+      }
+    };
+    window.addEventListener('storage', alCambiar);
+    return () => window.removeEventListener('storage', alCambiar);
+  }, []);
   useEffect(() => {
     guardarSesion(usuarioId);
   }, [usuarioId]);
@@ -122,18 +155,35 @@ export function MockProvider({ children }) {
   const ambitoSlug = { categorias: 'edicionId', votaciones: 'categoriaId' };
 
   const guardarEntidad = async (coleccion, entidadOriginal, accion) => {
-    // Imagen del banner en el modo demostración: se guarda como data URL en este navegador
-    const { archivo, ...entidad } = entidadOriginal;
-    if (archivo) {
-      entidad.imagen = await new Promise((resolver) => {
-        const lector = new FileReader();
-        lector.onload = () => resolver(lector.result);
-        lector.readAsDataURL(archivo);
-      });
+    // Imagen, ícono o audio subido: en el modo demostración se guarda como data URL en este navegador
+    const conf = ARCHIVOS[coleccion];
+    const entidad = { ...entidadOriginal };
+    if (conf) {
+      const fichero = entidad[conf.campo];
+      delete entidad[conf.campo];
+      if (conf.quitar && entidad[conf.quitar]) entidad[conf.web] = '';
+      delete entidad[conf.quitar];
+      if (fichero && fichero.size > MAX_ARCHIVO_DEMO) {
+        return { ok: false, error: 'En el modo demostración los archivos se guardan en este navegador: usa uno de máximo 2 MB.' };
+      }
+      if (fichero) {
+        try {
+          entidad[conf.web] = await leerComoDataUrl(fichero);
+        } catch {
+          return { ok: false, error: 'No fue posible leer el archivo seleccionado.' };
+        }
+      }
     }
     const lista = datos[coleccion];
     const actual = entidad.id ? lista.find((x) => x.id === entidad.id) : null;
     const combinada = { ...actual, ...entidad };
+
+    if (coleccion === 'votaciones' && actual?.publicada && entidad.publicada === false) {
+      const estado = votaciones.find((v) => v.id === actual.id)?.estado;
+      if (estado === 'abierta') {
+        return { ok: false, error: 'No se puede despublicar una votación abierta: espera al cierre o ciérrala primero.' };
+      }
+    }
 
     if (coleccion === 'votaciones' && combinada.publicada && !actual?.publicada) {
       const activas = datos.opciones.filter((o) => o.votacionId === entidad.id && o.activa !== false).length;
@@ -228,15 +278,50 @@ export function MockProvider({ children }) {
     return { ok: true, nombre };
   };
 
-  const cargarAuditoria = async (pagina = 1) => {
+  const cargarAuditoria = async (pagina = 1, { q = '' } = {}) => {
+    const texto = q.trim().toLowerCase();
+    const lista = texto ? datos.auditoria.filter((a) => `${a.usuario} ${a.accion}`.toLowerCase().includes(texto)) : datos.auditoria;
     const inicio = (pagina - 1) * POR_PAGINA_AUDITORIA;
     return {
       ok: true,
-      registros: datos.auditoria.slice(inicio, inicio + POR_PAGINA_AUDITORIA),
-      total: datos.auditoria.length,
-      hayMas: inicio + POR_PAGINA_AUDITORIA < datos.auditoria.length,
+      registros: lista.slice(inicio, inicio + POR_PAGINA_AUDITORIA),
+      total: lista.length,
+      hayMas: inicio + POR_PAGINA_AUDITORIA < lista.length,
     };
   };
+
+  const obtenerParticipacion = useCallback(
+    async (votacionId) => {
+      const votacion = votaciones.find((v) => v.id === votacionId);
+      if (!votacion) return { ok: false, error: 'La votación no existe.' };
+      return { ok: true, ...calcularParticipacion(votacion, datos.votos, datos.usuarios) };
+    },
+    [votaciones, datos.votos, datos.usuarios]
+  );
+
+  const obtenerResumen = useCallback(
+    async (edicionId) => {
+      const edicion = datos.ediciones.find((e) => e.id === edicionId);
+      if (!edicion) return { ok: false, error: 'La edición no existe.' };
+      return { ok: true, ...calcularResumen(edicion, { ...datos, votaciones }) };
+    },
+    [datos, votaciones]
+  );
+
+  const obtenerIntegridad = useCallback(
+    async (edicionId) => {
+      const edicion = datos.ediciones.find((e) => e.id === edicionId);
+      if (!edicion) return { ok: false, error: 'La edición no existe.' };
+      return { ok: true, ...verificarIntegridad(edicion, { ...datos, votaciones }) };
+    },
+    [datos, votaciones]
+  );
+
+  // En este modo los datos ya están en memoria; se releen por si otra pestaña los cambió
+  const recargar = useCallback(async () => {
+    setDatos(cargarDatos());
+    return { ok: true };
+  }, []);
 
   const guardarConfiguracion = async (configuracion) => {
     actualizar((d) => ({ ...d, configuracion }), 'Actualizó los datos de contacto');
@@ -271,6 +356,10 @@ export function MockProvider({ children }) {
     obtenerResultados,
     exportarResultadosCSV,
     cargarAuditoria,
+    obtenerParticipacion,
+    obtenerResumen,
+    obtenerIntegridad,
+    recargar,
     restablecer,
   };
 

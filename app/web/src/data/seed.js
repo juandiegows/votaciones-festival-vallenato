@@ -37,6 +37,7 @@ export function crearDatosSemilla() {
       fechaInicio: '2027-04-28',
       fechaFin: '2027-05-02',
       estado: 'activa',
+      presentacionCategorias: 'tarjetas',
     },
     {
       id: 2,
@@ -45,8 +46,9 @@ export function crearDatosSemilla() {
       fechaInicio: '2026-04-29',
       fechaFin: '2026-05-03',
       estado: 'cerrada',
+      presentacionCategorias: 'lista',
     },
-    { id: 3, nombre: 'Festival de la Leyenda Vallenata 2025', anio: 2025, fechaInicio: '2025-04-26', fechaFin: '2025-04-30', estado: 'cerrada' },
+    { id: 3, nombre: 'Festival de la Leyenda Vallenata 2025', anio: 2025, fechaInicio: '2025-04-26', fechaFin: '2025-04-30', estado: 'cerrada', presentacionCategorias: 'mosaico' },
   ];
 
   const anioActivo = ediciones[0].anio;
@@ -61,6 +63,7 @@ export function crearDatosSemilla() {
 
   categorias.forEach((c) => {
     c.slug = slugificar(c.nombre);
+    c.iconoImagen = '';
   });
 
   const base = { votosPorUsuario: 1, cerradaManualmente: false, publicada: true, resultadosPublicados: false };
@@ -77,8 +80,12 @@ export function crearDatosSemilla() {
     { ...base, id: 8, categoriaId: 1, titulo: 'Mejor acordeonero aficionado', descripcion: 'Votación en preparación. Requiere al menos 2 opciones para publicarse.', fechaApertura: relativa(30), fechaCierre: relativa(40), mostrarResultados: 'al cerrar', imagen: 'music-note', publicada: false },
   ];
 
+  // Cada votación muestra sus opciones de una forma distinta (ver data/presentaciones.js)
+  const presentaciones = { 1: 'reproductor', 2: 'lista', 3: 'mosaico', 4: 'compacta', 5: 'tarjetas', 6: 'lista', 7: 'tarjetas', 8: 'tarjetas' };
   votaciones.forEach((v) => {
     v.slug = slugificar(v.titulo);
+    v.iconoImagen = '';
+    v.presentacionOpciones = presentaciones[v.id];
   });
 
   // Muestras instrumentales ORIGINALES generadas para el proyecto (public/audio/muestras/), en el orden de las opciones.
@@ -146,6 +153,8 @@ export function crearDatosSemilla() {
         nombre,
         descripcion,
         enlaceMultimedia: muestras[votacionId] ? `/audio/muestras/${muestras[votacionId][i]}.mp3` : '',
+        audio: '',
+        textoAudio: muestras[votacionId] ? `Muestra instrumental ilustrativa de ${nombre.replace(/\s*\(ficticia\)/, '')}: acordeón, caja y guacharaca. ${descripcion}` : '',
         orden: i + 1,
       });
     });
@@ -165,15 +174,17 @@ export function crearDatosSemilla() {
   pasadas.forEach(([edicionId, nombreCat, icono, lista], i) => {
     const anio = ediciones.find((e) => e.id === edicionId).anio;
     const categoria = { id: categorias.length + 1, edicionId, nombre: nombreCat, slug: slugificar(nombreCat), descripcion: `Votaciones del público en la edición ${anio}.`, icono, activa: true, orden: i + 1 };
+    categoria.iconoImagen = '';
     categorias.push(categoria);
     lista.forEach(([titulo, imagen, nombresOps, w]) => {
       const votacion = {
         ...base, id: votaciones.length + 1, categoriaId: categoria.id, titulo, slug: slugificar(titulo),
         descripcion: `Votación cerrada de la edición ${anio}.`, fechaApertura: `${anio}-04-01T13:00:00.000Z`,
         fechaCierre: `${anio}-04-30T23:00:00.000Z`, mostrarResultados: 'al cerrar', imagen, resultadosPublicados: true,
+        iconoImagen: '', presentacionOpciones: 'tarjetas',
       };
       votaciones.push(votacion);
-      nombresOps.forEach((nombre, j) => opciones.push({ id: opcionId++, votacionId: votacion.id, nombre, descripcion: '', enlaceMultimedia: '', orden: j + 1 }));
+      nombresOps.forEach((nombre, j) => opciones.push({ id: opcionId++, votacionId: votacion.id, nombre, descripcion: '', enlaceMultimedia: '', audio: '', textoAudio: '', orden: j + 1 }));
       pesosPasadas[votacion.id] = w;
     });
   });
@@ -207,16 +218,21 @@ export function crearDatosSemilla() {
   // Pesos para que haya un ganador claro en cada votación
   const pesos = { 1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2], ...pesosPasadas };
   const anioDe = (votacion) => ediciones.find((e) => e.id === categorias.find((c) => c.id === votacion.categoriaId).edicionId).anio;
+  // «Mejor comparsa de Piloneras» (abierta) tiene menos de 10 votantes: así se ve que la lista de
+  // participación permanece oculta hasta llegar a 10 o al cierre.
+  const maxVotantes = { 3: 7 };
   const votos = [];
   let votoId = 1;
   Object.entries(pesos).forEach(([vId, w]) => {
+    let cupo = maxVotantes[vId] ?? Infinity;
     const votacion = votaciones.find((v) => v.id === Number(vId));
     const ops = opciones.filter((o) => o.votacionId === votacion.id);
     const total = w.reduce((s, x) => s + x, 0);
     const desde = new Date(votacion.fechaApertura).getTime();
     const hasta = Math.min(new Date(votacion.fechaCierre).getTime(), Date.now() - 60 * 60 * 1000);
     usuarios.forEach((u) => {
-      if (u.id < 100 || rnd() < 0.3) return; // ~70 % de participación
+      if (u.id < 100 || rnd() < 0.3 || cupo <= 0) return; // ~70 % de participación
+      cupo--;
       let r = rnd() * total;
       let idx = 0;
       while (r > w[idx]) { r -= w[idx]; idx++; }
@@ -249,7 +265,7 @@ export function crearDatosSemilla() {
     { id: 5, fechaHora: relativa(-1), usuario: 'admin@festival.test', accion: 'Actualizó la categoría "Vestuario"' },
   ];
 
-  // Contenido del sitio editable desde /admin/sitio y /admin/banner (sin banners: se usa el inicio ilustrado)
+  // Contenido del sitio editable desde /panel/sitio y /panel/banner (sin banners: se usa el inicio ilustrado)
   const configuracion = {
     nombreOrganizacion: 'Fundación Festival de la Leyenda Vallenata',
     telefono: '(+57) 315-746 3143',

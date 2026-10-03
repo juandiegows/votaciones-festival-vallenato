@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { alPerderSesion, api, descargarArchivo, guardarToken, leerToken, obtener } from '../api/cliente.js';
 import {
+  ARCHIVOS,
   auditoriaDesdeApi,
   desdeApi,
   erroresDesdeApi,
   haciaApi,
+  integridadDesdeApi,
+  participacionDesdeApi,
   resultadosDesdeApi,
+  resumenDesdeApi,
   usuarioDesdeApi,
 } from '../api/adaptadores.js';
 import { calcularEstado } from '../utils/helpers.js';
@@ -25,6 +29,8 @@ const VACIO = {
   ediciones: [], categorias: [], votaciones: [], opciones: [], votos: [], usuarios: [], auditoria: [], totalAuditoria: 0,
   banners: [], redes: [], configuracion: null,
 };
+
+const ACTIVOS_POR_DEFECTO = { banners: { activo: true }, categorias: { activa: true }, opciones: { activa: true } };
 
 const mapear = (coleccion, lista) => lista.map((x) => desdeApi(coleccion, x));
 
@@ -231,11 +237,15 @@ export function ApiProvider({ children }) {
     const ruta = RUTAS_ADMIN[coleccion];
     const actual = entidad.id ? colecciones[coleccion].find((x) => x.id === entidad.id) : null;
     let cuerpo = haciaApi(coleccion, entidad);
-    if (entidad.archivo) {
-      // Imagen del banner: multipart/form-data con el archivo y los demás campos
+    const archivo = ARCHIVOS[coleccion];
+    const fichero = archivo && entidad[archivo.campo];
+    if (fichero) {
+      // Imagen del banner, ícono o audio: multipart/form-data con el archivo y los demás campos
+      // En multipart, DRF toma un booleano ausente como «false»: al crear se envían los activos por defecto
+      if (!entidad.id) cuerpo = { ...ACTIVOS_POR_DEFECTO[coleccion], ...cuerpo };
       const formulario = new FormData();
-      Object.entries(cuerpo).forEach(([k, v]) => formulario.append(k, v));
-      formulario.append('imagen', entidad.archivo);
+      Object.entries(cuerpo).forEach(([k, v]) => v !== null && formulario.append(k, v));
+      formulario.append(archivo.api, fichero);
       cuerpo = formulario;
     }
     let id = entidad.id;
@@ -246,7 +256,7 @@ export function ApiProvider({ children }) {
       return { ok: false, error: r.error, errores: erroresDesdeApi(coleccion, r.errores) };
     };
 
-    if (entidad.archivo || Object.keys(cuerpo).length) {
+    if (fichero || Object.keys(cuerpo).length) {
       const r = id ? await api.patch(`${ruta}${id}/`, cuerpo) : await api.post(ruta, cuerpo);
       if (!r.ok) return fallo(r);
       guardada = desdeApi(coleccion, r.datos);
@@ -260,8 +270,8 @@ export function ApiProvider({ children }) {
         if (!r.ok) return fallo(r);
       }
       if (entidad.publicada === false && actual?.publicada) {
-        await recargar();
-        return { ok: false, error: 'Una votación publicada no se puede retirar del sitio; si es necesario, ciérrala.' };
+        const r = await api.post(`${ruta}${id}/despublicar/`);
+        if (!r.ok) return fallo(r);
       }
       if (entidad.cerradaManualmente === true && !actual?.cerradaManualmente) {
         const r = await api.post(`${ruta}${id}/cerrar/`);
@@ -326,8 +336,10 @@ export function ApiProvider({ children }) {
     return r;
   };
 
-  const cargarAuditoria = async (pagina = 1) => {
-    const r = await api.get(`/admin/auditoria/?page=${pagina}`);
+  const cargarAuditoria = async (pagina = 1, filtros = {}) => {
+    const params = new URLSearchParams({ page: pagina });
+    Object.entries(filtros).forEach(([k, v]) => v && params.set(k, v));
+    const r = await api.get(`/admin/auditoria/?${params}`);
     if (!r.ok) return { ok: false, error: r.error };
     const listas = { edicion: colecciones.ediciones, categoria: colecciones.categorias, votacion: colecciones.votaciones, opcion: colecciones.opciones };
     const nombrePor = (entidad, id) => {
@@ -341,6 +353,21 @@ export function ApiProvider({ children }) {
       hayMas: Boolean(r.datos.next),
     };
   };
+
+  const obtenerParticipacion = useCallback(async (votacionId) => {
+    const r = await api.get(`/admin/votaciones/${votacionId}/participacion/`);
+    return r.ok ? { ok: true, ...participacionDesdeApi(r.datos) } : { ok: false, error: r.error };
+  }, []);
+
+  const obtenerResumen = useCallback(async (edicionId) => {
+    const r = await api.get(`/admin/ediciones/${edicionId}/resumen/`);
+    return r.ok ? { ok: true, ...resumenDesdeApi(r.datos) } : { ok: false, error: r.error };
+  }, []);
+
+  const obtenerIntegridad = useCallback(async (edicionId) => {
+    const r = await api.get(`/admin/auditoria/integridad/?edicion=${edicionId}`);
+    return r.ok ? { ok: true, ...integridadDesdeApi(r.datos) } : { ok: false, error: r.error };
+  }, []);
 
   if (cargaInicial.cargando || cargaInicial.error) {
     return <PantallaCarga error={cargaInicial.error} onReintentar={iniciar} />;
@@ -371,6 +398,10 @@ export function ApiProvider({ children }) {
     obtenerResultados,
     exportarResultadosCSV,
     cargarAuditoria,
+    obtenerParticipacion,
+    obtenerResumen,
+    obtenerIntegridad,
+    recargar,
     restablecer: null,
   };
 
