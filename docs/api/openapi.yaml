@@ -2059,9 +2059,8 @@ components:
           maxLength: 300
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activo:
           type: boolean
       required:
@@ -2098,9 +2097,8 @@ components:
           maxLength: 300
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activo:
           type: boolean
       required:
@@ -2145,9 +2143,8 @@ components:
           type: boolean
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
       required:
       - edicion
       - edicion_anio
@@ -2186,9 +2183,8 @@ components:
           type: boolean
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
       required:
       - edicion
       - nombre
@@ -2237,6 +2233,13 @@ components:
           type: string
         modo_banner:
           $ref: '#/components/schemas/ModoBannerEnum'
+        dias_visible_cerradas:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          nullable: true
+          description: Días que una votación cerrada sigue visible en el sitio público
+            (0 = se oculta al cerrar; vacío = siempre visible).
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -2261,6 +2264,13 @@ components:
           type: string
         modo_banner:
           $ref: '#/components/schemas/ModoBannerEnum'
+        dias_visible_cerradas:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          nullable: true
+          description: Días que una votación cerrada sigue visible en el sitio público
+            (0 = se oculta al cerrar; vacío = siempre visible).
     Edicion:
       type: object
       properties:
@@ -2272,9 +2282,8 @@ components:
           maxLength: 150
         anio:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
           title: Año
         fecha_inicio:
           type: string
@@ -2295,6 +2304,15 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `destacada` - Destacada
+        visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/VisibilidadResultadosEnum'
+          description: |-
+            Cuándo ve el público los resultados de las votaciones de la edición.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
       required:
       - anio
       - fecha_fin
@@ -2310,9 +2328,8 @@ components:
           maxLength: 150
         anio:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
           title: Año
         fecha_inicio:
           type: string
@@ -2333,6 +2350,15 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `destacada` - Destacada
+        visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/VisibilidadResultadosEnum'
+          description: |-
+            Cuándo ve el público los resultados de las votaciones de la edición.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
       required:
       - anio
       - fecha_fin
@@ -2559,9 +2585,8 @@ components:
           description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
       required:
@@ -2603,9 +2628,8 @@ components:
           description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
       required:
       - audio
       - id
@@ -2644,9 +2668,8 @@ components:
           description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
       required:
       - audio
       - id
@@ -2683,9 +2706,8 @@ components:
           description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
       required:
@@ -2795,9 +2817,8 @@ components:
           maxLength: 300
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activo:
           type: boolean
     PatchedCategoriaRequest:
@@ -2833,9 +2854,8 @@ components:
           type: boolean
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
     PatchedConfiguracionSitioRequest:
       type: object
       properties:
@@ -2860,6 +2880,13 @@ components:
           type: string
         modo_banner:
           $ref: '#/components/schemas/ModoBannerEnum'
+        dias_visible_cerradas:
+          type: integer
+          maximum: 65535
+          minimum: 0
+          nullable: true
+          description: Días que una votación cerrada sigue visible en el sitio público
+            (0 = se oculta al cerrar; vacío = siempre visible).
     PatchedEdicionRequest:
       type: object
       properties:
@@ -2869,9 +2896,8 @@ components:
           maxLength: 150
         anio:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
           title: Año
         fecha_inicio:
           type: string
@@ -2892,6 +2918,15 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `destacada` - Destacada
+        visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/VisibilidadResultadosEnum'
+          description: |-
+            Cuándo ve el público los resultados de las votaciones de la edición.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
     PatchedOpcionRequest:
       type: object
       properties:
@@ -2924,9 +2959,8 @@ components:
           description: Letra o transcripción del audio, para accesibilidad.
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
     PatchedRedSocialRequest:
@@ -2945,9 +2979,8 @@ components:
           $ref: '#/components/schemas/IconoEnum'
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
     PatchedRevistaRequest:
@@ -2964,9 +2997,8 @@ components:
           format: binary
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
     PatchedVotacionRequest:
@@ -3021,11 +3053,14 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        personalizar_resultados:
+          type: boolean
+          description: Usar la visibilidad de resultados propia en lugar de la de
+            la edición.
     PresentacionCategoriasEnum:
       enum:
       - tarjetas
@@ -3077,9 +3112,8 @@ components:
           $ref: '#/components/schemas/IconoEnum'
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
       required:
@@ -3102,9 +3136,8 @@ components:
           $ref: '#/components/schemas/IconoEnum'
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
       required:
@@ -3230,9 +3263,8 @@ components:
           format: uri
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
         publicada_en:
@@ -3258,9 +3290,8 @@ components:
           format: binary
         orden:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         activa:
           type: boolean
       required:
@@ -3448,11 +3479,17 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        personalizar_resultados:
+          type: boolean
+          description: Usar la visibilidad de resultados propia en lugar de la de
+            la edición.
+        visibilidad_efectiva:
+          type: string
+          readOnly: true
         estado:
           type: string
           readOnly: true
@@ -3487,6 +3524,7 @@ components:
       - publicada
       - resultados_publicados
       - titulo
+      - visibilidad_efectiva
     VotacionDetalle:
       type: object
       properties:
@@ -3549,11 +3587,11 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         visibilidad_resultados:
-          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+          type: string
+          readOnly: true
         estado:
           type: string
           readOnly: true
@@ -3579,6 +3617,7 @@ components:
       - opciones
       - slug
       - titulo
+      - visibilidad_resultados
     VotacionPublica:
       type: object
       properties:
@@ -3641,11 +3680,11 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         visibilidad_resultados:
-          $ref: '#/components/schemas/VisibilidadResultadosEnum'
+          type: string
+          readOnly: true
         estado:
           type: string
           readOnly: true
@@ -3661,6 +3700,7 @@ components:
       - id
       - slug
       - titulo
+      - visibilidad_resultados
     VotacionRequest:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -3713,11 +3753,14 @@ components:
           format: date-time
         votos_por_usuario:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 65535
           minimum: 0
-          format: int64
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
+        personalizar_resultados:
+          type: boolean
+          description: Usar la visibilidad de resultados propia en lugar de la de
+            la edición.
       required:
       - categoria
       - fecha_apertura

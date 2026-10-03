@@ -170,6 +170,9 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"dias_visible_cerradas": 0}, format="json").status_code, 200)
         self.assertEqual(ConfiguracionSitio.obtener().dias_visible_cerradas, 0)
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"dias_visible_cerradas": -1}, format="json").status_code, 400)
+        # Vacío: las votaciones cerradas se muestran siempre
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"dias_visible_cerradas": None}, format="json").status_code, 200)
+        self.assertIsNone(self.client.get("/api/sitio/").data["configuracion"]["dias_visible_cerradas"])
 
     def test_banner_sin_titulo_solo_imagen(self):
         respuesta = self.client.post("/api/admin/banners/", {"edicion": self.edicion.pk, "texto_alternativo": "Cartel del Festival", "imagen": imagen()},
