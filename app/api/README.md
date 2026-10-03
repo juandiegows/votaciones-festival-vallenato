@@ -83,6 +83,7 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 | `CORREO_ADAPTADOR` | `consola` | Proveedor de correo: `consola` (solo imprime), `smtp` o `zeptomail` |
 | `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` · `CORREO_RESPONDER_A` | `no-responder@votaciones.juandiegows.com` | Remitente de los correos |
 | `CORREO_URL_SITIO` | `http://localhost:5195` | URL de la web usada en los enlaces de los correos |
+| `CORREO_EN_SEGUNDO_PLANO` | `true` | Entrega los correos del registro y del voto en un hilo aparte (no demora la respuesta) |
 | `EMAIL_HOST` · `EMAIL_PORT` · `EMAIL_HOST_USER` · `EMAIL_HOST_PASSWORD` · `EMAIL_USE_TLS` · `EMAIL_USE_SSL` | `localhost` · `587` | Adaptador `smtp` |
 | `ZEPTOMAIL_TOKEN` · `ZEPTOMAIL_API_URL` · `ZEPTOMAIL_BOUNCE_ADDRESS` | — · `https://api.zeptomail.com/v1.1/email` | Adaptador `zeptomail` (API de Zoho ZeptoMail) |
 
@@ -101,6 +102,9 @@ correo.enviar_confirmacion_correo(usuario, enlace)
 correo.enviar_comprobante_voto(voto)
 correo.enviar_restablecer_clave(usuario, enlace)
 ```
+
+Se envían solos: la **bienvenida** al registrarse y el **comprobante** al votar, siempre después de que el
+registro o el voto quedan guardados. Si el correo falla, el error queda en el log y la operación del usuario no se afecta.
 
 El proveedor es un adaptador (`correo/adaptadores/`): para cambiarlo basta con `CORREO_ADAPTADOR`; para agregar
 uno nuevo se crea una subclase de `AdaptadorCorreo` y se registra en `CORREO_ADAPTADORES` (`settings.py`).
