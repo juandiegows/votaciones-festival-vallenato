@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
+import PaginaError from '../pages/errores/PaginaError.jsx';
 
 // Ruta que exige sesión iniciada (RN-02)
 export function RequiereSesion({ children }) {
@@ -15,13 +16,7 @@ export function RequiereAdmin({ children }) {
   const location = useLocation();
   if (!usuario) return <Navigate to="/login" replace state={{ desde: location.pathname, aviso: 'Inicia sesión como administrador para acceder al panel.' }} />;
   if (!esAdmin) {
-    return (
-      <div className="container py-5 text-center">
-        <i className="bi bi-shield-lock display-4 text-danger" aria-hidden="true"></i>
-        <h1 className="h3 mt-3">Acceso restringido</h1>
-        <p>Esta sección es exclusiva para el rol <strong>administrador</strong>.</p>
-      </div>
-    );
+    return <PaginaError codigo={403} mensaje="Esta sección es exclusiva para el rol administrador y tu cuenta es de votante." />;
   }
   return children;
 }

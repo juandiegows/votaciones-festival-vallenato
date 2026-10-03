@@ -514,3 +514,38 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 .pista-tiempo { flex-shrink: 0; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--flv-gris-texto); }
 .pista-silencio { flex-shrink: 0; border: 0; background: transparent; color: var(--flv-gris-texto); padding: .25rem; border-radius: 50%; line-height: 1; }
 .pista-silencio:hover, .pista-silencio[aria-pressed="true"] { color: var(--flv-rojo); }
+
+/* ---------- Páginas de error ---------- */
+.fondo-error { background: var(--flv-crema); }
+.pagina-error { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); width: 100%; max-width: 52rem; overflow: hidden; padding: 0; }
+.pagina-error-codigo {
+  background: var(--flv-degradado-hero); color: var(--flv-dorado); display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: .25rem; padding: 2rem 1rem; text-align: center;
+}
+.pagina-error-codigo .numero { font-family: var(--flv-fuente-titulos); font-weight: 800; font-size: clamp(3.5rem, 9vw, 5.5rem); line-height: 1; }
+.pagina-error-codigo .bi { font-size: 4rem; line-height: 1; }
+.pagina-error-codigo .etiqueta { color: var(--flv-dorado-claro); text-transform: uppercase; letter-spacing: .2em; font-size: .75rem; font-weight: 600; }
+.pagina-error-texto { padding: 2rem; }
+.acordeon-animado { width: 100%; max-width: 11rem; height: auto; overflow: visible; }
+.acordeon-animado .acordeon-fuelle { transform-box: fill-box; transform-origin: center; animation: fuelle 1.4s ease-in-out infinite alternate; }
+.acordeon-animado .acordeon-pitos { animation: pitos 1.4s ease-in-out infinite alternate; }
+.acordeon-animado .acordeon-bajos { animation: bajos 1.4s ease-in-out infinite alternate; }
+.acordeon-animado .acordeon-notas text { opacity: 0; transform-box: fill-box; animation: nota 2.4s ease-out infinite; }
+.acordeon-animado .acordeon-notas text:nth-child(2) { animation-delay: .8s; }
+.acordeon-animado .acordeon-notas text:nth-child(3) { animation-delay: 1.6s; }
+@keyframes fuelle { from { transform: scaleX(1.06); } to { transform: scaleX(.72); } }
+@keyframes pitos { from { transform: translateX(-2px); } to { transform: translateX(10px); } }
+@keyframes bajos { from { transform: translateX(2px); } to { transform: translateX(-10px); } }
+@keyframes nota { 0% { opacity: 0; transform: translate(0, 10px) rotate(-8deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -18px) rotate(10deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .acordeon-animado * { animation: none !important; }
+  .acordeon-animado .acordeon-notas text { opacity: 1; }
+}
+@media (max-width: 575.98px) {
+  .pagina-error { grid-template-columns: 1fr; }
+  .pagina-error-codigo { flex-direction: row; padding: 1.25rem; gap: .75rem; }
+  .pagina-error-codigo .numero { font-size: 3rem; }
+  .pagina-error-codigo .bi { font-size: 2.5rem; }
+  .pagina-error-codigo .acordeon-animado { max-width: 6.5rem; }
+  .pagina-error-texto { padding: 1.5rem; }
+}

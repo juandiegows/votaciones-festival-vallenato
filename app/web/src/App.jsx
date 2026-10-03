@@ -11,6 +11,7 @@ import VotacionDetalle from './pages/VotacionDetalle.jsx';
 import Comprobante from './pages/Comprobante.jsx';
 import MisVotos from './pages/MisVotos.jsx';
 import NoEncontrado from './pages/NoEncontrado.jsx';
+import { RutaError } from './pages/errores/PaginaError.jsx';
 import Marca from './pages/Marca.jsx';
 import AdminLayout from './pages/admin/AdminLayout.jsx';
 import AdminPanel from './pages/admin/AdminPanel.jsx';
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="registro" element={<Registro />} />
         <Route path="login" element={<Login />} />
         <Route path="marca" element={<Navigate to="/panel/marca" replace />} />
+        <Route path="error/:codigo" element={<RutaError />} />
         <Route path="categorias" element={<IrAEdicionActiva />} />
         <Route path="categorias/:id" element={<RedireccionCategoria />} />
         <Route path="votaciones/:id" element={<RedireccionVotacion />} />

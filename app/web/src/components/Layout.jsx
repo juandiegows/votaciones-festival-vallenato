@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import Footer from './Footer.jsx';
+import LimiteErrores from './LimiteErrores.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { cssMarca } from '../data/marca.js';
 
@@ -25,7 +26,9 @@ export default function Layout() {
       </a>
       <Navbar />
       <main id="contenido" tabIndex={-1} className="flex-grow-1">
-        <Outlet />
+        <LimiteErrores key={pathname}>
+          <Outlet />
+        </LimiteErrores>
       </main>
       <Footer />
     </div>
