@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import { formatearFecha } from '../../utils/helpers.js';
+import { PRESENTACIONES_CATEGORIAS, presentacionCategorias } from '../../data/presentaciones.js';
 
 export default function AdminEdiciones() {
   const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
@@ -65,7 +66,7 @@ export default function AdminEdiciones() {
   return (
     <>
       <PageHeader titulo="Gestión de ediciones" subtitulo="Cada edición agrupa categorías y votaciones.">
-        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada' })}>
+        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: 'tarjetas' })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>
       </PageHeader>
@@ -84,6 +85,7 @@ export default function AdminEdiciones() {
               <th scope="col">Año</th>
               <th scope="col">Fechas</th>
               <th scope="col">Categorías</th>
+              <th scope="col">Presentación</th>
               <th scope="col">Estado</th>
               <th scope="col" className="text-end">Acciones</th>
             </tr>
@@ -95,9 +97,10 @@ export default function AdminEdiciones() {
                 <td>{ed.anio}</td>
                 <td className="small text-nowrap">{formatearFecha(ed.fechaInicio)} – {formatearFecha(ed.fechaFin)}</td>
                 <td>{categorias.filter((c) => c.edicionId === ed.id).length}</td>
+                <td className="small text-nowrap"><i className={`bi bi-${presentacionCategorias(ed.presentacionCategorias).icono} me-1 text-rojo`} aria-hidden="true"></i>{presentacionCategorias(ed.presentacionCategorias).etiqueta}</td>
                 <td><span className={`badge badge-estado ${ed.estado === 'activa' ? 'estado-abierta' : 'estado-cerrada'}`}>{ed.estado === 'activa' ? 'Activa' : 'Cerrada'}</span></td>
                 <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
                   <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
                 </td>
               </tr>
@@ -148,6 +151,16 @@ export default function AdminEdiciones() {
                   <option value="cerrada">Cerrada</option>
                 </select>
                 <div id="e-estado-ayuda" className="form-text">Solo puede haber una edición activa; al activar esta, las demás se cierran.</div>
+              </div>
+              <div className="col-12">
+                <label className="form-label" htmlFor="e-presentacion">Presentación de categorías al público</label>
+                <select id="e-presentacion" className="form-select" value={form.presentacionCategorias} onChange={(e) => setForm({ ...form, presentacionCategorias: e.target.value })} aria-describedby="e-presentacion-ayuda">
+                  {PRESENTACIONES_CATEGORIAS.map((p) => <option key={p.valor} value={p.valor}>{p.etiqueta}</option>)}
+                </select>
+                <div id="e-presentacion-ayuda" className="form-text">
+                  <i className={`bi bi-${presentacionCategorias(form.presentacionCategorias).icono} me-1`} aria-hidden="true"></i>
+                  {presentacionCategorias(form.presentacionCategorias).descripcion}
+                </div>
               </div>
             </div>
           </form>

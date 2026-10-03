@@ -7,7 +7,7 @@ import Countdown from '../components/Countdown.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Modal from '../components/Modal.jsx';
 import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
-import ReproductorMultimedia from '../components/ReproductorMultimedia.jsx';
+import OpcionesVotacion from '../components/presentaciones/OpcionesVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
 import { formatearFechaHora } from '../utils/helpers.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
@@ -146,35 +146,13 @@ export default function VotacionDetalle() {
 
           <fieldset id="lista-opciones" tabIndex={-1} aria-describedby={error ? 'error-voto' : undefined}>
             <legend className="h5 mb-3">Opciones disponibles <span className="text-secondary-flv fs-6 fw-normal">({lista.length})</span></legend>
-            <div className="row g-3">
-              {lista.map((o) => {
-                const marcada = yaVoto ? misVotos[0].opcionId === o.id : seleccion === o.id;
-                return (
-                  <div className={`col-md-6 ${o.enlaceMultimedia ? 'opcion-con-medio' : ''}`} key={o.id}>
-                    <input
-                      type="radio"
-                      className="opcion-input"
-                      name="opcion"
-                      id={`opcion-${o.id}`}
-                      value={o.id}
-                      checked={marcada}
-                      disabled={!puedeVotar}
-                      onChange={() => elegir(o.id)}
-                    />
-                    <label htmlFor={`opcion-${o.id}`} className="opcion-card">
-                      <Avatar nombre={o.nombre} />
-                      <span>
-                        <span className="d-block fw-semibold">{o.nombre}</span>
-                        <span className="d-block small text-secondary-flv">{o.descripcion}</span>
-                      </span>
-                      <span className="opcion-check" aria-hidden="true">{marcada && <i className="bi bi-check-lg"></i>}</span>
-                    </label>
-                    {/* Fuera del <label>: usar el reproductor no cambia la opción elegida */}
-                    {o.enlaceMultimedia && <ReproductorMultimedia enlace={o.enlaceMultimedia} titulo={o.nombre} className="reproductor-opcion" />}
-                  </div>
-                );
-              })}
-            </div>
+            <OpcionesVotacion
+              lista={lista}
+              presentacion={votacion.presentacionOpciones}
+              estaMarcada={(o) => (yaVoto ? misVotos.some((v) => v.opcionId === o.id) : seleccion === o.id)}
+              deshabilitada={!puedeVotar}
+              onElegir={elegir}
+            />
           </fieldset>
 
           {error && <div id="error-voto" className="alert alert-danger mt-3" role="alert">{error}</div>}
