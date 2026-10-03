@@ -21,7 +21,7 @@ export default function Layout() {
   return (
     <div className="d-flex flex-column min-vh-100">
       <style id="flv-marca">{estilosMarca}</style>
-      <a href="#contenido" className="skip-link" onClick={(e) => { e.preventDefault(); document.getElementById('contenido')?.focus(); }}>
+      <a href="#contenido" className="skip-link d-print-none" onClick={(e) => { e.preventDefault(); document.getElementById('contenido')?.focus(); }}>
         Saltar al contenido
       </a>
       <Navbar />

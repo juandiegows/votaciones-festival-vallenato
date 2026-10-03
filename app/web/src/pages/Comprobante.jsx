@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import Avatar from '../components/Avatar.jsx';
@@ -11,8 +12,20 @@ export default function Comprobante() {
   const { opciones, usuario, votosDeUsuario, edicionActiva } = useApp();
   const { edicion, votacion } = useRutaPublica();
   const rutas = useRutas();
+  const [parametros, setParametros] = useSearchParams();
+  const impreso = useRef(false);
+  const voto = votacion ? votosDeUsuario(votacion.id)[0] : null;
+
+  // El botón «Imprimir» del correo del comprobante llega con ?imprimir=1: abre el diálogo de impresión una vez
+  // que el voto está cargado y limpia el parámetro para que recargar la página no vuelva a imprimir.
+  useEffect(() => {
+    if (!voto || impreso.current || parametros.get('imprimir') !== '1') return;
+    impreso.current = true;
+    setParametros({}, { replace: true });
+    window.print();
+  }, [voto, parametros, setParametros]);
+
   if (!votacion) return <NoEncontrado />;
-  const voto = votosDeUsuario(votacion.id)[0];
 
   if (!voto) {
     return (
@@ -26,14 +39,17 @@ export default function Comprobante() {
   const opcion = opciones.find((o) => o.id === voto.opcionId) || { nombre: voto.opcionNombre || 'Opción registrada' };
 
   return (
-    <div className="container py-4 py-md-5">
-      <PageHeader
-        titulo="Comprobante de voto"
-        subtitulo="Mensaje posterior a la votación"
-        migas={[{ label: 'Inicio', to: '/' }, { label: votacion.titulo, to: rutas.votacion(votacion) }, { label: 'Comprobante' }]}
-      />
+    <div className="container py-4 py-md-5 comprobante-pagina">
+      {/* Al imprimir solo sale la tarjeta del comprobante: encabezado, botones y resultados llevan d-print-none */}
+      <div className="d-print-none">
+        <PageHeader
+          titulo="Comprobante de voto"
+          subtitulo="Mensaje posterior a la votación"
+          migas={[{ label: 'Inicio', to: '/' }, { label: votacion.titulo, to: rutas.votacion(votacion) }, { label: 'Comprobante' }]}
+        />
+      </div>
       <div className="row g-4">
-        <div className="col-lg-6">
+        <div className="col-lg-6 comprobante-columna">
           <section className="comprobante p-4 text-center" aria-labelledby="titulo-exito">
             <i className="bi bi-patch-check-fill display-4 text-success" aria-hidden="true"></i>
             <h2 id="titulo-exito" className="h4 mt-2">¡Tu voto fue registrado con éxito!</h2>
@@ -57,7 +73,7 @@ export default function Comprobante() {
                 <p className="fw-semibold mb-0">{opcion.nombre}</p>
               </div>
             </div>
-            <div className="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <div className="d-flex flex-wrap justify-content-center gap-2 mt-4 d-print-none">
               <button type="button" className="btn btn-outline-primary" onClick={() => window.print()}>
                 <i className="bi bi-printer me-1" aria-hidden="true"></i>Imprimir
               </button>
@@ -66,7 +82,7 @@ export default function Comprobante() {
             </div>
           </section>
         </div>
-        <div className="col-lg-6">
+        <div className="col-lg-6 d-print-none">
           <section className="card-flv p-4 h-100" aria-labelledby="titulo-res">
             <h2 id="titulo-res" className="h5"><i className="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
             <ResultadosVotacion votacion={votacion} nota="Resultados en tiempo real." />

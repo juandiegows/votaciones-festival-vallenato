@@ -182,6 +182,15 @@ a:hover { color: var(--flv-rojo-hover); }
 .comprobante { border: 2px dashed var(--flv-dorado-texto); background: var(--flv-blanco); border-radius: .75rem; }
 .codigo-comprobante { font-family: var(--flv-fuente-titulos); font-weight: 800; font-size: 1.6rem; letter-spacing: .08em; color: var(--flv-negro); background: var(--flv-crema); display: inline-block; padding: .2rem .8rem; border-radius: .4rem; }
 
+/* Impresión del comprobante: solo la tarjeta, centrada y con sus colores (fondo crema, avatar, sello) */
+@media print {
+  @page { margin: 15mm; }
+  body { background: #fff !important; }
+  .comprobante-pagina { max-width: none; padding: 0 !important; }
+  .comprobante-columna { flex: 0 0 100%; max-width: 100%; }
+  .comprobante { max-width: 15cm; margin: 0 auto; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* Modal (controlado por React, estilos de Bootstrap) */
 .modal-backdrop-flv { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1050; }
 .modal.d-block { z-index: 1055; }

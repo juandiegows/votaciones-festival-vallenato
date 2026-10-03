@@ -20,7 +20,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="footer-flv mt-5">
+    <footer className="footer-flv mt-5 d-print-none">
       <div className="aviso-prototipo text-center py-2 px-3">
         <i className="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
         Prototipo académico – Areandina · Desarrollo Web 2026 ·{' '}
