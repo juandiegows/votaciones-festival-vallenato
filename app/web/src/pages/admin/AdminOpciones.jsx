@@ -28,7 +28,8 @@ export default function AdminOpciones() {
         subtitulo={`${votacion.titulo} · ${categoria?.nombre}`}
         migas={[{ label: 'Votaciones', to: '/panel/votaciones' }, { label: votacion.titulo }, { label: 'Opciones' }]}
       >
-        <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))}>
+        <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))} disabled={votacion.estado === 'cerrada'}
+          title={votacion.estado === 'cerrada' ? 'La votación está cerrada: no admite opciones nuevas' : undefined}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
         </button>
       </PageHeader>

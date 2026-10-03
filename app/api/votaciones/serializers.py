@@ -192,6 +192,10 @@ class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
         return validar_icono(archivo)
 
     def validate(self, datos):
+        # Una edición cerrada no recibe categorías nuevas (ni categorías movidas desde otra edición)
+        edicion = datos.get("edicion")
+        if edicion and edicion.estado == Edicion.Estado.CERRADA and getattr(self.instance, "edicion_id", None) != edicion.pk:
+            raise serializers.ValidationError({"edicion": "La edición está cerrada: no se pueden agregar categorías."})
         self.validar_slug_unico(datos)
         return datos
 
@@ -210,6 +214,13 @@ class OpcionSerializer(serializers.ModelSerializer):
 
     def validate_audio(self, archivo):
         return validar_audio(archivo)
+
+    def validate(self, datos):
+        # Una votación cerrada ya no admite opciones nuevas
+        votacion = datos.get("votacion")
+        if self.instance is None and votacion and votacion.estado == Votacion.Estado.CERRADA:
+            raise serializers.ValidationError({"votacion": "La votación está cerrada: no se pueden agregar opciones."})
+        return datos
 
 
 class OpcionPublicaSerializer(serializers.ModelSerializer):

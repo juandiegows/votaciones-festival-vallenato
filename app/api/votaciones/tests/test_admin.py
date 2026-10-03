@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from votaciones.models import Opcion, RegistroAuditoria, Votacion, Voto
+from votaciones.models import Categoria, Edicion, Opcion, RegistroAuditoria, Votacion, Voto
 
 from .base import BaseAPITest
 
@@ -72,6 +72,24 @@ class GestionAdminTests(BaseAPITest):
         self.assertEqual(respuesta.status_code, 409)
         self.assertEqual(respuesta.data["codigo"], "tiene_votos")
         self.assertTrue(Votacion.objects.filter(pk=self.abierta.pk).exists())
+
+    def test_votacion_cerrada_no_admite_opciones_nuevas(self):
+        ahora = timezone.now()
+        cerrada = self.crear_votacion("Votación cerrada", ahora - timedelta(days=5), ahora - timedelta(days=1))
+        respuesta = self.client.post("/api/admin/opciones/", {"votacion": cerrada.pk, "nombre": "Tardía"}, format="json")
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertFalse(Opcion.objects.filter(votacion=cerrada, nombre="Tardía").exists())
+        opcion = Opcion.objects.create(votacion=cerrada, nombre="Existente")
+        self.assertEqual(self.client.patch(f"/api/admin/opciones/{opcion.pk}/", {"nombre": "Corregida"}, format="json").status_code, 200)
+
+    def test_edicion_cerrada_no_admite_categorias_nuevas(self):
+        cerrada = Edicion.objects.create(nombre="Festival 2025", anio=2025, fecha_inicio="2025-04-26", fecha_fin="2025-04-30", estado="cerrada")
+        respuesta = self.client.post("/api/admin/categorias/", {"edicion": cerrada.pk, "nombre": "Piloneras"}, format="json")
+        self.assertEqual(respuesta.status_code, 400)
+        movida = self.client.patch(f"/api/admin/categorias/{self.categoria.pk}/", {"edicion": cerrada.pk}, format="json")
+        self.assertEqual(movida.status_code, 400)
+        vieja = Categoria.objects.create(edicion=cerrada, nombre="Vestuario")
+        self.assertEqual(self.client.patch(f"/api/admin/categorias/{vieja.pk}/", {"nombre": "Vestuario típico"}, format="json").status_code, 200)
 
     def test_no_elimina_opcion_con_votos(self):
         Voto.objects.create(usuario=self.votante, votacion=self.abierta, opcion=self.opcion_a, codigo_comprobante="FLV27-DDDDDD")

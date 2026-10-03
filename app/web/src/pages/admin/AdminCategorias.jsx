@@ -24,6 +24,8 @@ export default function AdminCategorias() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
 
+  // Las ediciones cerradas no reciben categorías nuevas
+  const edicionesAbiertas = ediciones.filter((ed) => ed.estado !== 'cerrada');
   const numVotaciones = (id) => votaciones.filter((v) => v.categoriaId === id).length;
   const numAbiertas = (id) => votaciones.filter((v) => v.categoriaId === id && v.publicada && v.estado === 'abierta').length;
 
@@ -41,7 +43,7 @@ export default function AdminCategorias() {
 
   const nueva = () => {
     abrirFormulario({
-      edicionId: edicion?.id || ediciones[0]?.id || '', nombre: '', slug: '', descripcion: '', icono: 'music-note-beamed',
+      edicionId: (edicion?.estado !== 'cerrada' && edicion?.id) || edicionesAbiertas[0]?.id || '', nombre: '', slug: '', descripcion: '', icono: 'music-note-beamed',
       iconoImagen: '', archivoIcono: null, quitarIcono: false, activa: true, orden: categorias.length + 1,
     });
   };
@@ -124,7 +126,7 @@ export default function AdminCategorias() {
   return (
     <>
       <PageHeader titulo="Gestión de categorías" subtitulo={edicion ? `${edicion.nombre} · Crear, editar, activar o desactivar categorías.` : 'Crear, editar, activar o desactivar categorías.'}>
-        <button className="btn btn-primary" onClick={nueva} disabled={!edicion}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
+        <button className="btn btn-primary" onClick={nueva} disabled={!edicionesAbiertas.length} title={edicionesAbiertas.length ? undefined : 'Todas las ediciones están cerradas'}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
       </PageHeader>
       {!edicion && (
         <div className="alert alert-warning" role="alert">
@@ -295,7 +297,10 @@ export default function AdminCategorias() {
               <div className="col-md-6">
                 <label className="form-label" htmlFor="cat-edicion">Edición</label>
                 <select id="cat-edicion" className={`form-select ${errores.edicionId ? 'is-invalid' : ''}`} value={form.edicionId} onChange={(e) => setForm({ ...form, edicionId: e.target.value })}>
-                  {ediciones.map((ed) => <option key={ed.id} value={ed.id}>{ed.nombre}</option>)}
+                  {/* Al editar se conserva la edición actual aunque esté cerrada */}
+                  {ediciones.filter((ed) => ed.estado !== 'cerrada' || ed.id === Number(form.edicionId) && form.id).map((ed) => (
+                    <option key={ed.id} value={ed.id}>{ed.nombre}{ed.estado === 'cerrada' ? ' (cerrada)' : ''}</option>
+                  ))}
                 </select>
                 {errores.edicionId && <div className="invalid-feedback">{errores.edicionId}</div>}
               </div>
@@ -307,7 +312,7 @@ export default function AdminCategorias() {
               <div className="col-12">
                 <label className="form-label" htmlFor="cat-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
                 <input id="cat-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el nombre" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="cat-slug-ayuda" />
-                {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="cat-slug-ayuda" className="form-text">Aparece en la dirección pública, p. ej. /{ediciones.find((ed) => ed.id === Number(form.edicionId))?.anio}/{form.slug || 'musica'}. Déjalo vacío para generarlo automáticamente.</div>}
+                {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="cat-slug-ayuda" className="form-text">Aparece en la dirección pública, p. ej. /{ediciones.find((ed) => ed.id === Number(form.edicionId))?.anio}/categorias/{form.slug || 'musica'}. Déjalo vacío para generarlo automáticamente.</div>}
               </div>
               <div className="col-12">
                 <label className="form-label" htmlFor="cat-desc">Descripción</label>
