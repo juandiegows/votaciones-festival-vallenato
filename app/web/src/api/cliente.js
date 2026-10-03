@@ -52,6 +52,10 @@ export function alPerderSesion(fn) {
   alExpirarSesion = fn;
 }
 
+// La administración se pide en /gestion/: el WAF de producción (Cloudflare) bloquea cualquier ruta con /admin.
+// Las pantallas siguen usando los nombres /admin/… y aquí se traducen.
+const rutaReal = (ruta) => ruta.replace(/^\/admin\//, '/gestion/');
+
 async function peticionCruda(metodo, ruta, cuerpo) {
   const token = leerToken();
   const cabeceras = { Accept: 'application/json' };
@@ -59,7 +63,7 @@ async function peticionCruda(metodo, ruta, cuerpo) {
   if (cuerpo !== undefined && !multipart) cabeceras['Content-Type'] = 'application/json';
   if (token) cabeceras.Authorization = `Token ${token}`;
   try {
-    const respuesta = await fetch(`${API_URL}${ruta}`, {
+    const respuesta = await fetch(`${API_URL}${rutaReal(ruta)}`, {
       method: metodo,
       headers: cabeceras,
       body: multipart ? cuerpo : cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
