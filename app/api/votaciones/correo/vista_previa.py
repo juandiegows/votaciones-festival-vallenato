@@ -23,7 +23,7 @@ def datos_demo():
     edicion = Edicion(nombre="Festival de la Leyenda Vallenata 2027", anio=2027,
                       fecha_inicio=date(2027, 4, 28), fecha_fin=date(2027, 5, 1))
     categoria = Categoria(edicion=edicion, nombre="Piloneras", slug="piloneras")
-    votacion = Votacion(categoria=categoria, titulo="Mejor comparsa de Piloneras", slug="mejor-comparsa")
+    votacion = Votacion(categoria=categoria, titulo="Mejor comparsa de Piloneras", slug="mejor-comparsa-de-piloneras")
     opcion = Opcion(votacion=votacion, nombre="Comparsa Las Marías del Valle")
     voto = Voto(usuario=usuario, votacion=votacion, opcion=opcion, codigo_comprobante="FLV27-M5FV8T",
                 fecha_hora=timezone.now())
