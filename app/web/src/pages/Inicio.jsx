@@ -64,7 +64,7 @@ export default function Inicio() {
                 Participa en las votaciones del público del <strong>{edicionActiva.nombre}</strong>. Elige tus canciones,
                 comparsas y agrupaciones favoritas desde cualquier dispositivo.
               </p>
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2 hero-acciones">
                 <Link to={rutas.edicion(edicionActiva)} className="btn btn-primary btn-lg">
                   <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Ver votaciones
                 </Link>
