@@ -37,6 +37,10 @@ function recursosPdfjs() {
   };
 }
 
+// Dominio canónico para canonical, Open Graph y JSON-LD (index.html usa %VITE_SITE_URL%): producción por defecto,
+// también en la copia de GitHub Pages, para que los buscadores no la tomen como contenido duplicado.
+process.env.VITE_SITE_URL = (process.env.VITE_SITE_URL || 'https://votaciones.juandiegows.com').replace(/\/+$/, '');
+
 // base: GitHub Pages sirve el sitio en /votaciones-festival-vallenato/;
 // la imagen Docker (VPS, votaciones.juandiegows.com) lo construye con VITE_BASE=/
 export default defineConfig({

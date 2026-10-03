@@ -4,10 +4,12 @@ import PageHeader from '../components/PageHeader.jsx';
 import EstadoBadge from '../components/EstadoBadge.jsx';
 import { formatearFechaHora } from '../utils/helpers.js';
 import { useRutas } from '../hooks/useRutas.js';
+import { useSeo } from '../hooks/useSeo.js';
 
 export default function MisVotos() {
   const { misVotos, votaciones, opciones, categorias, edicionActiva } = useApp();
   const rutas = useRutas();
+  useSeo({ titulo: 'Mis votos', indexar: false });
   const mios = [...misVotos].sort((a, b) => b.fechaHora.localeCompare(a.fechaHora));
 
   return (

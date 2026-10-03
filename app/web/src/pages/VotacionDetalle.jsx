@@ -11,6 +11,7 @@ import OpcionesVotacion from '../components/presentaciones/OpcionesVotacion.jsx'
 import NoEncontrado from './NoEncontrado.jsx';
 import { formatearFechaHora, visibilidadResultados, votosPermitidos } from '../utils/helpers.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
+import { migasJsonLd, useSeo } from '../hooks/useSeo.js';
 
 const claveSeleccion = (id) => `flv_seleccion_${id}`;
 
@@ -31,6 +32,19 @@ export default function VotacionDetalle() {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const visible = votacion && (votacion.publicada || esAdmin);
+  useSeo(visible ? {
+    titulo: `${votacion.titulo} · ${categoria.nombre} ${edicion.anio}`,
+    descripcion: votacion.descripcion || `Vota en «${votacion.titulo}», categoría ${categoria.nombre} del ${edicion.nombre}.`,
+    // La vista previa de un borrador (solo administradores) no se indexa
+    indexar: votacion.publicada,
+    jsonLd: migasJsonLd([
+      ['Inicio', '/'],
+      [`Edición ${edicion.anio}`, rutas.edicion(edicion)],
+      [categoria.nombre, rutas.categoria(categoria)],
+      [votacion.titulo, rutas.votacion(votacion)],
+    ]),
+  } : null);
 
   if (!votacion || (!votacion.publicada && !esAdmin)) return <NoEncontrado mensaje="La votación no existe o aún no ha sido publicada." />;
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { EdicionAdminProvider, useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
+import { useSeo } from '../../hooks/useSeo.js';
 
 // `porEdicion`: la pantalla muestra solo los datos de la edición elegida en el selector
 const ENLACES = [
@@ -40,6 +41,7 @@ function SelectorEdicion() {
 }
 
 export default function AdminLayout() {
+  useSeo({ titulo: 'Panel de administración', indexar: false });
   const { pathname } = useLocation();
   const menuRef = useRef(null);
   // Móvil: el menú es una franja deslizable; se desplaza hasta la sección activa para que siempre se vea

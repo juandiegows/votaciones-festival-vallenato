@@ -8,6 +8,7 @@ import { votacionesPublicas } from '../utils/visibilidad.js';
 import { useRutas } from '../hooks/useRutas.js';
 import SinEdicion from '../components/SinEdicion.jsx';
 import HeroBanners from '../components/HeroBanners.jsx';
+import { SEO_BASE, useSeo } from '../hooks/useSeo.js';
 
 // pdf.js y page-flip solo se descargan si hay una revista que mostrar
 const RevistaLibro = lazy(() => import('../components/RevistaLibro.jsx'));
@@ -29,6 +30,11 @@ export default function Inicio() {
   const bannersEdicion = banners.filter((b) => b.activo && (b.edicionId ?? edicionActiva?.id) === edicionActiva?.id).sort((a, b) => a.orden - b.orden);
   const bannersActivos = configuracion?.modoBanner === 'fijo' ? bannersEdicion.slice(0, 1) : bannersEdicion;
   const rutas = useRutas();
+  // El título sigue a la edición activa (sin años fijos en el código)
+  useSeo({
+    titulo: edicionActiva ? `Vota en el ${edicionActiva.nombre}` : null,
+    descripcion: SEO_BASE.descripcion,
+  });
   if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);
   const abiertas = publicas.filter((v) => v.estado === 'abierta');

@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ERRORES } from '../../data/errores.js';
 import AcordeonAnimado from '../../components/AcordeonAnimado.jsx';
+import { useSeo } from '../../hooks/useSeo.js';
 
 const recargar = () => window.location.reload();
 
@@ -45,12 +45,8 @@ export default function PaginaError({ codigo = 404, titulo, mensaje, sugerencias
   const e = ERRORES[codigo] || ERRORES[500];
   const esNumero = /^\d+$/.test(String(codigo));
 
-  useEffect(() => {
-    if (!independiente) return undefined;
-    const anterior = document.title;
-    document.title = `${titulo || e.titulo} · Votaciones FLV`;
-    return () => { document.title = anterior; };
-  }, [independiente, titulo, e.titulo]);
+  // Las páginas de error nunca se indexan (en la SPA un 404 responde 200: el noindex evita el «soft 404»)
+  useSeo({ titulo: titulo || e.titulo, descripcion: mensaje || e.mensaje, indexar: false });
 
   const contenido = (
     <section className="pagina-error card-flv" aria-labelledby="titulo-error">

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
+import { useSeo } from '../hooks/useSeo.js';
 
 // Destino del enlace del correo de confirmación: /confirmar-correo?token=…
 export default function ConfirmarCorreo() {
   const { confirmarCorreo, usuario } = useApp();
+  useSeo({ titulo: 'Confirmar correo', indexar: false });
   const [parametros] = useSearchParams();
   const token = parametros.get('token') || '';
   const [resultado, setResultado] = useState(token ? null : { ok: false, error: 'El enlace de confirmación está incompleto.' });

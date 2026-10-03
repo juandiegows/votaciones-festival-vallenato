@@ -7,6 +7,7 @@ import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
 import { formatearFechaHora } from '../utils/helpers.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
+import { useSeo } from '../hooks/useSeo.js';
 
 export default function Comprobante() {
   const { opciones, usuario, votosDeUsuario, edicionActiva } = useApp();
@@ -15,6 +16,7 @@ export default function Comprobante() {
   const [parametros, setParametros] = useSearchParams();
   const impreso = useRef(false);
   const voto = votacion ? votosDeUsuario(votacion.id)[0] : null;
+  useSeo(votacion ? { titulo: `Comprobante · ${votacion.titulo}`, indexar: false } : null);
 
   // El botón «Imprimir» del correo del comprobante llega con ?imprimir=1: abre el diálogo de impresión una vez
   // que el voto está cargado y limpia el parámetro para que recargar la página no vuelva a imprimir.

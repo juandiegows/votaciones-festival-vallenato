@@ -5,6 +5,7 @@ import Modal from '../components/Modal.jsx';
 import PoliticaDatos from '../components/PoliticaDatos.jsx';
 import { validarContrasena, validarCorreo } from '../utils/helpers.js';
 import { TIPOS_DOCUMENTO, errorDocumento } from '../utils/documento.js';
+import { useSeo } from '../hooks/useSeo.js';
 
 const INICIAL = {
   nombres: '', apellidos: '', tipoDocumento: 'CC', numeroDocumento: '', correo: '', contrasena: '', confirmacion: '',
@@ -26,6 +27,10 @@ function validar(f) {
 
 export default function Registro() {
   const { registrarUsuario } = useApp();
+  useSeo({
+    titulo: 'Crea tu cuenta para votar',
+    descripcion: 'Regístrate con tu correo y tu documento para votar por tus favoritos del Festival de la Leyenda Vallenata.',
+  });
   const [form, setForm] = useState(INICIAL);
   const [errores, setErrores] = useState({});
   const [enviado, setEnviado] = useState(false);

@@ -4,9 +4,11 @@ import { useApp } from '../context/AppContext.jsx';
 import Modal from '../components/Modal.jsx';
 import { validarCorreo } from '../utils/helpers.js';
 import { CREDENCIALES_DEMO } from '../data/credencialesDemo.js';
+import { useSeo } from '../hooks/useSeo.js';
 
 export default function Login() {
   const { iniciarSesion } = useApp();
+  useSeo({ titulo: 'Iniciar sesión', indexar: false });
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');

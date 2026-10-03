@@ -3,16 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Prototipo académico del Sistema Web de Votaciones del Festival de la Leyenda Vallenata." />
+    <title>Votaciones · Festival de la Leyenda Vallenata</title>
+    <!-- SEO: valores por defecto; cada página los ajusta con useSeo (título, descripción, robots, canonical) -->
+    <meta name="description" content="Vota por tus favoritos del Festival de la Leyenda Vallenata: canciones, piloneras, vestuario, agrupaciones y más. Regístrate, elige y recibe tu comprobante." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="Juan Mejía Maestre, Sebastián Bautista Martínez y María Virginia Labarca Briceño" />
+    <meta name="application-name" content="Votaciones FLV" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="theme-color" content="#000000" />
+
+    <!-- Open Graph / redes sociales -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:site_name" content="Votaciones · Festival de la Leyenda Vallenata" />
+    <meta property="og:title" content="Votaciones · Festival de la Leyenda Vallenata" />
+    <meta property="og:description" content="Vota por tus favoritos del Festival de la Leyenda Vallenata: canciones, piloneras, vestuario, agrupaciones y más. Regístrate, elige y recibe tu comprobante." />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Votaciones del Festival de la Leyenda Vallenata" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Votaciones · Festival de la Leyenda Vallenata" />
+    <meta name="twitter:description" content="Vota por tus favoritos del Festival de la Leyenda Vallenata: canciones, piloneras, vestuario, agrupaciones y más. Regístrate, elige y recibe tu comprobante." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og-image.png" />
+
+    <!-- Íconos y aplicación instalable -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="author" href="/humans.txt" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Raleway:wght@700;800&display=swap" rel="stylesheet" />
-    <title>Votaciones · Festival de la Leyenda Vallenata</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Votaciones · Festival de la Leyenda Vallenata",
+        "alternateName": "Votaciones FLV",
+        "url": "%VITE_SITE_URL%/",
+        "inLanguage": "es-CO",
+        "description": "Sistema web de votaciones del público para el Festival de la Leyenda Vallenata (proyecto académico, Areandina)."
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main style="font-family: Poppins, system-ui, sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 16px">
+        <h1>Votaciones · Festival de la Leyenda Vallenata</h1>
+        <p>Vota por tus favoritos del Festival: canciones, piloneras, vestuario, agrupaciones y más.</p>
+        <p>Para registrarte y votar necesitas activar JavaScript en tu navegador.</p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

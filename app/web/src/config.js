@@ -11,3 +11,7 @@ export const BASE_URL = import.meta.env.BASE_URL || '/';
 export function urlDelSitio(ruta) {
   return `${BASE_URL.replace(/\/+$/, '')}${ruta}`;
 }
+
+// Dominio canónico del sitio (URL absolutas de canonical, Open Graph y JSON-LD). La copia de GitHub Pages
+// también apunta aquí para que los buscadores no la indexen como contenido duplicado.
+export const SITIO_URL = (import.meta.env.VITE_SITE_URL || 'https://votaciones.juandiegows.com').replace(/\/+$/, '');

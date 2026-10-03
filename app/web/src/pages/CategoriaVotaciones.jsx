@@ -5,6 +5,7 @@ import VotacionCard from '../components/VotacionCard.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
 import { edicionPublica, votacionesPublicas } from '../utils/visibilidad.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
+import { migasJsonLd, useSeo } from '../hooks/useSeo.js';
 
 const FILTROS = [
   ['todas', 'Todas'],
@@ -19,6 +20,12 @@ export default function CategoriaVotaciones() {
   const [filtro, setFiltro] = useState('todas');
   const { edicion, categoria } = useRutaPublica();
   const rutas = useRutas();
+  const visible = categoria?.activa && edicionPublica(edicion);
+  useSeo(visible ? {
+    titulo: `${categoria.nombre} · Edición ${edicion.anio}`,
+    descripcion: categoria.descripcion || `Votaciones de la categoría ${categoria.nombre} del ${edicion.nombre}.`,
+    jsonLd: migasJsonLd([['Inicio', '/'], [`Edición ${edicion.anio}`, rutas.edicion(edicion)], [categoria.nombre, rutas.categoria(categoria)]]),
+  } : null);
   if (!categoria || !categoria.activa || !edicionPublica(edicion)) return <NoEncontrado mensaje="La categoría no existe o no está activa." />;
 
   const todas = votacionesPublicas(datos, edicion).filter((v) => v.categoriaId === categoria.id);
