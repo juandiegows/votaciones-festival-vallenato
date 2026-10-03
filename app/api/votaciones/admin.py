@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
+from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Revista, Usuario, Votacion, Voto
 
 
 @admin.register(Usuario)
@@ -42,6 +42,12 @@ class VotacionAdmin(admin.ModelAdmin):
     list_display = ["titulo", "categoria", "fecha_apertura", "fecha_cierre", "publicada", "estado"]
     list_filter = ["categoria__edicion", "categoria", "publicada"]
     inlines = [OpcionInline]
+
+
+@admin.register(Revista)
+class RevistaAdmin(admin.ModelAdmin):
+    list_display = ["titulo", "orden", "activa", "publicada_en"]
+    list_filter = ["activa"]
 
 
 @admin.register(Voto)

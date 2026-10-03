@@ -63,7 +63,7 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 | GET | `/api/votaciones/{id}/` | Detalle con opciones activas y `mis_votos` del usuario (RF-06) |
 | GET | `/api/opciones/?votacion={id}` | Opciones activas de votaciones publicadas |
 | GET | `/api/votaciones/{id}/resultados/` | Resultados si la visibilidad lo permite (RF-15, RN-07) |
-| GET | `/api/sitio/` | Contacto, redes y banners activos **de la edición activa** |
+| GET | `/api/sitio/` | Contacto, redes, revistas activas y banners activos **de la edición activa** |
 
 ### Votación
 
@@ -91,6 +91,7 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 | GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
 | GET | `/api/gestion/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
 | CRUD | `/api/gestion/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
+| CRUD | `/api/gestion/revistas/` | Revista institucional en PDF (`archivo` en multipart, máximo 50 MB); el inicio la muestra como libro que se hojea |
 | GET | `/api/gestion/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
 | GET | `/api/gestion/auditoria/integridad/?edicion={id}` | Verifica que los votos cuadren en cada votación (por defecto, la edición activa) |
 

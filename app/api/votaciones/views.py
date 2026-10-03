@@ -18,13 +18,14 @@ from rest_framework.views import APIView
 
 from . import servicios
 from .models import (
-    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Usuario, Votacion, Voto,
+    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Revista, Usuario, Votacion, Voto,
 )
 from .permissions import EsAdministrador
 from .serializers import (
     BannerInicioSerializer,
     ConfiguracionSitioSerializer,
     RedSocialSerializer,
+    RevistaSerializer,
     SitioSerializer,
     CategoriaSerializer,
     EdicionSerializer,
@@ -486,7 +487,7 @@ class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
         return consulta.filter(rol=rol) if rol else consulta
 
 
-@extend_schema(tags=["Consulta pública"], summary="Contenido del sitio: contacto, redes y banners activos de la edición activa",
+@extend_schema(tags=["Consulta pública"], summary="Contenido del sitio: contacto, redes, revistas y banners activos de la edición activa",
                responses={200: SitioSerializer})
 class SitioView(APIView):
     permission_classes = [AllowAny]
@@ -500,6 +501,7 @@ class SitioView(APIView):
                 BannerInicio.objects.filter(activo=True, edicion=Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()),
                 many=True,
             ).data,
+            "revistas": RevistaSerializer(Revista.objects.filter(activa=True), many=True).data,
         })
 
 
@@ -526,6 +528,17 @@ class AdminBannerViewSet(AuditadoMixin, viewsets.ModelViewSet):
     def eliminar(self, banner):
         banner.imagen.delete(save=False)
         banner.delete()
+
+
+@extend_schema(tags=["Administración"])
+class AdminRevistaViewSet(AuditadoMixin, viewsets.ModelViewSet):
+    """Revistas institucionales del inicio. El PDF se envía como multipart/form-data (máximo 50 MB)."""
+
+    permission_classes = [EsAdministrador]
+    serializer_class = RevistaSerializer
+    queryset = Revista.objects.all()
+    entidad = "revista"
+    campos_archivo = ("archivo",)
 
 
 @extend_schema(tags=["Administración"])

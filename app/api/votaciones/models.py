@@ -293,6 +293,26 @@ class BannerInicio(models.Model):
         return self.titulo or self.texto_alternativo
 
 
+class Revista(models.Model):
+    """Revista institucional en PDF: el inicio la muestra como un libro que se hojea."""
+
+    titulo = models.CharField(max_length=150)
+    descripcion = models.TextField(blank=True)
+    archivo = models.FileField(upload_to="revistas/", help_text="Revista en PDF (máximo 50 MB).")
+    orden = models.PositiveSmallIntegerField(default=0)
+    activa = models.BooleanField(default=True)
+    publicada_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "revista"
+        ordering = ["orden", "-publicada_en"]
+        verbose_name = "revista"
+        verbose_name_plural = "revistas"
+
+    def __str__(self):
+        return self.titulo
+
+
 class ConfiguracionSitio(models.Model):
     """Datos de contacto del pie de página y modo del banner del inicio (un único registro, pk=1)."""
 

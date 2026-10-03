@@ -17,6 +17,7 @@ admin.register("opciones", views.AdminOpcionViewSet, basename="admin-opcion")
 admin.register("votos", views.AdminVotoViewSet, basename="admin-voto")
 admin.register("usuarios", views.AdminUsuarioViewSet, basename="admin-usuario")
 admin.register("banners", views.AdminBannerViewSet, basename="admin-banner")
+admin.register("revistas", views.AdminRevistaViewSet, basename="admin-revista")
 admin.register("redes", views.AdminRedSocialViewSet, basename="admin-red")
 admin.register("auditoria", views.AdminAuditoriaViewSet, basename="admin-auditoria")
 

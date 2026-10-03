@@ -8,7 +8,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import (
-    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Usuario, Votacion, Voto,
+    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Revista, Usuario, Votacion, Voto,
 )
 from .servicios import votos_del_usuario
 
@@ -67,6 +67,7 @@ class LoginSerializer(serializers.Serializer):
 TAMANO_MAXIMO_IMAGEN = 3 * 1024 * 1024
 TAMANO_MAXIMO_ICONO = 1 * 1024 * 1024
 TAMANO_MAXIMO_AUDIO = 10 * 1024 * 1024
+TAMANO_MAXIMO_REVISTA = 50 * 1024 * 1024
 FORMATOS_IMAGEN = {"JPEG", "PNG", "WEBP"}
 EXTENSIONES_AUDIO = (".mp3", ".ogg", ".wav", ".m4a", ".webm")
 
@@ -327,6 +328,25 @@ class BannerInicioSerializer(serializers.ModelSerializer):
         return validar_enlace_multimedia(valor)
 
 
+class RevistaSerializer(serializers.ModelSerializer):
+    archivo = RutaArchivoField()
+
+    class Meta:
+        model = Revista
+        fields = ["id", "titulo", "descripcion", "archivo", "orden", "activa", "publicada_en"]
+        read_only_fields = ["publicada_en"]
+
+    def validate_archivo(self, archivo):
+        if archivo.size > TAMANO_MAXIMO_REVISTA:
+            raise serializers.ValidationError("El PDF supera el tamaño máximo de 50 MB.")
+        # Se revisa la firma del archivo, no solo la extensión
+        inicio = archivo.read(5)
+        archivo.seek(0)
+        if not archivo.name.lower().endswith(".pdf") or inicio != b"%PDF-":
+            raise serializers.ValidationError("Formato no permitido: sube la revista en PDF.")
+        return archivo
+
+
 class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
@@ -343,6 +363,7 @@ class SitioSerializer(serializers.Serializer):
     configuracion = ConfiguracionSitioSerializer()
     redes = RedSocialSerializer(many=True)
     banners = BannerInicioSerializer(many=True)
+    revistas = RevistaSerializer(many=True)
 
 
 class VotoAdminSerializer(serializers.ModelSerializer):

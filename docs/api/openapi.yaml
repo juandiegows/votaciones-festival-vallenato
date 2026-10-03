@@ -1162,6 +1162,159 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/revistas/:
+    get:
+      operationId: gestion_revistas_list
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Revista'
+          description: ''
+    post:
+      operationId: gestion_revistas_create
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revista'
+          description: ''
+  /api/gestion/revistas/{id}/:
+    get:
+      operationId: gestion_revistas_retrieve
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este revista.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revista'
+          description: ''
+    put:
+      operationId: gestion_revistas_update
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este revista.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RevistaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revista'
+          description: ''
+    patch:
+      operationId: gestion_revistas_partial_update
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este revista.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRevistaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRevistaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRevistaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revista'
+          description: ''
+    delete:
+      operationId: gestion_revistas_destroy
+      description: Revistas institucionales del inicio. El PDF se envía como multipart/form-data
+        (máximo 50 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este revista.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/gestion/usuarios/:
     get:
       operationId: gestion_usuarios_list
@@ -1679,8 +1832,8 @@ paths:
   /api/sitio/:
     get:
       operationId: sitio_retrieve
-      summary: 'Contenido del sitio: contacto, redes y banners activos de la edición
-        activa'
+      summary: 'Contenido del sitio: contacto, redes, revistas y banners activos de
+        la edición activa'
       tags:
       - Consulta pública
       security:
@@ -2797,6 +2950,25 @@ components:
           format: int64
         activa:
           type: boolean
+    PatchedRevistaRequest:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        archivo:
+          type: string
+          format: binary
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
     PatchedVotacionRequest:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -3042,6 +3214,58 @@ components:
       - edicion
       - edicion_id
       - total_votos
+    Revista:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titulo:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        archivo:
+          type: string
+          format: uri
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+        publicada_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archivo
+      - id
+      - publicada_en
+      - titulo
+    RevistaRequest:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: string
+        archivo:
+          type: string
+          format: binary
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+      required:
+      - archivo
+      - titulo
     RolEnum:
       enum:
       - votante
@@ -3063,10 +3287,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BannerInicio'
+        revistas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Revista'
       required:
       - banners
       - configuracion
       - redes
+      - revistas
     TokenRespuesta:
       type: object
       properties:

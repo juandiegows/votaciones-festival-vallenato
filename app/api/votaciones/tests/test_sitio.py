@@ -1,4 +1,4 @@
-"""Contenido editable del sitio: banners del inicio, datos de contacto y redes sociales."""
+"""Contenido editable del sitio: banners del inicio, revista institucional, datos de contacto y redes sociales."""
 import io
 import os
 from io import StringIO
@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from PIL import Image
 
-from votaciones.models import BannerInicio, ConfiguracionSitio, Edicion, RedSocial, RegistroAuditoria, Votacion
+from votaciones.models import BannerInicio, ConfiguracionSitio, Edicion, RedSocial, RegistroAuditoria, Revista, Votacion
 
 from .base import BaseAPITest
 
@@ -100,6 +100,51 @@ class BannerAdminTests(BaseAPITest):
         self.assertTrue(archivo.storage.exists(archivo.name))
         self.assertEqual(self.client.delete(url).status_code, 204)
         self.assertFalse(archivo.storage.exists(archivo.name))
+
+
+def pdf(nombre="revista.pdf", contenido=b"%PDF-1.5\n%%EOF\n"):
+    return SimpleUploadedFile(nombre, contenido, content_type="application/pdf")
+
+
+class RevistaAdminTests(BaseAPITest):
+    def crear(self, archivo, **extra):
+        datos = {"titulo": "Revista 2025", "descripcion": "Edición digital", "archivo": archivo, **extra}
+        return self.client.post("/api/admin/revistas/", datos, format="multipart")
+
+    def test_solo_administrador(self):
+        self.assertEqual(self.client.get("/api/admin/revistas/").status_code, 401)
+        self.autenticar(self.votante)
+        self.assertEqual(self.crear(pdf()).status_code, 403)
+
+    def test_subir_pdf_queda_auditado_publico_y_se_sirve(self):
+        self.autenticar(self.admin)
+        respuesta = self.crear(pdf(), activa=True)
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertRegex(respuesta.data["archivo"], r"^/media/revistas/revista.*\.pdf$")
+        self.assertTrue(RegistroAuditoria.objects.filter(accion="crear", entidad="revista").exists())
+        self.assertEqual(self.client.get(respuesta.data["archivo"]).status_code, 200)
+        self.client.credentials()
+        self.assertEqual([r["titulo"] for r in self.client.get("/api/sitio/").data["revistas"]], ["Revista 2025"])
+
+    def test_rechaza_archivo_que_no_es_pdf(self):
+        self.autenticar(self.admin)
+        disfrazado = self.crear(pdf(contenido=b"no es un pdf"))
+        self.assertEqual(disfrazado.status_code, 400)
+        self.assertIn("PDF", str(disfrazado.data["archivo"]))
+        self.assertEqual(self.crear(pdf(nombre="revista.txt")).status_code, 400)
+
+    def test_desactivar_reemplazar_y_eliminar_borra_los_archivos(self):
+        self.autenticar(self.admin)
+        datos = self.crear(pdf(), activa=True).data
+        url = f"/api/admin/revistas/{datos['id']}/"
+        self.assertEqual(self.client.patch(url, {"activa": False}, format="json").status_code, 200)
+        self.assertEqual(self.client.get("/api/sitio/").data["revistas"], [])
+        anterior = Revista.objects.get().archivo
+        self.assertEqual(self.client.patch(url, {"archivo": pdf("nueva.pdf")}, format="multipart").status_code, 200)
+        self.assertFalse(anterior.storage.exists(anterior.name))
+        actual = Revista.objects.get().archivo
+        self.assertEqual(self.client.delete(url).status_code, 204)
+        self.assertFalse(actual.storage.exists(actual.name))
 
 
 class ConfiguracionYRedesTests(BaseAPITest):
