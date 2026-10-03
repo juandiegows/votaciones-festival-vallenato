@@ -245,3 +245,15 @@ a:hover { color: var(--flv-rojo-hover); }
 .reproductor audio:focus-visible, .reproductor-embebido:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
 .reproductor-embebido { border: 0; border-radius: .5rem; display: block; }
 .reproductor-nota { font-size: .75rem; color: var(--flv-gris-texto); margin-top: .3rem; }
+
+/* Pie de página: contacto y redes del Festival */
+.contacto-flv { font-style: normal; line-height: 1.5; }
+.contacto-flv a { text-decoration: none; word-break: break-word; }
+.contacto-flv a:hover, .contacto-flv a:focus-visible { text-decoration: underline; }
+.redes-flv a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--flv-dorado); color: var(--flv-dorado); font-size: 1.15rem;
+  text-decoration: none; transition: background-color .15s, color .15s;
+}
+.redes-flv a:hover, .redes-flv a:focus-visible { background-color: var(--flv-dorado); color: var(--flv-negro); }
