@@ -17,7 +17,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
-from ..models import ConfiguracionSitio
+from ..sitio.models import ConfiguracionSitio
 from .adaptadores import AdaptadorCorreo, Destinatario, ErrorEnvioCorreo, ImagenEnLinea, Mensaje
 
 logger = logging.getLogger("votaciones.correo")

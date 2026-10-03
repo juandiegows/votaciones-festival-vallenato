@@ -12,7 +12,8 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.utils.html import escape
 
-from ..models import Categoria, Edicion, Opcion, Usuario, Votacion, Voto
+from ..cuentas.models import Usuario
+from ..votacion.models import Categoria, Edicion, Opcion, Votacion, Voto
 from . import servicio
 from .adaptadores.memoria import AdaptadorMemoria
 

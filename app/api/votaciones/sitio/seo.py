@@ -14,7 +14,8 @@ from django.utils import timezone
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
 
-from .models import Categoria, ConfiguracionSitio, Edicion, Votacion
+from ..votacion.models import Categoria, Edicion, Votacion
+from .models import ConfiguracionSitio
 
 # Páginas fijas indexables (login, mis votos, comprobantes y el panel quedan fuera: son privadas o no aportan)
 PAGINAS_FIJAS = [("/", "daily", "1.0"), ("/registro", "monthly", "0.5")]

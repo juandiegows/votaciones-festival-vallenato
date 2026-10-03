@@ -1,7 +1,7 @@
 from django.test import RequestFactory, override_settings
 
 from votaciones.models import Opcion, Votacion, Voto
-from votaciones.servicios import ip_cliente
+from votaciones.comun.api import ip_cliente
 
 from .base import BaseAPITest
 

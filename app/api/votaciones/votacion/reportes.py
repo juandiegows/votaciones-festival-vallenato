@@ -1,120 +1,9 @@
-import ipaddress
-import secrets
-import string
+"""Reportes de solo lectura sobre los votos: resultados, participación, resumen por edición e integridad."""
 
-from django.conf import settings
-from django.db import transaction
 from django.db.models import Count, Min, Q
 from django.utils import timezone
 
-from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Votacion, Voto
-
-ALFABETO_COMPROBANTE = string.ascii_uppercase + string.digits
-
-
-class ReglaNegocioError(Exception):
-    def __init__(self, mensaje, codigo="regla_negocio", status=400):
-        super().__init__(mensaje)
-        self.mensaje = mensaje
-        self.codigo = codigo
-        self.status = status
-
-
-def ip_cliente(request):
-    """
-    IP real del cliente. Solo se confía en X-Forwarded-For cuando hay proxies declarados (NUM_PROXIES) y se toma
-    la entrada que agregó el proxy más externo, no la primera (esa la puede escribir el propio cliente).
-    Devuelve None si el valor no es una IP válida.
-    """
-    ip = request.META.get("REMOTE_ADDR")
-    reenviada = request.META.get("HTTP_X_FORWARDED_FOR")
-    if settings.NUM_PROXIES and reenviada:
-        saltos = [parte.strip() for parte in reenviada.split(",")]
-        ip = saltos[-min(settings.NUM_PROXIES, len(saltos))]
-    try:
-        return str(ipaddress.ip_address(ip))
-    except ValueError:
-        return None
-
-
-def auditar(request, accion, entidad, entidad_id="", detalle=None):
-    usuario = request.user if request.user.is_authenticated else None
-    return RegistroAuditoria.objects.create(
-        usuario=usuario,
-        accion=accion,
-        entidad=entidad,
-        entidad_id=str(entidad_id),
-        detalle=detalle or {},
-        ip=ip_cliente(request),
-    )
-
-
-def generar_codigo_comprobante(votacion):
-    prefijo = f"FLV{votacion.categoria.edicion.anio % 100:02d}-"
-    while True:
-        codigo = prefijo + "".join(secrets.choice(ALFABETO_COMPROBANTE) for _ in range(6))
-        if not Voto.objects.filter(codigo_comprobante=codigo).exists():
-            return codigo
-
-
-def votos_del_usuario(usuario, votacion):
-    if not usuario.is_authenticated:
-        return 0
-    return Voto.objects.filter(usuario=usuario, votacion=votacion).count()
-
-
-@transaction.atomic
-def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
-    if not usuario.correo_verificado:
-        raise ReglaNegocioError(
-            "Confirma tu correo para poder votar. Revisa tu bandeja de entrada.", codigo="correo_sin_confirmar", status=403
-        )
-
-    votacion = Votacion.objects.select_for_update().select_related("categoria__edicion").get(pk=votacion_id)
-
-    if votacion.estado != Votacion.Estado.ABIERTA:
-        raise ReglaNegocioError(
-            "La votación no está abierta.", codigo="votacion_no_abierta", status=409
-        )
-
-    if votacion.pausada:
-        raise ReglaNegocioError(
-            "Las votaciones están en pausa temporalmente. Intenta más tarde.", codigo="votaciones_pausadas", status=409
-        )
-
-    try:
-        opcion = votacion.opciones.get(pk=opcion_id, activa=True)
-    except Opcion.DoesNotExist:
-        raise ReglaNegocioError("La opción no pertenece a esta votación.", codigo="opcion_invalida")
-
-    if votos_del_usuario(usuario, votacion) >= votacion.votos_por_usuario_efectivo:
-        raise ReglaNegocioError(
-            "Ya alcanzaste el límite de votos de esta votación.", codigo="limite_votos", status=409
-        )
-
-    return Voto.objects.create(
-        usuario=usuario,
-        votacion=votacion,
-        opcion=opcion,
-        codigo_comprobante=generar_codigo_comprobante(votacion),
-        ip=ip,
-    )
-
-
-def resultados_visibles_para(votacion, usuario):
-    """Regla pública (RN-07): igual para todos, también para un administrador que navega el sitio.
-    La administración consulta los resultados completos en /api/gestion/votaciones/{id}/resultados/."""
-    if not votacion.publicada:
-        return False
-    if votacion.resultados_publicados:
-        return True
-    visibilidad = votacion.visibilidad_efectiva
-    if visibilidad == Votacion.Visibilidad.TIEMPO_REAL:
-        return True
-    if visibilidad == Votacion.Visibilidad.AL_CIERRE:
-        return votacion.estado == Votacion.Estado.CERRADA
-    return False
-
+from .models import Categoria, Votacion, Voto
 
 def calcular_resultados(votacion):
     conteos = dict(
@@ -140,30 +29,6 @@ def calcular_resultados(votacion):
         "total_votos": total,
         "resultados": filas,
     }
-
-
-def publicar_votacion(votacion):
-    if votacion.opciones.filter(activa=True).count() < 2:
-        raise ReglaNegocioError(
-            "La votación necesita al menos dos opciones activas para publicarse.",
-            codigo="opciones_insuficientes",
-        )
-    votacion.publicada = True
-    votacion.save(update_fields=["publicada", "actualizada_en"])
-    return votacion
-
-
-def despublicar_votacion(votacion):
-    """Retira la votación del sitio público; no se permite mientras está abierta (recibiendo votos)."""
-    if votacion.estado == Votacion.Estado.ABIERTA:
-        raise ReglaNegocioError(
-            "No se puede despublicar una votación abierta: espera al cierre o ciérrala primero.",
-            codigo="votacion_abierta",
-            status=409,
-        )
-    votacion.publicada = False
-    votacion.save(update_fields=["publicada", "actualizada_en"])
-    return votacion
 
 
 UMBRAL_PARTICIPACION = 10
@@ -307,21 +172,3 @@ def verificar_integridad(edicion):
         },
         "votaciones": filas,
     }
-
-
-def validar_eliminacion(objeto):
-    if objeto.votos.exists():
-        raise ReglaNegocioError(
-            "No se puede eliminar porque ya tiene votos; ciérrala o desactívala.",
-            codigo="tiene_votos",
-            status=409,
-        )
-
-
-def cerrar_otras_ediciones(edicion):
-    """Mantiene una sola edición activa: si esta queda activa, las demás se cierran."""
-    if edicion.estado != Edicion.Estado.ACTIVA:
-        return 0
-    return Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).exclude(pk=edicion.pk).update(
-        estado=Edicion.Estado.CERRADA
-    )

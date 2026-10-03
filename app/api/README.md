@@ -5,23 +5,57 @@ Backend del Sistema Web de Votaciones del Festival de la Leyenda Vallenata. La d
 
 ## Estructura
 
+Una sola app de Django (`votaciones`) organizada en **módulos por dominio**. Cada módulo sigue las mismas capas
+(convención *Django Styleguide*): la vista solo traduce HTTP, las lecturas van en `selectores.py` y las escrituras
+con reglas de negocio en `servicios.py`.
+
 ```
 app/api/
-├── config/              settings (variables de entorno), urls, wsgi
-├── votaciones/
-│   ├── models.py        Usuario, Edicion, Categoria, Votacion, Opcion, Voto, RegistroAuditoria
-│   ├── migrations/      0001_initial · 0002_slugs_urls_amigables
-│   ├── serializers.py   validación y formato JSON
-│   ├── servicios.py     reglas de negocio (emitir voto, resultados, publicar, auditoría)
-│   ├── views.py         endpoints públicos, de votante y de administración
-│   ├── permissions.py   EsAdministrador
-│   ├── urls.py          rutas /api/…
-│   ├── admin.py         panel /django-admin/
-│   ├── management/      comando cargar_demo (datos de demostración)
-│   └── tests/           pruebas automatizadas
+├── config/                  settings (variables de entorno), urls, wsgi
+├── votaciones/              app única: una etiqueta, unas migraciones, las mismas tablas
+│   ├── comun/               piezas compartidas, sin dominio propio
+│   │   ├── errores.py       ReglaNegocioError (la lanzan los servicios)
+│   │   ├── api.py           manejador de excepciones DRF, ip_cliente, ErrorReglaSerializer
+│   │   ├── campos.py        campos de archivo y validadores (imagen, audio, PDF, slug, enlace)
+│   │   ├── consultas.py     filtrar_por_id, slug_unico
+│   │   ├── permisos.py      EsAdministrador
+│   │   └── esquema.py       hook de OpenAPI (oculta el alias /api/admin/)
+│   ├── cuentas/             Usuario: registro, sesión por token, confirmación del correo
+│   ├── votacion/            Edición → Categoría → Votación → Opción → Voto
+│   │   └── reportes.py      resultados, participación, resumen e integridad (solo lectura)
+│   ├── sitio/               banners, revistas, redes, configuración, sitemap (seo.py)
+│   ├── auditoria/           RegistroAuditoria y AuditadoMixin (CRUD que deja constancia)
+│   ├── correo/              servicio de correo + adaptadores (consola, memoria, SMTP, ZeptoMail)
+│   ├── models.py            registra los modelos de todos los módulos
+│   ├── admin.py             registra el panel /django-admin/ de todos los módulos
+│   ├── urls.py              compone las rutas /api/… de todos los módulos
+│   ├── migrations/ · management/ (cargar_demo) · templates/ · static/
+│   └── tests/               pruebas automatizadas
 ├── Dockerfile · entrypoint.sh (espera MySQL, migra y arranca gunicorn)
 └── requirements.txt
 ```
+
+Cada módulo de dominio tiene, según lo que necesite:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `models.py` | tablas y reglas propias del registro (p. ej. `Votacion.estado`) |
+| `selectores.py` | lecturas: consultas que usan vistas y reportes; no modifican datos |
+| `servicios.py` | escrituras con reglas de negocio (RN-xx); no reciben `request`, lanzan `ReglaNegocioError` |
+| `serializers.py` | validación de entrada y formato JSON de salida |
+| `views.py` | HTTP: permisos, throttling, documentación OpenAPI y respuesta |
+| `urls.py` | `urlpatterns`, `rutas_publicas` y `rutas_gestion` (ViewSets que `votaciones/urls.py` registra en los routers) |
+| `admin.py` | panel `/django-admin/` |
+
+Reglas de dependencia: `comun` no importa ningún módulo de dominio; el núcleo de `votacion` (modelos, selectores,
+servicios y reportes) no depende de `sitio` ni de `auditoria`; las vistas
+no usan el ORM salvo el `queryset` de un CRUD simple. Un error de negocio se lanza en el servicio y DRF lo responde
+como `{"detail", "codigo"}` (ver `EXCEPTION_HANDLER` en `config/settings.py`).
+
+**Agregar un módulo** (p. ej. `patrocinios/`): crear la carpeta con sus `models.py`, `selectores.py`,
+`servicios.py`, `serializers.py`, `views.py` y `urls.py`; importar sus modelos en `votaciones/models.py`, su
+`admin` en `votaciones/admin.py` y su `urls` en `MODULOS` de `votaciones/urls.py`; luego
+`python manage.py makemigrations votaciones`.
 
 ## Ejecutar con Docker (recomendado)
 

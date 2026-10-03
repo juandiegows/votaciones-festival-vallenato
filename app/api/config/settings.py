@@ -190,6 +190,8 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Las reglas de negocio (ReglaNegocioError) llegan al cliente como {"detail", "codigo"} con su código HTTP
+    "EXCEPTION_HANDLER": "votaciones.comun.api.manejar_excepciones",
     "NUM_PROXIES": NUM_PROXIES,
     "DEFAULT_THROTTLE_RATES": {
         "login": os.getenv("THROTTLE_LOGIN", "10/min"),
@@ -218,11 +220,11 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     # El alias /api/admin/ no se documenta: la ruta pública de administración es /api/gestion/
-    "PREPROCESSING_HOOKS": ["votaciones.esquema.sin_alias_admin"],
+    "PREPROCESSING_HOOKS": ["votaciones.comun.esquema.sin_alias_admin"],
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
-        "EstadoEdicionEnum": "votaciones.models.Edicion.Estado",
-        "EstadoVotacionEnum": "votaciones.models.Votacion.Estado",
+        "EstadoEdicionEnum": "votaciones.votacion.models.Edicion.Estado",
+        "EstadoVotacionEnum": "votaciones.votacion.models.Votacion.Estado",
     },
     "TAGS": [
         {"name": "Autenticación", "description": "Registro, inicio y cierre de sesión (RF-01, RF-02)."},

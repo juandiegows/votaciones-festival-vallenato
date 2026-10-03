@@ -9,7 +9,8 @@ from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 
-from votaciones import correo, cuentas
+from votaciones import correo
+from votaciones.cuentas import servicios as cuentas
 from votaciones.correo.adaptadores import ErrorEnvioCorreo
 from votaciones.models import Usuario, Voto
 

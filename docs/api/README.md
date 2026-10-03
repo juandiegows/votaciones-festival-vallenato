@@ -215,5 +215,5 @@ Los diagramas de la API están con los demás del proyecto en [`docs/diagramas/`
 ## Mantener esta documentación
 
 - El esquema se genera desde el código: `python manage.py spectacular --file ../../docs/api/openapi.yaml --validate`.
-- Las descripciones de cada endpoint están en los decoradores `@extend_schema` de `app/api/votaciones/views.py`.
+- Las descripciones de cada endpoint están en los decoradores `@extend_schema` de `app/api/votaciones/<módulo>/views.py`.
 - Si cambia un modelo, actualiza `docs/diagramas/datos/modelo-fisico.mmd` y `entidad-relacion.mmd` y regenera las imágenes.
