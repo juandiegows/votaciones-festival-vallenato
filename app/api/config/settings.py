@@ -137,7 +137,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:8095,http://localhost:5195,http://localhost:5197,https://votaciones.juandiegows.com,https://juandiegows.github.io",
+    "http://localhost:8095,http://localhost:5195,http://localhost:5197,http://127.0.0.1:8095,http://127.0.0.1:5195,http://127.0.0.1:5197,https://votaciones.juandiegows.com,https://juandiegows.github.io",
 )
 
 # La web lee el nombre del archivo CSV exportado (descarga con fetch + token).
