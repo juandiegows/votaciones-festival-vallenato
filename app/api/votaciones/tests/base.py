@@ -1,6 +1,8 @@
+import tempfile
 from datetime import date, timedelta
 
 from django.core.cache import cache
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
@@ -8,6 +10,8 @@ from rest_framework.test import APITestCase
 from votaciones.models import Categoria, Edicion, Opcion, Usuario, Votacion
 
 
+# Los archivos subidos en las pruebas van a una carpeta temporal
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="flv-media-pruebas-"))
 class BaseAPITest(APITestCase):
     def setUp(self):
         cache.clear()

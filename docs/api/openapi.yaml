@@ -49,6 +49,159 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistroAuditoria'
           description: ''
+  /api/admin/banners/:
+    get:
+      operationId: admin_banners_list
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    post:
+      operationId: admin_banners_create
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+  /api/admin/banners/{id}/:
+    get:
+      operationId: admin_banners_retrieve
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    put:
+      operationId: admin_banners_update
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    patch:
+      operationId: admin_banners_partial_update
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    delete:
+      operationId: admin_banners_destroy
+      description: Banners del inicio. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/admin/categorias/:
     get:
       operationId: admin_categorias_list
@@ -195,6 +348,71 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/admin/configuracion/:
+    get:
+      operationId: admin_configuracion_retrieve
+      summary: Datos de contacto del pie de página
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+    put:
+      operationId: admin_configuracion_update
+      summary: Actualizar datos de contacto
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+    patch:
+      operationId: admin_configuracion_partial_update
+      summary: Actualizar datos de contacto (parcial)
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
   /api/admin/ediciones/:
     get:
       operationId: admin_ediciones_list
@@ -501,6 +719,147 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
           description: ''
+  /api/admin/redes/:
+    get:
+      operationId: admin_redes_list
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RedSocial'
+          description: ''
+    post:
+      operationId: admin_redes_create
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+  /api/admin/redes/{id}/:
+    get:
+      operationId: admin_redes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    put:
+      operationId: admin_redes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    patch:
+      operationId: admin_redes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    delete:
+      operationId: admin_redes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/admin/usuarios/:
     get:
       operationId: admin_usuarios_list
@@ -1132,6 +1491,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/OpcionListadoPublico'
           description: ''
+  /api/sitio/:
+    get:
+      operationId: sitio_retrieve
+      summary: 'Contenido del sitio: contacto, redes y banners activos'
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sitio'
+          description: ''
   /api/votaciones/:
     get:
       operationId: votaciones_list
@@ -1312,6 +1687,80 @@ paths:
           description: No existe o no está publicada
 components:
   schemas:
+    BannerInicio:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titulo:
+          type: string
+          maxLength: 120
+        subtitulo:
+          type: string
+          maxLength: 250
+        imagen:
+          type: string
+          format: uri
+        texto_alternativo:
+          type: string
+          description: Descripción de la imagen para lectores de pantalla.
+          maxLength: 200
+        texto_boton:
+          type: string
+          maxLength: 40
+        enlace_boton:
+          type: string
+          description: Ruta del sitio (/2027) o URL http(s).
+          maxLength: 300
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activo:
+          type: boolean
+      required:
+      - id
+      - imagen
+      - texto_alternativo
+      - titulo
+    BannerInicioRequest:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 120
+        subtitulo:
+          type: string
+          maxLength: 250
+        imagen:
+          type: string
+          format: binary
+        texto_alternativo:
+          type: string
+          minLength: 1
+          description: Descripción de la imagen para lectores de pantalla.
+          maxLength: 200
+        texto_boton:
+          type: string
+          maxLength: 40
+        enlace_boton:
+          type: string
+          description: Ruta del sitio (/2027) o URL http(s).
+          maxLength: 300
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activo:
+          type: boolean
+      required:
+      - imagen
+      - texto_alternativo
+      - titulo
     Categoria:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -1389,6 +1838,46 @@ components:
       required:
       - edicion
       - nombre
+    ConfiguracionSitio:
+      type: object
+      properties:
+        nombre_organizacion:
+          type: string
+          maxLength: 150
+        telefono:
+          type: string
+          maxLength: 40
+        direccion:
+          type: string
+          maxLength: 200
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+        texto_pie:
+          type: string
+    ConfiguracionSitioRequest:
+      type: object
+      properties:
+        nombre_organizacion:
+          type: string
+          minLength: 1
+          maxLength: 150
+        telefono:
+          type: string
+          minLength: 1
+          maxLength: 40
+        direccion:
+          type: string
+          minLength: 1
+          maxLength: 200
+        correo:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        texto_pie:
+          type: string
     Edicion:
       type: object
       properties:
@@ -1482,6 +1971,26 @@ components:
       - opcion_id
       - porcentaje
       - votos
+    IconoEnum:
+      enum:
+      - facebook
+      - twitter-x
+      - instagram
+      - youtube
+      - tiktok
+      - whatsapp
+      - spotify
+      - globe
+      type: string
+      description: |-
+        * `facebook` - Facebook
+        * `twitter-x` - X
+        * `instagram` - Instagram
+        * `youtube` - YouTube
+        * `tiktok` - TikTok
+        * `whatsapp` - WhatsApp
+        * `spotify` - Spotify
+        * `globe` - Sitio web
     LoginRequest:
       type: object
       properties:
@@ -1653,6 +2162,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RegistroAuditoria'
+    PatchedBannerInicioRequest:
+      type: object
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 120
+        subtitulo:
+          type: string
+          maxLength: 250
+        imagen:
+          type: string
+          format: binary
+        texto_alternativo:
+          type: string
+          minLength: 1
+          description: Descripción de la imagen para lectores de pantalla.
+          maxLength: 200
+        texto_boton:
+          type: string
+          maxLength: 40
+        enlace_boton:
+          type: string
+          description: Ruta del sitio (/2027) o URL http(s).
+          maxLength: 300
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activo:
+          type: boolean
     PatchedCategoriaRequest:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -1685,6 +2226,28 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+    PatchedConfiguracionSitioRequest:
+      type: object
+      properties:
+        nombre_organizacion:
+          type: string
+          minLength: 1
+          maxLength: 150
+        telefono:
+          type: string
+          minLength: 1
+          maxLength: 40
+        direccion:
+          type: string
+          minLength: 1
+          maxLength: 200
+        correo:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        texto_pie:
+          type: string
     PatchedEdicionRequest:
       type: object
       properties:
@@ -1729,6 +2292,27 @@ components:
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
             ej. /audio/muestras/x.mp3).
           maxLength: 300
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+    PatchedRedSocialRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 60
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 200
+        icono:
+          $ref: '#/components/schemas/IconoEnum'
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -1784,6 +2368,56 @@ components:
         publicar:
           type: boolean
           default: true
+    RedSocial:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 60
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        icono:
+          $ref: '#/components/schemas/IconoEnum'
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+      required:
+      - id
+      - nombre
+      - url
+    RedSocialRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 60
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 200
+        icono:
+          $ref: '#/components/schemas/IconoEnum'
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+      required:
+      - nombre
+      - url
     RegistroAuditoria:
       type: object
       properties:
@@ -1890,6 +2524,23 @@ components:
       description: |-
         * `votante` - Votante
         * `administrador` - Administrador
+    Sitio:
+      type: object
+      properties:
+        configuracion:
+          $ref: '#/components/schemas/ConfiguracionSitio'
+        redes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RedSocial'
+        banners:
+          type: array
+          items:
+            $ref: '#/components/schemas/BannerInicio'
+      required:
+      - banners
+      - configuracion
+      - redes
     TokenRespuesta:
       type: object
       properties:

@@ -1,0 +1,127 @@
+"""Contenido editable del sitio: banners del inicio, datos de contacto y redes sociales."""
+import io
+import os
+from io import StringIO
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
+from PIL import Image
+
+from votaciones.models import BannerInicio, ConfiguracionSitio, Edicion, RedSocial, RegistroAuditoria, Votacion
+
+from .base import BaseAPITest
+
+
+def imagen(formato="PNG", tamano=(40, 20), aleatoria=False, nombre="banner.png"):
+    if aleatoria:
+        img = Image.frombytes("RGB", tamano, os.urandom(tamano[0] * tamano[1] * 3))
+    else:
+        img = Image.new("RGB", tamano, (221, 51, 51))
+    datos = io.BytesIO()
+    img.save(datos, formato)
+    return SimpleUploadedFile(nombre, datos.getvalue(), content_type=f"image/{formato.lower()}")
+
+
+class SitioPublicoTests(BaseAPITest):
+    def test_lectura_publica_solo_elementos_activos(self):
+        RedSocial.objects.create(nombre="Facebook", url="https://facebook.com/x", icono="facebook")
+        RedSocial.objects.create(nombre="Oculta", url="https://x.com/y", icono="twitter-x", activa=False)
+        BannerInicio.objects.create(titulo="Visible", imagen="banners/a.webp", texto_alternativo="A")
+        BannerInicio.objects.create(titulo="Oculto", imagen="banners/b.webp", texto_alternativo="B", activo=False)
+        datos = self.client.get("/api/sitio/").data
+        self.assertEqual(datos["configuracion"]["telefono"], "(+57) 315-746 3143")
+        self.assertEqual([r["nombre"] for r in datos["redes"]], ["Facebook"])
+        self.assertEqual([b["titulo"] for b in datos["banners"]], ["Visible"])
+        self.assertEqual(datos["banners"][0]["imagen"], "/media/banners/a.webp")
+
+
+class BannerAdminTests(BaseAPITest):
+    def crear(self, archivo, **extra):
+        datos = {"titulo": "Nuevo banner", "texto_alternativo": "Degradado rojo", "imagen": archivo, **extra}
+        return self.client.post("/api/admin/banners/", datos, format="multipart")
+
+    def test_solo_administrador(self):
+        self.assertEqual(self.client.get("/api/admin/banners/").status_code, 401)
+        self.autenticar(self.votante)
+        self.assertEqual(self.crear(imagen()).status_code, 403)
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"telefono": "1"}, format="json").status_code, 403)
+        self.assertEqual(self.client.post("/api/admin/redes/", {"nombre": "X", "url": "https://x.com"}, format="json").status_code, 403)
+
+    def test_subir_imagen_valida_queda_auditada_y_se_sirve(self):
+        self.autenticar(self.admin)
+        respuesta = self.crear(imagen("WEBP", nombre="banner.webp"), enlace_boton="/2027")
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertRegex(respuesta.data["imagen"], r"^/media/banners/banner.*\.webp$")
+        self.assertTrue(RegistroAuditoria.objects.filter(accion="crear", entidad="banner").exists())
+        self.assertEqual(self.client.get(respuesta.data["imagen"]).status_code, 200)
+
+    def test_rechaza_formato_no_permitido(self):
+        self.autenticar(self.admin)
+        respuesta = self.crear(imagen("GIF", nombre="banner.gif"))
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("JPG, PNG o WebP", str(respuesta.data["imagen"]))
+        texto = SimpleUploadedFile("banner.png", b"no es una imagen", content_type="image/png")
+        self.assertEqual(self.crear(texto).status_code, 400)
+
+    def test_rechaza_imagen_de_mas_de_3_mb(self):
+        self.autenticar(self.admin)
+        grande = imagen(tamano=(1200, 1000), aleatoria=True)
+        self.assertGreater(grande.size, 3 * 1024 * 1024)
+        respuesta = self.crear(grande)
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("3 MB", str(respuesta.data["imagen"]))
+
+    def test_reordenar_desactivar_y_eliminar_borra_el_archivo(self):
+        self.autenticar(self.admin)
+        datos = self.crear(imagen()).data
+        url = f"/api/admin/banners/{datos['id']}/"
+        self.assertEqual(self.client.patch(url, {"orden": 5, "activo": False}, format="json").data["orden"], 5)
+        self.assertEqual(self.client.get("/api/sitio/").data["banners"], [])
+        archivo = BannerInicio.objects.get().imagen
+        self.assertTrue(archivo.storage.exists(archivo.name))
+        self.assertEqual(self.client.delete(url).status_code, 204)
+        self.assertFalse(archivo.storage.exists(archivo.name))
+
+
+class ConfiguracionYRedesTests(BaseAPITest):
+    def setUp(self):
+        super().setUp()
+        self.autenticar(self.admin)
+
+    def test_actualizar_configuracion_queda_auditada(self):
+        respuesta = self.client.patch("/api/admin/configuracion/", {"telefono": "(+57) 300 000 0000"}, format="json")
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(ConfiguracionSitio.obtener().telefono, "(+57) 300 000 0000")
+        self.assertTrue(RegistroAuditoria.objects.filter(accion="actualizar", entidad="configuracion").exists())
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"correo": "no-es-correo"}, format="json").status_code, 400)
+
+    def test_redes_crud_y_validacion(self):
+        respuesta = self.client.post("/api/admin/redes/", {"nombre": "TikTok", "url": "https://www.tiktok.com/@x", "icono": "tiktok"}, format="json")
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(self.client.post("/api/admin/redes/", {"nombre": "Otra", "url": "https://x.test", "icono": "myspace"}, format="json").status_code, 400)
+        self.assertEqual(self.client.post("/api/admin/redes/", {"nombre": "Mal", "url": "javascript:alert(1)", "icono": "globe"}, format="json").status_code, 400)
+        self.assertEqual(self.client.delete(f"/api/admin/redes/{respuesta.data['id']}/").status_code, 204)
+        self.assertTrue(RegistroAuditoria.objects.filter(accion="eliminar", entidad="red_social").exists())
+
+
+class CargarDemoSitioYEdicionesPasadasTests(BaseAPITest):
+    def setUp(self):
+        pass
+
+    def test_ediciones_pasadas_banners_y_redes(self):
+        call_command("cargar_demo", stdout=StringIO())
+        for anio in (2025, 2026):
+            self.assertEqual(Edicion.objects.get(anio=anio).estado, "cerrada")
+            pasadas = Votacion.objects.filter(categoria__edicion__anio=anio)
+            self.assertTrue(pasadas.exists())
+            for votacion in pasadas:
+                self.assertEqual(votacion.estado, "cerrada")
+                self.assertTrue(votacion.votos.exists())
+                self.assertTrue(votacion.votos.first().codigo_comprobante.startswith(f"FLV{anio % 100}-"))
+        self.assertEqual(Edicion.objects.get(estado="activa").anio, 2027)
+        votacion = self.client.get("/api/votaciones/por-ruta/", {"anio": 2025, "categoria": "musica", "votacion": "cancion-favorita-del-publico"}).data
+        self.assertEqual(self.client.get(f"/api/votaciones/{votacion['id']}/resultados/").status_code, 200)
+        sitio = self.client.get("/api/sitio/").data
+        self.assertEqual(len(sitio["banners"]), 2)
+        self.assertEqual([r["icono"] for r in sitio["redes"]], ["facebook", "twitter-x", "instagram", "youtube"])
+        self.assertEqual(self.client.get(sitio["banners"][0]["imagen"]).status_code, 200)

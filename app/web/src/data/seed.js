@@ -46,6 +46,7 @@ export function crearDatosSemilla() {
       fechaFin: '2026-05-03',
       estado: 'cerrada',
     },
+    { id: 3, nombre: 'Festival de la Leyenda Vallenata 2025', anio: 2025, fechaInicio: '2025-04-26', fechaFin: '2025-04-30', estado: 'cerrada' },
   ];
 
   const anioActivo = ediciones[0].anio;
@@ -150,6 +151,33 @@ export function crearDatosSemilla() {
     });
   });
 
+  // Ediciones anteriores: votaciones cerradas con resultados publicados (igual que `cargar_demo` en la API)
+  const pasadas = [
+    [2, 'Música', 'music-note-beamed', [['Canción favorita del público', 'vinyl-fill', ["'Amanecer en el Cesar' (ficticia)", "'La Parranda de Mi Viejo' (ficticia)", "'Río de Recuerdos' (ficticia)", "'Acordeón de mi Tierra' (ficticia)"], [4, 2, 3, 1]]]],
+    [2, 'Piloneras', 'people-fill', [['Mejor comparsa de Piloneras', 'people-fill', ['Comparsa Brisas del Valle (ficticia)', 'Comparsa Tambores del Cesar (ficticia)', 'Comparsa Flor de Pilón (ficticia)'], [2, 3, 2]]]],
+    [3, 'Música', 'music-note-beamed', [
+      ['Canción favorita del público', 'music-note-beamed', ["'Sombrero Vueltiao' (ficticia)", "'Noches de Valledupar' (ficticia)", "'El Viejo Guatapurí' (ficticia)"], [3, 4, 2]],
+      ['Canción inédita revelación', 'vinyl-fill', ["'Camino a La Mina' (ficticia)", "'Versos del Río' (ficticia)"], [3, 2]],
+    ]],
+    [3, 'Agrupaciones', 'boombox-fill', [['Agrupación favorita', 'boombox-fill', ['Los Cantores del Llano (ficticia)', 'Agrupación Raíz Vallenata (ficticia)', 'Los Juglares de la Sierra (ficticia)'], [2, 2, 3]]]],
+  ];
+  const pesosPasadas = {};
+  pasadas.forEach(([edicionId, nombreCat, icono, lista], i) => {
+    const anio = ediciones.find((e) => e.id === edicionId).anio;
+    const categoria = { id: categorias.length + 1, edicionId, nombre: nombreCat, slug: slugificar(nombreCat), descripcion: `Votaciones del público en la edición ${anio}.`, icono, activa: true, orden: i + 1 };
+    categorias.push(categoria);
+    lista.forEach(([titulo, imagen, nombresOps, w]) => {
+      const votacion = {
+        ...base, id: votaciones.length + 1, categoriaId: categoria.id, titulo, slug: slugificar(titulo),
+        descripcion: `Votación cerrada de la edición ${anio}.`, fechaApertura: `${anio}-04-01T13:00:00.000Z`,
+        fechaCierre: `${anio}-04-30T23:00:00.000Z`, mostrarResultados: 'al cerrar', imagen, resultadosPublicados: true,
+      };
+      votaciones.push(votacion);
+      nombresOps.forEach((nombre, j) => opciones.push({ id: opcionId++, votacionId: votacion.id, nombre, descripcion: '', enlaceMultimedia: '', orden: j + 1 }));
+      pesosPasadas[votacion.id] = w;
+    });
+  });
+
   // NOTA: las contraseñas en texto plano son SOLO para el prototipo (mock).
   // En la versión real se almacenarán con hash (p. ej. PBKDF2 de Django).
   const usuarios = [
@@ -177,7 +205,8 @@ export function crearDatosSemilla() {
   }
 
   // Pesos para que haya un ganador claro en cada votación
-  const pesos = { 1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2] };
+  const pesos = { 1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2], ...pesosPasadas };
+  const anioDe = (votacion) => ediciones.find((e) => e.id === categorias.find((c) => c.id === votacion.categoriaId).edicionId).anio;
   const votos = [];
   let votoId = 1;
   Object.entries(pesos).forEach(([vId, w]) => {
@@ -197,7 +226,7 @@ export function crearDatosSemilla() {
         votacionId: votacion.id,
         opcionId: ops[idx].id,
         fechaHora: new Date(desde + rnd() * (hasta - desde)).toISOString(),
-        codigoComprobante: generarCodigoComprobante(anioActivo),
+        codigoComprobante: generarCodigoComprobante(anioDe(votacion)),
       });
     });
   });
@@ -220,5 +249,20 @@ export function crearDatosSemilla() {
     { id: 5, fechaHora: relativa(-1), usuario: 'admin@festival.test', accion: 'Actualizó la categoría "Vestuario"' },
   ];
 
-  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria };
+  // Contenido del sitio editable desde /admin/sitio y /admin/banner (sin banners: se usa el inicio ilustrado)
+  const configuracion = {
+    nombreOrganizacion: 'Fundación Festival de la Leyenda Vallenata',
+    telefono: '(+57) 315-746 3143',
+    direccion: 'Carrera 19 No. 6N-39, Valledupar, Colombia',
+    correo: 'presidencia@festivalvallenato.com',
+    textoPie: 'Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.',
+  };
+  const redes = [
+    { id: 1, nombre: 'Facebook', url: 'https://www.facebook.com/pages/Festival-de-la-Leyenda-Vallenata/112408762110846', icono: 'facebook', orden: 1, activa: true },
+    { id: 2, nombre: 'X', url: 'https://x.com/FESVALLENATO', icono: 'twitter-x', orden: 2, activa: true },
+    { id: 3, nombre: 'Instagram', url: 'https://www.instagram.com/fesvallenato/', icono: 'instagram', orden: 3, activa: true },
+    { id: 4, nombre: 'YouTube', url: 'https://www.youtube.com/channel/UCEB34mUTorkyVnDxgNDCreA', icono: 'youtube', orden: 4, activa: true },
+  ];
+
+  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria, configuracion, redes, banners: [] };
 }

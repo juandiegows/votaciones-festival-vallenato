@@ -6,6 +6,7 @@ import { formatearFecha } from '../utils/helpers.js';
 import { votacionesPublicas } from '../utils/visibilidad.js';
 import { useRutas } from '../hooks/useRutas.js';
 import SinEdicion from '../components/SinEdicion.jsx';
+import HeroBanners from '../components/HeroBanners.jsx';
 
 const PASOS = [
   { icono: 'person-plus', titulo: 'Regístrate', texto: 'Crea tu cuenta con tu correo y acepta la política de tratamiento de datos.' },
@@ -16,7 +17,8 @@ const PASOS = [
 
 export default function Inicio() {
   const datos = useApp();
-  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario } = datos;
+  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners } = datos;
+  const bannersActivos = banners.filter((b) => b.activo).sort((a, b) => a.orden - b.orden);
   const rutas = useRutas();
   if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);
@@ -34,6 +36,9 @@ export default function Inicio() {
 
   return (
     <>
+      {bannersActivos.length > 0 ? (
+        <HeroBanners banners={bannersActivos} titulo={edicionActiva.nombre} />
+      ) : (
       <section className="hero py-5" aria-labelledby="titulo-hero">
         <div className="container py-lg-4">
           <div className="row align-items-center g-4">
@@ -65,6 +70,7 @@ export default function Inicio() {
           </div>
         </div>
       </section>
+      )}
 
       <section className="banda-negra py-4" aria-label="Cifras de la edición">
         <div className="container">

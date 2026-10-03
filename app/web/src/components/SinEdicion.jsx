@@ -15,7 +15,7 @@ export default function SinEdicion() {
         {esAdmin ? (
           <Link to="/admin/ediciones" className="btn btn-primary">Configurar una edición</Link>
         ) : (
-          <Link to="/marca" className="btn btn-outline-primary">Conocer la identidad visual</Link>
+          <Link to="/registro" className="btn btn-outline-primary">Crear una cuenta</Link>
         )}
       </div>
     </div>

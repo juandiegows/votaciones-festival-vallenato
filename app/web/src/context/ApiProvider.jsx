@@ -17,9 +17,14 @@ const RUTAS_ADMIN = {
   categorias: '/admin/categorias/',
   votaciones: '/admin/votaciones/',
   opciones: '/admin/opciones/',
+  banners: '/admin/banners/',
+  redes: '/admin/redes/',
 };
 
-const VACIO = { ediciones: [], categorias: [], votaciones: [], opciones: [], votos: [], usuarios: [], auditoria: [], totalAuditoria: 0 };
+const VACIO = {
+  ediciones: [], categorias: [], votaciones: [], opciones: [], votos: [], usuarios: [], auditoria: [], totalAuditoria: 0,
+  banners: [], redes: [], configuracion: null,
+};
 
 const mapear = (coleccion, lista) => lista.map((x) => desdeApi(coleccion, x));
 
@@ -45,9 +50,11 @@ export function ApiProvider({ children }) {
   /** Carga las colecciones que corresponden al usuario (público, votante o administrador). */
   const cargarColecciones = useCallback(async (u) => {
     const esAdmin = u?.rol === 'administrador';
+    // Contacto, redes y banners activos (público); el administrador recibe además los inactivos
+    const sitio = await obtener('/sitio/');
     let nuevas;
     if (esAdmin) {
-      const [ediciones, categorias, votaciones, opciones, votos, usuarios, auditoria] = await Promise.all([
+      const [ediciones, categorias, votaciones, opciones, votos, usuarios, auditoria, banners, redes] = await Promise.all([
         obtener('/admin/ediciones/'),
         obtener('/admin/categorias/'),
         obtener('/admin/votaciones/'),
@@ -55,7 +62,11 @@ export function ApiProvider({ children }) {
         obtener('/admin/votos/'),
         obtener('/admin/usuarios/'),
         obtener('/admin/auditoria/'),
+        obtener('/admin/banners/'),
+        obtener('/admin/redes/'),
       ]);
+      sitio.banners = banners;
+      sitio.redes = redes;
       const cats = mapear('categorias', categorias);
       const vots = mapear('votaciones', votaciones);
       const ops = mapear('opciones', opciones);
@@ -91,6 +102,9 @@ export function ApiProvider({ children }) {
         opciones: mapear('opciones', opciones),
       };
     }
+    nuevas.banners = mapear('banners', sitio.banners);
+    nuevas.redes = mapear('redes', sitio.redes);
+    nuevas.configuracion = desdeApi('configuracion', sitio.configuracion);
     const mios = u ? mapear('votos', await obtener('/mis-votos/')).map((v) => ({ ...v, usuarioId: u.id })) : [];
     setColecciones(nuevas);
     setMisVotos(mios);
@@ -216,7 +230,14 @@ export function ApiProvider({ children }) {
   const guardarEntidad = async (coleccion, entidad) => {
     const ruta = RUTAS_ADMIN[coleccion];
     const actual = entidad.id ? colecciones[coleccion].find((x) => x.id === entidad.id) : null;
-    const cuerpo = haciaApi(coleccion, entidad);
+    let cuerpo = haciaApi(coleccion, entidad);
+    if (entidad.archivo) {
+      // Imagen del banner: multipart/form-data con el archivo y los demás campos
+      const formulario = new FormData();
+      Object.entries(cuerpo).forEach(([k, v]) => formulario.append(k, v));
+      formulario.append('imagen', entidad.archivo);
+      cuerpo = formulario;
+    }
     let id = entidad.id;
     let guardada = actual;
 
@@ -225,7 +246,7 @@ export function ApiProvider({ children }) {
       return { ok: false, error: r.error, errores: erroresDesdeApi(coleccion, r.errores) };
     };
 
-    if (Object.keys(cuerpo).length) {
+    if (entidad.archivo || Object.keys(cuerpo).length) {
       const r = id ? await api.patch(`${ruta}${id}/`, cuerpo) : await api.post(ruta, cuerpo);
       if (!r.ok) return fallo(r);
       guardada = desdeApi(coleccion, r.datos);
@@ -286,6 +307,12 @@ export function ApiProvider({ children }) {
     return { ok: true };
   };
 
+  const guardarConfiguracion = async (datos) => {
+    const r = await api.patch('/admin/configuracion/', haciaApi('configuracion', datos));
+    await recargar();
+    return r.ok ? { ok: true } : { ok: false, error: r.error, errores: erroresDesdeApi('configuracion', r.errores) };
+  };
+
   // ---------- Resultados, exportación y auditoría ----------
   const obtenerResultados = useCallback(async (votacionId, { admin = false } = {}) => {
     const r = await api.get(admin ? `/admin/votaciones/${votacionId}/resultados/` : `/votaciones/${votacionId}/resultados/`);
@@ -340,6 +367,7 @@ export function ApiProvider({ children }) {
     guardarEntidad,
     eliminarEntidad,
     reemplazarColeccion,
+    guardarConfiguracion,
     obtenerResultados,
     exportarResultadosCSV,
     cargarAuditoria,

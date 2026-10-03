@@ -16,6 +16,8 @@ admin.register("votaciones", views.AdminVotacionViewSet, basename="admin-votacio
 admin.register("opciones", views.AdminOpcionViewSet, basename="admin-opcion")
 admin.register("votos", views.AdminVotoViewSet, basename="admin-voto")
 admin.register("usuarios", views.AdminUsuarioViewSet, basename="admin-usuario")
+admin.register("banners", views.AdminBannerViewSet, basename="admin-banner")
+admin.register("redes", views.AdminRedSocialViewSet, basename="admin-red")
 admin.register("auditoria", views.AdminAuditoriaViewSet, basename="admin-auditoria")
 
 urlpatterns = [
@@ -24,6 +26,8 @@ urlpatterns = [
     path("auth/logout/", views.LogoutView.as_view(), name="auth-logout"),
     path("auth/yo/", views.PerfilView.as_view(), name="auth-yo"),
     path("mis-votos/", views.MisVotosView.as_view(), name="mis-votos"),
+    path("sitio/", views.SitioView.as_view(), name="sitio"),
+    path("admin/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion"),
     path("admin/", include(admin.urls)),
     path("", include(publico.urls)),
 ]

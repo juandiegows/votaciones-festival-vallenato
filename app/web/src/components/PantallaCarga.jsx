@@ -1,7 +1,7 @@
 // Pantalla mientras se cargan los datos de la API (o si no hay conexión)
 export default function PantallaCarga({ error, onReintentar }) {
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center p-4" style={{ background: 'var(--flv-crema)' }}>
+    <main className="min-vh-100 d-flex align-items-center justify-content-center p-4" style={{ background: 'var(--flv-crema)' }}>
       <div className="card-flv p-4 p-md-5 text-center" style={{ maxWidth: '28rem' }}>
         {error ? (
           <>
@@ -19,6 +19,6 @@ export default function PantallaCarga({ error, onReintentar }) {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

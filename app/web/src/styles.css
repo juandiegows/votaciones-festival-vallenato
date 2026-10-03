@@ -257,3 +257,19 @@ a:hover { color: var(--flv-rojo-hover); }
   text-decoration: none; transition: background-color .15s, color .15s;
 }
 .redes-flv a:hover, .redes-flv a:focus-visible { background-color: var(--flv-dorado); color: var(--flv-negro); }
+
+/* Carrusel del inicio (banners editables) */
+.hero-banners { position: relative; background: var(--flv-negro); }
+.hero-banner-img { display: block; width: 100%; height: clamp(280px, 40vw, 480px); object-fit: cover; }
+.hero-banner-texto {
+  position: absolute; inset: 0; display: flex; align-items: center; color: #fff;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .55) 55%, rgba(0, 0, 0, .15) 100%);
+}
+.hero-banner-texto .container { padding-left: 3.5rem; padding-right: 3.5rem; max-width: 1140px; }
+.hero-banner-texto .h1 { font-family: var(--flv-fuente-titulos); font-weight: 800; max-width: 40rem; }
+.hero-banner-texto .lead { max-width: 36rem; }
+.hero-banners .carousel-control-prev, .hero-banners .carousel-control-next { width: 3rem; }
+.hero-banner-pausa { position: absolute; right: 1rem; bottom: 1rem; z-index: 3; }
+.hero-banners button:focus-visible { outline: 3px solid var(--flv-dorado); outline-offset: 2px; }
+.banner-miniatura { width: 8rem; height: 3rem; object-fit: cover; border-radius: .4rem; }
+.banner-vista-previa { width: 100%; max-height: 12rem; object-fit: cover; border-radius: .5rem; }

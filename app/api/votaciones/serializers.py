@@ -7,7 +7,9 @@ from django.core.validators import URLValidator
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
+from .models import (
+    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Usuario, Votacion, Voto,
+)
 from .servicios import votos_del_usuario
 
 
@@ -234,6 +236,54 @@ class VotoSerializer(serializers.ModelSerializer):
             "opcion_nombre", "fecha_hora", "codigo_comprobante",
         ]
         read_only_fields = fields
+
+
+TAMANO_MAXIMO_IMAGEN = 3 * 1024 * 1024
+FORMATOS_IMAGEN = {"JPEG", "PNG", "WEBP"}
+
+
+class RutaImagenField(serializers.ImageField):
+    """Devuelve la ruta absoluta del sitio (/media/banners/x.webp), sin dominio."""
+
+    def to_representation(self, valor):
+        return valor.url if valor else None
+
+
+class BannerInicioSerializer(serializers.ModelSerializer):
+    imagen = RutaImagenField()
+
+    class Meta:
+        model = BannerInicio
+        fields = ["id", "titulo", "subtitulo", "imagen", "texto_alternativo", "texto_boton", "enlace_boton", "orden", "activo"]
+
+    def validate_imagen(self, archivo):
+        if archivo.size > TAMANO_MAXIMO_IMAGEN:
+            raise serializers.ValidationError("La imagen supera el tamaño máximo de 3 MB.")
+        formato = getattr(getattr(archivo, "image", None), "format", None)
+        if formato not in FORMATOS_IMAGEN:
+            raise serializers.ValidationError("Formato no permitido: usa una imagen JPG, PNG o WebP.")
+        return archivo
+
+    def validate_enlace_boton(self, valor):
+        return validar_enlace_multimedia(valor)
+
+
+class ConfiguracionSitioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfiguracionSitio
+        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie"]
+
+
+class RedSocialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RedSocial
+        fields = ["id", "nombre", "url", "icono", "orden", "activa"]
+
+
+class SitioSerializer(serializers.Serializer):
+    configuracion = ConfiguracionSitioSerializer()
+    redes = RedSocialSerializer(many=True)
+    banners = BannerInicioSerializer(many=True)
 
 
 class VotoAdminSerializer(serializers.ModelSerializer):

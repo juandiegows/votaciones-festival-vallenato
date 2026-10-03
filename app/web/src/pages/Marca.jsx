@@ -118,8 +118,8 @@ export default function Marca() {
               </div>
               <h3 className="h6 mb-2">Enlaces</h3>
               <p className="mb-0">
-                <a href="/marca" onClick={(e) => e.preventDefault()}>Enlace de texto</a> ·{' '}
-                <a href="/marca" className="enlace-mas" onClick={(e) => e.preventDefault()}>Leer más <i className="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <a href="/admin/marca" onClick={(e) => e.preventDefault()}>Enlace de texto</a> ·{' '}
+                <a href="/admin/marca" className="enlace-mas" onClick={(e) => e.preventDefault()}>Leer más <i className="bi bi-arrow-right" aria-hidden="true"></i></a>
               </p>
             </div>
           </div>

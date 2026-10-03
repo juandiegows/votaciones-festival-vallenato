@@ -121,7 +121,16 @@ export function MockProvider({ children }) {
   // ---------- CRUD genérico para administración ----------
   const ambitoSlug = { categorias: 'edicionId', votaciones: 'categoriaId' };
 
-  const guardarEntidad = async (coleccion, entidad, accion) => {
+  const guardarEntidad = async (coleccion, entidadOriginal, accion) => {
+    // Imagen del banner en el modo demostración: se guarda como data URL en este navegador
+    const { archivo, ...entidad } = entidadOriginal;
+    if (archivo) {
+      entidad.imagen = await new Promise((resolver) => {
+        const lector = new FileReader();
+        lector.onload = () => resolver(lector.result);
+        lector.readAsDataURL(archivo);
+      });
+    }
     const lista = datos[coleccion];
     const actual = entidad.id ? lista.find((x) => x.id === entidad.id) : null;
     const combinada = { ...actual, ...entidad };
@@ -229,6 +238,11 @@ export function MockProvider({ children }) {
     };
   };
 
+  const guardarConfiguracion = async (configuracion) => {
+    actualizar((d) => ({ ...d, configuracion }), 'Actualizó los datos de contacto');
+    return { ok: true };
+  };
+
   const restablecer = async () => {
     setDatos(restablecerDatos());
     setUsuarioId(null);
@@ -253,6 +267,7 @@ export function MockProvider({ children }) {
     guardarEntidad,
     eliminarEntidad,
     reemplazarColeccion,
+    guardarConfiguracion,
     obtenerResultados,
     exportarResultadosCSV,
     cargarAuditoria,

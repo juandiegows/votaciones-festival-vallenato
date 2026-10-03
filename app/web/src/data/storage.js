@@ -1,9 +1,9 @@
 // Persistencia simulada en localStorage (reemplaza al backend en el prototipo)
 import { crearDatosSemilla } from './seed.js';
 
-// v2: datos con slugs (URL amigables) y muestras de audio
-const CLAVE_DATOS = 'flv_datos_v2';
-const CLAVE_SESION = 'flv_sesion_v2';
+// v3: datos con slugs, muestras de audio, contenido del sitio y ediciones 2025/2026
+const CLAVE_DATOS = 'flv_datos_v3';
+const CLAVE_SESION = 'flv_sesion_v3';
 
 export function cargarDatos() {
   try {

@@ -3,22 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import Modal from './Modal.jsx';
 
-const CONTACTO = {
-  telefono: '(+57) 315-746 3143',
-  telefonoEnlace: '+573157463143',
-  direccion: 'Carrera 19 No. 6N-39, Valledupar, Colombia',
-  correo: 'presidencia@festivalvallenato.com',
-};
-
-const REDES = [
-  { nombre: 'Facebook', icono: 'bi-facebook', url: 'https://www.facebook.com/pages/Festival-de-la-Leyenda-Vallenata/112408762110846' },
-  { nombre: 'X', icono: 'bi-twitter-x', url: 'https://x.com/FESVALLENATO' },
-  { nombre: 'Instagram', icono: 'bi-instagram', url: 'https://www.instagram.com/fesvallenato/' },
-  { nombre: 'YouTube', icono: 'bi-youtube', url: 'https://www.youtube.com/channel/UCEB34mUTorkyVnDxgNDCreA' },
-];
-
 export default function Footer() {
-  const { restablecer, edicionActiva, modo } = useApp();
+  const { restablecer, edicionActiva, modo, configuracion: contacto, redes } = useApp();
+  // Contacto y redes editables en /admin/sitio
+  const redesActivas = [...redes].filter((r) => r.activa).sort((a, b) => a.orden - b.orden);
   const [confirmar, setConfirmar] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const navigate = useNavigate();
@@ -43,8 +31,7 @@ export default function Footer() {
           <div className="col-lg-4">
             <p className="font-titulo fw-bold text-white mb-1">Sistema Web de Votaciones</p>
             <p className="small mb-0">
-              {edicionActiva?.nombre || 'Festival de la Leyenda Vallenata'} · Valledupar, Cesar (Colombia). Diseño académico original: no
-              representa la marca oficial del Festival ni de la Fundación.
+              {edicionActiva?.nombre || 'Festival de la Leyenda Vallenata'} · Valledupar, Cesar (Colombia). {contacto?.textoPie}
             </p>
           </div>
           <div className="col-sm-6 col-lg-2">
@@ -54,33 +41,32 @@ export default function Footer() {
               <li><Link to="/mis-votos">Mis votos</Link></li>
               <li><Link to="/registro">Registro</Link></li>
               <li><Link to="/admin">Panel admin</Link></li>
-              <li><Link to="/marca">Guía de identidad visual</Link></li>
             </ul>
           </div>
-          <div className="col-sm-6 col-lg-3">
+          {contacto && <div className="col-sm-6 col-lg-3">
             <p className="fw-semibold text-white mb-2">Contacto</p>
             <address className="small mb-3 contacto-flv">
-              <span className="d-block mb-1">Fundación Festival de la Leyenda Vallenata</span>
-              <a className="d-block mb-1" href={`tel:${CONTACTO.telefonoEnlace}`}>
-                <i className="bi bi-telephone-fill me-1" aria-hidden="true"></i>{CONTACTO.telefono}
+              <span className="d-block mb-1">{contacto.nombreOrganizacion}</span>
+              <a className="d-block mb-1" href={`tel:${contacto.telefono.replace(/[^\d+]/g, '')}`}>
+                <i className="bi bi-telephone-fill me-1" aria-hidden="true"></i>{contacto.telefono}
               </a>
               <span className="d-block mb-1">
-                <i className="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>{CONTACTO.direccion}
+                <i className="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>{contacto.direccion}
               </span>
-              <a className="d-block" href={`mailto:${CONTACTO.correo}`}>
-                <i className="bi bi-envelope-fill me-1" aria-hidden="true"></i>{CONTACTO.correo}
+              <a className="d-block" href={`mailto:${contacto.correo}`}>
+                <i className="bi bi-envelope-fill me-1" aria-hidden="true"></i>{contacto.correo}
               </a>
             </address>
             <ul className="list-inline mb-0 redes-flv" aria-label="Redes sociales del Festival">
-              {REDES.map((red) => (
-                <li className="list-inline-item" key={red.nombre}>
+              {redesActivas.map((red) => (
+                <li className="list-inline-item" key={red.id}>
                   <a href={red.url} target="_blank" rel="noopener noreferrer" aria-label={`${red.nombre} del Festival (se abre en una pestaña nueva)`} title={red.nombre}>
-                    <i className={`bi ${red.icono}`} aria-hidden="true"></i>
+                    <i className={`bi bi-${red.icono}`} aria-hidden="true"></i>
                   </a>
                 </li>
               ))}
             </ul>
-          </div>
+          </div>}
           {restablecer && (
             <div className="col-sm-6 col-lg-3">
               <p className="fw-semibold text-white mb-2">Demostración</p>

@@ -17,9 +17,15 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from . import servicios
-from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Usuario, Votacion, Voto
+from .models import (
+    BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Usuario, Votacion, Voto,
+)
 from .permissions import EsAdministrador
 from .serializers import (
+    BannerInicioSerializer,
+    ConfiguracionSitioSerializer,
+    RedSocialSerializer,
+    SitioSerializer,
     CategoriaSerializer,
     EdicionSerializer,
     ErrorReglaSerializer,
@@ -258,7 +264,7 @@ class AuditadoMixin:
         try:
             self.validar_eliminacion(objeto)
             pk = objeto.pk
-            objeto.delete()
+            self.eliminar(objeto)
         except servicios.ReglaNegocioError as error:
             return respuesta_regla(error)
         except ProtectedError:
@@ -272,6 +278,9 @@ class AuditadoMixin:
 
     def validar_eliminacion(self, objeto):
         pass
+
+    def eliminar(self, objeto):
+        objeto.delete()
 
 
 @extend_schema(tags=["Administración"])
@@ -429,6 +438,65 @@ class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
         consulta = Usuario.objects.order_by("id")
         rol = self.request.query_params.get("rol")
         return consulta.filter(rol=rol) if rol else consulta
+
+
+@extend_schema(tags=["Consulta pública"], summary="Contenido del sitio: contacto, redes y banners activos",
+               responses={200: SitioSerializer})
+class SitioView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            "configuracion": ConfiguracionSitioSerializer(ConfiguracionSitio.obtener()).data,
+            "redes": RedSocialSerializer(RedSocial.objects.filter(activa=True), many=True).data,
+            "banners": BannerInicioSerializer(BannerInicio.objects.filter(activo=True), many=True).data,
+        })
+
+
+@extend_schema(tags=["Administración"])
+class AdminBannerViewSet(AuditadoMixin, viewsets.ModelViewSet):
+    """Banners del inicio. La imagen se envía como multipart/form-data (JPG, PNG o WebP, máximo 3 MB)."""
+
+    permission_classes = [EsAdministrador]
+    serializer_class = BannerInicioSerializer
+    queryset = BannerInicio.objects.all()
+    entidad = "banner"
+
+    def perform_update(self, serializer):
+        anterior = serializer.instance.imagen.name
+        super().perform_update(serializer)
+        if anterior and anterior != serializer.instance.imagen.name:
+            serializer.instance.imagen.storage.delete(anterior)
+
+    def eliminar(self, banner):
+        banner.imagen.delete(save=False)
+        banner.delete()
+
+
+@extend_schema(tags=["Administración"])
+class AdminRedSocialViewSet(AuditadoMixin, viewsets.ModelViewSet):
+    permission_classes = [EsAdministrador]
+    serializer_class = RedSocialSerializer
+    queryset = RedSocial.objects.all()
+    entidad = "red_social"
+
+
+@extend_schema_view(
+    get=extend_schema(summary="Datos de contacto del pie de página"),
+    put=extend_schema(summary="Actualizar datos de contacto"),
+    patch=extend_schema(summary="Actualizar datos de contacto (parcial)"),
+)
+@extend_schema(tags=["Administración"])
+class AdminConfiguracionView(generics.RetrieveUpdateAPIView):
+    permission_classes = [EsAdministrador]
+    serializer_class = ConfiguracionSitioSerializer
+
+    def get_object(self):
+        return ConfiguracionSitio.obtener()
+
+    def perform_update(self, serializer):
+        serializer.save()
+        servicios.auditar(self.request, "actualizar", "configuracion", 1, serializer.data)
 
 
 class PaginacionAuditoria(PageNumberPagination):

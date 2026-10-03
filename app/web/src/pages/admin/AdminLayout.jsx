@@ -7,6 +7,9 @@ const ENLACES = [
   { to: '/admin/votaciones', label: 'Votaciones', icono: 'check2-square' },
   { to: '/admin/resultados', label: 'Resultados', icono: 'bar-chart' },
   { to: '/admin/auditoria', label: 'Auditoría', icono: 'clock-history' },
+  { to: '/admin/banner', label: 'Banner de inicio', icono: 'images' },
+  { to: '/admin/sitio', label: 'Contacto y redes', icono: 'telephone' },
+  { to: '/admin/marca', label: 'Identidad visual', icono: 'palette' },
 ];
 
 export default function AdminLayout() {

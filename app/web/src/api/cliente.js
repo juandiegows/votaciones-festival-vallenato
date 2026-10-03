@@ -55,13 +55,14 @@ export function alPerderSesion(fn) {
 async function peticionCruda(metodo, ruta, cuerpo) {
   const token = leerToken();
   const cabeceras = { Accept: 'application/json' };
-  if (cuerpo !== undefined) cabeceras['Content-Type'] = 'application/json';
+  const multipart = cuerpo instanceof FormData;
+  if (cuerpo !== undefined && !multipart) cabeceras['Content-Type'] = 'application/json';
   if (token) cabeceras.Authorization = `Token ${token}`;
   try {
     const respuesta = await fetch(`${API_URL}${ruta}`, {
       method: metodo,
       headers: cabeceras,
-      body: cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
+      body: multipart ? cuerpo : cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
     });
     if (respuesta.status === 401 && token && alExpirarSesion) alExpirarSesion();
     return { respuesta };

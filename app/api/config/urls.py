@@ -1,11 +1,22 @@
+import mimetypes
+
+from django.conf import settings
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
 def salud(request):
     return JsonResponse({"estado": "ok"})
+
+
+mimetypes.add_type("image/webp", ".webp")  # la imagen slim de Python no lo trae registrado
+
+
+def media(request, path):
+    return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 
 urlpatterns = [
@@ -15,4 +26,6 @@ urlpatterns = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="esquema"), name="swagger"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="esquema"), name="redoc"),
     path("api/", include("votaciones.urls")),
+    # Imágenes subidas: las sirve Django en todos los entornos (el proxy reenvía /media/ a la API)
+    re_path(r"^media/(?P<path>.*)$", media, name="media"),
 ]

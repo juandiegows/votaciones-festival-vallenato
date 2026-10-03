@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { RequiereAdmin, RequiereSesion } from './components/Guards.jsx';
 import { IrAEdicionActiva, RedireccionCategoria, RedireccionVotacion } from './components/Redirecciones.jsx';
@@ -20,6 +20,8 @@ import AdminOpciones from './pages/admin/AdminOpciones.jsx';
 import AdminResultados from './pages/admin/AdminResultados.jsx';
 import AdminEdiciones from './pages/admin/AdminEdiciones.jsx';
 import AdminAuditoria from './pages/admin/AdminAuditoria.jsx';
+import AdminBanner from './pages/admin/AdminBanner.jsx';
+import AdminSitio from './pages/admin/AdminSitio.jsx';
 
 // Las rutas fijas (registro, login, admin…) tienen prioridad sobre /:anio. La web nunca usa
 // /api, /django-admin ni /static: en producción esas rutas las atiende Django.
@@ -31,7 +33,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="registro" element={<Registro />} />
         <Route path="login" element={<Login />} />
-        <Route path="marca" element={<Marca />} />
+        <Route path="marca" element={<Navigate to="/admin/marca" replace />} />
         <Route path="categorias" element={<IrAEdicionActiva />} />
         <Route path="categorias/:id" element={<RedireccionCategoria />} />
         <Route path="votaciones/:id" element={<RedireccionVotacion />} />
@@ -47,6 +49,9 @@ export default function App() {
           <Route path="votaciones/:id/opciones" element={<AdminOpciones />} />
           <Route path="resultados" element={<AdminResultados />} />
           <Route path="auditoria" element={<AdminAuditoria />} />
+          <Route path="banner" element={<AdminBanner />} />
+          <Route path="sitio" element={<AdminSitio />} />
+          <Route path="marca" element={<Marca />} />
         </Route>
         {/* URL amigables por edición: /{año}/{categoría}/{votación} */}
         <Route path=":anio" element={<Categorias />} />

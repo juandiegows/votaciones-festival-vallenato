@@ -108,8 +108,8 @@ class CargarDemoTests(BaseAPITest):
         self.assertIn("cargados", self.cargar())
         self.assertEqual(Edicion.objects.get(estado="activa").anio, 2027)
         self.assertEqual(Edicion.objects.get(anio=2026).estado, "cerrada")
-        self.assertEqual(Categoria.objects.count(), 5)
-        self.assertEqual(Votacion.objects.count(), 8)
+        self.assertEqual(Categoria.objects.filter(edicion__anio=2027).count(), 5)
+        self.assertEqual(Votacion.objects.filter(categoria__edicion__anio=2027).count(), 8)
         estados = {v.estado for v in Votacion.objects.all()}
         self.assertTrue({"abierta", "programada", "cerrada", "borrador"} <= estados)
         borrador = Votacion.objects.get(publicada=False)
@@ -132,7 +132,7 @@ class CargarDemoTests(BaseAPITest):
         self.cargar()
         total = Voto.objects.count()
         self.assertIn("ya están cargados", self.cargar())
-        self.assertEqual(Votacion.objects.count(), 8)
+        self.assertEqual(Votacion.objects.count(), 13)
         self.assertEqual(Voto.objects.count(), total)
 
     def test_reiniciar_borra_cambios_y_recarga(self):
@@ -142,7 +142,7 @@ class CargarDemoTests(BaseAPITest):
         votacion = next(v for v in Votacion.objects.all() if v.estado == "abierta")
         Voto.objects.create(usuario=externo, votacion=votacion, opcion=votacion.opciones.first(), codigo_comprobante="FLV27-ZZZZZZ")
         self.cargar("--reiniciar")
-        self.assertEqual(Categoria.objects.count(), 5)
+        self.assertEqual(Categoria.objects.count(), 9)
         self.assertFalse(Voto.objects.filter(codigo_comprobante="FLV27-ZZZZZZ").exists())
         self.assertTrue(Usuario.objects.filter(email="externo@correo.test").exists())
         self.assertEqual(Usuario.objects.filter(email="admin@festival.test").count(), 1)
@@ -237,12 +237,12 @@ class CargarDemoRutasTests(BaseAPITest):
 
     def test_slugs_y_muestras_de_audio(self):
         call_command("cargar_demo", stdout=StringIO())
-        votacion = Votacion.objects.get(slug="cancion-favorita-del-publico")
+        votacion = Votacion.objects.get(slug="cancion-favorita-del-publico", categoria__edicion__anio=2027)
         self.assertEqual(votacion.categoria.slug, "musica")
         enlaces = list(votacion.opciones.order_by("orden").values_list("enlace_multimedia", flat=True))
         self.assertEqual(enlaces[0], "/audio/muestras/brisas-del-guatapuri.mp3")
         self.assertEqual(len([e for e in enlaces if e.endswith(".mp3")]), 5)
-        ineditas = Votacion.objects.get(slug="cancion-inedita-revelacion").opciones.exclude(enlace_multimedia="").count()
+        ineditas = Votacion.objects.get(slug="cancion-inedita-revelacion", categoria__edicion__anio=2027).opciones.exclude(enlace_multimedia="").count()
         self.assertEqual(ineditas, 4)
         self.assertFalse(Opcion.objects.filter(votacion__categoria__slug="piloneras").exclude(enlace_multimedia="").exists())
         respuesta = self.client.get("/api/votaciones/por-ruta/", {"anio": 2027, "categoria": "musica", "votacion": "cancion-favorita-del-publico"})

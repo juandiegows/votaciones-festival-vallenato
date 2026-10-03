@@ -1,3 +1,5 @@
+import { API_URL } from '../config.js';
+
 // Adaptadores entre la API (snake_case) y el modelo de la web (camelCase, igual al modo demostración).
 // Es el ÚNICO lugar donde se traducen nombres de campos y valores.
 
@@ -31,6 +33,14 @@ const CAMPOS = {
     votacionTitulo: 'votacion_titulo', votacionSlug: 'votacion_slug', categoriaSlug: 'categoria_slug',
     edicionAnio: 'edicion_anio', opcionNombre: 'opcion_nombre',
   },
+  banners: {
+    id: 'id', titulo: 'titulo', subtitulo: 'subtitulo', imagen: 'imagen', textoAlternativo: 'texto_alternativo',
+    textoBoton: 'texto_boton', enlaceBoton: 'enlace_boton', orden: 'orden', activo: 'activo',
+  },
+  redes: { id: 'id', nombre: 'nombre', url: 'url', icono: 'icono', orden: 'orden', activa: 'activa' },
+  configuracion: {
+    nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
+  },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',
     fechaRegistro: 'fecha_registro',
@@ -57,6 +67,10 @@ export function desdeApi(coleccion, objeto) {
     }
     if (salida.resultadosPublicados === undefined) salida.resultadosPublicados = false;
   }
+  // Las imágenes subidas (/media/…) las sirve la API: si está en otro origen, se antepone ese origen.
+  if (coleccion === 'banners' && salida.imagen?.startsWith('/') && /^https?:\/\//.test(API_URL)) {
+    salida.imagen = new URL(API_URL).origin + salida.imagen;
+  }
   return salida;
 }
 
@@ -72,6 +86,7 @@ export function haciaApi(coleccion, objeto) {
     if (objeto.mostrarResultados !== undefined) salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';
     if (objeto.imagen !== undefined) salida.imagen = urlDesdeIcono(objeto.imagen);
   }
+  if (coleccion === 'banners') delete salida.imagen; // la imagen solo se envía como archivo (multipart)
   return salida;
 }
 
@@ -101,7 +116,10 @@ const VERBOS = {
   cerrar: 'Cerró',
   exportar_resultados: 'Exportó los resultados de',
 };
-const ENTIDADES = { edicion: 'la edición', categoria: 'la categoría', votacion: 'la votación', opcion: 'la opción' };
+const ENTIDADES = {
+  edicion: 'la edición', categoria: 'la categoría', votacion: 'la votación', opcion: 'la opción', banner: 'el banner',
+  red_social: 'la red social', configuracion: 'los datos de contacto',
+};
 
 /**
  * Registro de auditoría de la API → { id, fechaHora, usuario, accion } legible.
@@ -109,7 +127,7 @@ const ENTIDADES = { edicion: 'la edición', categoria: 'la categoría', votacion
  */
 export function auditoriaDesdeApi(r, nombrePor = () => '') {
   const detalle = r.detalle || {};
-  const nombre = detalle.titulo || detalle.nombre || nombrePor(r.entidad, Number(r.entidad_id)) || `#${r.entidad_id}`;
+  const nombre = detalle.titulo || detalle.nombre || detalle.nombre_organizacion || nombrePor(r.entidad, Number(r.entidad_id)) || `#${r.entidad_id}`;
   let verbo = VERBOS[r.accion] || r.accion;
   if (r.accion === 'publicar_resultados') verbo = detalle.publicar ? 'Publicó los resultados de' : 'Retiró los resultados de';
   const entidad = ENTIDADES[r.entidad] || r.entidad;

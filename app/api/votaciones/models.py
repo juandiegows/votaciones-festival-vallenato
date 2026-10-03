@@ -240,6 +240,78 @@ class Voto(models.Model):
         return self.codigo_comprobante
 
 
+class BannerInicio(models.Model):
+    titulo = models.CharField(max_length=120)
+    subtitulo = models.CharField(max_length=250, blank=True)
+    imagen = models.ImageField(upload_to="banners/")
+    texto_alternativo = models.CharField(max_length=200, help_text="Descripción de la imagen para lectores de pantalla.")
+    texto_boton = models.CharField(max_length=40, blank=True)
+    enlace_boton = models.CharField(max_length=300, blank=True, help_text="Ruta del sitio (/2027) o URL http(s).")
+    orden = models.PositiveSmallIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "banner_inicio"
+        ordering = ["orden", "id"]
+        verbose_name = "banner de inicio"
+        verbose_name_plural = "banners de inicio"
+
+    def __str__(self):
+        return self.titulo
+
+
+class ConfiguracionSitio(models.Model):
+    """Datos de contacto del pie de página (un único registro, pk=1)."""
+
+    nombre_organizacion = models.CharField(max_length=150, default="Fundación Festival de la Leyenda Vallenata")
+    telefono = models.CharField(max_length=40, default="(+57) 315-746 3143")
+    direccion = models.CharField(max_length=200, default="Carrera 19 No. 6N-39, Valledupar, Colombia")
+    correo = models.EmailField(default="presidencia@festivalvallenato.com")
+    texto_pie = models.TextField(
+        blank=True,
+        default="Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.",
+    )
+
+    class Meta:
+        db_table = "configuracion_sitio"
+        verbose_name = "configuración del sitio"
+        verbose_name_plural = "configuración del sitio"
+
+    def __str__(self):
+        return self.nombre_organizacion
+
+    @classmethod
+    def obtener(cls):
+        return cls.objects.get_or_create(pk=1)[0]
+
+
+class RedSocial(models.Model):
+    class Icono(models.TextChoices):
+        FACEBOOK = "facebook", "Facebook"
+        TWITTER_X = "twitter-x", "X"
+        INSTAGRAM = "instagram", "Instagram"
+        YOUTUBE = "youtube", "YouTube"
+        TIKTOK = "tiktok", "TikTok"
+        WHATSAPP = "whatsapp", "WhatsApp"
+        SPOTIFY = "spotify", "Spotify"
+        GLOBE = "globe", "Sitio web"
+
+    nombre = models.CharField(max_length=60)
+    url = models.URLField()
+    icono = models.CharField(max_length=20, choices=Icono.choices, default=Icono.GLOBE)
+    orden = models.PositiveSmallIntegerField(default=0)
+    activa = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "red_social"
+        ordering = ["orden", "id"]
+        verbose_name = "red social"
+        verbose_name_plural = "redes sociales"
+
+    def __str__(self):
+        return self.nombre
+
+
 class RegistroAuditoria(models.Model):
     usuario = models.ForeignKey(
         Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name="registros_auditoria"
