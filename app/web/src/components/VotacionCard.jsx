@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import EstadoBadge from './EstadoBadge.jsx';
+import IconoEntidad from './IconoEntidad.jsx';
 import { formatearFechaHora } from '../utils/helpers.js';
 import { useRutas } from '../hooks/useRutas.js';
 
@@ -8,7 +9,7 @@ export default function VotacionCard({ votacion, categoria, numOpciones, yaVoto 
   return (
     <article className="card-flv interactiva h-100 p-3 d-flex flex-column">
       <div className="d-flex align-items-start gap-3 mb-2">
-        <span className="icono-circulo" aria-hidden="true"><i className={`bi bi-${votacion.imagen || categoria?.icono || 'check2-square'}`}></i></span>
+        <span className="icono-circulo" aria-hidden="true"><IconoEntidad icono={votacion.imagen || categoria?.icono} imagen={votacion.iconoImagen} /></span>
         <div className="flex-grow-1">
           <div className="d-flex flex-wrap gap-1 mb-1">
             <EstadoBadge estado={votacion.estado} />
