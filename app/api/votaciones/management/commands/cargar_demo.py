@@ -339,11 +339,13 @@ class Command(BaseCommand):
         # Contraseñas asignadas con set_password (sin validadores): son credenciales de demostración.
         admin = Usuario(email=ADMIN["email"], nombres=ADMIN["nombres"], apellidos=ADMIN["apellidos"],
                         rol=Usuario.Rol.ADMINISTRADOR, is_staff=True, acepta_tratamiento_datos=True,
+                        tipo_documento=Usuario.TipoDocumento.CC, numero_documento="1000000001", correo_verificado=True,
                         fecha_registro=relativa(-60))
         admin.set_password(ADMIN["password"])
         admin.save()
         votante = Usuario(email=VOTANTE["email"], nombres=VOTANTE["nombres"], apellidos=VOTANTE["apellidos"],
-                          acepta_tratamiento_datos=True, fecha_registro=relativa(-20))
+                          acepta_tratamiento_datos=True, tipo_documento=Usuario.TipoDocumento.CC,
+                          numero_documento="1000000002", correo_verificado=True, fecha_registro=relativa(-20))
         votante.set_password(VOTANTE["password"])
         votante.save()
 
@@ -357,6 +359,8 @@ class Command(BaseCommand):
             ficticios.append(Usuario(
                 email=correo, nombres=nombre, apellidos=apellido, password=clave_ficticios,
                 acepta_tratamiento_datos=True, fecha_registro=relativa(-rnd.randint(1, 40)),
+                # Documentos ficticios fuera del rango de los demo (1000000001 y 1000000002)
+                tipo_documento=Usuario.TipoDocumento.CC, numero_documento=str(1100000000 + i), correo_verificado=True,
             ))
         Usuario.objects.bulk_create(ficticios)
         # MySQL no devuelve las claves primarias en bulk_create: se vuelven a leer en el mismo orden.

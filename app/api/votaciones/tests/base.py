@@ -27,11 +27,11 @@ class BaseAPITest(APITestCase):
 
         self.votante = Usuario.objects.create_user(
             "votante@festival.test", "Voto2027*seguro", nombres="Valentina", apellidos="Prueba",
-            acepta_tratamiento_datos=True,
+            acepta_tratamiento_datos=True, correo_verificado=True, tipo_documento="CC", numero_documento="1065000001",
         )
         self.admin = Usuario.objects.create_user(
             "admin@festival.test", "Admin2027*seguro", nombres="Ana", apellidos="Admin",
-            rol=Usuario.Rol.ADMINISTRADOR, acepta_tratamiento_datos=True,
+            rol=Usuario.Rol.ADMINISTRADOR, acepta_tratamiento_datos=True, correo_verificado=True,
         )
 
     def crear_votacion(self, titulo, apertura, cierre, publicada=True, **extra):

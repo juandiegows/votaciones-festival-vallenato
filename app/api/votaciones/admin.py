@@ -7,12 +7,13 @@ from .models import Categoria, Edicion, Opcion, RegistroAuditoria, Revista, Usua
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
     ordering = ["email"]
-    list_display = ["email", "nombres", "apellidos", "rol", "is_active", "fecha_registro"]
-    list_filter = ["rol", "is_active"]
-    search_fields = ["email", "nombres", "apellidos"]
+    list_display = ["email", "nombres", "apellidos", "tipo_documento", "numero_documento", "correo_verificado", "rol", "is_active", "fecha_registro"]
+    list_filter = ["rol", "is_active", "correo_verificado"]
+    search_fields = ["email", "nombres", "apellidos", "numero_documento"]
     fieldsets = [
         (None, {"fields": ["email", "password"]}),
-        ("Datos personales", {"fields": ["nombres", "apellidos", "acepta_tratamiento_datos"]}),
+        ("Datos personales", {"fields": ["nombres", "apellidos", "tipo_documento", "numero_documento", "acepta_tratamiento_datos"]}),
+        ("Verificación", {"fields": ["correo_verificado"]}),
         ("Permisos", {"fields": ["rol", "is_active", "is_staff", "is_superuser"]}),
         ("Fechas", {"fields": ["fecha_registro", "last_login"]}),
     ]
