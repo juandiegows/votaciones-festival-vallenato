@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: API – Sistema Web de Votaciones FLV 2027
+  title: API – Sistema Web de Votaciones del Festival de la Leyenda Vallenata
   version: 1.0.0
   description: 'API REST del Sistema Web de Votaciones del Festival de la Leyenda
-    Vallenata 2027 (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición
+    Vallenata (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición
     → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization:
     Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.'
 paths:
@@ -198,6 +198,8 @@ paths:
   /api/admin/ediciones/:
     get:
       operationId: admin_ediciones_list
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       tags:
       - Administración
       security:
@@ -213,6 +215,8 @@ paths:
           description: ''
     post:
       operationId: admin_ediciones_create
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       tags:
       - Administración
       requestBody:
@@ -239,6 +243,8 @@ paths:
   /api/admin/ediciones/{id}/:
     get:
       operationId: admin_ediciones_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       parameters:
       - in: path
         name: id
@@ -259,6 +265,8 @@ paths:
           description: ''
     put:
       operationId: admin_ediciones_update
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       parameters:
       - in: path
         name: id
@@ -291,6 +299,8 @@ paths:
           description: ''
     patch:
       operationId: admin_ediciones_partial_update
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       parameters:
       - in: path
         name: id
@@ -322,6 +332,8 @@ paths:
           description: ''
     delete:
       operationId: admin_ediciones_destroy
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
       parameters:
       - in: path
         name: id
@@ -488,6 +500,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/admin/usuarios/:
+    get:
+      operationId: admin_usuarios_list
+      summary: Usuarios registrados (sin contraseñas)
+      parameters:
+      - in: query
+        name: rol
+        schema:
+          type: string
+          enum:
+          - administrador
+          - votante
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
+  /api/admin/usuarios/{id}/:
+    get:
+      operationId: admin_usuarios_retrieve
+      summary: Detalle de usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdmin'
           description: ''
   /api/admin/votaciones/:
     get:
@@ -770,6 +829,51 @@ paths:
                 type: string
                 format: binary
           description: Archivo CSV
+  /api/admin/votos/:
+    get:
+      operationId: admin_votos_list
+      summary: Votos registrados para indicadores (sin datos del votante)
+      parameters:
+      - in: query
+        name: votacion
+        schema:
+          type: integer
+        description: ID de la votación
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VotoAdmin'
+          description: ''
+  /api/admin/votos/{id}/:
+    get:
+      operationId: admin_votos_retrieve
+      summary: Detalle de voto (sin datos del votante)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este voto.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoAdmin'
+          description: ''
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -861,6 +965,11 @@ paths:
       operationId: categorias_list
       summary: Categorías activas (RF-04)
       parameters:
+      - in: query
+        name: anio
+        schema:
+          type: integer
+        description: Año de la edición (URL amigable /{año})
       - in: query
         name: edicion
         schema:
@@ -976,16 +1085,73 @@ paths:
                 items:
                   $ref: '#/components/schemas/Voto'
           description: ''
+  /api/opciones/:
+    get:
+      operationId: opciones_list
+      summary: Opciones activas de las votaciones publicadas (RF-06)
+      parameters:
+      - in: query
+        name: votacion
+        schema:
+          type: integer
+        description: ID de la votación
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpcionListadoPublico'
+          description: ''
+  /api/opciones/{id}/:
+    get:
+      operationId: opciones_retrieve
+      summary: Detalle de opción
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpcionListadoPublico'
+          description: ''
   /api/votaciones/:
     get:
       operationId: votaciones_list
       summary: Votaciones publicadas (RF-05)
       parameters:
       - in: query
+        name: anio
+        schema:
+          type: integer
+        description: Año de la edición
+      - in: query
         name: categoria
         schema:
           type: integer
         description: ID de la categoría
+      - in: query
+        name: categoria_slug
+        schema:
+          type: string
+        description: Slug de la categoría
       - in: query
         name: estado
         schema:
@@ -994,6 +1160,11 @@ paths:
           - abierta
           - cerrada
           - programada
+      - in: query
+        name: slug
+        schema:
+          type: string
+        description: Slug de la votación
       tags:
       - Consulta pública
       security:
@@ -1102,19 +1273,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
           description: ''
+  /api/votaciones/por-ruta/:
+    get:
+      operationId: votaciones_por_ruta_retrieve
+      summary: Detalle por URL amigable /{año}/{categoría}/{votación} (RF-06)
+      parameters:
+      - in: query
+        name: anio
+        schema:
+          type: integer
+        description: Año de la edición
+        required: true
+      - in: query
+        name: categoria
+        schema:
+          type: string
+        description: Slug de la categoría
+        required: true
+      - in: query
+        name: votacion
+        schema:
+          type: string
+        description: Slug de la votación
+        required: true
+      tags:
+      - Consulta pública
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotacionDetalle'
+          description: ''
+        '404':
+          description: No existe o no está publicada
 components:
   schemas:
     Categoria:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         id:
           type: integer
           readOnly: true
         edicion:
           type: integer
+        edicion_anio:
+          type: integer
+          readOnly: true
         nombre:
           type: string
           maxLength: 120
+        slug:
+          description: Identificador para la URL pública; se genera desde el nombre
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 120
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         icono:
@@ -1129,10 +1351,13 @@ components:
           format: int64
       required:
       - edicion
+      - edicion_anio
       - id
       - nombre
     CategoriaRequest:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         edicion:
           type: integer
@@ -1140,6 +1365,15 @@ components:
           type: string
           minLength: 1
           maxLength: 120
+        slug:
+          description: Identificador para la URL pública; se genera desde el nombre
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 120
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         icono:
@@ -1283,12 +1517,10 @@ components:
           - type: string
             maxLength: 0
         enlace_multimedia:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 200
-          - type: string
-            maxLength: 0
+          type: string
+          description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
+            ej. /audio/muestras/x.mp3).
+          maxLength: 300
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -1296,6 +1528,40 @@ components:
           format: int64
         activa:
           type: boolean
+      required:
+      - id
+      - nombre
+      - votacion
+    OpcionListadoPublico:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        votacion:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 150
+        descripcion:
+          type: string
+        imagen:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        enlace_multimedia:
+          type: string
+          description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
+            ej. /audio/muestras/x.mp3).
+          maxLength: 300
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
       required:
       - id
       - nombre
@@ -1319,12 +1585,10 @@ components:
           - type: string
             maxLength: 0
         enlace_multimedia:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 200
-          - type: string
-            maxLength: 0
+          type: string
+          description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
+            ej. /audio/muestras/x.mp3).
+          maxLength: 300
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -1352,12 +1616,10 @@ components:
           - type: string
             maxLength: 0
         enlace_multimedia:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 200
-          - type: string
-            maxLength: 0
+          type: string
+          description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
+            ej. /audio/muestras/x.mp3).
+          maxLength: 300
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -1393,6 +1655,8 @@ components:
             $ref: '#/components/schemas/RegistroAuditoria'
     PatchedCategoriaRequest:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         edicion:
           type: integer
@@ -1400,6 +1664,15 @@ components:
           type: string
           minLength: 1
           maxLength: 120
+        slug:
+          description: Identificador para la URL pública; se genera desde el nombre
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 120
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         icono:
@@ -1452,12 +1725,10 @@ components:
           - type: string
             maxLength: 0
         enlace_multimedia:
-          oneOf:
-          - type: string
-            format: uri
-            maxLength: 200
-          - type: string
-            maxLength: 0
+          type: string
+          description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
+            ej. /audio/muestras/x.mp3).
+          maxLength: 300
         orden:
           type: integer
           maximum: 9223372036854775807
@@ -1467,6 +1738,8 @@ components:
           type: boolean
     PatchedVotacionRequest:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         categoria:
           type: integer
@@ -1474,6 +1747,15 @@ components:
           type: string
           minLength: 1
           maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         imagen:
@@ -1651,6 +1933,45 @@ components:
       - id
       - nombres
       - rol
+    UsuarioAdmin:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Correo
+        nombres:
+          type: string
+          readOnly: true
+        apellidos:
+          type: string
+          readOnly: true
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Activo
+          description: Indica si el usuario debe ser tratado como activo. Desmarque
+            esta opción en lugar de borrar la cuenta.
+        fecha_registro:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - apellidos
+      - email
+      - fecha_registro
+      - id
+      - is_active
+      - nombres
+      - rol
     VisibilidadResultadosEnum:
       enum:
       - tiempo_real
@@ -1663,15 +1984,32 @@ components:
         * `no_publicar` - No publicar
     Votacion:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         id:
           type: integer
           readOnly: true
         categoria:
           type: integer
+        categoria_slug:
+          type: string
+          readOnly: true
+        edicion_anio:
+          type: integer
+          readOnly: true
         titulo:
           type: string
           maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         imagen:
@@ -1717,8 +2055,10 @@ components:
       required:
       - actualizada_en
       - categoria
+      - categoria_slug
       - cerrada_manualmente
       - creada_en
+      - edicion_anio
       - estado
       - fecha_apertura
       - fecha_cierre
@@ -1737,9 +2077,24 @@ components:
         categoria_nombre:
           type: string
           readOnly: true
+        categoria_slug:
+          type: string
+          readOnly: true
+        edicion_anio:
+          type: integer
+          readOnly: true
         titulo:
           type: string
           maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         imagen:
@@ -1776,12 +2131,15 @@ components:
       required:
       - categoria
       - categoria_nombre
+      - categoria_slug
+      - edicion_anio
       - estado
       - fecha_apertura
       - fecha_cierre
       - id
       - mis_votos
       - opciones
+      - slug
       - titulo
     VotacionPublica:
       type: object
@@ -1794,9 +2152,24 @@ components:
         categoria_nombre:
           type: string
           readOnly: true
+        categoria_slug:
+          type: string
+          readOnly: true
+        edicion_anio:
+          type: integer
+          readOnly: true
         titulo:
           type: string
           maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         imagen:
@@ -1825,13 +2198,18 @@ components:
       required:
       - categoria
       - categoria_nombre
+      - categoria_slug
+      - edicion_anio
       - estado
       - fecha_apertura
       - fecha_cierre
       - id
+      - slug
       - titulo
     VotacionRequest:
       type: object
+      description: El slug es opcional (se genera desde el nombre o título), así que
+        su unicidad se valida aparte.
       properties:
         categoria:
           type: integer
@@ -1839,6 +2217,15 @@ components:
           type: string
           minLength: 1
           maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         descripcion:
           type: string
         imagen:
@@ -1886,6 +2273,15 @@ components:
         votacion_titulo:
           type: string
           readOnly: true
+        votacion_slug:
+          type: string
+          readOnly: true
+        categoria_slug:
+          type: string
+          readOnly: true
+        edicion_anio:
+          type: integer
+          readOnly: true
         opcion:
           type: integer
           readOnly: true
@@ -1900,13 +2296,39 @@ components:
           type: string
           readOnly: true
       required:
+      - categoria_slug
       - codigo_comprobante
+      - edicion_anio
       - fecha_hora
       - id
       - opcion
       - opcion_nombre
       - votacion
+      - votacion_slug
       - votacion_titulo
+    VotoAdmin:
+      type: object
+      description: 'Voto sin datos del votante ni comprobante (secreto del voto, RNF-08):
+        solo para conteos.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        votacion:
+          type: integer
+          readOnly: true
+        opcion:
+          type: integer
+          readOnly: true
+        fecha_hora:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - fecha_hora
+      - id
+      - opcion
+      - votacion
   securitySchemes:
     tokenAuth:
       type: apiKey

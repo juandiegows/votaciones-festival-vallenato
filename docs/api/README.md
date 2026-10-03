@@ -1,6 +1,6 @@
 # Documentación de la API
 
-API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata 2027, construida con
+API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (2027 y ediciones futuras), construida con
 **Django 5.2 + Django REST Framework** sobre **MySQL**. Código en [`app/api`](../../app/api).
 
 | Recurso | Enlace (entorno local con Docker) |
@@ -56,9 +56,12 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 |---|---|---|
 | GET | `/api/ediciones/` · `/api/ediciones/{id}/` | Ediciones del Festival |
 | GET | `/api/ediciones/vigente/` | Edición activa más reciente |
-| GET | `/api/categorias/?edicion={id}` | Categorías activas; sin parámetro, las de la edición activa (RF-04) |
+| GET | `/api/categorias/?edicion={id}` · `?anio=2027` | Categorías activas; sin parámetro, las de la edición activa (RF-04) |
 | GET | `/api/votaciones/?categoria={id}&estado={programada\|abierta\|cerrada}` | Votaciones publicadas (RF-05) |
+| GET | `/api/votaciones/?anio=&categoria_slug=&slug=` | Filtros por año de la edición y slugs |
+| GET | `/api/votaciones/por-ruta/?anio=2027&categoria=musica&votacion=cancion-favorita-del-publico` | Busca una votación por su URL amigable |
 | GET | `/api/votaciones/{id}/` | Detalle con opciones activas y `mis_votos` del usuario (RF-06) |
+| GET | `/api/opciones/?votacion={id}` | Opciones activas de votaciones publicadas |
 | GET | `/api/votaciones/{id}/resultados/` | Resultados si la visibilidad lo permite (RF-15, RN-07) |
 
 ### Votación
@@ -81,6 +84,8 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 | GET | `/api/admin/votaciones/{id}/resultados/` | Resultados completos, siempre visibles para el administrador (RF-14) |
 | GET | `/api/admin/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
 | CRUD | `/api/admin/opciones/?votacion={id}` | Gestión de opciones (RF-13) |
+| GET | `/api/admin/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
+| GET | `/api/admin/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
 | GET | `/api/admin/auditoria/` | Registro de auditoría paginado, 50 por página (RF-16, RN-12) |
 
 `CRUD` = `GET` lista, `POST` crear, `GET/PUT/PATCH/DELETE` sobre `{id}/`. Eliminar una votación u opción con
@@ -101,6 +106,27 @@ Toda creación, modificación, eliminación, publicación, cierre y exportación
 | RN-09 No se elimina con votos | `409 tiene_votos` |
 | RN-10 Aceptar el tratamiento de datos | Validación del registro |
 | RN-12 Auditoría de acciones administrativas | Tabla `registro_auditoria` |
+
+Una votación publicada no se puede despublicar: si es necesario, se cierra. Al activar una edición, las demás
+quedan cerradas automáticamente, así el sitio público muestra siempre una sola edición vigente.
+
+### URLs amigables y ediciones futuras
+
+Las categorías y votaciones tienen `slug` (generado desde el nombre, editable por el administrador): único por
+edición en las categorías y único por categoría en las votaciones. La web usa rutas como
+`/2027/musica/cancion-favorita-del-publico`; en 2028 basta con crear y activar la nueva edición. Las respuestas
+incluyen `slug`, `edicion_anio` y `categoria_slug`. El código del comprobante usa el año de la edición (`FLV27-…`,
+`FLV28-…`).
+
+### Multimedia de las opciones
+
+`enlace_multimedia` acepta una URL `http(s)` (YouTube, Spotify, SoundCloud o un archivo de audio) o una ruta del
+sitio que empiece por `/` (por ejemplo, `/audio/muestras/brisas-del-guatapuri.mp3`).
+
+### Datos de prueba
+
+`python manage.py cargar_demo [--reiniciar]` carga en la base de datos ediciones, categorías, votaciones, opciones
+con audio, unos 100 votantes ficticios y las cuentas `admin@festival.test` y `votante@festival.test`.
 
 Estado de una votación: `borrador` → (`programada`) → `abierta` → `cerrada`
 (ver [diagrama de estados](diagramas/04-estados-votacion.png)).

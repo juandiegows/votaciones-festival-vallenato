@@ -1,6 +1,6 @@
 # app/api – API REST (Django + DRF + MySQL)
 
-Backend del Sistema Web de Votaciones FLV 2027. La documentación funcional de los endpoints está en
+Backend del Sistema Web de Votaciones del Festival de la Leyenda Vallenata. La documentación funcional de los endpoints está en
 [`docs/api/README.md`](../../docs/api/README.md) y en Swagger (`/api/docs/`).
 
 ## Estructura
@@ -10,13 +10,14 @@ app/api/
 ├── config/              settings (variables de entorno), urls, wsgi
 ├── votaciones/
 │   ├── models.py        Usuario, Edicion, Categoria, Votacion, Opcion, Voto, RegistroAuditoria
-│   ├── migrations/      0001_initial
+│   ├── migrations/      0001_initial · 0002_slugs_urls_amigables
 │   ├── serializers.py   validación y formato JSON
 │   ├── servicios.py     reglas de negocio (emitir voto, resultados, publicar, auditoría)
 │   ├── views.py         endpoints públicos, de votante y de administración
 │   ├── permissions.py   EsAdministrador
 │   ├── urls.py          rutas /api/…
 │   ├── admin.py         panel /django-admin/
+│   ├── management/      comando cargar_demo (datos de demostración)
 │   └── tests/           pruebas automatizadas
 ├── Dockerfile · entrypoint.sh (espera MySQL, migra y arranca gunicorn)
 └── requirements.txt
@@ -32,6 +33,21 @@ docker exec -it votaciones_api_local python manage.py createsuperuser
 ```
 
 API en http://localhost:8096/api/ · Swagger en http://localhost:8096/api/docs/ · panel en http://localhost:8096/django-admin/.
+
+## Datos de demostración
+
+```bash
+python manage.py cargar_demo              # carga los datos si aún no existen (idempotente)
+python manage.py cargar_demo --reiniciar  # borra los datos de demostración y los vuelve a cargar
+docker exec votaciones_api_local python manage.py cargar_demo --reiniciar   # en Docker
+```
+
+Equivale a `app/web/src/data/seed.js`: ediciones 2027 (activa) y 2026 (cerrada), categorías, votaciones y
+opciones **ilustrativas y ficticias** con fechas relativas (hay votaciones abiertas, programadas, cerradas y un
+borrador con una sola opción), unos 100 votantes ficticios con votos y las cuentas
+`admin@festival.test` / `Admin2027*` (administrador) y `votante@festival.test` / `Voto2027*`. Las opciones
+musicales enlazan a las muestras instrumentales de la web (`/audio/muestras/*.mp3`). `--reiniciar` también
+elimina los votos de otros usuarios en esas ediciones.
 
 ## Ejecutar sin Docker (SQLite)
 

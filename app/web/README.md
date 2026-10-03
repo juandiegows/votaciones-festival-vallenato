@@ -12,7 +12,7 @@ El prototipo respeta los **colores de marca del Festival** (tomados de festivalv
 
 - Paleta completa, contrastes y reglas de uso: [`docs/BRANDING.md`](../../docs/BRANDING.md)
 - Tokens CSS: [`src/styles/brand.css`](src/styles/brand.css)
-- Guía interactiva en el prototipo: ruta `#/marca` (enlazada en el pie de página)
+- Guía interactiva en el prototipo: ruta `/marca` (enlazada en el pie de página)
 
 ## Equipo
 
@@ -27,7 +27,32 @@ El prototipo respeta los **colores de marca del Festival** (tomados de festivalv
 | Administrador | `admin@festival.test` | `Admin2027*` |
 | Votante | `votante@festival.test` | `Voto2027*` |
 
-También puedes crear una cuenta nueva en **Registro**. El botón **«Restablecer datos de demostración»** (pie de página) vuelve a cargar los datos semilla.
+También puedes crear una cuenta nueva en **Registro**. En el modo de demostración, el botón **«Restablecer datos de demostración»** (pie de página) vuelve a cargar los datos semilla; en el modo API los datos se restauran en el servidor con `python manage.py cargar_demo --reiniciar`.
+
+## Modos de datos
+
+La web funciona con dos fuentes de datos. El modo se elige **al compilar** con la variable `VITE_API_URL`:
+
+| Modo | `VITE_API_URL` | Datos | Uso |
+|---|---|---|---|
+| Demostración | sin definir | Simulados en `localStorage` (`src/data/seed.js`) | GitHub Pages, prototipo sin servidor |
+| API | p. ej. `/api` (mismo dominio) o `http://localhost:8096/api` | API REST de Django (`app/api`) | VPS, Docker local |
+
+```bash
+npm run build                                          # modo demostración
+VITE_API_URL=http://localhost:8096/api npm run dev     # modo API en desarrollo (Windows PowerShell: $env:VITE_API_URL="…"; npm run dev)
+VITE_BASE=/ VITE_API_URL=/api npm run build            # modo API servido en la raíz del dominio
+```
+
+- La capa de datos está en `src/context/`: `MockProvider.jsx` (demostración) y `ApiProvider.jsx` (API) exponen
+  **el mismo contexto** (`useApp()`), así que las pantallas no dependen del modo. Todas las acciones son
+  asíncronas y devuelven `{ ok, error }`; las pantallas muestran el estado «Guardando…» y el mensaje de error del
+  servidor (`detail`).
+- `src/api/cliente.js`: `fetch` con el token en `localStorage` (`Authorization: Token …`); `src/api/adaptadores.js`:
+  única traducción entre los campos de la API (snake_case) y los de la web (camelCase).
+- En el modo API la sesión se restaura al cargar (`/auth/yo/`), el cierre de sesión invalida el token
+  (`/auth/logout/`), los resultados públicos respetan la visibilidad del servidor y el CSV se descarga desde la API.
+- Si la web se sirve en otro origen que la API, ese origen debe estar en `CORS_ALLOWED_ORIGINS` de la API.
 
 ## Cómo ejecutar
 
@@ -42,19 +67,24 @@ npm run preview   # sirve la compilación
 
 ## Tecnología
 
-- React + Vite (JavaScript), `react-router-dom` con **HashRouter** (compatible con GitHub Pages).
+- React + Vite (JavaScript), `react-router-dom` con **BrowserRouter**: URL limpias, sin `#`. Para GitHub Pages, `npm run build`
+  copia `dist/index.html` a `dist/404.html` (script `postbuild`) para atender los enlaces profundos; en la VPS/Docker
+  nginx responde `index.html` a cualquier ruta. La web nunca usa las rutas `/api`, `/django-admin` ni `/static`.
 - Bootstrap 5 + Bootstrap Icons. Gráficos con barras en CSS (sin librerías).
-- **Sin backend:** los datos viven en `localStorage` (simulación de la base de datos).
+- Datos en `localStorage` (modo demostración) o en la API de Django (modo API); ver «Modos de datos».
+- Muestras de audio instrumentales **originales** generadas para el proyecto en `public/audio/muestras/` (ilustrativas).
 - Despliegue automático con GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml` en la raíz del repositorio).
 
 ## Estructura
 
 ```
 src/
-├── data/        seed.js (datos ilustrativos) · storage.js (persistencia en localStorage) · marca.js (paleta)
+├── api/         cliente.js (fetch + token) · adaptadores.js (snake_case ↔ camelCase)
+├── data/        seed.js (datos ilustrativos) · storage.js (persistencia en localStorage) · marca.js (paleta) · credencialesDemo.js
 ├── styles/      brand.css (tokens de marca + mapeo a Bootstrap)
-├── context/     AppContext.jsx (estado global, autenticación y acciones ≈ futuras vistas Django)
-├── components/  Navbar, Footer, Modal, Avatar SVG, EstadoBadge, Countdown, ResultadosChart, guardas de ruta…
+├── context/     AppContext.jsx (elige el proveedor) · MockProvider.jsx · ApiProvider.jsx · contexto.js (contrato común)
+├── hooks/       useResultados (resultados con visibilidad) · useRutas (URL amigables por edición)
+├── components/  Navbar, Footer, Modal, Avatar SVG, EstadoBadge, Countdown, ResultadosChart, ReproductorMultimedia, guardas de ruta…
 ├── pages/       pantallas públicas y de votante
 │   └── admin/   pantallas del rol administrador
 └── utils/       helpers (estado por fechas, CSV, validaciones, formato de fechas es-CO)
@@ -67,33 +97,40 @@ Cada página corresponde a una futura plantilla de Django y cada acción del con
 `EDICIÓN → CATEGORÍA → VOTACIÓN → OPCIÓN → VOTO`, más `USUARIO`.
 
 - **Edicion:** id, nombre, anio, fechaInicio, fechaFin, estado (activa/cerrada)
-- **Categoria:** id, edicionId, nombre, descripcion, icono, activa, orden
-- **Votacion:** id, categoriaId, titulo, descripcion, fechaApertura, fechaCierre, estado (programada/abierta/cerrada, calculado por fechas o cierre manual), votosPorUsuario, mostrarResultados («al cerrar» | «en tiempo real» | «no publicar»), imagen
-- **Opcion:** id, votacionId, nombre, descripcion, enlaceMultimedia, orden
+- **Categoria:** id, edicionId, nombre, slug, descripcion, icono, activa, orden
+- **Votacion:** id, categoriaId, titulo, slug, descripcion, fechaApertura, fechaCierre, estado (programada/abierta/cerrada, calculado por fechas o cierre manual), votosPorUsuario, mostrarResultados («al cerrar» | «en tiempo real» | «no publicar»), imagen
+- **Opcion:** id, votacionId, nombre, descripcion, enlaceMultimedia (URL http(s), ruta del sitio como `/audio/muestras/x.mp3`, YouTube, Spotify o SoundCloud), orden
 - **Usuario:** id, nombres, apellidos, correo, contrasena (texto plano **solo en el mock**), rol, aceptaTratamientoDatos, fechaRegistro
-- **Voto:** id, usuarioId, votacionId, opcionId, fechaHora, codigoComprobante (p. ej. `FLV27-8F3K2A`)
+- **Voto:** id, usuarioId, votacionId, opcionId, fechaHora, codigoComprobante (`FLV` + dos últimos dígitos del año de la edición, p. ej. `FLV27-8F3K2A`)
 
 Campos auxiliares del prototipo en Votacion: `publicada` (borrador/publicada), `cerradaManualmente`, `resultadosPublicados` (RF-15).
 
 ## Rutas (pantallas)
 
+URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven para 2027 y para las ediciones futuras.
+
 | Ruta | Pantalla | Requisito |
 |---|---|---|
-| `#/` | Inicio | — |
-| `#/registro` | Registro | RF-01, RN-10 |
-| `#/login` | Inicio de sesión + recuperar contraseña (simulado) | RF-02, RF-03 |
-| `#/categorias` | Categorías | RF-04 |
-| `#/categorias/:id` | Votaciones disponibles (filtro por estado) | RF-05 |
-| `#/votaciones/:id` | Detalle de la votación + confirmación (modal) | RF-06, RF-07 |
-| `#/votaciones/:id/comprobante` | Comprobante y resultados | RF-09, RN-07 |
-| `#/mis-votos` | Mis votos | — |
-| `#/marca` | Guía de identidad visual | — |
-| `#/admin` | Panel principal (KPI + auditoría simulada) | RF-16 |
-| `#/admin/ediciones` | Gestión de ediciones | RF-10 |
-| `#/admin/categorias` | Gestión de categorías | RF-11 |
-| `#/admin/votaciones` | Gestión de votaciones | RF-12, RN-06, RN-09 |
-| `#/admin/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
-| `#/admin/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
+| `/` | Inicio de la edición activa | — |
+| `/registro` | Registro | RF-01, RN-10 |
+| `/login` | Inicio de sesión + recuperar contraseña (simulado) | RF-02, RF-03 |
+| `/{año}` (p. ej. `/2027`) | Categorías de la edición | RF-04 |
+| `/{año}/{categoría}` (p. ej. `/2027/musica`) | Votaciones de la categoría (filtro por estado) | RF-05 |
+| `/{año}/{categoría}/{votación}` (p. ej. `/2027/musica/cancion-favorita-del-publico`) | Detalle, muestras multimedia y confirmación del voto | RF-06, RF-07 |
+| `/{año}/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
+| `/categorias` | Redirige a `/{año de la edición activa}` | — |
+| `/mis-votos` | Mis votos | — |
+| `/marca` | Guía de identidad visual | — |
+| `/admin` | Panel principal (KPI + actividad reciente) | RF-16 |
+| `/admin/ediciones` | Gestión de ediciones | RF-10 |
+| `/admin/categorias` | Gestión de categorías | RF-11 |
+| `/admin/votaciones` | Gestión de votaciones | RF-12, RN-06, RN-09 |
+| `/admin/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
+| `/admin/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
+| `/admin/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
+
+Las rutas anteriores con ID (`/categorias/:id`, `/votaciones/:id`, `/votaciones/:id/comprobante`) redirigen a la URL
+amigable. En GitHub Pages todas las rutas llevan el prefijo `/votaciones-festival-vallenato/`.
 
 ## Reglas de negocio aplicadas en la interfaz
 
