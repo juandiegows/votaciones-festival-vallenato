@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
-import { PRESENTACIONES_CATEGORIAS } from '../../data/presentaciones.js';
+import { PRESENTACIONES_CATEGORIAS, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
-import { DIAS_VISIBLE_CERRADAS } from '../../utils/visibilidad.js';
+import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
 
 const SECCIONES = [
   { id: 'resultados', label: 'Resultados', icono: 'bar-chart', descripcion: 'Cuándo ve el público los resultados de la edición.' },
   { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
-  { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo se muestran las categorías y el inicio.' },
+  { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
 ];
 
 const OPCIONES_RESULTADOS = [
@@ -56,14 +56,16 @@ function Fila({ titulo, descripcion, children, id }) {
 
 // Configuración del sitio público: visibilidad de resultados (por edición), votaciones cerradas y presentación
 export default function AdminConfiguracion() {
-  const { configuracion, guardarConfiguracion, guardarEntidad } = useApp();
+  const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, votaciones: todasLasVotaciones } = useApp();
   const { edicion, votaciones, categorias } = useEdicionAdmin();
   const [seccion, setSeccion] = useState('resultados');
-  const [dias, setDias] = useState(String(configuracion?.diasVisibleCerradas ?? DIAS_VISIBLE_CERRADAS));
+  const diasGuardados = diasVisibleCerradas(configuracion);
+  const siempre = diasGuardados === null;
+  const [dias, setDias] = useState(String(diasGuardados ?? DIAS_VISIBLE_CERRADAS));
   const [estado, setEstado] = useState(null);
   const [procesando, setProcesando] = useState(false);
 
-  useEffect(() => setDias(String(configuracion?.diasVisibleCerradas ?? DIAS_VISIBLE_CERRADAS)), [configuracion?.diasVisibleCerradas]);
+  useEffect(() => setDias(String(diasGuardados ?? DIAS_VISIBLE_CERRADAS)), [diasGuardados]);
 
   // Cada cambio se guarda al momento
   const guardar = async (accion, exito) => {
@@ -85,11 +87,32 @@ export default function AdminConfiguracion() {
       setEstado({ tipo: 'danger', texto: 'Escribe un número de días entre 0 y 365.' });
       return;
     }
-    if (n === (configuracion?.diasVisibleCerradas ?? DIAS_VISIBLE_CERRADAS)) return;
+    if (n === diasGuardados) return;
     guardarSitio({ diasVisibleCerradas: n }, n === 0 ? 'Las votaciones cerradas se ocultan al cerrar.' : `Las votaciones cerradas se verán ${n} ${n === 1 ? 'día' : 'días'} después del cierre.`);
   };
 
   const personalizadas = votaciones.filter((v) => v.personalizarResultados);
+  const presentacionesUsadas = new Set(votaciones.map((v) => v.presentacionOpciones || 'tarjetas'));
+  const presentacionComun = presentacionesUsadas.size === 1 ? [...presentacionesUsadas][0] : null;
+
+  // Una sola operación: la API guarda solo las votaciones que cambian y recarga una vez
+  const presentarOpcionesComo = (valor, auditoria) => {
+    const ids = new Set(votaciones.map((v) => v.id));
+    const lista = todasLasVotaciones.map((v) => (ids.has(v.id) ? { ...v, presentacionOpciones: valor } : v));
+    return reemplazarColeccion('votaciones', lista, auditoria);
+  };
+
+  const aplicarATodas = (valor) => {
+    const pendientes = votaciones.filter((v) => (v.presentacionOpciones || 'tarjetas') !== valor);
+    const etiqueta = presentacionOpciones(valor).etiqueta;
+    guardar(() => presentarOpcionesComo(valor, `Aplicó la presentación de opciones "${etiqueta}" a las votaciones de "${edicion.nombre}"`), `Opciones de ${pendientes.length === votaciones.length ? 'todas las votaciones' : `${pendientes.length} votación(es)`}: ${etiqueta}.`);
+  };
+
+  const cambiarPresentacionVotacion = (v, valor) =>
+    guardar(
+      () => guardarEntidad('votaciones', { id: v.id, presentacionOpciones: valor }, `Cambió la presentación de opciones de "${v.titulo}" a "${presentacionOpciones(valor).etiqueta}"`),
+      `«${v.titulo}»: ${presentacionOpciones(valor).etiqueta}.`,
+    );
   const categoriaDe = (id) => categorias.find((c) => c.id === id)?.nombre;
   const actual = SECCIONES.find((s) => s.id === seccion);
 
@@ -99,7 +122,10 @@ export default function AdminConfiguracion() {
     if (seccion === 'presentacion') {
       guardar(async () => {
         const r = await guardarEntidad('ediciones', { id: edicion.id, presentacionCategorias: 'tarjetas' }, 'Restableció la presentación de categorías');
-        return r.ok ? guardarConfiguracion({ ...configuracion, modoBanner: 'carrusel' }) : r;
+        if (!r.ok) return r;
+        const rv = await presentarOpcionesComo('tarjetas', `Restableció la presentación de opciones de "${edicion.nombre}"`);
+        if (!rv.ok) return rv;
+        return guardarConfiguracion({ ...configuracion, modoBanner: 'carrusel' });
       }, 'Presentación restablecida.');
     }
   };
@@ -173,7 +199,23 @@ export default function AdminConfiguracion() {
           )}
 
           {seccion === 'visibilidad' && (
-            <Fila titulo="Días visibles después del cierre" descripcion="El sitio muestra las votaciones programadas y abiertas. Las cerradas siguen visibles estos días; con 0 se ocultan al cerrar. Las categorías de ediciones cerradas no se muestran. Aplica a todas las ediciones.">
+            <Fila titulo="Días visibles después del cierre" descripcion="El sitio muestra las votaciones programadas y abiertas. Las cerradas siguen visibles estos días (con 0 se ocultan al cerrar) o siempre. Las categorías de ediciones cerradas no se muestran. Aplica a todas las ediciones.">
+              <div className="mb-3">
+                <Opciones
+                  nombre="cfg-cerradas"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'dias', etiqueta: 'Por días', icono: 'calendar-range', descripcion: 'Se ocultan pasado el número de días que elijas.' },
+                    { valor: 'siempre', etiqueta: 'Siempre visibles', icono: 'infinity', descripcion: 'Nunca se ocultan del sitio por haber cerrado.' },
+                  ]}
+                  valor={siempre ? 'siempre' : 'dias'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => v === 'siempre'
+                    ? guardarSitio({ diasVisibleCerradas: null }, 'Las votaciones cerradas se verán siempre.')
+                    : guardarSitio({ diasVisibleCerradas: Number(dias) || DIAS_VISIBLE_CERRADAS }, `Las votaciones cerradas se verán ${Number(dias) || DIAS_VISIBLE_CERRADAS} días después del cierre.`)}
+                />
+              </div>
+              {!siempre && (
               <div className="d-flex flex-wrap align-items-center gap-3">
                 <input type="range" className="form-range flex-grow-1" style={{ maxWidth: '28rem' }} min="0" max="60" value={Math.min(Number(dias) || 0, 60)}
                   onChange={(e) => setDias(e.target.value)} onMouseUp={guardarDias} onTouchEnd={guardarDias} onKeyUp={guardarDias} aria-label="Días visibles después del cierre" disabled={procesando} />
@@ -183,6 +225,7 @@ export default function AdminConfiguracion() {
                   <span className="input-group-text">días</span>
                 </div>
               </div>
+              )}
             </Fila>
           )}
 
@@ -197,6 +240,37 @@ export default function AdminConfiguracion() {
                   deshabilitado={procesando}
                   onCambio={(v) => guardarEdicion({ presentacionCategorias: v }, `Categorías: ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta}.`, `Cambió la presentación de categorías de "${edicion.nombre}"`)}
                 />
+              </Fila>
+              <Fila titulo={`Opciones de las votaciones de ${edicion.anio}`} descripcion="Cómo ve el público las opciones al votar. Elige una para aplicarla a todas las votaciones de la edición, o cámbiala en cada una más abajo.">
+                {votaciones.length === 0 ? (
+                  <p className="small mb-0">Esta edición aún no tiene votaciones.</p>
+                ) : (
+                  <>
+                    <Opciones
+                      nombre="cfg-opciones"
+                      columnas="col-sm-6 col-xl-4"
+                      opciones={PRESENTACIONES_OPCIONES}
+                      valor={presentacionComun}
+                      deshabilitado={procesando}
+                      onCambio={aplicarATodas}
+                    />
+                    {!presentacionComun && (
+                      <p className="small text-secondary-flv mt-2 mb-0"><i className="bi bi-info-circle me-1" aria-hidden="true"></i>Las votaciones usan presentaciones distintas; elige una para igualarlas todas.</p>
+                    )}
+                    <ul className="list-unstyled lista-compacta mt-3 mb-0" aria-label="Presentación de opciones por votación">
+                      {votaciones.map((v) => (
+                        <li key={v.id}>
+                          <span className="flex-grow-1 text-truncate"><strong>{v.titulo}</strong> <span className="text-secondary-flv">· {categoriaDe(v.categoriaId)}</span></span>
+                          <label className="visually-hidden" htmlFor={`cfg-op-${v.id}`}>Presentación de opciones de {v.titulo}</label>
+                          <select id={`cfg-op-${v.id}`} className="form-select form-select-sm" style={{ width: 'auto' }} value={v.presentacionOpciones || 'tarjetas'}
+                            disabled={procesando} onChange={(e) => cambiarPresentacionVotacion(v, e.target.value)}>
+                            {PRESENTACIONES_OPCIONES.map((o) => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
+                          </select>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </Fila>
               <Fila titulo="Banner del inicio" descripcion="Aplica a todo el sitio. Los banners se administran en «Banner de inicio».">
                 <Opciones
