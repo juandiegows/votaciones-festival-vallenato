@@ -4,6 +4,21 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def cargar_env(ruta):
+    """Lee app/api/.env en desarrollo local; las variables ya definidas (Docker env_file) tienen prioridad."""
+    if not ruta.is_file():
+        return
+    for linea in ruta.read_text(encoding="utf-8").splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith("#") or "=" not in linea:
+            continue
+        clave, valor = linea.split("=", 1)
+        os.environ.setdefault(clave.strip(), valor.strip().strip("'\""))
+
+
+cargar_env(BASE_DIR / ".env")
+
+
 def env_bool(name, default=False):
     return os.getenv(name, str(default)).lower() in ("1", "true", "yes", "si")
 
@@ -119,6 +134,39 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Correo transaccional (votaciones/correo). CORREO_ADAPTADOR elige el proveedor: consola (desarrollo), smtp o
+# zeptomail. Para agregar otro proveedor: crear la clase en votaciones/correo/adaptadores/ y registrarla aquí.
+CORREO_ADAPTADORES = {
+    "consola": "votaciones.correo.adaptadores.consola.AdaptadorConsola",
+    "smtp": "votaciones.correo.adaptadores.smtp.AdaptadorSMTP",
+    "zeptomail": "votaciones.correo.adaptadores.zeptomail.AdaptadorZeptoMail",
+    "memoria": "votaciones.correo.adaptadores.memoria.AdaptadorMemoria",
+}
+CORREO_ADAPTADOR = os.getenv("CORREO_ADAPTADOR", "consola")
+CORREO_REMITENTE = os.getenv("CORREO_REMITENTE", "no-responder@votaciones.juandiegows.com")
+CORREO_REMITENTE_NOMBRE = os.getenv("CORREO_REMITENTE_NOMBRE", "Votaciones Festival Vallenato")
+CORREO_RESPONDER_A = os.getenv("CORREO_RESPONDER_A", "")
+# URL pública de la web (React): base de los enlaces de los correos
+CORREO_URL_SITIO = os.getenv("CORREO_URL_SITIO", "http://localhost:5195")
+# Carpeta pública con las imágenes de los correos (app/web/public/correo); vacío = {CORREO_URL_SITIO}/correo
+CORREO_URL_RECURSOS = os.getenv("CORREO_URL_RECURSOS", "")
+DEFAULT_FROM_EMAIL = CORREO_REMITENTE
+
+# Adaptador smtp (backend SMTP de Django)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "15"))
+
+# Adaptador zeptomail (API HTTP de ZeptoMail, Zoho)
+ZEPTOMAIL_TOKEN = os.getenv("ZEPTOMAIL_TOKEN", "")
+ZEPTOMAIL_API_URL = os.getenv("ZEPTOMAIL_API_URL", "https://api.zeptomail.com/v1.1/email")
+ZEPTOMAIL_BOUNCE_ADDRESS = os.getenv("ZEPTOMAIL_BOUNCE_ADDRESS", "")
+ZEPTOMAIL_TIMEOUT = int(os.getenv("ZEPTOMAIL_TIMEOUT", "15"))
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
