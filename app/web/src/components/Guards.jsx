@@ -6,7 +6,7 @@ import PaginaError from '../pages/errores/PaginaError.jsx';
 export function RequiereSesion({ children }) {
   const { usuario } = useApp();
   const location = useLocation();
-  if (!usuario) return <Navigate to="/login" replace state={{ desde: location.pathname, aviso: 'Debes iniciar sesión para continuar.' }} />;
+  if (!usuario) return <Navigate to="/login" replace state={{ desde: location.pathname + location.search, aviso: 'Debes iniciar sesión para continuar.' }} />;
   return children;
 }
 
@@ -14,7 +14,7 @@ export function RequiereSesion({ children }) {
 export function RequiereAdmin({ children }) {
   const { usuario, esAdmin } = useApp();
   const location = useLocation();
-  if (!usuario) return <Navigate to="/login" replace state={{ desde: location.pathname, aviso: 'Inicia sesión como administrador para acceder al panel.' }} />;
+  if (!usuario) return <Navigate to="/login" replace state={{ desde: location.pathname + location.search, aviso: 'Inicia sesión como administrador para acceder al panel.' }} />;
   if (!esAdmin) {
     return <PaginaError codigo={403} mensaje="Esta sección es exclusiva para el rol administrador y tu cuenta es de votante." />;
   }
