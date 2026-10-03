@@ -66,8 +66,9 @@ ErrorDocument 504 /50x.html
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
   Header always set Cross-Origin-Opener-Policy "same-origin"
-  # API en otro dominio: agregarlo a connect-src (p. ej. https://votaciones.juandiegows.com)
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://votaciones.juandiegows.com; frame-src https://www.youtube-nocookie.com https://open.spotify.com https://w.soundcloud.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  # API en otro dominio: agregarlo a connect-src (p. ej. https://votaciones.juandiegows.com).
+  # Detrás de Cloudflare con detección de bots activa hace falta un nonce por petición (ver nginx-seguridad.conf).
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://cloudflareinsights.com https://votaciones.juandiegows.com; frame-src https://www.youtube-nocookie.com https://open.spotify.com https://w.soundcloud.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   Header always unset X-Powered-By
   Header unset ETag
 
