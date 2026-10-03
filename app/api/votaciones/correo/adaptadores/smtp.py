@@ -1,3 +1,4 @@
+from email.mime.image import MIMEImage
 from email.utils import formataddr
 
 from django.core.mail import EmailMultiAlternatives, get_connection
@@ -24,6 +25,14 @@ class AdaptadorSMTP(AdaptadorCorreo):
             connection=get_connection(fail_silently=False),
         )
         correo.attach_alternative(mensaje.html, "text/html")
+        if mensaje.imagenes:
+            # multipart/related: el HTML y sus imágenes en línea viajan juntos
+            correo.mixed_subtype = "related"
+            for imagen in mensaje.imagenes:
+                parte = MIMEImage(imagen.contenido, _subtype=imagen.tipo.split("/")[-1])
+                parte.add_header("Content-ID", f"<{imagen.cid}>")
+                parte.add_header("Content-Disposition", "inline", filename=imagen.nombre)
+                correo.attach(parte)
         try:
             correo.send()
         except Exception as error:  # smtplib, socket y ssl lanzan excepciones distintas

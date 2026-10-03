@@ -149,8 +149,6 @@ CORREO_REMITENTE_NOMBRE = os.getenv("CORREO_REMITENTE_NOMBRE", "Votaciones Festi
 CORREO_RESPONDER_A = os.getenv("CORREO_RESPONDER_A", "")
 # URL pública de la web (React): base de los enlaces de los correos
 CORREO_URL_SITIO = os.getenv("CORREO_URL_SITIO", "http://localhost:5195")
-# Carpeta pública con las imágenes de los correos (app/web/public/correo); vacío = {CORREO_URL_SITIO}/correo
-CORREO_URL_RECURSOS = os.getenv("CORREO_URL_RECURSOS", "")
 DEFAULT_FROM_EMAIL = CORREO_REMITENTE
 # Entregar los correos del registro y del voto en un hilo aparte para no demorar la respuesta de la API
 CORREO_EN_SEGUNDO_PLANO = env_bool("CORREO_EN_SEGUNDO_PLANO", True)

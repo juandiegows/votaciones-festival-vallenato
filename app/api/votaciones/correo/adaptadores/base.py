@@ -13,6 +13,17 @@ class Destinatario:
 
 
 @dataclass
+class ImagenEnLinea:
+    """Imagen incrustada en el correo (se cita en el HTML como src="cid:<cid>"); se ve aunque el cliente
+    bloquee las imágenes externas."""
+
+    cid: str
+    contenido: bytes
+    tipo: str = "image/png"
+    nombre: str = "imagen.png"
+
+
+@dataclass
 class Mensaje:
     """Correo ya renderizado, independiente del proveedor que lo envía."""
 
@@ -23,6 +34,7 @@ class Mensaje:
     remitente: Destinatario
     responder_a: str = ""
     etiquetas: dict = field(default_factory=dict)
+    imagenes: list[ImagenEnLinea] = field(default_factory=list)
 
 
 class AdaptadorCorreo(ABC):

@@ -66,6 +66,16 @@ class PlantillasCorreoTest(BaseAPITest):
         self.assertIn("30 minutos", html)
         self.assertIn("https://votaciones.test/clave/nueva?t=y", mensaje.body)
 
+    def test_logo_incrustado(self):
+        correo.enviar_bienvenida(self.votante)
+        mensaje = mail.outbox[0]
+        self.assertIn('src="cid:logo-flv"', mensaje.alternatives[0][0])
+        crudo = mensaje.message()
+        self.assertEqual(crudo.get_content_subtype(), "related")
+        imagen = [p for p in crudo.walk() if p.get_content_type() == "image/png"][0]
+        self.assertEqual(imagen["Content-ID"], "<logo-flv>")
+        self.assertTrue(imagen.get_payload(decode=True).startswith(b"\x89PNG"))
+
     def test_escapa_datos_del_usuario(self):
         self.votante.nombres = "<script>x</script>"
         correo.enviar_bienvenida(self.votante)
@@ -98,6 +108,9 @@ class AdaptadoresCorreoTest(BaseAPITest):
         self.assertEqual(cuerpo["to"][0]["email_address"], {"address": "votante@festival.test", "name": "Valentina Prueba"})
         self.assertIn("¡Te damos la bienvenida, Valentina!", cuerpo["htmlbody"])
         self.assertIn("Valentina", cuerpo["textbody"])
+        self.assertEqual(cuerpo["inline_images"][0]["cid"], "logo-flv")
+        self.assertEqual(cuerpo["inline_images"][0]["mime_type"], "image/png")
+        self.assertIn('src="cid:logo-flv"', cuerpo["htmlbody"])
 
     @override_settings(**ZEPTO)
     def test_fallo_del_proveedor(self):

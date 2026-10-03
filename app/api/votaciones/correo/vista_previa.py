@@ -9,7 +9,6 @@ from datetime import date
 
 from django.http import Http404, HttpResponse
 from django.templatetags.static import static
-from django.test.utils import override_settings
 from django.utils import timezone
 from django.utils.html import escape
 
@@ -55,11 +54,12 @@ def vista_previa(request, plantilla=None):
     if plantilla not in disponibles:
         raise Http404("Plantilla no encontrada")
     memoria = AdaptadorMemoria()
-    # El logo se toma de los estáticos de la API: la vista previa funciona sin levantar la web
-    recursos = request.build_absolute_uri(static("correo/")).rstrip("/")
-    with override_settings(CORREO_URL_RECURSOS=recursos):
-        disponibles[plantilla][1](adaptador=memoria, silencioso=False)
+    disponibles[plantilla][1](adaptador=memoria, silencioso=False)
     mensaje = memoria.mensajes[0]
+    # El navegador no entiende cid: (imagen incrustada); en la vista previa el logo sale de los estáticos de la API
+    mensaje.html = mensaje.html.replace(
+        f"cid:{servicio.CID_LOGO}", request.build_absolute_uri(static("correo/acordeon.png"))
+    )
     if request.GET.get("formato") == "txt":
         return HttpResponse(f"<!doctype html><meta charset=utf-8><pre>Asunto: {escape(mensaje.asunto)}\n\n"
                             f"{escape(mensaje.texto)}</pre>")

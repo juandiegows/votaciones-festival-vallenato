@@ -1,3 +1,4 @@
+import base64
 import json
 import urllib.error
 import urllib.request
@@ -33,6 +34,11 @@ class AdaptadorZeptoMail(AdaptadorCorreo):
             "htmlbody": mensaje.html,
             "textbody": mensaje.texto,
         }
+        if mensaje.imagenes:
+            datos["inline_images"] = [
+                {"cid": i.cid, "mime_type": i.tipo, "name": i.nombre, "content": base64.b64encode(i.contenido).decode()}
+                for i in mensaje.imagenes
+            ]
         if mensaje.responder_a:
             datos["reply_to"] = [{"address": mensaje.responder_a}]
         if settings.ZEPTOMAIL_BOUNCE_ADDRESS:
