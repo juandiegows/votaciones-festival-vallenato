@@ -9,6 +9,7 @@ import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFechaHora } from '../../utils/helpers.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const PESTANAS = [
   { id: 'participacion', label: 'Quién votó', icono: 'people' },
@@ -183,30 +184,19 @@ function Acciones() {
         </ul>
       )}
       {vista === 'tabla' && (
-        <div className="table-responsive card-flv">
-          <table className="table table-flv align-middle mb-0">
-            <caption className="visually-hidden">Registro de auditoría, página {pagina}</caption>
-            <thead>
-              <tr>
-                <th scope="col">Fecha y hora</th>
-                <th scope="col">Usuario</th>
-                <th scope="col">Acción</th>
-              </tr>
-            </thead>
-            <tbody aria-busy={cargando}>
-              {registros.map((a) => (
-                <tr key={a.id}>
-                  <td className="small text-nowrap">{formatearFechaHora(a.fechaHora)}</td>
-                  <td className="small text-break">{a.usuario}</td>
-                  <td className="small">{a.accion}</td>
-                </tr>
-              ))}
-              {!cargando && registros.length === 0 && (
-                <tr><td colSpan="3" className="text-center py-4">No hay acciones registradas con ese filtro.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TablaResponsiva
+          titulo={`Registro de auditoría, página ${pagina}`}
+          filas={registros}
+          clave={(a) => a.id}
+          nombreFila={(a) => a.accion}
+          ocupado={cargando}
+          vacio={!cargando && 'No hay acciones registradas con ese filtro.'}
+          columnas={[
+            { id: 'fecha', titulo: 'Fecha y hora', celda: (a) => formatearFechaHora(a.fechaHora), claseTd: 'small text-nowrap', prioridad: 1 },
+            { id: 'usuario', titulo: 'Usuario', celda: (a) => a.usuario, claseTd: 'small text-break', prioridad: 2 },
+            { id: 'accion', titulo: 'Acción', celda: (a) => a.accion, claseTd: 'small', minimo: '11rem', prioridad: 0 },
+          ]}
+        />
       )}
       <nav className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Paginación de la auditoría">
         <span className="small text-secondary-flv" aria-live="polite">

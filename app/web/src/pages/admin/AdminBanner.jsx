@@ -4,6 +4,7 @@ import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import { validarEnlaceMultimedia } from '../../utils/helpers.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAXIMO = 3 * 1024 * 1024;
@@ -106,41 +107,48 @@ export default function AdminBanner() {
           ))}
         </div>
       </fieldset>
-      <div className="table-responsive card-flv">
-        <table className="table table-flv align-middle mb-0">
-          <caption className="visually-hidden">Banners del inicio</caption>
-          <thead>
-            <tr><th scope="col">Imagen</th><th scope="col">Texto</th><th scope="col">Estado</th><th scope="col" className="text-end">Acciones</th></tr>
-          </thead>
-          <tbody>
-            {lista.map((b, i) => (
-              <tr key={b.id}>
-                <td><img src={b.imagen} alt={b.textoAlternativo} className="banner-miniatura" /></td>
-                <td>
-                  {modo === 'fijo' && b.activo && b.id === lista.find((x) => x.activo)?.id && <span className="badge text-bg-dark me-2">En el inicio</span>}
-                  <strong>{b.titulo || <span className="fw-normal fst-italic">Solo imagen</span>}</strong>
-                  <div className="small text-secondary-flv">{b.subtitulo}</div>
-                  {b.enlaceBoton && <div className="small"><code>{b.enlaceBoton}</code></div>}
-                </td>
-                <td>
-                  <div className="form-check form-switch mb-0">
-                    <input className="form-check-input" type="checkbox" role="switch" id={`banner-${b.id}`} checked={b.activo} disabled={procesando}
-                      onChange={() => ejecutar(() => guardarEntidad('banners', { id: b.id, activo: !b.activo }, `${b.activo ? 'Desactivó' : 'Activó'} el banner "${nombreBanner(b)}"`), `Banner «${nombreBanner(b)}» ${b.activo ? 'desactivado' : 'activado'}.`)} />
-                    <label className="form-check-label small" htmlFor={`banner-${b.id}`}>{b.activo ? 'Activo' : 'Inactivo'}</label>
-                  </div>
-                </td>
-                <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${nombreBanner(b)}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${nombreBanner(b)}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(b)} aria-label={`Editar ${nombreBanner(b)}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(b)} aria-label={`Eliminar ${nombreBanner(b)}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
-                </td>
-              </tr>
-            ))}
-            {lista.length === 0 && <tr><td colSpan="4" className="text-center py-4">No hay banners: el inicio muestra la ilustración predeterminada.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <TablaResponsiva
+        titulo="Banners del inicio"
+        filas={lista}
+        clave={(b) => b.id}
+        nombreFila={nombreBanner}
+        vacio="No hay banners: el inicio muestra la ilustración predeterminada."
+        columnas={[
+          { id: 'imagen', titulo: 'Imagen', prioridad: 3, celda: (b) => <img src={b.imagen} alt={b.textoAlternativo} className="banner-miniatura" /> },
+          {
+            id: 'texto', titulo: 'Texto', minimo: '10rem', prioridad: 0,
+            celda: (b) => (
+              <>
+                {modo === 'fijo' && b.activo && b.id === lista.find((x) => x.activo)?.id && <span className="badge text-bg-dark me-2">En el inicio</span>}
+                <strong>{b.titulo || <span className="fw-normal fst-italic">Solo imagen</span>}</strong>
+                <div className="small text-secondary-flv">{b.subtitulo}</div>
+                {b.enlaceBoton && <div className="small"><code>{b.enlaceBoton}</code></div>}
+              </>
+            ),
+          },
+          {
+            id: 'estado', titulo: 'Estado', prioridad: 2,
+            celda: (b) => (
+              <div className="form-check form-switch mb-0">
+                <input className="form-check-input" type="checkbox" role="switch" id={`banner-${b.id}`} checked={b.activo} disabled={procesando}
+                  onChange={() => ejecutar(() => guardarEntidad('banners', { id: b.id, activo: !b.activo }, `${b.activo ? 'Desactivó' : 'Activó'} el banner "${nombreBanner(b)}"`), `Banner «${nombreBanner(b)}» ${b.activo ? 'desactivado' : 'activado'}.`)} />
+                <label className="form-check-label small" htmlFor={`banner-${b.id}`}>{b.activo ? 'Activo' : 'Inactivo'}</label>
+              </div>
+            ),
+          },
+          {
+            id: 'acciones', titulo: 'Acciones', claseTh: 'text-end', claseTd: 'text-end text-nowrap', prioridad: 1,
+            celda: (b, i) => (
+              <>
+                <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${nombreBanner(b)}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${nombreBanner(b)}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(b)} aria-label={`Editar ${nombreBanner(b)}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(b)} aria-label={`Eliminar ${nombreBanner(b)}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
+              </>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         abierto={!!form}

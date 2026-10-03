@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import { useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFecha } from '../../utils/helpers.js';
+import TablaResponsiva from '../TablaResponsiva.jsx';
 
 /**
  * Quién votó (nunca por qué opción). Mientras la votación está abierta la lista solo aparece en
@@ -43,24 +44,20 @@ export default function ParticipacionVotacion({ votacionId, intervalo = 0 }) {
         <>
           <label htmlFor={`buscar-votante-${votacionId}`} className="visually-hidden">Buscar votante</label>
           <input id={`buscar-votante-${votacionId}`} type="search" className="form-control form-control-sm mb-2" placeholder="Buscar por nombre o correo" value={filtro} onChange={(e) => setFiltro(e.target.value)} />
-          <div className="table-responsive participacion-tabla">
-            <table className="table table-sm table-flv align-middle mb-0">
-              <caption className="visually-hidden">Personas que votaron</caption>
-              <thead>
-                <tr><th scope="col">Votante</th><th scope="col">Correo</th><th scope="col">Fecha</th></tr>
-              </thead>
-              <tbody>
-                {lista.map((v) => (
-                  <tr key={v.id}>
-                    <td className="small">{v.nombre}</td>
-                    <td className="small text-break">{v.correo}</td>
-                    <td className="small text-nowrap">{formatearFecha(v.fecha)}</td>
-                  </tr>
-                ))}
-                {lista.length === 0 && <tr><td colSpan="3" className="text-center small py-3">Sin coincidencias.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <TablaResponsiva
+            titulo="Personas que votaron"
+            claseContenedor="participacion-tabla"
+            claseTabla="table-sm"
+            filas={lista}
+            clave={(v) => v.id}
+            nombreFila={(v) => v.nombre}
+            vacio="Sin coincidencias."
+            columnas={[
+              { id: 'votante', titulo: 'Votante', celda: (v) => v.nombre, claseTd: 'small', minimo: '9rem', prioridad: 0 },
+              { id: 'correo', titulo: 'Correo', celda: (v) => v.correo, claseTd: 'small text-break', prioridad: 2 },
+              { id: 'fecha', titulo: 'Fecha', celda: (v) => formatearFecha(v.fecha), claseTd: 'small text-nowrap', prioridad: 1 },
+            ]}
+          />
         </>
       )}
     </div>

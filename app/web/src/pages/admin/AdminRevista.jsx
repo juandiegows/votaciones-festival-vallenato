@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import { formatearFecha } from '../../utils/helpers.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const MAXIMO_MB = 50;
 const esPdf = (archivo) => archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf');
@@ -74,43 +75,50 @@ export default function AdminRevista() {
           <button type="button" className="btn-close" aria-label="Cerrar" onClick={() => setMensaje(null)}></button>
         </div>
       )}
-      <div className="table-responsive card-flv">
-        <table className="table table-flv align-middle mb-0">
-          <caption className="visually-hidden">Revistas institucionales</caption>
-          <thead>
-            <tr><th scope="col">Revista</th><th scope="col">Publicada</th><th scope="col">Estado</th><th scope="col" className="text-end">Acciones</th></tr>
-          </thead>
-          <tbody>
-            {lista.map((r, i) => (
-              <tr key={r.id}>
-                <td>
-                  {r.id === enInicio?.id && <span className="badge text-bg-dark me-2">En el inicio</span>}
-                  <strong>{r.titulo}</strong>
-                  {r.descripcion && <div className="small text-secondary-flv">{r.descripcion}</div>}
-                  <a className="small" href={r.archivo} target="_blank" rel="noopener noreferrer">
-                    <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Ver PDF
-                  </a>
-                </td>
-                <td className="small text-nowrap">{r.publicadaEn ? formatearFecha(r.publicadaEn) : '—'}</td>
-                <td>
-                  <div className="form-check form-switch mb-0">
-                    <input className="form-check-input" type="checkbox" role="switch" id={`revista-${r.id}`} checked={r.activa} disabled={procesando}
-                      onChange={() => ejecutar(() => guardarEntidad('revistas', { id: r.id, activa: !r.activa }, `${r.activa ? 'Desactivó' : 'Activó'} la revista "${r.titulo}"`), `Revista «${r.titulo}» ${r.activa ? 'desactivada' : 'activada'}.`)} />
-                    <label className="form-check-label small" htmlFor={`revista-${r.id}`}>{r.activa ? 'Activa' : 'Inactiva'}</label>
-                  </div>
-                </td>
-                <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${r.titulo}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${r.titulo}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(r)} aria-label={`Editar ${r.titulo}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(r)} aria-label={`Eliminar ${r.titulo}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
-                </td>
-              </tr>
-            ))}
-            {lista.length === 0 && <tr><td colSpan="4" className="text-center py-4">No hay revistas: el inicio no muestra la sección de la revista.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <TablaResponsiva
+        titulo="Revistas institucionales"
+        filas={lista}
+        clave={(r) => r.id}
+        nombreFila={(r) => r.titulo}
+        vacio="No hay revistas: el inicio no muestra la sección de la revista."
+        columnas={[
+          {
+            id: 'revista', titulo: 'Revista', minimo: '11rem', prioridad: 0,
+            celda: (r) => (
+              <>
+                {r.id === enInicio?.id && <span className="badge text-bg-dark me-2">En el inicio</span>}
+                <strong>{r.titulo}</strong>
+                {r.descripcion && <div className="small text-secondary-flv">{r.descripcion}</div>}
+                <a className="small" href={r.archivo} target="_blank" rel="noopener noreferrer">
+                  <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Ver PDF
+                </a>
+              </>
+            ),
+          },
+          { id: 'publicada', titulo: 'Publicada', claseTd: 'small text-nowrap', prioridad: 3, celda: (r) => (r.publicadaEn ? formatearFecha(r.publicadaEn) : '—') },
+          {
+            id: 'estado', titulo: 'Estado', prioridad: 2,
+            celda: (r) => (
+              <div className="form-check form-switch mb-0">
+                <input className="form-check-input" type="checkbox" role="switch" id={`revista-${r.id}`} checked={r.activa} disabled={procesando}
+                  onChange={() => ejecutar(() => guardarEntidad('revistas', { id: r.id, activa: !r.activa }, `${r.activa ? 'Desactivó' : 'Activó'} la revista "${r.titulo}"`), `Revista «${r.titulo}» ${r.activa ? 'desactivada' : 'activada'}.`)} />
+                <label className="form-check-label small" htmlFor={`revista-${r.id}`}>{r.activa ? 'Activa' : 'Inactiva'}</label>
+              </div>
+            ),
+          },
+          {
+            id: 'acciones', titulo: 'Acciones', claseTh: 'text-end', claseTd: 'text-end text-nowrap', prioridad: 1,
+            celda: (r, i) => (
+              <>
+                <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${r.titulo}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${r.titulo}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(r)} aria-label={`Editar ${r.titulo}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
+                <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(r)} aria-label={`Eliminar ${r.titulo}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
+              </>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         abierto={!!form}

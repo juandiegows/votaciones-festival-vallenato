@@ -1,5 +1,6 @@
 import IconoEntidad from '../IconoEntidad.jsx';
 import EstadoBadge from '../EstadoBadge.jsx';
+import TablaResponsiva from '../TablaResponsiva.jsx';
 
 const n = (x) => x.toLocaleString('es-CO');
 
@@ -49,31 +50,19 @@ export default function ResumenResultados({ resumen, onElegir, vista = 'tarjetas
 
   if (vista === 'tabla') {
     return (
-      <div className="table-responsive card-flv">
-        <table className="table table-flv align-middle mb-0">
-          <caption className="visually-hidden">Resumen de resultados por votación</caption>
-          <thead>
-            <tr>
-              <th scope="col">Categoría</th>
-              <th scope="col">Votación</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Va ganando</th>
-              <th scope="col" className="text-end">Votos</th>
-            </tr>
-          </thead>
-          <tbody>
-            {todas.map((v) => (
-              <tr key={v.id}>
-                <td className="small">{v.categoria.nombre}</td>
-                <td><BotonVotacion v={v} onElegir={onElegir} /></td>
-                <td>{estado(v)}</td>
-                <td className="small">{textoLider(v)}</td>
-                <td className="text-end fw-bold">{n(v.totalVotos)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TablaResponsiva
+        titulo="Resumen de resultados por votación"
+        filas={todas}
+        clave={(v) => v.id}
+        nombreFila={(v) => v.titulo}
+        columnas={[
+          { id: 'categoria', titulo: 'Categoría', celda: (v) => v.categoria.nombre, claseTd: 'small', prioridad: 4 },
+          { id: 'votacion', titulo: 'Votación', celda: (v) => <BotonVotacion v={v} onElegir={onElegir} />, minimo: '10rem', prioridad: 0 },
+          { id: 'estado', titulo: 'Estado', celda: estado, prioridad: 2 },
+          { id: 'lider', titulo: 'Va ganando', celda: textoLider, claseTd: 'small', prioridad: 3 },
+          { id: 'votos', titulo: 'Votos', celda: (v) => n(v.totalVotos), claseTh: 'text-end', claseTd: 'text-end fw-bold', prioridad: 1 },
+        ]}
+      />
     );
   }
 
