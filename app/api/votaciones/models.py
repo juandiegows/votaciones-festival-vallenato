@@ -273,7 +273,8 @@ class Voto(models.Model):
 class BannerInicio(models.Model):
     # El inicio solo muestra los banners de la edición activa
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="banners")
-    titulo = models.CharField(max_length=120)
+    # Título y subtítulo opcionales: sin textos la imagen se muestra completa, sin capa oscura encima
+    titulo = models.CharField(max_length=120, blank=True)
     subtitulo = models.CharField(max_length=250, blank=True)
     imagen = models.ImageField(upload_to="banners/")
     texto_alternativo = models.CharField(max_length=200, help_text="Descripción de la imagen para lectores de pantalla.")
@@ -289,11 +290,15 @@ class BannerInicio(models.Model):
         verbose_name_plural = "banners de inicio"
 
     def __str__(self):
-        return self.titulo
+        return self.titulo or self.texto_alternativo
 
 
 class ConfiguracionSitio(models.Model):
-    """Datos de contacto del pie de página (un único registro, pk=1)."""
+    """Datos de contacto del pie de página y modo del banner del inicio (un único registro, pk=1)."""
+
+    class ModoBanner(models.TextChoices):
+        FIJO = "fijo", "Banner fijo"
+        CARRUSEL = "carrusel", "Carrusel"
 
     nombre_organizacion = models.CharField(max_length=150, default="Fundación Festival de la Leyenda Vallenata")
     telefono = models.CharField(max_length=40, default="(+57) 315-746 3143")
@@ -303,6 +308,8 @@ class ConfiguracionSitio(models.Model):
         blank=True,
         default="Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.",
     )
+    # Fijo: solo el primer banner activo; carrusel: todos los activos rotando
+    modo_banner = models.CharField(max_length=10, choices=ModoBanner.choices, default=ModoBanner.CARRUSEL)
 
     class Meta:
         db_table = "configuracion_sitio"

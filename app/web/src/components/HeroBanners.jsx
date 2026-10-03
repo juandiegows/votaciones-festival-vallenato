@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 
 const reducirMovimiento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-// Carrusel del inicio (clases de Bootstrap, controlado por React). Rota cada 7 s salvo que el usuario
-// prefiera menos movimiento, lo pause o esté interactuando con él.
+// Banner del inicio a todo lo ancho (clases de Bootstrap, controlado por React). Con un solo banner es fijo;
+// con varios rota cada 7 s salvo que el usuario prefiera menos movimiento, lo pause o esté interactuando con él.
+// La imagen se ve completa: la capa oscura con textos solo aparece si el banner tiene título, subtítulo o botón.
 export default function HeroBanners({ banners, titulo }) {
   const [actual, setActual] = useState(0);
   const [pausado, setPausado] = useState(reducirMovimiento);
@@ -35,9 +36,10 @@ export default function HeroBanners({ banners, titulo }) {
         {banners.map((b, i) => (
           <div key={b.id} className={`carousel-item ${i === indice ? 'active' : ''}`} role="group" aria-roledescription="diapositiva" aria-label={`${i + 1} de ${total}`}>
             <img src={b.imagen} alt={b.textoAlternativo} className="hero-banner-img" />
+            {(b.titulo || b.subtitulo || (b.textoBoton && b.enlaceBoton)) && (
             <div className="hero-banner-texto">
               <div className="container">
-                <p className="h1 mb-2">{b.titulo}</p>
+                {b.titulo && <p className="h1 mb-2">{b.titulo}</p>}
                 {b.subtitulo && <p className="lead mb-3">{b.subtitulo}</p>}
                 {b.textoBoton && b.enlaceBoton && (b.enlaceBoton.startsWith('/') ? (
                   <Link to={b.enlaceBoton} className="btn btn-primary btn-lg">{b.textoBoton}</Link>
@@ -46,6 +48,7 @@ export default function HeroBanners({ banners, titulo }) {
                 ))}
               </div>
             </div>
+            )}
           </div>
         ))}
       </div>

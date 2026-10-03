@@ -259,12 +259,15 @@ a:hover { color: var(--flv-rojo-hover); }
 .redes-flv a:hover, .redes-flv a:focus-visible { background-color: var(--flv-dorado); color: var(--flv-negro); }
 
 /* Carrusel del inicio (banners editables) */
-.hero-banners { position: relative; background: var(--flv-negro); }
-.hero-banner-img { display: block; width: 100%; height: clamp(280px, 40vw, 480px); object-fit: cover; }
+/* Imagen panorámica a todo lo ancho (proporción 1920 × 600), como el encabezado del sitio del Festival */
+.hero-banners { position: relative; background: var(--flv-negro); border-bottom: 1px solid rgba(215, 172, 112, .35); }
+.hero-banner-img { display: block; width: 100%; aspect-ratio: 16 / 5; min-height: 240px; max-height: 640px; object-fit: cover; object-position: center top; }
 .hero-banner-texto {
-  position: absolute; inset: 0; display: flex; align-items: center; color: #fff;
-  background: linear-gradient(90deg, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .55) 55%, rgba(0, 0, 0, .15) 100%);
+  position: absolute; inset: 0; display: flex; align-items: flex-end; padding-bottom: 3.5rem; color: #fff;
+  background: linear-gradient(0deg, rgba(0, 0, 0, .8) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, 0) 75%);
 }
+.hero-banners .carousel-indicators [type="button"] { width: 1.6rem; height: 4px; background-color: var(--flv-dorado); }
+.hero-banners .carousel-control-prev-icon, .hero-banners .carousel-control-next-icon { filter: drop-shadow(0 0 4px rgba(0, 0, 0, .8)); }
 .hero-banner-texto .container { padding-left: 3.5rem; padding-right: 3.5rem; max-width: 1140px; }
 .hero-banner-texto .h1 { font-family: var(--flv-fuente-titulos); font-weight: 800; max-width: 40rem; }
 .hero-banner-texto .lead { max-width: 36rem; }

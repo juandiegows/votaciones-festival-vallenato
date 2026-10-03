@@ -114,6 +114,18 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertTrue(RegistroAuditoria.objects.filter(accion="actualizar", entidad="configuracion").exists())
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"correo": "no-es-correo"}, format="json").status_code, 400)
 
+    def test_modo_del_banner_fijo_o_carrusel(self):
+        self.assertEqual(self.client.get("/api/sitio/").data["configuracion"]["modo_banner"], "carrusel")
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"modo_banner": "fijo"}, format="json").status_code, 200)
+        self.assertEqual(ConfiguracionSitio.obtener().modo_banner, "fijo")
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"modo_banner": "girando"}, format="json").status_code, 400)
+
+    def test_banner_sin_titulo_solo_imagen(self):
+        respuesta = self.client.post("/api/admin/banners/", {"edicion": self.edicion.pk, "texto_alternativo": "Cartel del Festival", "imagen": imagen()},
+                                     format="multipart")
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(respuesta.data["titulo"], "")
+
     def test_redes_crud_y_validacion(self):
         respuesta = self.client.post("/api/admin/redes/", {"nombre": "TikTok", "url": "https://www.tiktok.com/@x", "icono": "tiktok"}, format="json")
         self.assertEqual(respuesta.status_code, 201)

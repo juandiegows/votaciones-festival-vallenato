@@ -330,7 +330,7 @@ class BannerInicioSerializer(serializers.ModelSerializer):
 class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
-        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie"]
+        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner"]
 
 
 class RedSocialSerializer(serializers.ModelSerializer):

@@ -17,9 +17,11 @@ const PASOS = [
 
 export default function Inicio() {
   const datos = useApp();
-  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners } = datos;
-  // Solo los banners de la edición activa (los que no tienen edición se consideran de la activa)
-  const bannersActivos = banners.filter((b) => b.activo && (b.edicionId ?? edicionActiva?.id) === edicionActiva?.id).sort((a, b) => a.orden - b.orden);
+  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners, configuracion } = datos;
+  // Solo los banners de la edición activa (los que no tienen edición se consideran de la activa);
+  // en modo «fijo» se muestra únicamente el primero
+  const bannersEdicion = banners.filter((b) => b.activo && (b.edicionId ?? edicionActiva?.id) === edicionActiva?.id).sort((a, b) => a.orden - b.orden);
+  const bannersActivos = configuracion?.modoBanner === 'fijo' ? bannersEdicion.slice(0, 1) : bannersEdicion;
   const rutas = useRutas();
   if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);

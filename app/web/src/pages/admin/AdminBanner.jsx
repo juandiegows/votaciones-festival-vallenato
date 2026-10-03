@@ -7,10 +7,17 @@ import { validarEnlaceMultimedia } from '../../utils/helpers.js';
 
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp'];
 const MAXIMO = 3 * 1024 * 1024;
+// Los banners sin título se identifican por su texto alternativo
+const nombreBanner = (b) => b.titulo || b.textoAlternativo;
+const MODOS = [
+  ['fijo', 'Banner fijo', 'Solo se muestra el primer banner activo de la lista.'],
+  ['carrusel', 'Carrusel', 'Los banners activos rotan cada 7 segundos.'],
+];
 
 // Banners del inicio: imagen (JPG, PNG o WebP, máx. 3 MB), textos, botón, orden y estado
 export default function AdminBanner() {
-  const { banners, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { banners, configuracion, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const modo = configuracion?.modoBanner || 'carrusel';
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
@@ -46,7 +53,7 @@ export default function AdminBanner() {
   const guardar = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (form.titulo.trim().length < 3) errs.titulo = 'Escribe un título de al menos 3 caracteres.';
+    if (form.titulo.trim() && form.titulo.trim().length < 3) errs.titulo = 'Escribe un título de al menos 3 caracteres o déjalo vacío.';
     if (!form.textoAlternativo.trim()) errs.textoAlternativo = 'Describe la imagen para quienes usan lectores de pantalla.';
     if (!form.id && !form.archivo) errs.archivo = 'Selecciona una imagen.';
     if (form.archivo && !TIPOS.includes(form.archivo.type)) errs.archivo = 'Formato no permitido: usa una imagen JPG, PNG o WebP.';
@@ -56,7 +63,8 @@ export default function AdminBanner() {
     if (Object.keys(errs).length) return;
     const datos = { ...form, enlaceBoton: form.enlaceBoton.trim(), orden: Number(form.orden) };
     if (!datos.archivo) delete datos.archivo;
-    const r = await ejecutar(() => guardarEntidad('banners', datos, `${form.id ? 'Actualizó' : 'Creó'} el banner "${form.titulo}"`), `Banner «${form.titulo}» guardado.`);
+    const nombre = form.titulo.trim() || form.textoAlternativo.trim();
+    const r = await ejecutar(() => guardarEntidad('banners', datos, `${form.id ? 'Actualizó' : 'Creó'} el banner "${nombre}"`), `Banner «${nombre}» guardado.`);
     if (r.ok) setForm(null);
     else setErrores(r.errores || {});
   };
@@ -69,9 +77,15 @@ export default function AdminBanner() {
     ejecutar(() => reemplazarColeccion('banners', todos, 'Reordenó los banners'), 'Orden actualizado.');
   };
 
+  const cambiarModo = (nuevo) => {
+    if (nuevo === modo) return;
+    const etiqueta = MODOS.find(([k]) => k === nuevo)[1];
+    ejecutar(() => guardarConfiguracion({ ...configuracion, modoBanner: nuevo }), `El inicio ahora muestra: ${etiqueta.toLowerCase()}.`);
+  };
+
   return (
     <>
-      <PageHeader titulo="Banner de inicio" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Imágenes y mensajes del carrusel de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.`}>
+      <PageHeader titulo="Banner de inicio" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Imágenes de la cabecera de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.`}>
         <button className="btn btn-primary" onClick={() => abrir({})}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</button>
       </PageHeader>
       {mensaje && (
@@ -80,6 +94,18 @@ export default function AdminBanner() {
           <button type="button" className="btn-close" aria-label="Cerrar mensaje" onClick={() => setMensaje(null)}></button>
         </div>
       )}
+      <fieldset className="card-flv p-3 mb-3" disabled={procesando}>
+        <legend className="h6 float-none w-auto mb-2">¿Cómo se muestra el banner en el inicio?</legend>
+        <div className="d-flex flex-wrap gap-4">
+          {MODOS.map(([valor, etiqueta, ayuda]) => (
+            <div className="form-check" key={valor}>
+              <input className="form-check-input" type="radio" name="modo-banner" id={`modo-${valor}`} checked={modo === valor} onChange={() => cambiarModo(valor)} aria-describedby={`modo-${valor}-ayuda`} />
+              <label className="form-check-label fw-semibold" htmlFor={`modo-${valor}`}>{etiqueta}</label>
+              <div id={`modo-${valor}-ayuda`} className="small text-secondary-flv">{ayuda}</div>
+            </div>
+          ))}
+        </div>
+      </fieldset>
       <div className="table-responsive card-flv">
         <table className="table table-flv align-middle mb-0">
           <caption className="visually-hidden">Banners del inicio</caption>
@@ -91,22 +117,23 @@ export default function AdminBanner() {
               <tr key={b.id}>
                 <td><img src={b.imagen} alt={b.textoAlternativo} className="banner-miniatura" /></td>
                 <td>
-                  <strong>{b.titulo}</strong>
+                  {modo === 'fijo' && b.activo && b.id === lista.find((x) => x.activo)?.id && <span className="badge text-bg-dark me-2">En el inicio</span>}
+                  <strong>{b.titulo || <span className="fw-normal fst-italic">Solo imagen</span>}</strong>
                   <div className="small text-secondary-flv">{b.subtitulo}</div>
                   {b.enlaceBoton && <div className="small"><code>{b.enlaceBoton}</code></div>}
                 </td>
                 <td>
                   <div className="form-check form-switch mb-0">
                     <input className="form-check-input" type="checkbox" role="switch" id={`banner-${b.id}`} checked={b.activo} disabled={procesando}
-                      onChange={() => ejecutar(() => guardarEntidad('banners', { id: b.id, activo: !b.activo }, `${b.activo ? 'Desactivó' : 'Activó'} el banner "${b.titulo}"`), `Banner «${b.titulo}» ${b.activo ? 'desactivado' : 'activado'}.`)} />
+                      onChange={() => ejecutar(() => guardarEntidad('banners', { id: b.id, activo: !b.activo }, `${b.activo ? 'Desactivó' : 'Activó'} el banner "${nombreBanner(b)}"`), `Banner «${nombreBanner(b)}» ${b.activo ? 'desactivado' : 'activado'}.`)} />
                     <label className="form-check-label small" htmlFor={`banner-${b.id}`}>{b.activo ? 'Activo' : 'Inactivo'}</label>
                   </div>
                 </td>
                 <td className="text-end text-nowrap">
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${b.titulo}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${b.titulo}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(b)} aria-label={`Editar ${b.titulo}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(b)} aria-label={`Eliminar ${b.titulo}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${nombreBanner(b)}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-secondary me-1" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${nombreBanner(b)}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrir(b)} aria-label={`Editar ${nombreBanner(b)}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
+                  <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(b)} aria-label={`Eliminar ${nombreBanner(b)}`}><i className="bi bi-trash" aria-hidden="true"></i></button>
                 </td>
               </tr>
             ))}
@@ -130,13 +157,13 @@ export default function AdminBanner() {
         {form && (
           <form id="form-banner" noValidate onSubmit={guardar}>
             <div className="mb-3">
-              <label className="form-label" htmlFor="b-imagen">Imagen <span className="fw-normal text-secondary-flv">(JPG, PNG o WebP, máximo 3 MB; recomendado 1600 × 600 px)</span></label>
+              <label className="form-label" htmlFor="b-imagen">Imagen <span className="fw-normal text-secondary-flv">(JPG, PNG o WebP, máximo 3 MB; recomendado 1920 × 600 px)</span></label>
               <input id="b-imagen" type="file" accept="image/jpeg,image/png,image/webp" className={`form-control ${errores.archivo || errores.imagen ? 'is-invalid' : ''}`} onChange={elegirArchivo} />
               {(errores.archivo || errores.imagen) && <div className="invalid-feedback">{errores.archivo || errores.imagen}</div>}
               {vistaPrevia && <img src={vistaPrevia} alt="Vista previa del banner" className="banner-vista-previa mt-2" />}
             </div>
             {[
-              ['titulo', 'Título', 'b-titulo'],
+              ['titulo', 'Título (opcional: déjalo vacío si la imagen ya trae el texto)', 'b-titulo'],
               ['subtitulo', 'Subtítulo (opcional)', 'b-subtitulo'],
               ['textoAlternativo', 'Texto alternativo de la imagen', 'b-alt'],
               ['textoBoton', 'Texto del botón (opcional)', 'b-boton'],
@@ -164,13 +191,13 @@ export default function AdminBanner() {
           <>
             <button className="btn btn-outline-secondary" onClick={() => setAEliminar(null)}>Cancelar</button>
             <button className="btn btn-peligro" disabled={procesando} onClick={async () => {
-              await ejecutar(() => eliminarEntidad('banners', aEliminar.id, `Eliminó el banner "${aEliminar.titulo}"`), `Banner «${aEliminar.titulo}» eliminado.`);
+              await ejecutar(() => eliminarEntidad('banners', aEliminar.id, `Eliminó el banner "${nombreBanner(aEliminar)}"`), `Banner «${nombreBanner(aEliminar)}» eliminado.`);
               setAEliminar(null);
             }}>Eliminar</button>
           </>
         }
       >
-        <p className="mb-0">¿Eliminar el banner «{aEliminar?.titulo}» y su imagen?</p>
+        <p className="mb-0">¿Eliminar el banner «{aEliminar && nombreBanner(aEliminar)}» y su imagen?</p>
       </Modal>
     </>
   );
