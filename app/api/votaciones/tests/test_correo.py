@@ -9,7 +9,7 @@ from django.test import override_settings
 
 from votaciones import correo
 from votaciones.correo.adaptadores import ErrorEnvioCorreo
-from votaciones.models import Voto
+from votaciones.models import Usuario, Voto
 
 from .base import BaseAPITest
 
@@ -107,3 +107,58 @@ class AdaptadoresCorreoTest(BaseAPITest):
                 self.assertFalse(correo.enviar_bienvenida(self.votante))
             with self.assertRaisesMessage(ErrorEnvioCorreo, "401"):
                 correo.enviar_bienvenida(self.votante, silencioso=False)
+
+
+@override_settings(CORREO_ADAPTADOR="smtp", CORREO_EN_SEGUNDO_PLANO=False)
+class CorreosEnFlujosTest(BaseAPITest):
+    REGISTRO = {
+        "email": "nuevo@festival.test", "nombres": "Carlos", "apellidos": "Pérez",
+        "password": "Clave-Segura-2027", "acepta_tratamiento_datos": True,
+    }
+
+    def registrar(self, **cambios):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post("/api/auth/registro/", {**self.REGISTRO, **cambios}, format="json")
+
+    def votar(self, votacion, opcion):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(f"/api/votaciones/{votacion.pk}/votar/", {"opcion": opcion.pk}, format="json")
+
+    def test_registro_envia_bienvenida(self):
+        self.assertEqual(self.registrar().status_code, 201)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("bienvenida", mail.outbox[0].subject)
+        self.assertTrue(mail.outbox[0].to[0].endswith("<nuevo@festival.test>"))
+
+    def test_registro_invalido_no_envia(self):
+        self.assertEqual(self.registrar(acepta_tratamiento_datos=False).status_code, 400)
+        self.assertEqual(mail.outbox, [])
+
+    def test_voto_envia_comprobante(self):
+        self.autenticar(self.votante)
+        respuesta = self.votar(self.abierta, self.opcion_a)
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(respuesta.data["codigo_comprobante"], mail.outbox[0].subject)
+        self.assertIn("Canción A", mail.outbox[0].body)
+
+    def test_voto_rechazado_no_envia(self):
+        self.autenticar(self.votante)
+        self.votar(self.abierta, self.opcion_a)
+        mail.outbox.clear()
+        self.assertEqual(self.votar(self.abierta, self.opcion_b).status_code, 409)
+        self.assertEqual(mail.outbox, [])
+
+    def test_fallo_del_correo_no_afecta_el_registro(self):
+        with mock.patch("votaciones.correo.servicio.render_to_string", side_effect=RuntimeError("plantilla rota")):
+            with self.assertLogs("votaciones.correo", "ERROR"):
+                respuesta = self.registrar()
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertTrue(Usuario.objects.filter(email="nuevo@festival.test").exists())
+
+    @override_settings(CORREO_EN_SEGUNDO_PLANO=True)
+    def test_entrega_en_segundo_plano(self):
+        with mock.patch("votaciones.correo.servicio.threading.Thread") as hilo:
+            self.registrar()
+        hilo.return_value.start.assert_called_once()
+        self.assertEqual(hilo.call_args.kwargs["args"][2], "bienvenida")

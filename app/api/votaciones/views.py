@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from . import servicios
+from . import correo, servicios
 from .models import (
     BannerInicio, Categoria, ConfiguracionSitio, Edicion, Opcion, RedSocial, RegistroAuditoria, Revista, Usuario, Votacion, Voto,
 )
@@ -72,6 +72,7 @@ class RegistroView(APIView):
         serializer = RegistroSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario = serializer.save()
+        correo.enviar_al_confirmar(correo.enviar_bienvenida, usuario)
         return respuesta_auth(usuario, status.HTTP_201_CREATED)
 
 
@@ -215,6 +216,7 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
             )
         except servicios.ReglaNegocioError as error:
             return respuesta_regla(error)
+        correo.enviar_al_confirmar(correo.enviar_comprobante_voto, voto)
         return Response(VotoSerializer(voto).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(summary="Resultados públicos según visibilidad (RF-15, RN-07)",
