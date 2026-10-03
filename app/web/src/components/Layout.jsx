@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import Footer from './Footer.jsx';
+import AvisoConfirmarCorreo from './AvisoConfirmarCorreo.jsx';
 import LimiteErrores from './LimiteErrores.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { cssMarca } from '../data/marca.js';
@@ -25,6 +26,7 @@ export default function Layout() {
         Saltar al contenido
       </a>
       <Navbar />
+      <AvisoConfirmarCorreo />
       <main id="contenido" tabIndex={-1} className="flex-grow-1">
         <LimiteErrores key={pathname}>
           <Outlet />

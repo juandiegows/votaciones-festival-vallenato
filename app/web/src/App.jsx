@@ -5,6 +5,7 @@ import { IrAEdicionActiva, RedireccionCategoria, RedireccionRutaAnterior, Redire
 import Inicio from './pages/Inicio.jsx';
 import Registro from './pages/Registro.jsx';
 import Login from './pages/Login.jsx';
+import ConfirmarCorreo from './pages/ConfirmarCorreo.jsx';
 import Categorias from './pages/Categorias.jsx';
 import CategoriaVotaciones from './pages/CategoriaVotaciones.jsx';
 import VotacionDetalle from './pages/VotacionDetalle.jsx';
@@ -36,6 +37,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="registro" element={<Registro />} />
         <Route path="login" element={<Login />} />
+        <Route path="confirmar-correo" element={<ConfirmarCorreo />} />
         <Route path="marca" element={<Navigate to="/panel/marca" replace />} />
         <Route path="error/:codigo" element={<RutaError />} />
         <Route path="categorias" element={<IrAEdicionActiva />} />

@@ -39,6 +39,8 @@ export default function VotacionDetalle() {
   const yaVoto = misVotos.length >= votosPermitidos(votacion);
   const abierta = votacion.estado === 'abierta' && !votacion.pausada;
   const puedeVotar = abierta && !yaVoto;
+  // Cuenta registrada sin confirmar el correo: puede ver y elegir, pero el voto se habilita al confirmar
+  const sinConfirmar = usuario?.correoVerificado === false;
   const opcionElegida = lista.find((o) => o.id === (yaVoto ? misVotos[0].opcionId : seleccion));
 
   const elegir = (opcionId) => {
@@ -60,6 +62,10 @@ export default function VotacionDetalle() {
     // RN-02: solo usuarios autenticados; se redirige al login y luego se regresa aquí
     if (!usuario) {
       navigate('/login', { state: { desde: rutas.votacion(votacion), aviso: 'Inicia sesión o regístrate para registrar tu voto. Guardamos tu selección.' } });
+      return;
+    }
+    if (sinConfirmar) {
+      setError('Confirma tu correo para poder votar. Revisa tu bandeja de entrada o usa «Reenviar enlace» arriba.');
       return;
     }
     setConfirmando(true);
@@ -163,6 +169,7 @@ export default function VotacionDetalle() {
                 <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Votar
               </button>
               {!usuario && abierta && <span className="small text-secondary-flv">Te pediremos iniciar sesión antes de confirmar.</span>}
+              {sinConfirmar && abierta && <span className="small text-secondary-flv">Podrás votar cuando confirmes tu correo.</span>}
               {votacion.pausada && votacion.estado === 'abierta' && <span className="small text-secondary-flv">Las votaciones están en pausa temporalmente. Intenta más tarde.</span>}
               {!abierta && !votacion.pausada && <span className="small text-secondary-flv">El botón se habilita solo con la votación abierta.</span>}
             </div>

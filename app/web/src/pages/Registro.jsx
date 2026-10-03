@@ -4,13 +4,19 @@ import { useApp } from '../context/AppContext.jsx';
 import Modal from '../components/Modal.jsx';
 import PoliticaDatos from '../components/PoliticaDatos.jsx';
 import { validarContrasena, validarCorreo } from '../utils/helpers.js';
+import { TIPOS_DOCUMENTO, errorDocumento } from '../utils/documento.js';
 
-const INICIAL = { nombres: '', apellidos: '', correo: '', contrasena: '', confirmacion: '', aceptaTratamientoDatos: false };
+const INICIAL = {
+  nombres: '', apellidos: '', tipoDocumento: 'CC', numeroDocumento: '', correo: '', contrasena: '', confirmacion: '',
+  aceptaTratamientoDatos: false,
+};
 
 function validar(f) {
   const e = {};
   if (f.nombres.trim().length < 2) e.nombres = 'Ingresa tus nombres.';
   if (f.apellidos.trim().length < 2) e.apellidos = 'Ingresa tus apellidos.';
+  const documento = errorDocumento(f.tipoDocumento, f.numeroDocumento);
+  if (documento) e.numeroDocumento = documento;
   if (!validarCorreo(f.correo)) e.correo = 'Ingresa un correo electrónico válido.';
   if (!validarContrasena(f.contrasena)) e.contrasena = 'Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.';
   if (f.confirmacion !== f.contrasena || !f.confirmacion) e.confirmacion = 'Las contraseñas no coinciden.';
@@ -57,6 +63,7 @@ export default function Registro() {
       if (Object.keys(deCampo).length) setErrores(deCampo);
       return setErrorGeneral(r.error);
     }
+    // Con la API la cuenta confirma el correo antes de votar; el aviso lo muestra AvisoConfirmarCorreo (Layout)
     navigate(location.state?.desde || '/categorias', { replace: true });
   };
 
@@ -93,6 +100,20 @@ export default function Registro() {
                 <div className="col-sm-6">{campo('nombres', 'Nombres', 'text', { attrs: { autoComplete: 'given-name' } })}</div>
                 <div className="col-sm-6">{campo('apellidos', 'Apellidos', 'text', { attrs: { autoComplete: 'family-name' } })}</div>
               </div>
+              <div className="row">
+                <div className="col-12 mb-3">
+                  <label htmlFor="tipoDocumento" className="form-label">Tipo de documento <span className="text-danger" aria-hidden="true">*</span></label>
+                  <select id="tipoDocumento" name="tipoDocumento" className="form-select" value={form.tipoDocumento} onChange={cambiar} required>
+                    {TIPOS_DOCUMENTO.map((t) => <option key={t.valor} value={t.valor}>{t.etiqueta}</option>)}
+                  </select>
+                </div>
+                <div className="col-12">
+                  {campo('numeroDocumento', 'Número de documento', 'text', {
+                    ayuda: 'Una cuenta por persona. Sin puntos ni espacios.',
+                    attrs: { inputMode: ['CC', 'TI'].includes(form.tipoDocumento) ? 'numeric' : 'text', autoComplete: 'off' },
+                  })}
+                </div>
+              </div>
               {campo('correo', 'Correo electrónico', 'email', { attrs: { autoComplete: 'email', placeholder: 'nombre@correo.com' } })}
               {campo('contrasena', 'Contraseña', verClave ? 'text' : 'password', {
                 ayuda: 'Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.',
@@ -106,7 +127,7 @@ export default function Registro() {
 
               <div className="alert alert-warning small py-2" role="note">
                 <i className="bi bi-hourglass-split me-1" aria-hidden="true"></i>
-                Campos adicionales (documento, municipio, edad) pendientes de validación con la Fundación.
+                Campos adicionales (municipio, edad) pendientes de validación con la Fundación.
               </div>
 
               <div className="form-check mb-4">
