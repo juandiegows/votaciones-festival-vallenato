@@ -14,7 +14,7 @@ function validar(f) {
   if (!validarCorreo(f.correo)) e.correo = 'Ingresa un correo electrónico válido.';
   if (!validarContrasena(f.contrasena)) e.contrasena = 'Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.';
   if (f.confirmacion !== f.contrasena || !f.confirmacion) e.confirmacion = 'Las contraseñas no coinciden.';
-  if (!f.aceptaTratamientoDatos) e.aceptaTratamientoDatos = 'Debes aceptar la política de tratamiento de datos para registrarte (RN-10).';
+  if (!f.aceptaTratamientoDatos) e.aceptaTratamientoDatos = 'Debes aceptar la política de tratamiento de datos para registrarte.';
   return e;
 }
 
@@ -86,7 +86,7 @@ export default function Registro() {
         <div className="col-md-9 col-lg-7 col-xl-6">
           <div className="card-flv p-4 p-md-5">
             <h1 className="h3 mb-1">Crear cuenta de votante</h1>
-            <p className="text-secondary-flv">Regístrate para participar en las votaciones del público (RF-01).</p>
+            <p className="text-secondary-flv">Regístrate para participar en las votaciones del público.</p>
             {errorGeneral && <div className="alert alert-danger" role="alert">{errorGeneral}</div>}
             <form noValidate onSubmit={enviar}>
               <div className="row">

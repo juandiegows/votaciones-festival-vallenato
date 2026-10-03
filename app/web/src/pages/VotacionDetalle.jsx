@@ -80,14 +80,14 @@ export default function VotacionDetalle() {
   };
 
   let mensajeEstado = null;
-  if (votacion.estado === 'programada') mensajeEstado = `Esta votación aún no está abierta. Podrás votar a partir del ${formatearFechaHora(votacion.fechaApertura)} (RN-03).`;
-  if (votacion.estado === 'cerrada') mensajeEstado = `Esta votación cerró el ${formatearFechaHora(votacion.fechaCierre)}. Ya no se reciben votos (RN-03).`;
+  if (votacion.estado === 'programada') mensajeEstado = `Esta votación aún no está abierta. Podrás votar a partir del ${formatearFechaHora(votacion.fechaApertura)}.`;
+  if (votacion.estado === 'cerrada') mensajeEstado = `Esta votación cerró el ${formatearFechaHora(votacion.fechaCierre)}. Ya no se reciben votos.`;
 
   return (
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo={votacion.titulo}
-        subtitulo={`Detalle de la votación (RF-06) · Categoría ${categoria.nombre}`}
+        subtitulo={`Detalle de la votación · Categoría ${categoria.nombre}`}
         migas={[
           { label: 'Inicio', to: '/' },
           { label: `Edición ${edicion.anio}`, to: rutas.edicion(edicion) },
@@ -118,11 +118,11 @@ export default function VotacionDetalle() {
           <section className="card-flv p-4" aria-labelledby="titulo-reglas">
             <h2 id="titulo-reglas" className="h6"><i className="bi bi-journal-check me-1" aria-hidden="true"></i>Reglas de la votación</h2>
             <ul className="small mb-0 ps-3">
-              <li>Debes iniciar sesión para votar (RN-02).</li>
-              <li>Solo se vota entre la fecha de apertura y la de cierre (RN-03).</li>
-              <li>Un voto por persona en esta votación (RN-04).</li>
-              <li>Una vez confirmado, el voto no se puede cambiar (RN-05).</li>
-              <li>Los resultados se publican según la configuración: «{votacion.mostrarResultados}» (RN-07).</li>
+              <li>Debes iniciar sesión para votar.</li>
+              <li>Solo se vota entre la fecha de apertura y la de cierre.</li>
+              <li>Un voto por persona en esta votación.</li>
+              <li>Una vez confirmado, el voto no se puede cambiar.</li>
+              <li>Los resultados se publican según la configuración: «{votacion.mostrarResultados}».</li>
             </ul>
           </section>
         </div>
@@ -132,7 +132,7 @@ export default function VotacionDetalle() {
             <div className="alert alert-success d-flex flex-wrap align-items-center gap-2" role="status">
               <i className="bi bi-check-circle-fill fs-4" aria-hidden="true"></i>
               <div className="flex-grow-1">
-                <strong>Ya votaste en esta votación.</strong> Tu voto fue registrado y no se puede modificar (RN-04, RN-05).
+                <strong>Ya votaste en esta votación.</strong> Tu voto fue registrado y no se puede modificar.
               </div>
               <Link to={rutas.comprobante(votacion)} className="btn btn-sm btn-success">Ver comprobante</Link>
             </div>
@@ -225,7 +225,7 @@ export default function VotacionDetalle() {
         )}
         <div className="alert alert-warning mb-0 small" role="alert">
           <i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
-          <strong>Importante:</strong> una vez confirmado, no podrás cambiar tu voto (RN-05).
+          <strong>Importante:</strong> una vez confirmado, no podrás cambiar tu voto.
         </div>
       </Modal>
     </div>

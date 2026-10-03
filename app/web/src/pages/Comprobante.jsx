@@ -29,7 +29,7 @@ export default function Comprobante() {
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo="Comprobante de voto"
-        subtitulo="Mensaje posterior a la votación (RF-09)"
+        subtitulo="Mensaje posterior a la votación"
         migas={[{ label: 'Inicio', to: '/' }, { label: votacion.titulo, to: rutas.votacion(votacion) }, { label: 'Comprobante' }]}
       />
       <div className="row g-4">
@@ -69,7 +69,7 @@ export default function Comprobante() {
         <div className="col-lg-6">
           <section className="card-flv p-4 h-100" aria-labelledby="titulo-res">
             <h2 id="titulo-res" className="h5"><i className="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
-            <ResultadosVotacion votacion={votacion} nota="Resultados en tiempo real (RN-07)." />
+            <ResultadosVotacion votacion={votacion} nota="Resultados en tiempo real." />
           </section>
         </div>
       </div>

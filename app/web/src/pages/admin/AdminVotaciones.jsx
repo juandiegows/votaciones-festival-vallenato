@@ -61,14 +61,14 @@ export default function AdminVotaciones() {
     if (procesando) return;
     const errs = {};
     if (form.slug && !PATRON_SLUG.test(form.slug)) errs.slug = 'Usa solo minúsculas sin tildes, números y guiones (p. ej. «cancion-favorita»).';
-    if (!form.categoriaId) errs.categoriaId = 'Toda votación debe pertenecer a una categoría (RN-01).';
+    if (!form.categoriaId) errs.categoriaId = 'Toda votación debe pertenecer a una categoría.';
     if (form.titulo.trim().length < 5) errs.titulo = 'El título debe tener al menos 5 caracteres.';
     if (!form.descripcion.trim()) errs.descripcion = 'La descripción es obligatoria.';
     if (!form.fechaApertura) errs.fechaApertura = 'Indica la fecha de apertura.';
-    if (!form.fechaCierre || form.fechaCierre <= form.fechaApertura) errs.fechaCierre = 'La fecha de cierre debe ser posterior a la de apertura (RN-03).';
+    if (!form.fechaCierre || form.fechaCierre <= form.fechaApertura) errs.fechaCierre = 'La fecha de cierre debe ser posterior a la de apertura.';
     if (Number(form.votosPorUsuario) < 1) errs.votosPorUsuario = 'Debe ser al menos 1.';
     if (form.publicada && (!form.id || numOpciones(form.id) < 2)) {
-      errs.publicada = 'No se puede publicar: la votación necesita al menos 2 opciones (RN-06). Guárdala como borrador y agrega opciones.';
+      errs.publicada = 'No se puede publicar: la votación necesita al menos 2 opciones. Guárdala como borrador y agrega opciones.';
     }
     setErrores(errs);
     if (Object.keys(errs).length) return;
@@ -93,7 +93,7 @@ export default function AdminVotaciones() {
     const g = r.entidad;
     setMensaje({
       tipo: 'success',
-      texto: form.id ? `Votación «${form.titulo}» actualizada.` : `Votación «${form.titulo}» creada como borrador. Agrega al menos 2 opciones para publicarla (RN-06).`,
+      texto: form.id ? `Votación «${form.titulo}» actualizada.` : `Votación «${form.titulo}» creada como borrador. Agrega al menos 2 opciones para publicarla.`,
       opcionesId: form.id ? null : g.id,
     });
     setForm(null);
@@ -135,7 +135,7 @@ export default function AdminVotaciones() {
 
   return (
     <>
-      <PageHeader titulo="Gestión de votaciones" subtitulo="Crear, editar, publicar y cerrar votaciones (RF-12).">
+      <PageHeader titulo="Gestión de votaciones" subtitulo="Crear, editar, publicar y cerrar votaciones.">
         <button className="btn btn-primary" onClick={nueva}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</button>
       </PageHeader>
 
@@ -286,14 +286,14 @@ export default function AdminVotaciones() {
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-vpu">Votos por usuario</label>
                 <input id="v-vpu" type="number" min="1" max="5" className={`form-control ${errores.votosPorUsuario ? 'is-invalid' : ''}`} value={form.votosPorUsuario} onChange={(e) => setForm({ ...form, votosPorUsuario: e.target.value })} aria-describedby="v-vpu-ayuda" />
-                <div id="v-vpu-ayuda" className="form-text">RN-04: por defecto 1 (pendiente de validación con la Fundación).</div>
+                <div id="v-vpu-ayuda" className="form-text">Por defecto 1 (pendiente de validación con la Fundación).</div>
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-mr">Mostrar resultados</label>
                 <select id="v-mr" className="form-select" value={form.mostrarResultados} onChange={(e) => setForm({ ...form, mostrarResultados: e.target.value })} aria-describedby="v-mr-ayuda">
                   {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div id="v-mr-ayuda" className="form-text">RN-07: visibilidad pública de los resultados.</div>
+                <div id="v-mr-ayuda" className="form-text">Visibilidad pública de los resultados.</div>
               </div>
               <div className="col-12">
                 <div className="form-check form-switch">
@@ -301,7 +301,7 @@ export default function AdminVotaciones() {
                   <label className="form-check-label" htmlFor="v-pub">Publicar votación (visible al público)</label>
                   {errores.publicada && <div className="invalid-feedback d-block" role="alert">{errores.publicada}</div>}
                   <div id="v-pub-ayuda" className="form-text">
-                    {form.id ? `Opciones registradas: ${numOpciones(form.id)}.` : 'Las votaciones nuevas se crean como borrador.'} Se requieren al menos 2 opciones para publicar (RN-06).
+                    {form.id ? `Opciones registradas: ${numOpciones(form.id)}.` : 'Las votaciones nuevas se crean como borrador.'} Se requieren al menos 2 opciones para publicar.
                   </div>
                 </div>
               </div>
@@ -337,8 +337,8 @@ export default function AdminVotaciones() {
         {votosAEliminar > 0 ? (
           <div className="alert alert-warning mb-0" role="alert">
             <i className="bi bi-shield-exclamation me-1" aria-hidden="true"></i>
-            La votación «{aEliminar?.titulo}» tiene <strong>{votosAEliminar} votos</strong> registrados. Según la regla
-            <strong> RN-09</strong>, una votación con votos no se puede eliminar, solo cerrar.
+            La votación «{aEliminar?.titulo}» tiene <strong>{votosAEliminar} votos</strong> registrados. Una votación
+            con votos no se puede eliminar, solo cerrar.
           </div>
         ) : (
           <p className="mb-0">¿Eliminar la votación «{aEliminar?.titulo}» y sus opciones? No tiene votos registrados.</p>

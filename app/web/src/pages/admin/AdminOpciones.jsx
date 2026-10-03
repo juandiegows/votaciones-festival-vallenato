@@ -70,11 +70,11 @@ export default function AdminOpciones() {
 
   const pedirEliminar = (o) => {
     if (votosDe(o.id) > 0) {
-      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${o.nombre}»: ya tiene votos registrados (integridad de resultados, RN-09).` });
+      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${o.nombre}»: ya tiene votos registrados.` });
       return;
     }
     if (votacion.publicada && lista.length <= 2) {
-      setMensaje({ tipo: 'danger', texto: 'No se puede eliminar: una votación publicada debe conservar al menos 2 opciones (RN-06).' });
+      setMensaje({ tipo: 'danger', texto: 'No se puede eliminar: una votación publicada debe conservar al menos 2 opciones.' });
       return;
     }
     setAEliminar(o);
@@ -86,7 +86,7 @@ export default function AdminOpciones() {
     <>
       <PageHeader
         titulo="Gestión de opciones"
-        subtitulo={`${votacion.titulo} · ${categoria?.nombre} (RF-13)`}
+        subtitulo={`${votacion.titulo} · ${categoria?.nombre}`}
         migas={[{ label: 'Votaciones', to: '/admin/votaciones' }, { label: votacion.titulo }, { label: 'Opciones' }]}
       >
         <button
@@ -106,7 +106,7 @@ export default function AdminOpciones() {
       {lista.length < 2 && (
         <div className="alert alert-warning" role="alert">
           <i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
-          Esta votación tiene {lista.length} opción(es). Se necesitan <strong>al menos 2 opciones</strong> para publicarla o abrirla (RN-06).
+          Esta votación tiene {lista.length} opción(es). Se necesitan <strong>al menos 2 opciones</strong> para publicarla o abrirla.
         </div>
       )}
       {mensaje && (

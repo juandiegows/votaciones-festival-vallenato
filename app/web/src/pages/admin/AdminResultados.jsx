@@ -31,12 +31,12 @@ export default function AdminResultados() {
     const r = await guardarEntidad('votaciones', { id: votacion.id, resultadosPublicados: nuevo }, `${nuevo ? 'Publicó' : 'Retiró'} los resultados de "${votacion.titulo}"`);
     setProcesando(false);
     if (!r.ok) return setMensaje({ tipo: 'danger', texto: r.error });
-    setMensaje({ tipo: 'success', texto: nuevo ? 'Resultados publicados para el público (RF-15).' : 'Publicación manual de resultados retirada.' });
+    setMensaje({ tipo: 'success', texto: nuevo ? 'Resultados publicados para el público.' : 'Publicación manual de resultados retirada.' });
   };
 
   return (
     <>
-      <PageHeader titulo="Consulta de resultados" subtitulo="Conteo por opción, exportación y publicación (RF-14, RF-15)." />
+      <PageHeader titulo="Consulta de resultados" subtitulo="Conteo por opción, exportación y publicación." />
       <div className="card-flv p-3 mb-3">
         <label htmlFor="sel-votacion" className="form-label">Selecciona una votación</label>
         <select id="sel-votacion" className="form-select" value={seleccion} onChange={(e) => { setSeleccion(e.target.value); setMensaje(null); }}>
@@ -95,7 +95,7 @@ export default function AdminResultados() {
               </div>
               <p id="publicar-ayuda" className="small text-secondary-flv mt-2 mb-1">
                 Configuración: «{votacion.mostrarResultados}». Visibles al público ahora:{' '}
-                <strong>{resultadosVisibles(votacion) ? 'Sí' : 'No'}</strong> (RN-07).
+                <strong>{resultadosVisibles(votacion) ? 'Sí' : 'No'}</strong>.
               </p>
               {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2 mt-2 mb-0`} role="status">{mensaje.texto}</div>}
             </section>

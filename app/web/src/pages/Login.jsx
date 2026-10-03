@@ -43,7 +43,7 @@ export default function Login() {
         <div className="col-md-8 col-lg-6 col-xl-5">
           <div className="card-flv p-4 p-md-5">
             <h1 className="h3 mb-1">Iniciar sesión</h1>
-            <p className="text-secondary-flv">Ingresa para votar y consultar tus comprobantes (RF-02).</p>
+            <p className="text-secondary-flv">Ingresa para votar y consultar tus comprobantes.</p>
             {aviso && (
               <div className="alert alert-info small" role="status">
                 <i className="bi bi-info-circle me-1" aria-hidden="true"></i>{aviso}
@@ -111,7 +111,7 @@ export default function Login() {
           <div className="alert alert-success mb-0" role="status">
             <i className="bi bi-envelope-check me-1" aria-hidden="true"></i>
             Si <strong>{correoRecuperar}</strong> está registrado, recibirás un enlace para restablecer tu contraseña
-            (simulado – RF-03; en el prototipo no se envían correos).
+            (simulado; en el prototipo no se envían correos).
           </div>
         ) : (
           <>

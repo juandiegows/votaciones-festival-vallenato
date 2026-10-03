@@ -213,7 +213,7 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
     def resultados(self, request, pk=None):
         votacion = self.get_object()
         if not servicios.resultados_visibles_para(votacion, request.user):
-            raise PermissionDenied("Los resultados de esta votación aún no son públicos (RN-07).")
+            raise PermissionDenied("Los resultados de esta votación aún no son públicos.")
         return Response(servicios.calcular_resultados(votacion))
 
 

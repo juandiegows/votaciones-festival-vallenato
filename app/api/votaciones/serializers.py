@@ -36,7 +36,7 @@ class RegistroSerializer(serializers.ModelSerializer):
     def validate_acepta_tratamiento_datos(self, valor):
         if not valor:
             raise serializers.ValidationError(
-                "Debes aceptar la política de tratamiento de datos personales (RN-10)."
+                "Debes aceptar la política de tratamiento de datos personales."
             )
         return valor
 

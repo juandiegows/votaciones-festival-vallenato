@@ -19,7 +19,7 @@ export default function Categorias() {
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo="Categorías"
-        subtitulo={`${edicion.nombre} · Elige una categoría para ver sus votaciones (RF-04).`}
+        subtitulo={`${edicion.nombre} · Elige una categoría para ver sus votaciones.`}
         migas={[{ label: 'Inicio', to: '/' }, { label: `Edición ${edicion.anio}` }]}
       />
       {!esActiva && (

@@ -34,7 +34,7 @@ export default function AdminPanel() {
       <div className="row g-4">
         <div className="col-xl-7">
           <section className="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-auditoria">
-            <h2 id="titulo-auditoria" className="h5"><i className="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span className="small fw-normal text-secondary-flv">({modo === 'api' ? 'auditoría' : 'auditoría simulada'} – RF-16)</span></h2>
+            <h2 id="titulo-auditoria" className="h5"><i className="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span className="small fw-normal text-secondary-flv">({modo === 'api' ? 'auditoría' : 'auditoría simulada'})</span></h2>
             <ul className="list-group list-group-flush">
               {auditoria.slice(0, 8).map((a) => (
                 <li className="list-group-item px-0" key={a.id}>

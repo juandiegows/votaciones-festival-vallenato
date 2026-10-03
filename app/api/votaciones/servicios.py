@@ -56,7 +56,7 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
 
     if votacion.estado != Votacion.Estado.ABIERTA:
         raise ReglaNegocioError(
-            "La votación no está abierta (RN-03).", codigo="votacion_no_abierta", status=409
+            "La votación no está abierta.", codigo="votacion_no_abierta", status=409
         )
 
     try:
@@ -66,7 +66,7 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
 
     if votos_del_usuario(usuario, votacion) >= votacion.votos_por_usuario:
         raise ReglaNegocioError(
-            "Ya alcanzaste el límite de votos de esta votación (RN-04).", codigo="limite_votos", status=409
+            "Ya alcanzaste el límite de votos de esta votación.", codigo="limite_votos", status=409
         )
 
     return Voto.objects.create(
@@ -121,7 +121,7 @@ def calcular_resultados(votacion):
 def publicar_votacion(votacion):
     if votacion.opciones.filter(activa=True).count() < 2:
         raise ReglaNegocioError(
-            "La votación necesita al menos dos opciones activas para publicarse (RN-06).",
+            "La votación necesita al menos dos opciones activas para publicarse.",
             codigo="opciones_insuficientes",
         )
     votacion.publicada = True
@@ -132,7 +132,7 @@ def publicar_votacion(votacion):
 def validar_eliminacion(objeto):
     if objeto.votos.exists():
         raise ReglaNegocioError(
-            "No se puede eliminar porque ya tiene votos; ciérrala o desactívala (RN-09).",
+            "No se puede eliminar porque ya tiene votos; ciérrala o desactívala.",
             codigo="tiene_votos",
             status=409,
         )

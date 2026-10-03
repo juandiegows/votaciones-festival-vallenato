@@ -53,7 +53,7 @@ export default function AdminEdiciones() {
 
   const eliminar = async (ed) => {
     if (categorias.some((c) => c.edicionId === ed.id)) {
-      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${ed.nombre}»: tiene categorías asociadas (RN-01).` });
+      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${ed.nombre}»: tiene categorías asociadas.` });
       return;
     }
     setProcesando(true);
@@ -64,7 +64,7 @@ export default function AdminEdiciones() {
 
   return (
     <>
-      <PageHeader titulo="Gestión de ediciones" subtitulo="Cada edición agrupa categorías y votaciones (RF-10).">
+      <PageHeader titulo="Gestión de ediciones" subtitulo="Cada edición agrupa categorías y votaciones.">
         <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada' })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>

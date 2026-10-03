@@ -102,10 +102,10 @@ export function MockProvider({ children }) {
   };
 
   const emitirVoto = async (votacionId, opcionId) => {
-    if (!usuario) return { ok: false, error: 'Debes iniciar sesión para votar (RN-02).' };
+    if (!usuario) return { ok: false, error: 'Debes iniciar sesión para votar.' };
     const votacion = votaciones.find((v) => v.id === votacionId);
-    if (!votacion || votacion.estado !== 'abierta') return { ok: false, error: 'La votación no está abierta (RN-03).' };
-    if (votosDeUsuario(votacionId).length >= votacion.votosPorUsuario) return { ok: false, error: 'Ya registraste tu voto en esta votación (RN-04).' };
+    if (!votacion || votacion.estado !== 'abierta') return { ok: false, error: 'La votación no está abierta.' };
+    if (votosDeUsuario(votacionId).length >= votacion.votosPorUsuario) return { ok: false, error: 'Ya registraste tu voto en esta votación.' };
     const voto = {
       id: siguienteId(datos.votos),
       usuarioId: usuario.id,
@@ -185,8 +185,8 @@ export function MockProvider({ children }) {
           status: 403,
           error:
             votacion.mostrarResultados === 'no publicar'
-              ? 'Los resultados de esta votación no se publican al público (RN-07).'
-              : 'Los resultados se publicarán al cierre de la votación (RN-07).',
+              ? 'Los resultados de esta votación no se publican al público.'
+              : 'Los resultados se publicarán al cierre de la votación.',
         };
       }
       const opcionesVotacion = datos.opciones.filter((o) => o.votacionId === votacionId);

@@ -28,7 +28,7 @@ export default function AdminCategorias() {
     if (form.nombre.trim().length < 3) errs.nombre = 'El nombre debe tener al menos 3 caracteres.';
     if (form.slug && !PATRON_SLUG.test(form.slug)) errs.slug = 'Usa solo minúsculas sin tildes, números y guiones (p. ej. «musica»).';
     if (!form.descripcion.trim()) errs.descripcion = 'La descripción es obligatoria.';
-    if (!form.edicionId) errs.edicionId = 'Toda categoría debe pertenecer a una edición (RN-01).';
+    if (!form.edicionId) errs.edicionId = 'Toda categoría debe pertenecer a una edición.';
     setErrores(errs);
     if (Object.keys(errs).length) return;
     const datos = { ...form, edicionId: Number(form.edicionId), orden: Number(form.orden), slug: form.slug.trim() };
@@ -61,7 +61,7 @@ export default function AdminCategorias() {
   const pedirEliminar = (c) => {
     const n = votaciones.filter((v) => v.categoriaId === c.id).length;
     if (n > 0) {
-      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${c.nombre}»: tiene ${n} votación(es) asociada(s) (RN-01). Puedes desactivarla.` });
+      setMensaje({ tipo: 'warning', texto: `No se puede eliminar «${c.nombre}»: tiene ${n} votación(es) asociada(s). Puedes desactivarla.` });
       return;
     }
     setEliminar(c);
@@ -69,7 +69,7 @@ export default function AdminCategorias() {
 
   return (
     <>
-      <PageHeader titulo="Gestión de categorías" subtitulo="Crear, editar, activar o desactivar categorías (RF-11).">
+      <PageHeader titulo="Gestión de categorías" subtitulo="Crear, editar, activar o desactivar categorías.">
         <button className="btn btn-primary" onClick={nueva}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
       </PageHeader>
       <p className="badge badge-ilustrativo rounded-pill px-3 py-2">Categorías ilustrativas – pendientes de validación con la Fundación</p>

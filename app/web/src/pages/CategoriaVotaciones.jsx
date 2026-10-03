@@ -28,7 +28,7 @@ export default function CategoriaVotaciones() {
     <div className="container py-4 py-md-5">
       <PageHeader
         titulo={categoria.nombre}
-        subtitulo={`Votaciones disponibles (RF-05) · ${categoria.descripcion}`}
+        subtitulo={`Votaciones disponibles · ${categoria.descripcion}`}
         migas={[{ label: 'Inicio', to: '/' }, { label: `Edición ${edicion.anio}`, to: rutas.edicion(edicion) }, { label: categoria.nombre }]}
       />
       <fieldset className="mb-4">
