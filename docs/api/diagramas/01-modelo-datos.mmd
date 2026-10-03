@@ -1,12 +1,13 @@
 erDiagram
     direction LR
     EDICION ||--|{ CATEGORIA : agrupa
+    EDICION ||--o{ BANNER_INICIO : muestra
     CATEGORIA ||--o{ VOTACION : contiene
     VOTACION ||--|{ OPCION : ofrece
     VOTACION ||--o{ VOTO : registra
     OPCION ||--o{ VOTO : recibe
     USUARIO ||--o{ VOTO : emite
-    USUARIO ||--o{ REGISTRO_AUDITORIA : genera
+    USUARIO |o--o{ REGISTRO_AUDITORIA : genera
     EDICION {
         bigint id PK
         varchar nombre
@@ -14,11 +15,16 @@ erDiagram
         date fecha_inicio
         date fecha_fin
         varchar estado "activa | cerrada"
+        varchar presentacion_categorias
+        varchar visibilidad_resultados "tiempo_real | al_cierre | no_publicar"
+        smallint votos_por_usuario "por defecto 1"
+        bool votaciones_pausadas
     }
     CATEGORIA {
         bigint id PK
         bigint edicion_id FK
         varchar nombre "único por edición"
+        varchar slug "único por edición"
         text descripcion
         varchar icono
         bool activa
@@ -28,11 +34,14 @@ erDiagram
         bigint id PK
         bigint categoria_id FK
         varchar titulo
-        text descripcion
+        varchar slug "único por categoría"
         datetime fecha_apertura
         datetime fecha_cierre "mayor que apertura"
-        smallint votos_por_usuario "mínimo 1"
-        varchar visibilidad_resultados "tiempo_real | al_cierre | no_publicar"
+        varchar presentacion_opciones
+        bool personalizar_votos
+        smallint votos_por_usuario
+        bool personalizar_resultados
+        varchar visibilidad_resultados
         bool publicada
         bool cerrada_manualmente
         bool resultados_publicados
@@ -43,7 +52,7 @@ erDiagram
         varchar nombre
         text descripcion
         varchar imagen
-        varchar enlace_multimedia
+        varchar audio
         smallint orden
         bool activa
     }
@@ -53,6 +62,9 @@ erDiagram
         varchar password "hash PBKDF2"
         varchar nombres
         varchar apellidos
+        varchar tipo_documento "UK con el número"
+        varchar numero_documento "UK con el tipo"
+        bool correo_verificado
         varchar rol "votante | administrador"
         bool acepta_tratamiento_datos
         datetime fecha_registro
@@ -68,11 +80,20 @@ erDiagram
     }
     REGISTRO_AUDITORIA {
         bigint id PK
-        bigint usuario_id FK
+        bigint usuario_id FK "nulo si se borra"
         varchar accion
         varchar entidad
         varchar entidad_id
         json detalle
         datetime fecha_hora
         varchar ip
+    }
+    BANNER_INICIO {
+        bigint id PK
+        bigint edicion_id FK
+        varchar titulo
+        varchar imagen
+        varchar texto_alternativo
+        smallint orden
+        bool activo
     }
