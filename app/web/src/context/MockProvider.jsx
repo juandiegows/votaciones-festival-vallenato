@@ -335,8 +335,8 @@ export function MockProvider({ children }) {
     return { ok: true };
   }, []);
 
-  const guardarConfiguracion = async (configuracion) => {
-    actualizar((d) => ({ ...d, configuracion }), 'Actualizó los datos de contacto');
+  const guardarConfiguracion = async (configuracion, accion = 'Actualizó los datos de contacto') => {
+    actualizar((d) => ({ ...d, configuracion }), accion);
     return { ok: true };
   };
 

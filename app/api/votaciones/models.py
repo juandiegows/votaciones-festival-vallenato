@@ -351,6 +351,9 @@ class ConfiguracionSitio(models.Model):
         default=7, null=True, blank=True,
         help_text="Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre visible).",
     )
+    # Tema editable desde /panel/marca: {"colores": {token: hex}, "botones": {"primario": {...}, "secundario": {...}}}.
+    # Solo guarda lo que difiere de la marca base (docs/BRANDING.md); vacío = marca base.
+    marca = models.JSONField(default=dict, blank=True, help_text="Colores y estilos de botón personalizados del sitio.")
 
     class Meta:
         db_table = "configuracion_sitio"

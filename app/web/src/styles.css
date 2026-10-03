@@ -221,6 +221,20 @@ a:hover { color: var(--flv-rojo-hover); }
 .swatch dd { margin-bottom: .35rem; font-size: .85rem; color: var(--flv-negro); }
 .especimen { border-left: 4px solid var(--flv-rojo); }
 .muestra-oscura { background: var(--flv-degradado-hero); border-radius: .75rem; }
+/* Editor de identidad visual (/panel/marca) */
+.barra-marca { position: sticky; top: .5rem; z-index: 5; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+.campo-color .form-control-color { max-width: 2.75rem; padding: .2rem; }
+.muestra-rol { width: 3.5rem; height: 3.5rem; border-radius: .75rem; flex-shrink: 0; border: 1px solid var(--flv-gris-borde); }
+.muestra-mini { display: inline-block; width: .85rem; height: .85rem; border-radius: 50%; vertical-align: -.1rem; margin-left: .2rem; border: 1px solid rgba(0,0,0,.2); }
+.opcion-estilo {
+  display: flex; flex-direction: column; align-items: center; gap: .35rem; height: 100%; padding: .8rem .5rem; text-align: center;
+  cursor: pointer; border: 2px solid var(--flv-gris-borde); border-radius: .6rem; background: var(--flv-blanco); color: var(--flv-negro);
+  transition: border-color .15s, background .15s;
+}
+.opcion-estilo .btn { pointer-events: none; }
+.opcion-estilo:hover { border-color: var(--flv-dorado); }
+.btn-check:checked + .opcion-estilo { border-color: var(--flv-negro); background: var(--flv-fondo); box-shadow: inset 0 0 0 1px var(--flv-negro); }
+.btn-check:focus-visible + .opcion-estilo { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
 
 @media (max-width: 575.98px) {
   .cuenta-item { min-width: 2.9rem; padding: .35rem .4rem; }

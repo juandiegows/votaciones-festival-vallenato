@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import Footer from './Footer.jsx';
 import { useApp } from '../context/AppContext.jsx';
+import { cssMarca } from '../data/marca.js';
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const { edicionActiva } = useApp();
+  const { edicionActiva, configuracion } = useApp();
+  // Tema editable desde /panel/marca (colores y botones): se aplica a todo el sitio
+  const estilosMarca = useMemo(() => cssMarca(configuracion?.marca), [configuracion?.marca]);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -16,6 +19,7 @@ export default function Layout() {
   }, [edicionActiva]);
   return (
     <div className="d-flex flex-column min-vh-100">
+      <style id="flv-marca">{estilosMarca}</style>
       <a href="#contenido" className="skip-link" onClick={(e) => { e.preventDefault(); document.getElementById('contenido')?.focus(); }}>
         Saltar al contenido
       </a>
