@@ -227,6 +227,23 @@ export function resumenDesdeApi(d) {
   };
 }
 
+/** /admin/auditoria/autoria/ → quién creó y quién modificó por última vez cada registro */
+export function autoriaDesdeApi(d) {
+  return {
+    edicionId: d.edicion_id,
+    registros: d.registros.map((r) => ({
+      clave: `${r.entidad}-${r.entidad_id}`,
+      entidad: r.entidad,
+      id: r.entidad_id,
+      nombre: r.nombre,
+      creadoEn: r.creado_en,
+      creadoPor: r.creado_por,
+      actualizadoEn: r.actualizado_en,
+      actualizadoPor: r.actualizado_por,
+    })),
+  };
+}
+
 /** /admin/auditoria/integridad/ → verificaciones por votación */
 export function integridadDesdeApi(d) {
   return {

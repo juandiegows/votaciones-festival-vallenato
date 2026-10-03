@@ -14,6 +14,7 @@ import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 const PESTANAS = [
   { id: 'participacion', label: 'Quién votó', icono: 'people' },
   { id: 'integridad', label: 'Integridad de votos', icono: 'shield-check' },
+  { id: 'autoria', label: 'Autoría de registros', icono: 'person-badge' },
   { id: 'acciones', label: 'Acciones de administración', icono: 'clock-history' },
 ];
 
@@ -79,6 +80,96 @@ function Integridad({ intervalo }) {
   if (error) return <div className="alert alert-danger" role="alert">{error}</div>;
   if (!datos) return <p role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Verificando votos…</p>;
   return <IntegridadVotos integridad={datos} />;
+}
+
+// Tipos de registro de la autoría (columnas de soporte creado_por / actualizado_por)
+const TIPOS_REGISTRO = {
+  edicion: 'Edición',
+  categoria: 'Categoría',
+  votacion: 'Votación',
+  opcion: 'Opción',
+  banner: 'Banner',
+  revista: 'Revista',
+  red_social: 'Red social',
+  configuracion: 'Configuración',
+};
+
+function Autor({ nombre, fecha }) {
+  return (
+    <>
+      <span className="d-block text-break">{nombre || <span className="text-secondary-flv">Sistema (carga de datos)</span>}</span>
+      <span className="d-block text-secondary-flv text-nowrap">{formatearFechaHora(fecha)}</span>
+    </>
+  );
+}
+
+function Autoria() {
+  const { obtenerAutoria, version } = useApp();
+  const { edicion } = useEdicionAdmin();
+  const [tipo, setTipo] = useState('');
+  const [buscar, setBuscar] = useState('');
+  const [estado, setEstado] = useState({ cargando: true, registros: [], error: '' });
+
+  useEffect(() => {
+    let vigente = true;
+    setEstado((e) => ({ ...e, cargando: true }));
+    obtenerAutoria(edicion.id).then((r) => {
+      if (vigente) setEstado(r.ok ? { cargando: false, registros: r.registros, error: '' } : { cargando: false, registros: [], error: r.error });
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [obtenerAutoria, edicion.id, version]);
+
+  const { cargando, registros, error } = estado;
+  const texto = buscar.trim().toLowerCase();
+  const visibles = registros.filter(
+    (r) => (!tipo || r.entidad === tipo) && (!texto || `${r.nombre} ${r.creadoPor || ''} ${r.actualizadoPor || ''}`.toLowerCase().includes(texto))
+  );
+  if (error) return <div className="alert alert-info" role="status">{error}</div>;
+  return (
+    <>
+      <div className="card-flv p-3 mb-3">
+        <div className="row g-2">
+          <div className="col-md-7">
+            <label htmlFor="aut-buscar" className="form-label small mb-1">Buscar</label>
+            <input id="aut-buscar" type="search" className="form-control form-control-sm" placeholder="Registro o usuario" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+          </div>
+          <div className="col-md-5">
+            <label htmlFor="aut-tipo" className="form-label small mb-1">Tipo de registro</label>
+            <select id="aut-tipo" className="form-select form-select-sm" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+              <option value="">Todos</option>
+              {Object.entries(TIPOS_REGISTRO).map(([v, e]) => <option key={v} value={v}>{e}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+      <TablaResponsiva
+        titulo="Autoría de los registros: quién los creó y quién los modificó por última vez"
+        filas={visibles}
+        clave={(r) => r.clave}
+        nombreFila={(r) => r.nombre}
+        ocupado={cargando}
+        vacio={!cargando && 'No hay registros con ese filtro.'}
+        columnas={[
+          {
+            id: 'registro', titulo: 'Registro', claseTd: 'small', minimo: '11rem', prioridad: 0,
+            celda: (r) => (
+              <>
+                <span className="d-block text-secondary-flv">{TIPOS_REGISTRO[r.entidad] || r.entidad}</span>
+                <span className="d-block fw-semibold">{r.nombre}</span>
+              </>
+            ),
+          },
+          { id: 'creado', titulo: 'Creado por', celda: (r) => <Autor nombre={r.creadoPor} fecha={r.creadoEn} />, claseTd: 'small', prioridad: 2 },
+          { id: 'actualizado', titulo: 'Última modificación', celda: (r) => <Autor nombre={r.actualizadoPor} fecha={r.actualizadoEn} />, claseTd: 'small', prioridad: 1 },
+        ]}
+      />
+      <p className="small text-secondary-flv mt-2 mb-0" aria-live="polite">
+        {cargando ? 'Cargando…' : `${visibles.length.toLocaleString('es-CO')} registros · lo modificado más recientemente primero`}
+      </p>
+    </>
+  );
 }
 
 function Acciones() {
@@ -225,9 +316,9 @@ export default function AdminAuditoria() {
     <>
       <PageHeader
         titulo="Auditoría"
-        subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Quién votó, verificación de que los votos cuadren y registro de todo lo que hace la administración.`}
+        subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Quién votó, verificación de que los votos cuadren, quién creó y modificó cada registro y todo lo que hace la administración.`}
       >
-        {pestana !== 'acciones' && <IndicadorEnVivo id="aud-en-vivo" activo={enVivo} onCambio={setEnVivo} />}
+        {(pestana === 'participacion' || pestana === 'integridad') && <IndicadorEnVivo id="aud-en-vivo" activo={enVivo} onCambio={setEnVivo} />}
       </PageHeader>
       <ul className="nav nav-tabs mb-3" role="tablist">
         {PESTANAS.map((p) => (
@@ -245,6 +336,8 @@ export default function AdminAuditoria() {
           <Participacion intervalo={intervalo} />
         ) : pestana === 'integridad' ? (
           <Integridad intervalo={intervalo} />
+        ) : pestana === 'autoria' ? (
+          <Autoria />
         ) : (
           <Acciones />
         )}

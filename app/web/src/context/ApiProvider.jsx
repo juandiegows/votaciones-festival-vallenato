@@ -3,6 +3,7 @@ import { alPerderSesion, api, descargarArchivo, guardarToken, leerToken, obtener
 import {
   ARCHIVOS,
   auditoriaDesdeApi,
+  autoriaDesdeApi,
   desdeApi,
   erroresDesdeApi,
   haciaApi,
@@ -398,6 +399,11 @@ export function ApiProvider({ children }) {
     return r.ok ? { ok: true, ...integridadDesdeApi(r.datos) } : { ok: false, error: r.error };
   }, []);
 
+  const obtenerAutoria = useCallback(async (edicionId) => {
+    const r = await api.get(`/admin/auditoria/autoria/?edicion=${edicionId}`);
+    return r.ok ? { ok: true, ...autoriaDesdeApi(r.datos) } : { ok: false, error: r.error };
+  }, []);
+
   if (cargaInicial.cargando || cargaInicial.error) {
     return <PantallaCarga error={cargaInicial.error} onReintentar={iniciar} />;
   }
@@ -434,6 +440,7 @@ export function ApiProvider({ children }) {
     obtenerParticipacion,
     obtenerResumen,
     obtenerIntegridad,
+    obtenerAutoria,
     recargar,
     restablecer: null,
   };

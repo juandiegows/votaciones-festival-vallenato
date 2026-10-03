@@ -416,6 +416,8 @@ export function MockProvider({ children }) {
     obtenerParticipacion,
     obtenerResumen,
     obtenerIntegridad,
+    // La autoría sale de las columnas de soporte de la base de datos: no existe en los datos simulados
+    obtenerAutoria: async () => ({ ok: false, sinDatos: true, error: 'La autoría de los registros se consulta en la base de datos: conecta la web a la API.' }),
     recargar,
     restablecer,
   };
