@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { urlDelSitio } from '../config.js';
 
-const EXT_AUDIO = /\.(mp3|ogg|wav|m4a)(\?.*)?$/i;
+const EXT_AUDIO = /\.(mp3|ogg|wav|m4a|webm)(\?.*)?$/i;
 const YOUTUBE = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/i;
 const SPOTIFY = /open\.spotify\.com\/(?:intl-[a-z-]+\/)?(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i;
 const SOUNDCLOUD = /^https?:\/\/(?:www\.|m\.)?soundcloud\.com\//i;
@@ -43,16 +43,48 @@ function registrarAudioUnico() {
 }
 
 /**
- * Reproductor de la muestra multimedia de una opción.
- * - .mp3/.ogg/.wav/.m4a → <audio> nativo (preload="none").
- * - YouTube, Spotify, SoundCloud → reproductor embebido que se carga solo al pulsar «Escuchar».
- * - Otro enlace → «Abrir enlace» en una pestaña nueva.
+ * Origen del sonido de una opción, para que el administrador y el votante sepan de dónde sale:
+ * archivo subido, muestra incluida en el sitio o enlace externo.
  */
-export default function ReproductorMultimedia({ enlace, titulo, className = '' }) {
-  const [embebidoActivo, setEmbebidoActivo] = useState(false);
+export function fuenteMedio({ audio, enlace } = {}) {
+  if (audio) return { tipo: 'subido', etiqueta: 'Archivo de audio subido', icono: 'file-earmark-music' };
   const medio = analizarEnlace(enlace);
   if (!medio) return null;
+  if (medio.tipo === 'audio' && medio.propio) return { tipo: 'sitio', etiqueta: 'Muestra del sitio (ilustrativa)', icono: 'music-note' };
+  if (medio.tipo === 'audio') return { tipo: 'externo', etiqueta: 'Enlace externo · archivo de audio', icono: 'link-45deg' };
+  if (medio.tipo === 'embebido') return { tipo: 'externo', etiqueta: `Enlace externo · ${medio.proveedor}`, icono: 'box-arrow-up-right' };
+  return { tipo: 'externo', etiqueta: 'Enlace externo', icono: 'box-arrow-up-right' };
+}
+
+function TextoAudio({ texto, titulo, abierto = false }) {
+  if (!texto) return null;
+  return (
+    <details className="texto-audio mt-1" open={abierto || undefined}>
+      <summary>Ver texto del audio</summary>
+      <p className="mb-0 small" aria-label={`Texto del audio de «${titulo}»`}>{texto}</p>
+    </details>
+  );
+}
+
+/**
+ * Reproductor de la muestra multimedia de una opción.
+ * - `audio` (archivo subido por el administrador) tiene prioridad sobre `enlace`.
+ * - .mp3/.ogg/.wav/.m4a/.webm → <audio> nativo (preload="none").
+ * - YouTube, Spotify, SoundCloud → reproductor embebido que se carga solo al pulsar «Escuchar».
+ * - Otro enlace → «Abrir enlace» en una pestaña nueva.
+ * - `textoAudio` (letra o descripción) se ofrece en un desplegable para quien no puede escuchar.
+ */
+export default function ReproductorMultimedia({ enlace, audio, textoAudio, titulo, className = '', mostrarFuente = false, textoAbierto = false }) {
+  const [embebidoActivo, setEmbebidoActivo] = useState(false);
+  const medio = audio ? { tipo: 'audio', url: audio, subido: true } : analizarEnlace(enlace);
+  if (!medio) {
+    return textoAudio ? <div className={`reproductor ${className}`}><TextoAudio texto={textoAudio} titulo={titulo} abierto={textoAbierto} /></div> : null;
+  }
   const etiqueta = `Escuchar muestra de «${titulo}»`;
+  const fuente = mostrarFuente ? fuenteMedio({ audio, enlace }) : null;
+  const notaFuente = fuente && (
+    <p className="reproductor-nota mb-0"><i className={`bi bi-${fuente.icono} me-1`} aria-hidden="true"></i>{fuente.etiqueta}</p>
+  );
 
   if (medio.tipo === 'audio') {
     registrarAudioUnico();
@@ -61,11 +93,12 @@ export default function ReproductorMultimedia({ enlace, titulo, className = '' }
         <audio controls preload="none" src={medio.url} aria-label={etiqueta} className="w-100">
           <a href={medio.url}>Descargar la muestra de «{titulo}»</a>
         </audio>
-        {medio.propio && (
+        {notaFuente || (medio.propio && (
           <p className="reproductor-nota mb-0">
             <i className="bi bi-music-note me-1" aria-hidden="true"></i>Muestra instrumental generada (ilustrativa)
           </p>
-        )}
+        ))}
+        <TextoAudio texto={textoAudio} titulo={titulo} abierto={textoAbierto} />
       </div>
     );
   }
@@ -91,6 +124,7 @@ export default function ReproductorMultimedia({ enlace, titulo, className = '' }
           </button>
         )}
         <p className="reproductor-nota mb-0">Contenido externo de {medio.proveedor}; se carga solo si pulsas «Escuchar».</p>
+        <TextoAudio texto={textoAudio} titulo={titulo} abierto={textoAbierto} />
       </div>
     );
   }
@@ -100,6 +134,8 @@ export default function ReproductorMultimedia({ enlace, titulo, className = '' }
       <a href={medio.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary" aria-label={`Abrir enlace de «${titulo}» (se abre en una pestaña nueva)`}>
         <i className="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Abrir enlace
       </a>
+      {notaFuente}
+      <TextoAudio texto={textoAudio} titulo={titulo} abierto={textoAbierto} />
     </div>
   );
 }
