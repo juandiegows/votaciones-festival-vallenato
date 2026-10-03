@@ -52,6 +52,11 @@ class VisibilidadResultadosTests(BaseAPITest):
     def test_al_cierre_oculta_resultados_mientras_esta_abierta(self):
         self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 403)
 
+    def test_administrador_en_el_sitio_publico_ve_lo_mismo_que_el_publico(self):
+        self.autenticar(self.admin)
+        self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 403)
+        self.assertEqual(self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/").status_code, 200)
+
     def test_tiempo_real_muestra_resultados(self):
         self.abierta.visibilidad_resultados = "tiempo_real"
         self.abierta.personalizar_resultados = True

@@ -85,8 +85,8 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
 
 
 def resultados_visibles_para(votacion, usuario):
-    if usuario.is_authenticated and usuario.es_administrador:
-        return True
+    """Regla pública (RN-07): igual para todos, también para un administrador que navega el sitio.
+    La administración consulta los resultados completos en /api/gestion/votaciones/{id}/resultados/."""
     if not votacion.publicada:
         return False
     if votacion.resultados_publicados:

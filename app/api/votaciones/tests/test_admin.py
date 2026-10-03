@@ -113,7 +113,8 @@ class GestionAdminTests(BaseAPITest):
         datos = self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/").data
         self.assertEqual(datos["total_votos"], 1)
         self.assertEqual(datos["resultados"][0]["opcion"], "Canción B")
-        self.assertEqual(self.client.get(f"/api/votaciones/{self.abierta.pk}/resultados/").status_code, 200)
+        # En el sitio público el administrador ve lo mismo que el público (al cierre: aún no)
+        self.assertEqual(self.client.get(f"/api/votaciones/{self.abierta.pk}/resultados/").status_code, 403)
 
     def test_exportar_csv(self):
         Voto.objects.create(usuario=self.votante, votacion=self.abierta, opcion=self.opcion_a, codigo_comprobante="FLV27-FFFFFF")
