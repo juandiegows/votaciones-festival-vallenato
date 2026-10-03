@@ -486,7 +486,7 @@ class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
         return consulta.filter(rol=rol) if rol else consulta
 
 
-@extend_schema(tags=["Consulta pública"], summary="Contenido del sitio: contacto, redes y banners activos",
+@extend_schema(tags=["Consulta pública"], summary="Contenido del sitio: contacto, redes y banners activos de la edición activa",
                responses={200: SitioSerializer})
 class SitioView(APIView):
     permission_classes = [AllowAny]
@@ -495,18 +495,27 @@ class SitioView(APIView):
         return Response({
             "configuracion": ConfiguracionSitioSerializer(ConfiguracionSitio.obtener()).data,
             "redes": RedSocialSerializer(RedSocial.objects.filter(activa=True), many=True).data,
-            "banners": BannerInicioSerializer(BannerInicio.objects.filter(activo=True), many=True).data,
+            # Solo los banners de la edición activa (la más reciente si hubiera varias)
+            "banners": BannerInicioSerializer(
+                BannerInicio.objects.filter(activo=True, edicion=Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio").first()),
+                many=True,
+            ).data,
         })
 
 
+@extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición")]))
 @extend_schema(tags=["Administración"])
 class AdminBannerViewSet(AuditadoMixin, viewsets.ModelViewSet):
-    """Banners del inicio. La imagen se envía como multipart/form-data (JPG, PNG o WebP, máximo 3 MB)."""
+    """Banners del inicio por edición. La imagen se envía como multipart/form-data (JPG, PNG o WebP, máximo 3 MB)."""
 
     permission_classes = [EsAdministrador]
     serializer_class = BannerInicioSerializer
-    queryset = BannerInicio.objects.all()
     entidad = "banner"
+
+    def get_queryset(self):
+        consulta = BannerInicio.objects.select_related("edicion")
+        edicion = self.request.query_params.get("edicion")
+        return consulta.filter(edicion_id=edicion) if edicion else consulta
 
     def perform_update(self, serializer):
         anterior = serializer.instance.imagen.name

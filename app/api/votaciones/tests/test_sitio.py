@@ -26,8 +26,11 @@ class SitioPublicoTests(BaseAPITest):
     def test_lectura_publica_solo_elementos_activos(self):
         RedSocial.objects.create(nombre="Facebook", url="https://facebook.com/x", icono="facebook")
         RedSocial.objects.create(nombre="Oculta", url="https://x.com/y", icono="twitter-x", activa=False)
-        BannerInicio.objects.create(titulo="Visible", imagen="banners/a.webp", texto_alternativo="A")
-        BannerInicio.objects.create(titulo="Oculto", imagen="banners/b.webp", texto_alternativo="B", activo=False)
+        pasada = Edicion.objects.create(nombre="FLV 2026", anio=2026, fecha_inicio="2026-04-29", fecha_fin="2026-05-03",
+                                        estado="cerrada")
+        BannerInicio.objects.create(edicion=self.edicion, titulo="Visible", imagen="banners/a.webp", texto_alternativo="A")
+        BannerInicio.objects.create(edicion=self.edicion, titulo="Oculto", imagen="banners/b.webp", texto_alternativo="B", activo=False)
+        BannerInicio.objects.create(edicion=pasada, titulo="De 2026", imagen="banners/c.webp", texto_alternativo="C")
         datos = self.client.get("/api/sitio/").data
         self.assertEqual(datos["configuracion"]["telefono"], "(+57) 315-746 3143")
         self.assertEqual([r["nombre"] for r in datos["redes"]], ["Facebook"])
@@ -37,7 +40,7 @@ class SitioPublicoTests(BaseAPITest):
 
 class BannerAdminTests(BaseAPITest):
     def crear(self, archivo, **extra):
-        datos = {"titulo": "Nuevo banner", "texto_alternativo": "Degradado rojo", "imagen": archivo, **extra}
+        datos = {"edicion": self.edicion.pk, "titulo": "Nuevo banner", "texto_alternativo": "Degradado rojo", "imagen": archivo, **extra}
         return self.client.post("/api/admin/banners/", datos, format="multipart")
 
     def test_solo_administrador(self):
@@ -54,6 +57,22 @@ class BannerAdminTests(BaseAPITest):
         self.assertRegex(respuesta.data["imagen"], r"^/media/banners/banner.*\.webp$")
         self.assertTrue(RegistroAuditoria.objects.filter(accion="crear", entidad="banner").exists())
         self.assertEqual(self.client.get(respuesta.data["imagen"]).status_code, 200)
+
+    def test_banner_requiere_edicion_y_se_filtra_por_edicion(self):
+        self.autenticar(self.admin)
+        sin_edicion = self.client.post("/api/admin/banners/", {"titulo": "X", "texto_alternativo": "X", "imagen": imagen()},
+                                       format="multipart")
+        self.assertEqual(sin_edicion.status_code, 400)
+        self.assertIn("edicion", sin_edicion.data)
+        pasada = Edicion.objects.create(nombre="FLV 2026", anio=2026, fecha_inicio="2026-04-29", fecha_fin="2026-05-03",
+                                        estado="cerrada")
+        self.assertEqual(self.crear(imagen(), activo=True).status_code, 201)
+        self.assertEqual(self.crear(imagen(), edicion=pasada.pk).status_code, 201)
+        self.assertEqual(len(self.client.get("/api/admin/banners/", {"edicion": pasada.pk}).data), 1)
+        self.assertEqual(len(self.client.get("/api/admin/banners/").data), 2)
+        self.assertEqual(self.client.get("/api/admin/banners/", {"edicion": pasada.pk}).data[0]["edicion_anio"], 2026)
+        # El sitio público solo muestra los de la edición activa
+        self.assertEqual(len(self.client.get("/api/sitio/").data["banners"]), 1)
 
     def test_rechaza_formato_no_permitido(self):
         self.autenticar(self.admin)
@@ -122,6 +141,9 @@ class CargarDemoSitioYEdicionesPasadasTests(BaseAPITest):
         votacion = self.client.get("/api/votaciones/por-ruta/", {"anio": 2025, "categoria": "musica", "votacion": "cancion-favorita-del-publico"}).data
         self.assertEqual(self.client.get(f"/api/votaciones/{votacion['id']}/resultados/").status_code, 200)
         sitio = self.client.get("/api/sitio/").data
-        self.assertEqual(len(sitio["banners"]), 2)
+        self.assertEqual([b["titulo"] for b in sitio["banners"]], ["60.º Festival de la Leyenda Vallenata 2027"])
+        for anio, numero in ((2025, "58.º"), (2026, "59.º")):
+            banners = BannerInicio.objects.filter(edicion__anio=anio)
+            self.assertEqual([b.titulo for b in banners], [f"{numero} Festival de la Leyenda Vallenata {anio}"])
         self.assertEqual([r["icono"] for r in sitio["redes"]], ["facebook", "twitter-x", "instagram", "youtube"])
         self.assertEqual(self.client.get(sitio["banners"][0]["imagen"]).status_code, 200)

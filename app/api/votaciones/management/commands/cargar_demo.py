@@ -5,7 +5,7 @@ Los datos son ILUSTRATIVOS: categorías, votaciones y opciones no han sido confi
 Festival de la Leyenda Vallenata, y todos los nombres de personas, canciones y agrupaciones son ficticios.
 Las fechas de la edición activa son relativas al momento de la carga, para que siempre haya votaciones
 abiertas, programadas y cerradas; las ediciones 2025 y 2026 quedan cerradas con resultados publicados.
-También crea los banners del inicio (imágenes abstractas generadas aquí), los datos de contacto y las redes.
+También crea un banner del inicio por edición (imágenes abstractas generadas aquí), los datos de contacto y las redes.
 
 Uso:
     python manage.py cargar_demo              # carga si aún no existen (idempotente)
@@ -41,11 +41,11 @@ COMPROBANTE_VOTANTE_DEMO = "FLV27-8F3K2A"
 
 EDICIONES = [
     {"nombre": "Festival de la Leyenda Vallenata 2027", "anio": 2027, "fecha_inicio": date(2027, 4, 28),
-     "fecha_fin": date(2027, 5, 2), "estado": Edicion.Estado.ACTIVA},
+     "fecha_fin": date(2027, 5, 2), "estado": Edicion.Estado.ACTIVA, "presentacion_categorias": "tarjetas"},
     {"nombre": "Festival de la Leyenda Vallenata 2026", "anio": 2026, "fecha_inicio": date(2026, 4, 29),
-     "fecha_fin": date(2026, 5, 3), "estado": Edicion.Estado.CERRADA},
+     "fecha_fin": date(2026, 5, 3), "estado": Edicion.Estado.CERRADA, "presentacion_categorias": "lista"},
     {"nombre": "Festival de la Leyenda Vallenata 2025", "anio": 2025, "fecha_inicio": date(2025, 4, 26),
-     "fecha_fin": date(2025, 4, 30), "estado": Edicion.Estado.CERRADA},
+     "fecha_fin": date(2025, 4, 30), "estado": Edicion.Estado.CERRADA, "presentacion_categorias": "mosaico"},
 ]
 ANIO_ACTIVO = 2027
 
@@ -136,6 +136,11 @@ OPCIONES = {
     8: [("Participante 1 (ficticio)", "Única opción registrada hasta ahora.")],
 }
 
+PRESENTACION_OPCIONES = {1: "reproductor", 2: "lista", 3: "mosaico", 4: "tarjetas", 5: "compacta", 6: "tarjetas", 7: "lista"}
+
+# Votaciones abiertas con pocos votantes: la lista de participación sigue oculta (menos de 10 votantes).
+MAX_VOTANTES = {3: 7}
+
 # Muestras instrumentales ORIGINALES generadas para el proyecto (servidas por la web en /audio/muestras/).
 MUESTRAS = {
     1: ["brisas-del-guatapuri", "luna-de-valledupar", "el-pilon-de-mi-tierra", "sabanas-del-cesar", "caminos-de-la-sierra"],
@@ -188,14 +193,18 @@ PASADAS = {
     ],
 }
 
-BANNERS = [
-    ("Tu voz también hace parte de la leyenda", "Vota por tus canciones, comparsas y agrupaciones favoritas.",
-     "Ver votaciones", f"/{ANIO_ACTIVO}",
-     "Ilustración abstracta en rojo, negro y dorado inspirada en los fuelles del acordeón.", ((221, 51, 51), (20, 20, 20))),
-    ("Revive las ediciones anteriores", "Consulta los resultados de las votaciones de 2025 y 2026.",
-     "Ver resultados 2026", "/2026",
-     "Ilustración abstracta en negro y dorado con ondas que evocan el sonido del acordeón.", ((20, 20, 20), (120, 80, 30))),
-]
+# Un banner por edición: año → (título, subtítulo, botón, enlace, texto alternativo, colores del degradado)
+BANNERS = {
+    2027: ("60.º Festival de la Leyenda Vallenata 2027", "Tu voz también hace parte de la leyenda: vota por tus favoritos.",
+           "Ver votaciones", "/2027",
+           "Ilustración abstracta en rojo, negro y dorado inspirada en los fuelles del acordeón.", ((221, 51, 51), (20, 20, 20))),
+    2026: ("59.º Festival de la Leyenda Vallenata 2026", "Consulta los resultados de las votaciones del público de 2026.",
+           "Ver resultados 2026", "/2026",
+           "Ilustración abstracta en negro y dorado con ondas que evocan el sonido del acordeón.", ((20, 20, 20), (120, 80, 30))),
+    2025: ("58.º Festival de la Leyenda Vallenata 2025", "Revive las votaciones del público de la edición 2025.",
+           "Ver resultados 2025", "/2025",
+           "Ilustración abstracta en dorado y rojo oscuro con fuelles de acordeón.", ((125, 39, 16), (60, 40, 20))),
+}
 
 REDES = [
     ("Facebook", "https://www.facebook.com/pages/Festival-de-la-Leyenda-Vallenata/112408762110846", "facebook"),
@@ -275,7 +284,8 @@ class Command(BaseCommand):
         demo = usuarios_demo()
         Voto.objects.filter(votacion__categoria__edicion__in=ediciones).delete()
         Voto.objects.filter(usuario__in=demo).delete()
-        for banner in BannerInicio.objects.filter(imagen__startswith="banners/demo-"):
+        # Los banners pertenecen a una edición (PROTECT): se borran todos los de las ediciones de demostración.
+        for banner in BannerInicio.objects.filter(edicion__in=ediciones):
             banner.imagen.delete(save=False)
             banner.delete()
         RedSocial.objects.all().delete()
@@ -312,6 +322,7 @@ class Command(BaseCommand):
                 categoria=categorias[cat], titulo=titulo, descripcion=desc, imagen=URL_ICONO.format(icono),
                 fecha_apertura=relativa(*apertura), fecha_cierre=relativa(*cierre), votos_por_usuario=1,
                 visibilidad_resultados=visibilidad, publicada=publicada,
+                presentacion_opciones=PRESENTACION_OPCIONES.get(clave, Votacion.PresentacionOpciones.TARJETAS),
             )
 
         opciones = {}
@@ -320,6 +331,7 @@ class Command(BaseCommand):
                 Opcion.objects.create(
                     votacion=votaciones[clave], nombre=nombre, descripcion=desc, orden=i,
                     enlace_multimedia=RUTA_MUESTRA.format(MUESTRAS[clave][i - 1]) if clave in MUESTRAS else "",
+                    texto_audio=f"Muestra instrumental original (sin letra) de {nombre}. {desc}" if clave in MUESTRAS else "",
                 )
                 for i, (nombre, desc) in enumerate(lista, start=1)
             ]
@@ -361,13 +373,13 @@ class Command(BaseCommand):
                     return valor
 
         tope = ahora - timedelta(hours=1)
-        a_votar = [(votaciones[c], opciones[c], pesos, ANIO_ACTIVO) for c, pesos in PESOS.items()]
-        a_votar += self.cargar_pasadas(ediciones)
+        a_votar = [(votaciones[c], opciones[c], pesos, ANIO_ACTIVO, MAX_VOTANTES.get(c)) for c, pesos in PESOS.items()]
+        a_votar += [(*fila, None) for fila in self.cargar_pasadas(ediciones)]
         votos, fechas = [], []
-        for votacion, lista_opciones, pesos, anio in a_votar:
+        for votacion, lista_opciones, pesos, anio, maximo in a_votar:
             desde = votacion.fecha_apertura
             hasta = min(votacion.fecha_cierre, tope)
-            for usuario in ficticios:
+            for usuario in ficticios[:maximo]:
                 if rnd.random() < 0.3:  # ~70 % de participación
                     continue
                 opcion = rnd.choices(lista_opciones, weights=pesos)[0]
@@ -398,7 +410,7 @@ class Command(BaseCommand):
             )
             RegistroAuditoria.objects.filter(pk=registro.pk).update(fecha_hora=fecha)
 
-        self.cargar_sitio()
+        self.cargar_sitio(ediciones)
 
         return {
             "ediciones": len(ediciones), "categorías": len(categorias), "votaciones": len(votaciones),
@@ -417,22 +429,23 @@ class Command(BaseCommand):
                     votacion = Votacion.objects.create(
                         categoria=categoria, titulo=titulo, descripcion=desc_v, imagen=URL_ICONO.format(icono_v),
                         fecha_apertura=apertura, fecha_cierre=cierre, publicada=True, resultados_publicados=True,
+                        presentacion_opciones=Votacion.PresentacionOpciones.LISTA,
                     )
                     ops = [Opcion.objects.create(votacion=votacion, nombre=n, descripcion=d, orden=j)
                            for j, (n, d) in enumerate(lista, start=1)]
                     a_votar.append((votacion, ops, pesos, anio))
         return a_votar
 
-    def cargar_sitio(self):
-        """Datos de contacto, redes sociales y banners del inicio."""
+    def cargar_sitio(self, ediciones):
+        """Datos de contacto, redes sociales y un banner del inicio por edición."""
         ConfiguracionSitio.obtener()
         if not RedSocial.objects.exists():
             for orden, (nombre, url, icono) in enumerate(REDES, start=1):
                 RedSocial.objects.create(nombre=nombre, url=url, icono=icono, orden=orden)
-        for orden, (titulo, subtitulo, boton, enlace, alt, colores) in enumerate(BANNERS, start=1):
-            banner = BannerInicio(titulo=titulo, subtitulo=subtitulo, texto_boton=boton, enlace_boton=enlace,
-                                  texto_alternativo=alt, orden=orden)
-            banner.imagen.storage.delete(f"banners/demo-{orden}.webp")  # nombre estable entre recargas
-            banner.imagen.save(f"demo-{orden}.webp", imagen_banner(colores, orden - 1), save=False)
+        for variante, (anio, (titulo, subtitulo, boton, enlace, alt, colores)) in enumerate(BANNERS.items()):
+            banner = BannerInicio(edicion=ediciones[anio], titulo=titulo, subtitulo=subtitulo, texto_boton=boton, enlace_boton=enlace,
+                                  texto_alternativo=alt, orden=1)
+            banner.imagen.storage.delete(f"banners/demo-{anio}.webp")  # nombre estable entre recargas
+            banner.imagen.save(f"demo-{anio}.webp", imagen_banner(colores, variante % 2), save=False)
             banner.save()
 

@@ -309,10 +309,11 @@ class VotoSerializer(serializers.ModelSerializer):
 
 class BannerInicioSerializer(serializers.ModelSerializer):
     imagen = RutaImagenField()
+    edicion_anio = serializers.IntegerField(source="edicion.anio", read_only=True)
 
     class Meta:
         model = BannerInicio
-        fields = ["id", "titulo", "subtitulo", "imagen", "texto_alternativo", "texto_boton", "enlace_boton", "orden", "activo"]
+        fields = ["id", "edicion", "edicion_anio", "titulo", "subtitulo", "imagen", "texto_alternativo", "texto_boton", "enlace_boton", "orden", "activo"]
 
     def validate_imagen(self, archivo):
         if archivo.size > TAMANO_MAXIMO_IMAGEN:

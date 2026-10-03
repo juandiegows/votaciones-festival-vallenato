@@ -271,6 +271,8 @@ class Voto(models.Model):
 
 
 class BannerInicio(models.Model):
+    # El inicio solo muestra los banners de la edición activa
+    edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="banners")
     titulo = models.CharField(max_length=120)
     subtitulo = models.CharField(max_length=250, blank=True)
     imagen = models.ImageField(upload_to="banners/")
@@ -282,7 +284,7 @@ class BannerInicio(models.Model):
 
     class Meta:
         db_table = "banner_inicio"
-        ordering = ["orden", "id"]
+        ordering = ["edicion", "orden", "id"]
         verbose_name = "banner de inicio"
         verbose_name_plural = "banners de inicio"
 
