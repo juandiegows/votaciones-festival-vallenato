@@ -1,22 +1,49 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import EstadoBadge from '../../components/EstadoBadge.jsx';
+import IndicadorEnVivo from '../../components/admin/IndicadorEnVivo.jsx';
+import { INTERVALO_EN_VIVO } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFechaHora } from '../../utils/helpers.js';
 
 export default function AdminPanel() {
-  const { votaciones, votos, usuarios, categorias, auditoria, edicionActiva, usuario, modo } = useApp();
+  const { usuarios, auditoria, edicionActiva, usuario, modo, recargar } = useApp();
+  const { edicion, esActiva, votaciones, votos, categorias } = useEdicionAdmin();
+  const [enVivo, setEnVivo] = useState(true);
+  const [actualizado, setActualizado] = useState(() => new Date());
+  const [cargando, setCargando] = useState(false);
+
+  // Tiempo real: en modo API se vuelven a pedir los datos; en el modo demostración llegan solos entre pestañas
+  useEffect(() => {
+    if (!enVivo) return undefined;
+    const t = setInterval(async () => {
+      if (document.visibilityState !== 'visible') return;
+      setCargando(true);
+      if (modo === 'api') await recargar();
+      setCargando(false);
+      setActualizado(new Date());
+    }, INTERVALO_EN_VIVO * 2);
+    return () => clearInterval(t);
+  }, [enVivo, modo, recargar]);
+
   const abiertas = votaciones.filter((v) => v.publicada && v.estado === 'abierta');
   const kpis = [
     { label: 'Votaciones abiertas', valor: abiertas.length, icono: 'unlock', clase: '' },
-    { label: 'Total de votos', valor: votos.length, icono: 'check2-all', clase: 'oro' },
+    { label: 'Votos de la edición', valor: votos.length, icono: 'check2-all', clase: 'oro' },
     { label: 'Votantes registrados', valor: usuarios.filter((u) => u.rol === 'votante').length, icono: 'people', clase: 'terracota' },
-    { label: 'Categorías activas', valor: categorias.filter((c) => c.activa && c.edicionId === edicionActiva?.id).length, icono: 'grid', clase: 'oscuro' },
+    { label: 'Categorías activas', valor: categorias.filter((c) => c.activa).length, icono: 'grid', clase: 'oscuro' },
   ];
+
+  let saludo = 'No hay una edición activa: configura una en «Ediciones».';
+  if (edicion) saludo = esActiva ? `${edicion.nombre}.` : `Consultando ${edicion.nombre} (edición anterior${edicionActiva ? `; la activa es ${edicionActiva.anio}` : ''}).`;
 
   return (
     <>
-      <PageHeader titulo="Panel de administración" subtitulo={`Hola, ${usuario.nombres}. ${edicionActiva ? `${edicionActiva.nombre}.` : 'No hay una edición activa: configura una en «Ediciones».'}`} />
+      <PageHeader titulo="Panel de administración" subtitulo={`Hola, ${usuario.nombres}. ${saludo}`}>
+        <IndicadorEnVivo id="panel-en-vivo" activo={enVivo} onCambio={setEnVivo} actualizado={actualizado} cargando={cargando} />
+      </PageHeader>
       <section aria-label="Indicadores" className="row g-3 mb-4">
         {kpis.map((k) => (
           <div className="col-6 col-xl-3" key={k.label}>
@@ -43,21 +70,22 @@ export default function AdminPanel() {
                 </li>
               ))}
             </ul>
-            <Link to="/admin/auditoria" className="enlace-mas d-inline-block mt-2">Ver toda la auditoría <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
+            <Link to="/panel/auditoria" className="enlace-mas d-inline-block mt-2">Ver toda la auditoría <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
           </section>
         </div>
         <div className="col-xl-5">
           <section className="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-accesos">
             <h2 id="titulo-accesos" className="h5">Accesos rápidos</h2>
             <div className="d-grid gap-2">
-              <Link className="btn btn-primary text-start" to="/admin/votaciones"><i className="bi bi-plus-circle me-2" aria-hidden="true"></i>Crear o gestionar votaciones</Link>
-              <Link className="btn btn-outline-primary text-start" to="/admin/categorias"><i className="bi bi-grid me-2" aria-hidden="true"></i>Gestionar categorías</Link>
-              <Link className="btn btn-outline-primary text-start" to="/admin/resultados"><i className="bi bi-bar-chart me-2" aria-hidden="true"></i>Consultar resultados y exportar CSV</Link>
-              <Link className="btn btn-outline-primary text-start" to="/admin/ediciones"><i className="bi bi-calendar3 me-2" aria-hidden="true"></i>Gestionar ediciones</Link>
+              <Link className="btn btn-primary text-start" to="/panel/votaciones"><i className="bi bi-plus-circle me-2" aria-hidden="true"></i>Crear o gestionar votaciones</Link>
+              <Link className="btn btn-outline-primary text-start" to="/panel/categorias"><i className="bi bi-grid me-2" aria-hidden="true"></i>Gestionar categorías</Link>
+              <Link className="btn btn-outline-primary text-start" to="/panel/resultados"><i className="bi bi-bar-chart me-2" aria-hidden="true"></i>Consultar resultados y exportar CSV</Link>
+              <Link className="btn btn-outline-primary text-start" to="/panel/ediciones"><i className="bi bi-calendar3 me-2" aria-hidden="true"></i>Gestionar ediciones</Link>
             </div>
           </section>
           <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-abiertas">
             <h2 id="titulo-abiertas" className="h5">Votaciones abiertas ahora</h2>
+            {abiertas.length === 0 && <p className="small text-secondary-flv mb-0">No hay votaciones abiertas en esta edición.</p>}
             <ul className="list-unstyled mb-0">
               {abiertas.map((v) => (
                 <li key={v.id} className="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">

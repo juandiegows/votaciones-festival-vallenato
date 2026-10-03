@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles/brand.css';
 import './styles.css';
+import './styles/admin-analisis.css';
 import App from './App.jsx';
 import { AppProvider } from './context/AppContext.jsx';
 import { BASE_URL } from './config.js';
