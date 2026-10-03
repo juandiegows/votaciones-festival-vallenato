@@ -19,6 +19,10 @@ erDiagram
         varchar visibilidad_resultados "tiempo_real | al_cierre | no_publicar"
         smallint votos_por_usuario "por defecto 1"
         bool votaciones_pausadas
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
     }
     CATEGORIA {
         bigint id PK
@@ -27,17 +31,25 @@ erDiagram
         varchar slug "único por edición"
         text descripcion
         varchar icono
+        varchar icono_imagen
         bool activa
         smallint orden
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
     }
     VOTACION {
         bigint id PK
         bigint categoria_id FK
         varchar titulo
         varchar slug "único por categoría"
+        text descripcion
+        varchar imagen
+        varchar icono_imagen
+        varchar presentacion_opciones
         datetime fecha_apertura
         datetime fecha_cierre "mayor que apertura"
-        varchar presentacion_opciones
         bool personalizar_votos
         smallint votos_por_usuario
         bool personalizar_resultados
@@ -45,6 +57,10 @@ erDiagram
         bool publicada
         bool cerrada_manualmente
         bool resultados_publicados
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
     }
     OPCION {
         bigint id PK
@@ -52,9 +68,15 @@ erDiagram
         varchar nombre
         text descripcion
         varchar imagen
+        varchar enlace_multimedia
         varchar audio
+        text texto_audio
         smallint orden
         bool activa
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
     }
     USUARIO {
         bigint id PK
@@ -68,6 +90,8 @@ erDiagram
         varchar rol "votante | administrador"
         bool acepta_tratamiento_datos
         datetime fecha_registro
+        bool is_active
+        datetime last_login
     }
     VOTO {
         bigint id PK
@@ -92,8 +116,56 @@ erDiagram
         bigint id PK
         bigint edicion_id FK
         varchar titulo
+        varchar subtitulo
         varchar imagen
         varchar texto_alternativo
+        varchar texto_boton
+        varchar enlace_boton
         smallint orden
         bool activo
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
+    }
+    REVISTA {
+        bigint id PK
+        varchar titulo
+        text descripcion
+        varchar archivo "PDF"
+        smallint orden
+        bool activa
+        datetime publicada_en
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
+    }
+    CONFIGURACION_SITIO {
+        bigint id PK
+        varchar nombre_organizacion
+        varchar telefono
+        varchar direccion
+        varchar correo
+        text texto_pie
+        varchar modo_banner
+        bool mostrar_total_votos
+        smallint dias_visible_cerradas
+        json marca
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
+    }
+    RED_SOCIAL {
+        bigint id PK
+        varchar nombre
+        varchar url
+        varchar icono
+        smallint orden
+        bool activa
+        datetime creado_en "soporte"
+        bigint creado_por FK "soporte, a USUARIO"
+        datetime actualizado_en "soporte"
+        bigint actualizado_por FK "soporte, a USUARIO"
     }

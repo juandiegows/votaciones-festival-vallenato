@@ -14,12 +14,16 @@ erDiagram
         varchar estado
         smallint votos_por_usuario
         bool votaciones_pausadas
+        bigint creado_por FK "soporte"
+        bigint actualizado_por FK "soporte"
     }
     CATEGORIA {
         bigint id PK
         bigint edicion_id FK
         varchar nombre
         varchar slug
+        bigint creado_por FK "soporte"
+        bigint actualizado_por FK "soporte"
     }
     VOTACION {
         bigint id PK
@@ -27,12 +31,16 @@ erDiagram
         varchar titulo
         datetime fecha_apertura
         datetime fecha_cierre
+        bigint creado_por FK "soporte"
+        bigint actualizado_por FK "soporte"
     }
     OPCION {
         bigint id PK
         bigint votacion_id FK
         varchar nombre
         bool activa
+        bigint creado_por FK "soporte"
+        bigint actualizado_por FK "soporte"
     }
     USUARIO {
         bigint id PK
@@ -52,9 +60,12 @@ erDiagram
         bigint id PK
         bigint usuario_id FK
         varchar accion
+        datetime fecha_hora
     }
     BANNER_INICIO {
         bigint id PK
         bigint edicion_id FK
         varchar imagen
+        bigint creado_por FK "soporte"
+        bigint actualizado_por FK "soporte"
     }
