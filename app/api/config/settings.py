@@ -152,6 +152,8 @@ CORREO_URL_SITIO = os.getenv("CORREO_URL_SITIO", "http://localhost:5195")
 # Carpeta pública con las imágenes de los correos (app/web/public/correo); vacío = {CORREO_URL_SITIO}/correo
 CORREO_URL_RECURSOS = os.getenv("CORREO_URL_RECURSOS", "")
 DEFAULT_FROM_EMAIL = CORREO_REMITENTE
+# Entregar los correos del registro y del voto en un hilo aparte para no demorar la respuesta de la API
+CORREO_EN_SEGUNDO_PLANO = env_bool("CORREO_EN_SEGUNDO_PLANO", True)
 
 # Adaptador smtp (backend SMTP de Django)
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")

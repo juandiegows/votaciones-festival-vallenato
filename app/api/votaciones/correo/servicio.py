@@ -6,9 +6,11 @@ CORREO_ADAPTADOR y se resuelve en obtener_adaptador().
 
 import logging
 import re
+import threading
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.module_loading import import_string
@@ -72,11 +74,24 @@ def contexto_base():
     }
 
 
-def enviar_plantilla(plantilla, usuario, asunto, contexto=None, silencioso=True, adaptador=None):
+def entregar(adaptador, mensaje, plantilla, silencioso):
+    try:
+        adaptador.enviar(mensaje)
+    except ErrorEnvioCorreo:
+        if not silencioso:
+            raise
+        logger.exception("No se pudo enviar el correo «%s» a %s", plantilla, mensaje.para[0].correo)
+        return False
+    return True
+
+
+def enviar_plantilla(plantilla, usuario, asunto, contexto=None, silencioso=True, adaptador=None, asincrono=False):
     """
     Renderiza correo/<plantilla>.html y .txt y lo envía al usuario. Con silencioso=True un fallo del proveedor
     se registra en el log y no interrumpe la operación (registro, voto…); devuelve True si se envió.
     adaptador: reemplaza al configurado (la vista previa usa uno que solo guarda el mensaje).
+    asincrono: con CORREO_EN_SEGUNDO_PLANO la entrega al proveedor va en un hilo aparte (la plantilla se
+    renderiza antes, en el hilo actual, para no usar la base de datos fuera de la petición).
     """
     contexto = {**contexto_base(), "usuario": usuario, "asunto": asunto, **(contexto or {})}
     mensaje = Mensaje(
@@ -88,14 +103,28 @@ def enviar_plantilla(plantilla, usuario, asunto, contexto=None, silencioso=True,
         responder_a=settings.CORREO_RESPONDER_A,
         etiquetas={"plantilla": plantilla},
     )
-    try:
-        (adaptador or obtener_adaptador()).enviar(mensaje)
-    except ErrorEnvioCorreo:
-        if not silencioso:
-            raise
-        logger.exception("No se pudo enviar el correo «%s» a %s", plantilla, usuario.email)
-        return False
-    return True
+    adaptador = adaptador or obtener_adaptador()
+    if asincrono and settings.CORREO_EN_SEGUNDO_PLANO:
+        threading.Thread(
+            target=entregar, args=(adaptador, mensaje, plantilla, True), name=f"correo-{plantilla}", daemon=True
+        ).start()
+        return True
+    return entregar(adaptador, mensaje, plantilla, silencioso)
+
+
+def enviar_al_confirmar(funcion, *args, **kwargs):
+    """
+    Programa un correo (p. ej. enviar_bienvenida) para cuando la transacción actual se confirme, así nunca sale
+    un correo de un registro o voto que no quedó guardado. Cualquier error del correo solo queda en el log:
+    la operación del usuario ya terminó bien y no debe fallar por esto.
+    """
+    def tarea():
+        try:
+            funcion(*args, asincrono=True, **kwargs)
+        except Exception:
+            logger.exception("Error al preparar el correo %s", getattr(funcion, "__name__", funcion))
+
+    transaction.on_commit(tarea)
 
 
 def enviar_bienvenida(usuario, **opciones):
