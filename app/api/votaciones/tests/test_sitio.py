@@ -165,6 +165,12 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertEqual(ConfiguracionSitio.obtener().modo_banner, "fijo")
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"modo_banner": "girando"}, format="json").status_code, 400)
 
+    def test_dias_visibles_de_votaciones_cerradas(self):
+        self.assertEqual(self.client.get("/api/sitio/").data["configuracion"]["dias_visible_cerradas"], 7)
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"dias_visible_cerradas": 0}, format="json").status_code, 200)
+        self.assertEqual(ConfiguracionSitio.obtener().dias_visible_cerradas, 0)
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"dias_visible_cerradas": -1}, format="json").status_code, 400)
+
     def test_banner_sin_titulo_solo_imagen(self):
         respuesta = self.client.post("/api/admin/banners/", {"edicion": self.edicion.pk, "texto_alternativo": "Cartel del Festival", "imagen": imagen()},
                                      format="multipart")

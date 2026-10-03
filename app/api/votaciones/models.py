@@ -330,6 +330,10 @@ class ConfiguracionSitio(models.Model):
     )
     # Fijo: solo el primer banner activo; carrusel: todos los activos rotando
     modo_banner = models.CharField(max_length=10, choices=ModoBanner.choices, default=ModoBanner.CARRUSEL)
+    # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar)
+    dias_visible_cerradas = models.PositiveSmallIntegerField(
+        default=7, help_text="Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar)."
+    )
 
     class Meta:
         db_table = "configuracion_sitio"
