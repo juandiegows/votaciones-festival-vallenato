@@ -75,6 +75,20 @@ npm run preview   # sirve la compilación
 - Muestras de audio instrumentales **originales** generadas para el proyecto en `public/audio/muestras/` (ilustrativas).
 - Despliegue automático con GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml` en la raíz del repositorio).
 
+## SEO y archivos del sitio
+
+- `hooks/useSeo.js`: cada página fija título, descripción, `robots`, `canonical`, Open Graph/Twitter y JSON-LD
+  (`BreadcrumbList`). Las privadas (login, mis votos, comprobante, confirmar correo, panel, errores) van con
+  `noindex`. El dominio canónico es `VITE_SITE_URL` (por defecto `https://votaciones.juandiegows.com`; la copia de
+  GitHub Pages también apunta ahí para no competir como contenido duplicado).
+- `public/robots.txt`: bloquea las rutas privadas y la API; declara el mapa del sitio dinámico
+  `https://votaciones.juandiegows.com/api/sitemap.xml` (lo genera Django con las ediciones, categorías y votaciones públicas).
+- `public/.well-known/security.txt` (RFC 9116, caduca el 2027-10-03: renovarlo antes) y `SECURITY.md` en la raíz.
+- `public/humans.txt`, `public/site.webmanifest`, íconos PNG y `og-image.png` (1200×630). Se regeneran con
+  `python herramientas/seo/generar_imagenes.py`.
+- Cabeceras de seguridad (CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) en
+  `nginx-seguridad.conf` (Docker/VPS) y `public/.htaccess` (equivalente para un hosting con Apache).
+
 ## Estructura
 
 ```
