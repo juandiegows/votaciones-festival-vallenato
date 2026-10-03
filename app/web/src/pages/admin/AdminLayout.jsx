@@ -10,6 +10,7 @@ const ENLACES = [
   { to: '/panel/resultados', label: 'Resultados', icono: 'bar-chart', porEdicion: true },
   { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
   { to: '/panel/banner', label: 'Banner de inicio', icono: 'images', porEdicion: true },
+  { to: '/panel/revista', label: 'Revista', icono: 'book' },
   { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
   { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
 ];

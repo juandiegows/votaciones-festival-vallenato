@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import HeroAcordeon from '../components/HeroAcordeon.jsx';
@@ -8,6 +9,9 @@ import { useRutas } from '../hooks/useRutas.js';
 import SinEdicion from '../components/SinEdicion.jsx';
 import HeroBanners from '../components/HeroBanners.jsx';
 
+// pdf.js y page-flip solo se descargan si hay una revista que mostrar
+const RevistaLibro = lazy(() => import('../components/RevistaLibro.jsx'));
+
 const PASOS = [
   { icono: 'person-plus', titulo: 'Regístrate', texto: 'Crea tu cuenta con tu correo y acepta la política de tratamiento de datos.' },
   { icono: 'grid-3x3-gap', titulo: 'Explora', texto: 'Revisa las categorías y las votaciones abiertas de la edición.' },
@@ -17,7 +21,9 @@ const PASOS = [
 
 export default function Inicio() {
   const datos = useApp();
-  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners, configuracion } = datos;
+  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners, configuracion, revistas = [] } = datos;
+  // La primera revista activa de la lista definida en /panel/revista
+  const revista = revistas.filter((r) => r.activa).sort((a, b) => a.orden - b.orden || b.id - a.id)[0];
   // Solo los banners de la edición activa (los que no tienen edición se consideran de la activa);
   // en modo «fijo» se muestra únicamente el primero
   const bannersEdicion = banners.filter((b) => b.activo && (b.edicionId ?? edicionActiva?.id) === edicionActiva?.id).sort((a, b) => a.orden - b.orden);
@@ -87,6 +93,24 @@ export default function Inicio() {
           </ul>
         </div>
       </section>
+
+      {revista && (
+        <section className="seccion-revista py-5" aria-labelledby="titulo-revista">
+          <div className="container">
+            <div className="text-center mb-4">
+              <h2 id="titulo-revista" className="seccion-titulo seccion-titulo-centro">Revista institucional</h2>
+              <p className="revista-titulo mb-1">{revista.titulo}</p>
+              {revista.descripcion && <p className="revista-descripcion mb-0">{revista.descripcion}</p>}
+              <p className="revista-ayuda small mt-2 mb-0">
+                <i className="bi bi-hand-index me-1" aria-hidden="true"></i>Arrastra la esquina de la página o usa las flechas para hojearla.
+              </p>
+            </div>
+            <Suspense fallback={<div className="revista-estado position-static" role="status">Cargando la revista…</div>}>
+              <RevistaLibro key={revista.id} url={revista.archivo} titulo={revista.titulo} />
+            </Suspense>
+          </div>
+        </section>
+      )}
 
       <section className="container py-5" aria-labelledby="como-funciona">
         <h2 id="como-funciona" className="seccion-titulo mb-4">¿Cómo funciona?</h2>

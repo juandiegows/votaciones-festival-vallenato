@@ -281,5 +281,5 @@ export function crearDatosSemilla() {
     { id: 4, nombre: 'YouTube', url: 'https://www.youtube.com/channel/UCEB34mUTorkyVnDxgNDCreA', icono: 'youtube', orden: 4, activa: true },
   ];
 
-  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria, configuracion, redes, banners: [] };
+  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria, configuracion, redes, banners: [], revistas: [] };
 }

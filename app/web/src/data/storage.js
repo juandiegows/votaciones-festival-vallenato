@@ -8,7 +8,8 @@ const CLAVE_SESION = 'flv_sesion_v3';
 export function cargarDatos() {
   try {
     const raw = localStorage.getItem(CLAVE_DATOS);
-    if (raw) return JSON.parse(raw);
+    // Los datos guardados antes de existir las revistas no traen la colección
+    if (raw) return { revistas: [], ...JSON.parse(raw) };
   } catch {
     /* almacenamiento no disponible: se usan datos semilla */
   }

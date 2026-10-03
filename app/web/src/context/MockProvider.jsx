@@ -16,6 +16,7 @@ import { AppContext, buscarEdicionActiva } from './contexto.js';
 // Archivos que el modo demostración guarda como data URL en este navegador
 const ARCHIVOS = {
   banners: { campo: 'archivo', web: 'imagen' },
+  revistas: { campo: 'archivoPdf', web: 'archivo' },
   categorias: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
   votaciones: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
   opciones: { campo: 'archivoAudio', web: 'audio', quitar: 'quitarAudio' },

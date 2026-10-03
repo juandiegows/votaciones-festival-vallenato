@@ -41,6 +41,10 @@ const CAMPOS = {
     id: 'id', edicionId: 'edicion', titulo: 'titulo', subtitulo: 'subtitulo', imagen: 'imagen', textoAlternativo: 'texto_alternativo',
     textoBoton: 'texto_boton', enlaceBoton: 'enlace_boton', orden: 'orden', activo: 'activo',
   },
+  revistas: {
+    id: 'id', titulo: 'titulo', descripcion: 'descripcion', archivo: 'archivo', orden: 'orden', activa: 'activa',
+    publicadaEn: 'publicada_en',
+  },
   redes: { id: 'id', nombre: 'nombre', url: 'url', icono: 'icono', orden: 'orden', activa: 'activa' },
   configuracion: {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
@@ -53,11 +57,12 @@ const CAMPOS = {
 };
 
 // Campos que la API calcula o que solo cambian con acciones específicas (publicar, cerrar…)
-const SOLO_LECTURA = new Set(['id', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
+const SOLO_LECTURA = new Set(['id', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
 
 // Archivos subidos: solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {
   banners: { campo: 'archivo', api: 'imagen', web: 'imagen' },
+  revistas: { campo: 'archivoPdf', api: 'archivo', web: 'archivo' },
   categorias: { campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' },
   votaciones: { campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' },
   opciones: { campo: 'archivoAudio', api: 'audio', web: 'audio', quitar: 'quitarAudio' },
@@ -140,7 +145,7 @@ const VERBOS = {
   exportar_resultados: 'Exportó los resultados de',
 };
 const ENTIDADES = {
-  edicion: 'la edición', categoria: 'la categoría', votacion: 'la votación', opcion: 'la opción', banner: 'el banner',
+  edicion: 'la edición', categoria: 'la categoría', votacion: 'la votación', opcion: 'la opción', banner: 'el banner', revista: 'la revista',
   red_social: 'la red social', configuracion: 'los datos de contacto',
 };
 

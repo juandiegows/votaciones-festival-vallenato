@@ -22,15 +22,16 @@ const RUTAS_ADMIN = {
   votaciones: '/admin/votaciones/',
   opciones: '/admin/opciones/',
   banners: '/admin/banners/',
+  revistas: '/admin/revistas/',
   redes: '/admin/redes/',
 };
 
 const VACIO = {
   ediciones: [], categorias: [], votaciones: [], opciones: [], votos: [], usuarios: [], auditoria: [], totalAuditoria: 0,
-  banners: [], redes: [], configuracion: null,
+  banners: [], revistas: [], redes: [], configuracion: null,
 };
 
-const ACTIVOS_POR_DEFECTO = { banners: { activo: true }, categorias: { activa: true }, opciones: { activa: true } };
+const ACTIVOS_POR_DEFECTO = { banners: { activo: true }, revistas: { activa: true }, categorias: { activa: true }, opciones: { activa: true } };
 
 const mapear = (coleccion, lista) => lista.map((x) => desdeApi(coleccion, x));
 
@@ -56,11 +57,11 @@ export function ApiProvider({ children }) {
   /** Carga las colecciones que corresponden al usuario (público, votante o administrador). */
   const cargarColecciones = useCallback(async (u) => {
     const esAdmin = u?.rol === 'administrador';
-    // Contacto, redes y banners activos (público); el administrador recibe además los inactivos
+    // Contacto, redes, revistas y banners activos (público); el administrador recibe además los inactivos
     const sitio = await obtener('/sitio/');
     let nuevas;
     if (esAdmin) {
-      const [ediciones, categorias, votaciones, opciones, votos, usuarios, auditoria, banners, redes] = await Promise.all([
+      const [ediciones, categorias, votaciones, opciones, votos, usuarios, auditoria, banners, redes, revistas] = await Promise.all([
         obtener('/admin/ediciones/'),
         obtener('/admin/categorias/'),
         obtener('/admin/votaciones/'),
@@ -70,8 +71,10 @@ export function ApiProvider({ children }) {
         obtener('/admin/auditoria/'),
         obtener('/admin/banners/'),
         obtener('/admin/redes/'),
+        obtener('/admin/revistas/'),
       ]);
       sitio.banners = banners;
+      sitio.revistas = revistas;
       sitio.redes = redes;
       const cats = mapear('categorias', categorias);
       const vots = mapear('votaciones', votaciones);
@@ -110,6 +113,7 @@ export function ApiProvider({ children }) {
     }
     nuevas.banners = mapear('banners', sitio.banners);
     nuevas.redes = mapear('redes', sitio.redes);
+    nuevas.revistas = mapear('revistas', sitio.revistas || []);
     nuevas.configuracion = desdeApi('configuracion', sitio.configuracion);
     const mios = u ? mapear('votos', await obtener('/mis-votos/')).map((v) => ({ ...v, usuarioId: u.id })) : [];
     setColecciones(nuevas);

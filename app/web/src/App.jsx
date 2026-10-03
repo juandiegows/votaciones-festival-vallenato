@@ -22,6 +22,7 @@ import AdminEdiciones from './pages/admin/AdminEdiciones.jsx';
 import AdminAuditoria from './pages/admin/AdminAuditoria.jsx';
 import AdminBanner from './pages/admin/AdminBanner.jsx';
 import AdminSitio from './pages/admin/AdminSitio.jsx';
+import AdminRevista from './pages/admin/AdminRevista.jsx';
 
 // Las rutas fijas (registro, login, admin…) tienen prioridad sobre /:anio. La web nunca usa
 // /api, /django-admin ni /static: en producción esas rutas las atiende Django.
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="resultados" element={<AdminResultados />} />
           <Route path="auditoria" element={<AdminAuditoria />} />
           <Route path="banner" element={<AdminBanner />} />
+          <Route path="revista" element={<AdminRevista />} />
           <Route path="sitio" element={<AdminSitio />} />
           <Route path="marca" element={<Marca />} />
         </Route>
