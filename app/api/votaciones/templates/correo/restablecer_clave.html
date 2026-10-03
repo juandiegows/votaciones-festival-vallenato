@@ -1,0 +1,17 @@
+{% extends "correo/base.html" %}
+{% block preheader %}Recibimos una solicitud para cambiar la contraseña de tu cuenta.{% endblock %}
+{% block icono %}&#128273;{% endblock %}
+{% block etiqueta %}Seguridad de tu cuenta{% endblock %}
+{% block titulo %}Restablece tu contraseña{% endblock %}
+{% block intro %}Hola, {{ usuario.nombres }}. Recibimos una solicitud para cambiar la contraseña de <strong style="color:#000000;">{{ usuario.email }}</strong>.{% endblock %}
+{% block contenido %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF8EF;border:1px solid #F1E2CC;border-radius:12px;">
+  <tr>
+    <td align="center" style="padding:16px 18px;font-size:14px;color:#555555;">
+      <span style="font-size:18px;">&#9201;&#65039;</span>&nbsp; El enlace vence en <strong style="color:#000000;">{{ minutos_validez }} minutos</strong> y solo se puede usar una vez.
+    </td>
+  </tr>
+</table>
+{% endblock %}
+{% block boton %}Crear nueva contraseña{% endblock %}
+{% block motivo %}Recibes este correo porque se pidió restablecer la contraseña de tu cuenta en el sistema de votaciones.{% endblock %}

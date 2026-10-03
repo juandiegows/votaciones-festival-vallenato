@@ -1,0 +1,18 @@
+{% autoescape off %}¡Tu voto fue registrado con éxito!
+
+Hola, {{ usuario.nombres }}. Gracias por participar. Guarda este código como constancia.
+
+  Código de comprobante: {{ voto.codigo_comprobante }}
+  Edición:      {{ edicion.nombre }}
+  Votante:      {{ usuario.email }}
+  Categoría:    {{ categoria.nombre }}
+  Votación:     {{ votacion.titulo }}
+  Tu elección:  {{ voto.opcion.nombre }}
+  Fecha y hora: {{ fecha_hora|date:"j \d\e F \d\e Y, h:i a"|lower }} (hora de Colombia)
+
+Imprimir:        {{ enlace_imprimir }}
+Mis votos:       {{ enlace_mis_votos }}
+Seguir votando:  {{ enlace_seguir }}
+
+Si no reconoces este voto, escríbenos de inmediato a {{ correo_contacto }}.
+{% include "correo/pie.txt" %}{% endautoescape %}

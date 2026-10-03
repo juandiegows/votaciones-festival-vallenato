@@ -1,0 +1,81 @@
+{% extends "correo/base.html" %}
+{% block preheader %}Tu voto en «{{ votacion.titulo }}» quedó registrado. Código {{ voto.codigo_comprobante }}.{% endblock %}
+{# Mismo diseño que la pantalla «Comprobante de voto» de la web (app/web/src/pages/Comprobante.jsx) #}
+{% block encabezado %}{% endblock %}
+{% block contenido %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border:2px dashed #8A6A2E;border-radius:12px;background:#FFFFFF;">
+  <tr>
+    <td align="center" class="relleno" style="padding:30px 28px 28px;">
+      {# Sello de verificación #}
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" valign="middle" width="60" height="60" style="width:60px;height:60px;border-radius:50%;background:#2E7D32;box-shadow:0 0 0 6px #E3F1E4;font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:700;line-height:60px;color:#FFFFFF;text-align:center;">&#10003;</td>
+        </tr>
+      </table>
+      <h1 class="titulo" style="margin:22px 0 8px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:24px;font-weight:800;line-height:1.25;color:#000000;">¡Tu voto fue registrado con éxito!</h1>
+      <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#555555;">Gracias por participar, {{ usuario.nombres }}. Guarda este código como constancia.</p>
+
+      {# Código #}
+      <p style="margin:0 0 6px;font-size:13px;color:#555555;">Código de comprobante</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:8px 16px;border-radius:7px;background:#FCE6CC;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;letter-spacing:2px;color:#000000;">{{ voto.codigo_comprobante }}</td>
+        </tr>
+      </table>
+
+      {# Datos #}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;text-align:left;">
+        <tr>
+          <td width="42%" valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Votación</td>
+          <td valign="top" style="padding:5px 12px;color:#555555;">{{ votacion.titulo }}</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Categoría</td>
+          <td valign="top" style="padding:5px 12px;color:#555555;">{{ categoria.nombre }} · {{ edicion.anio }}</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Fecha y hora</td>
+          <td valign="top" style="padding:5px 12px;color:#555555;">{{ fecha_hora|date:"j \d\e M \d\e Y, g:i a"|lower }}</td>
+        </tr>
+        <tr>
+          <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Votante</td>
+          <td valign="top" style="padding:5px 12px;color:#555555;word-break:break-all;">{{ usuario.email }}</td>
+        </tr>
+      </table>
+
+      {# Tu elección #}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;border-radius:10px;background:#FCE6CC;text-align:left;">
+        <tr>
+          <td width="48" valign="middle" style="padding:16px 0 16px 16px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle" width="48" height="48" style="width:48px;height:48px;border-radius:12px;background:{{ avatar.fondo }};font-family:Poppins,Arial,Helvetica,sans-serif;font-size:17px;font-weight:700;line-height:48px;color:{{ avatar.texto }};text-align:center;">{{ avatar.iniciales }}</td>
+              </tr>
+            </table>
+          </td>
+          <td valign="middle" style="padding:16px 16px 16px 14px;font-family:Poppins,Arial,Helvetica,sans-serif;">
+            <p style="margin:0;font-size:13px;color:#555555;">Tu elección</p>
+            <p style="margin:2px 0 0;font-size:16px;font-weight:600;color:#000000;">{{ voto.opcion.nombre }}</p>
+          </td>
+        </tr>
+      </table>
+
+      {# Acciones. Un correo no puede imprimir: «Imprimir» abre el comprobante en la web con ?imprimir=1 y ella abre el diálogo #}
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+        <tr>
+          <td class="apilar apilar-espacio" style="padding:0 4px;">
+            <a href="{{ enlace_imprimir }}" target="_blank" style="display:inline-block;padding:9px 13px;white-space:nowrap;border:1px solid #B71C1C;border-radius:8px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;font-weight:600;color:#B71C1C;text-decoration:none;">&#128424;&#65039; Imprimir</a>
+          </td>
+          <td class="apilar apilar-espacio" style="padding:0 4px;">
+            <a href="{{ enlace_mis_votos }}" target="_blank" style="display:inline-block;padding:9px 13px;white-space:nowrap;border:1px solid #B71C1C;border-radius:8px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;font-weight:600;color:#B71C1C;text-decoration:none;">&#129534; Mis votos</a>
+          </td>
+          <td class="apilar" style="padding:0 4px;">
+            <a href="{{ enlace_seguir }}" target="_blank" style="display:inline-block;padding:10px 15px;white-space:nowrap;border-radius:8px;background:#DD3333;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;font-weight:600;color:#FFFFFF;text-decoration:none;">Seguir votando</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#777777;text-align:center;">¿No reconoces este voto? Escríbenos a <a href="mailto:{{ correo_contacto }}" style="color:#B71C1C;text-decoration:underline;">{{ correo_contacto }}</a> indicando el código.</p>
+{% endblock %}

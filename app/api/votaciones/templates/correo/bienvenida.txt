@@ -1,0 +1,14 @@
+{% autoescape off %}¡Hola, {{ usuario.nombres }}!
+
+Te damos la bienvenida al sistema de votaciones del Festival de la Leyenda Vallenata.
+Tu cuenta quedó creada con el correo {{ usuario.email }}.
+
+Desde ahora puedes:
+- Consultar las categorías y votaciones de la edición vigente.
+- Votar por tus favoritos mientras cada votación esté abierta.
+- Recibir un comprobante con código único por cada voto.
+
+Ir a votar: {{ enlace }}
+
+Si no creaste esta cuenta, escríbenos a {{ correo_contacto }}.
+{% include "correo/pie.txt" %}{% endautoescape %}

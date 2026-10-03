@@ -1,0 +1,57 @@
+{% extends "correo/base.html" %}
+{% block preheader %}Tu cuenta está lista: ya puedes votar en las categorías abiertas del Festival.{% endblock %}
+{% block icono %}&#127881;{% endblock %}
+{% block etiqueta %}Cuenta creada{% endblock %}
+{% block titulo %}¡Te damos la bienvenida, {{ usuario.nombres }}!{% endblock %}
+{% block intro %}Ya haces parte de las votaciones del <strong style="color:#000000;">Festival de la Leyenda Vallenata</strong>. Tu voz cuenta para elegir a los favoritos del público.{% endblock %}
+{% block contenido %}
+{# Datos de la cuenta #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF8EF;border:1px solid #F1E2CC;border-radius:12px;">
+  <tr>
+    <td style="padding:14px 18px;font-size:14px;color:#555555;">
+      <span style="font-size:18px;vertical-align:middle;">&#9993;&#65039;</span>&nbsp; Tu cuenta: <strong style="color:#000000;">{{ usuario.email }}</strong>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:28px 0 14px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:18px;font-weight:800;color:#000000;text-align:center;">Así de fácil es votar</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td class="apilar apilar-espacio" width="33%" valign="top" style="padding:0 6px 0 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #EFE6DA;border-top:4px solid #DD3333;border-radius:12px;">
+        <tr>
+          <td align="center" valign="top" height="150" style="height:150px;padding:18px 12px 14px;">
+            <div style="font-size:28px;line-height:1;">&#128269;</div>
+            <p style="margin:10px 0 4px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#000000;">1. Explora</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#555555;">Revisa las categorías y votaciones de la edición vigente.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="apilar apilar-espacio" width="33%" valign="top" style="padding:0 3px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #EFE6DA;border-top:4px solid #D7AC70;border-radius:12px;">
+        <tr>
+          <td align="center" valign="top" height="150" style="height:150px;padding:18px 12px 14px;">
+            <div style="font-size:28px;line-height:1;">&#127926;</div>
+            <p style="margin:10px 0 4px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#000000;">2. Vota</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#555555;">Elige a tu favorito mientras la votación esté abierta.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="apilar apilar-espacio" width="33%" valign="top" style="padding:0 0 0 6px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #EFE6DA;border-top:4px solid #7D2710;border-radius:12px;">
+        <tr>
+          <td align="center" valign="top" height="150" style="height:150px;padding:18px 12px 14px;">
+            <div style="font-size:28px;line-height:1;">&#129534;</div>
+            <p style="margin:10px 0 4px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:15px;font-weight:800;color:#000000;">3. Guarda</p>
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#555555;">Recibe un comprobante con código único por cada voto.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p style="margin:22px 0 0;font-size:13px;color:#777777;text-align:center;">¿No creaste esta cuenta? Escríbenos a <a href="mailto:{{ correo_contacto }}" style="color:#B71C1C;text-decoration:underline;">{{ correo_contacto }}</a>.</p>
+{% endblock %}
+{% block boton %}Ir a votar{% endblock %}

@@ -1,0 +1,10 @@
+{% autoescape off %}Restablece tu contraseña
+
+Hola, {{ usuario.nombres }}. Recibimos una solicitud para restablecer la contraseña de la cuenta {{ usuario.email }}.
+
+Abre este enlace para crear una nueva (vence en {{ minutos_validez }} minutos y solo se puede usar una vez):
+{{ enlace }}
+
+¿No fuiste tú? Ignora este correo: tu contraseña actual sigue funcionando.
+Nunca te pediremos tu contraseña por correo.
+{% include "correo/pie.txt" %}{% endautoescape %}

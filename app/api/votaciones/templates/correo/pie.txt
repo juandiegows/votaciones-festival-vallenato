@@ -1,0 +1,10 @@
+
+Saludos,
+Equipo de votaciones · {{ organizacion }}
+
+--
+{{ organizacion }}
+{{ direccion }} · {{ telefono_contacto }} · {{ correo_contacto }}
+Este es un mensaje automático; por favor no respondas a esta dirección.
+{% if texto_pie %}{{ texto_pie }}
+{% endif %}{{ url_sitio }}
