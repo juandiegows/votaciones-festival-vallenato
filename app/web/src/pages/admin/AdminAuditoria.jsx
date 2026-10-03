@@ -6,6 +6,7 @@ import EstadoBadge from '../../components/EstadoBadge.jsx';
 import IndicadorEnVivo from '../../components/admin/IndicadorEnVivo.jsx';
 import IntegridadVotos from '../../components/admin/IntegridadVotos.jsx';
 import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.jsx';
+import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFechaHora } from '../../utils/helpers.js';
 
@@ -84,6 +85,7 @@ function Acciones() {
   const [pagina, setPagina] = useState(1);
   const [buscar, setBuscar] = useState('');
   const [entidad, setEntidad] = useState('');
+  const [vista, setVista] = useVistaGuardada('auditoria', 'tabla');
   const [estado, setEstado] = useState({ cargando: true, registros: [], total: 0, hayMas: false, error: '' });
 
   useEffect(() => {
@@ -107,7 +109,7 @@ function Acciones() {
     <>
       <div className="card-flv p-3 mb-3">
         <div className="row g-2">
-          <div className="col-md-8">
+          <div className={modo === 'api' ? 'col-md-6' : 'col-md'}>
             <label htmlFor="aud-buscar" className="form-label small mb-1">Buscar</label>
             <input id="aud-buscar" type="search" className="form-control form-control-sm" placeholder="Usuario o acción (crear, publicar, eliminar…)" value={buscar} onChange={(e) => { setBuscar(e.target.value); setPagina(1); }} />
           </div>
@@ -119,33 +121,93 @@ function Acciones() {
               </select>
             </div>
           )}
+          <div className="col-md-auto d-flex align-items-end">
+            <SelectorVista valor={vista} onCambio={setVista} />
+          </div>
         </div>
       </div>
       {error && <div className="alert alert-danger" role="alert">{error}</div>}
-      <div className="table-responsive card-flv">
-        <table className="table table-flv align-middle mb-0">
-          <caption className="visually-hidden">Registro de auditoría, página {pagina}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Fecha y hora</th>
-              <th scope="col">Usuario</th>
-              <th scope="col">Acción</th>
-            </tr>
-          </thead>
-          <tbody aria-busy={cargando}>
-            {registros.map((a) => (
-              <tr key={a.id}>
-                <td className="small text-nowrap">{formatearFechaHora(a.fechaHora)}</td>
-                <td className="small text-break">{a.usuario}</td>
-                <td className="small">{a.accion}</td>
+      {!cargando && registros.length === 0 && vista !== 'tabla' && (
+        <div className="card-flv p-4 text-center">No hay acciones registradas con ese filtro.</div>
+      )}
+      {vista === 'tarjetas' && (
+        <div className="row g-3" aria-busy={cargando}>
+          {registros.map((a) => (
+            <div className="col-md-6 col-xl-4" key={a.id}>
+              <article className="card-flv h-100 p-3">
+                <p className="mb-2">{a.accion}</p>
+                <div className="d-flex flex-wrap justify-content-between gap-2 small text-secondary-flv border-top pt-2">
+                  <span className="text-break"><i className="bi bi-person me-1" aria-hidden="true"></i>{a.usuario}</span>
+                  <span className="text-nowrap"><i className="bi bi-clock me-1" aria-hidden="true"></i>{formatearFechaHora(a.fechaHora)}</span>
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+      )}
+      {vista === 'mosaico' && (
+        <div className="row g-2 vista-mosaico" aria-busy={cargando}>
+          {registros.map((a) => (
+            <div className="col-sm-6 col-lg-4 col-xxl-3" key={a.id}>
+              <article className="card-flv h-100 small">
+                <span className="d-block text-secondary-flv text-nowrap mb-1">{formatearFechaHora(a.fechaHora)}</span>
+                <span className="d-block fw-semibold mb-1">{a.accion}</span>
+                <span className="d-block text-secondary-flv text-truncate">{a.usuario}</span>
+              </article>
+            </div>
+          ))}
+        </div>
+      )}
+      {vista === 'lista' && (
+        <ul className="list-unstyled d-grid gap-2 mb-0" aria-busy={cargando}>
+          {registros.map((a) => (
+            <li key={a.id} className="card-flv p-3 d-flex align-items-center gap-3">
+              <span className="icono-circulo icono-sm"><i className="bi bi-clock-history" aria-hidden="true"></i></span>
+              <div className="flex-grow-1">
+                <span className="d-block">{a.accion}</span>
+                <span className="small text-secondary-flv text-break">{a.usuario} · {formatearFechaHora(a.fechaHora)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {vista === 'compacta' && registros.length > 0 && (
+        <ul className="list-unstyled lista-compacta mb-0" aria-busy={cargando}>
+          {registros.map((a) => (
+            <li key={a.id}>
+              <span className="text-secondary-flv text-nowrap">{formatearFechaHora(a.fechaHora)}</span>
+              <span className="flex-grow-1 text-truncate">{a.accion}</span>
+              <span className="d-none d-md-inline text-secondary-flv text-truncate" style={{ maxWidth: '14rem' }}>{a.usuario}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {vista === 'tabla' && (
+        <div className="table-responsive card-flv">
+          <table className="table table-flv align-middle mb-0">
+            <caption className="visually-hidden">Registro de auditoría, página {pagina}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Fecha y hora</th>
+                <th scope="col">Usuario</th>
+                <th scope="col">Acción</th>
               </tr>
-            ))}
-            {!cargando && registros.length === 0 && (
-              <tr><td colSpan="3" className="text-center py-4">No hay acciones registradas con ese filtro.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody aria-busy={cargando}>
+              {registros.map((a) => (
+                <tr key={a.id}>
+                  <td className="small text-nowrap">{formatearFechaHora(a.fechaHora)}</td>
+                  <td className="small text-break">{a.usuario}</td>
+                  <td className="small">{a.accion}</td>
+                </tr>
+              ))}
+              {!cargando && registros.length === 0 && (
+                <tr><td colSpan="3" className="text-center py-4">No hay acciones registradas con ese filtro.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
       <nav className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Paginación de la auditoría">
         <span className="small text-secondary-flv" aria-live="polite">
           {cargando ? 'Cargando…' : `${total.toLocaleString('es-CO')} registros · página ${pagina}`}

@@ -7,6 +7,7 @@ import ResultadosChart from '../../components/ResultadosChart.jsx';
 import IndicadorEnVivo from '../../components/admin/IndicadorEnVivo.jsx';
 import ResumenResultados from '../../components/admin/ResumenResultados.jsx';
 import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.jsx';
+import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { formatearFechaHora, resultadosVisibles } from '../../utils/helpers.js';
 import { useResultados } from '../../hooks/useResultados.js';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
@@ -18,6 +19,7 @@ export default function AdminResultados() {
   const [enVivo, setEnVivo] = useState(true);
   const [mensaje, setMensaje] = useState(null);
   const [procesando, setProcesando] = useState(false);
+  const [vista, setVista] = useVistaGuardada('resultados', 'tarjetas');
   const intervalo = enVivo ? INTERVALO_EN_VIVO : 0;
 
   const votacion = votaciones.find((v) => v.id === Number(seleccion));
@@ -91,10 +93,13 @@ export default function AdminResultados() {
           <p role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando resumen…</p>
         ) : (
           <>
-            <p className="small mb-2">
-              <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién votó.
-            </p>
-            <ResumenResultados resumen={resumen.datos} onElegir={elegir} />
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+              <p className="small mb-0">
+                <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién votó.
+              </p>
+              <SelectorVista valor={vista} onCambio={setVista} />
+            </div>
+            <ResumenResultados resumen={resumen.datos} onElegir={elegir} vista={vista} />
           </>
         ))}
 

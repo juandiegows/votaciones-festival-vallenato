@@ -360,6 +360,20 @@ img.icono-lista { width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fi
 .categoria-chip-icono { color: var(--flv-dorado); }
 img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; object-fit: cover; }
 
+/* ---------- Selector de vista (mosaico / tarjetas / lista / tabla / compacta) ---------- */
+.selector-vista { display: inline-flex; gap: .15rem; padding: .2rem; background: var(--flv-fondo); border: 1px solid var(--flv-gris-borde); border-radius: .6rem; }
+.selector-vista button { border: 0; background: transparent; color: var(--flv-gris-texto); width: 2.1rem; height: 1.9rem; border-radius: .45rem; display: inline-flex; align-items: center; justify-content: center; }
+.selector-vista button:hover { color: var(--flv-negro); background: var(--flv-blanco); }
+.selector-vista button.activa { background: var(--flv-blanco); color: var(--flv-rojo); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.selector-vista button:focus-visible { outline: 2px solid var(--flv-rojo); outline-offset: 1px; }
+.vista-mosaico .card-flv { padding: .75rem; }
+.vista-mosaico h3, .vista-mosaico .h6 { font-size: .9rem; }
+.lista-compacta { border: 1px solid var(--flv-gris-borde); border-radius: .75rem; overflow: hidden; background: var(--flv-blanco); }
+.lista-compacta > li { display: flex; align-items: center; gap: .75rem; padding: .35rem .75rem; font-size: .875rem; border-bottom: 1px solid var(--flv-gris-borde); }
+.lista-compacta > li:last-child { border-bottom: 0; }
+.lista-compacta > li:hover { background: var(--flv-fondo); }
+.lista-compacta .btn-sm { padding: .1rem .4rem; }
+
 /* ==========================================================================
    Revista institucional del inicio (libro que se hojea con page-flip)
    ========================================================================== */

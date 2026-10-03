@@ -195,7 +195,7 @@ export default function AdminVotaciones() {
 
   const votosAEliminar = aEliminar ? numVotos(aEliminar.id) : 0;
 
-  // ---------- Piezas reutilizadas por las tres vistas ----------
+  // ---------- Piezas reutilizadas por las vistas ----------
   const insignias = (v) => (
     <span className="d-inline-flex flex-wrap gap-1 align-items-center">
       <EstadoBadge estado={v.estado} />
@@ -356,7 +356,44 @@ export default function AdminVotaciones() {
     </ul>
   );
 
-  const render = { tabla: vistaTabla, tarjetas: vistaTarjetas, lista: vistaLista }[vista] || vistaLista;
+  const vistaMosaico = (vs) => (
+    <div className="row g-2 vista-mosaico">
+      {vs.map((v) => (
+        <div className="col-sm-6 col-lg-4 col-xxl-3" key={v.id}>
+          <article className="card-flv h-100 d-flex flex-column gap-1">
+            <div className="d-flex align-items-center gap-2">
+              <span className="icono-circulo icono-sm"><IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} /></span>
+              <h3 className="h6 mb-0 flex-grow-1">{v.titulo}</h3>
+            </div>
+            <div>{insignias(v)}</div>
+            <p className="small text-secondary-flv mb-1">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos</p>
+            {verOpciones && <div className="border-top pt-2 mb-1">{bloqueOpciones(v)}</div>}
+            <div className="mt-auto border-top pt-2 text-end">{acciones(v)}</div>
+          </article>
+        </div>
+      ))}
+    </div>
+  );
+
+  const vistaCompacta = (vs) => (
+    <ul className="list-unstyled lista-compacta mb-0">
+      {vs.map((v) => (
+        <Fragment key={v.id}>
+          <li>
+            <IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} className="text-rojo" />
+            <span className="flex-grow-1 text-truncate fw-semibold">{v.titulo}</span>
+            <span className="d-none d-md-inline small text-secondary-flv text-nowrap">{formatearFechaHora(v.fechaCierre)}</span>
+            {insignias(v)}
+            <span className="small text-nowrap">{numVotos(v.id)} votos</span>
+            {acciones(v)}
+          </li>
+          {verOpciones && <li className="d-block">{bloqueOpciones(v)}</li>}
+        </Fragment>
+      ))}
+    </ul>
+  );
+
+  const render = { tabla: vistaTabla, tarjetas: vistaTarjetas, lista: vistaLista, mosaico: vistaMosaico, compacta: vistaCompacta }[vista] || vistaLista;
   const presentacionElegida = form && presentacionOpciones(form.presentacionOpciones);
   const publicacionBloqueada = form?.id && form.publicadaOriginal && form.estado === 'abierta';
 

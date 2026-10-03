@@ -243,6 +243,39 @@ export default function AdminCategorias() {
         </ul>
       )}
 
+      {lista.length > 0 && vista === 'mosaico' && (
+        <div className="row g-2 vista-mosaico">
+          {lista.map((c) => (
+            <div className="col-6 col-md-4 col-xl-3" key={c.id}>
+              <article className={`card-flv h-100 d-flex flex-column align-items-center text-center gap-1 ${c.activa ? '' : 'inactiva'}`}>
+                <span className="icono-circulo"><IconoEntidad icono={c.icono} imagen={c.iconoImagen} /></span>
+                <h2 className="h6 mb-0">{c.nombre}</h2>
+                <div className="flex-grow-1">{resumenVotaciones(c)}</div>
+                <div className="d-flex justify-content-between align-items-center gap-1 w-100 border-top pt-2">
+                  {interruptor(c)}
+                  {acciones(c)}
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {lista.length > 0 && vista === 'compacta' && (
+        <ul className="list-unstyled lista-compacta">
+          {lista.map((c) => (
+            <li key={c.id} className={c.activa ? '' : 'opacity-75'}>
+              <span className="text-secondary-flv small">{c.orden}</span>
+              <IconoEntidad icono={c.icono} imagen={c.iconoImagen} className="text-rojo" />
+              <span className="flex-grow-1 text-truncate fw-semibold">{c.nombre}</span>
+              <span className="small text-nowrap">{numVotaciones(c.id)} vot.</span>
+              {interruptor(c)}
+              {acciones(c)}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <Modal
         abierto={!!form}
         tamano="modal-lg"
