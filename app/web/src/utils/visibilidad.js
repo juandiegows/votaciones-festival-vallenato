@@ -6,10 +6,10 @@ export const DIAS_VISIBLE_CERRADAS = 7;
 export const diasVisibleCerradas = (configuracion) =>
   configuracion?.diasVisibleCerradas === undefined ? DIAS_VISIBLE_CERRADAS : configuracion.diasVisibleCerradas;
 
-/** Las ediciones cerradas no se muestran en el sitio público. */
+/** RN-14: las ediciones cerradas no se muestran en el sitio público. */
 export const edicionPublica = (edicion) => edicion?.estado === 'activa';
 
-/** Una votación cerrada sigue visible los días configurados en /panel/configuracion después de su cierre (o siempre). */
+/** RN-13: una votación cerrada sigue visible los días configurados en /panel/configuracion después de su cierre (o siempre). */
 export function cerradaVisible(votacion, configuracion, ahora = Date.now()) {
   const dias = diasVisibleCerradas(configuracion);
   if (dias === null) return true;
