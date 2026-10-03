@@ -10,14 +10,18 @@ export const VISTAS = [
 
 const VALORES = VISTAS.map((v) => v.valor);
 
+// En pantallas angostas la tabla obliga a desplazarse en horizontal: sin preferencia guardada se usan tarjetas
+const esMovil = () => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767.98px)').matches;
+
 /** Vista elegida por el administrador, recordada en este navegador. */
 export function useVistaGuardada(clave, porDefecto = 'tabla') {
+  const inicial = porDefecto === 'tabla' && esMovil() ? 'tarjetas' : porDefecto;
   const [vista, setVista] = useState(() => {
     try {
       const guardada = localStorage.getItem(`flv_vista_${clave}`);
-      return VALORES.includes(guardada) ? guardada : porDefecto;
+      return VALORES.includes(guardada) ? guardada : inicial;
     } catch {
-      return porDefecto;
+      return inicial;
     }
   });
   const cambiar = (valor) => {

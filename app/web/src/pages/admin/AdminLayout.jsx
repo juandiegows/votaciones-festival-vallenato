@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { EdicionAdminProvider, useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 
 // `porEdicion`: la pantalla muestra solo los datos de la edición elegida en el selector
@@ -39,6 +40,15 @@ function SelectorEdicion() {
 }
 
 export default function AdminLayout() {
+  const { pathname } = useLocation();
+  const menuRef = useRef(null);
+  // Móvil: el menú es una franja deslizable; se desplaza hasta la sección activa para que siempre se vea
+  useEffect(() => {
+    const lista = menuRef.current;
+    const activo = lista?.querySelector('.nav-link.active');
+    if (!lista || !activo || lista.scrollWidth <= lista.clientWidth) return;
+    lista.scrollTo({ left: activo.offsetLeft - (lista.clientWidth - activo.offsetWidth) / 2, behavior: 'smooth' });
+  }, [pathname]);
   return (
     <EdicionAdminProvider>
       <div className="container-fluid panel-ancho py-4">
@@ -47,7 +57,7 @@ export default function AdminLayout() {
             <nav aria-label="Menú de administración" className="card-flv p-2 admin-nav">
               <SelectorEdicion />
               <p className="small fw-semibold text-secondary-flv px-2 pt-1 mb-1 d-none d-lg-block">Administración</p>
-              <ul className="nav nav-pills flex-row flex-lg-column flex-nowrap overflow-auto gap-1">
+              <ul ref={menuRef} className="nav nav-pills flex-row flex-lg-column flex-nowrap overflow-auto gap-1 admin-nav-lista">
                 {ENLACES.map((e) => (
                   <li className="nav-item" key={e.to}>
                     <NavLink to={e.to} end={e.end} className="nav-link" title={e.porEdicion ? 'Muestra la edición seleccionada' : undefined}>

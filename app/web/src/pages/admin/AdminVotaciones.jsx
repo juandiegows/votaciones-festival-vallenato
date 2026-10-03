@@ -47,6 +47,8 @@ export default function AdminVotaciones() {
   });
   const [agrupar, setAgrupar] = useState(() => leerPreferencia('flv_votaciones_agrupar', true));
   const [verOpciones, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', true));
+  // Móvil: los filtros avanzados se pliegan para que la lista quede a la vista
+  const [masFiltros, setMasFiltros] = useState(false);
   const [vista, setVista] = useVistaGuardada('votaciones', 'lista');
   const [form, setForm] = useState(null);
   const [formOpcion, setFormOpcion] = useState(null);
@@ -434,45 +436,54 @@ export default function AdminVotaciones() {
         <div className="row g-2">
           <div className="col-md-6 col-xl-4">
             <label htmlFor="f-texto" className="form-label small mb-1">Buscar</label>
-            <input id="f-texto" type="search" className="form-control form-control-sm" placeholder="Título, descripción u opción" value={filtros.texto} onChange={(e) => cambiarFiltro('texto', e.target.value)} />
+            <div className="d-flex gap-2">
+              <input id="f-texto" type="search" className="form-control form-control-sm" placeholder="Título, descripción u opción" value={filtros.texto} onChange={(e) => cambiarFiltro('texto', e.target.value)} />
+              <button type="button" className="btn btn-sm btn-outline-secondary d-md-none text-nowrap" aria-expanded={masFiltros} aria-controls="filtros-avanzados" onClick={() => setMasFiltros((m) => !m)}>
+                <i className="bi bi-sliders me-1" aria-hidden="true"></i>Filtros
+              </button>
+            </div>
           </div>
-          <div className="col-sm-6 col-md-3 col-xl-2">
-            <label htmlFor="f-cat" className="form-label small mb-1">Categoría</label>
-            <select id="f-cat" className="form-select form-select-sm" value={filtros.categoria} onChange={(e) => cambiarFiltro('categoria', e.target.value)}>
-              <option value="">Todas</option>
-              {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-            </select>
-          </div>
-          <div className="col-sm-6 col-md-3 col-xl-2">
-            <label htmlFor="f-estado" className="form-label small mb-1">Estado</label>
-            <select id="f-estado" className="form-select form-select-sm" value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
-              <option value="">Todos</option>
-              <option value="abierta">Abierta</option>
-              <option value="programada">Programada</option>
-              <option value="cerrada">Cerrada</option>
-              <option value="borrador">Borrador (sin publicar)</option>
-            </select>
-          </div>
-          <div className="col-sm-4 col-xl-2">
-            <label htmlFor="f-res" className="form-label small mb-1">Resultados</label>
-            <select id="f-res" className="form-select form-select-sm" value={filtros.resultados} onChange={(e) => cambiarFiltro('resultados', e.target.value)}>
-              <option value="">Cualquiera</option>
-              {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-          <div className="col-sm-4 col-xl-1">
-            <label htmlFor="f-votos" className="form-label small mb-1">Votos</label>
-            <select id="f-votos" className="form-select form-select-sm" value={filtros.votos} onChange={(e) => cambiarFiltro('votos', e.target.value)}>
-              <option value="">Todos</option>
-              <option value="con">Con votos</option>
-              <option value="sin">Sin votos</option>
-            </select>
-          </div>
-          <div className="col-sm-4 col-xl-1">
-            <label htmlFor="f-orden" className="form-label small mb-1">Ordenar</label>
-            <select id="f-orden" className="form-select form-select-sm" value={filtros.orden} onChange={(e) => cambiarFiltro('orden', e.target.value)}>
-              {ORDENES.map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
-            </select>
+          <div id="filtros-avanzados" className={`col-12 col-md-6 col-xl-8 ${masFiltros ? '' : 'd-none d-md-block'}`}>
+            <div className="row g-2">
+              <div className="col-6 col-md-6 col-xl-3">
+                <label htmlFor="f-cat" className="form-label small mb-1">Categoría</label>
+                <select id="f-cat" className="form-select form-select-sm" value={filtros.categoria} onChange={(e) => cambiarFiltro('categoria', e.target.value)}>
+                  <option value="">Todas</option>
+                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </div>
+              <div className="col-6 col-md-6 col-xl-3">
+                <label htmlFor="f-estado" className="form-label small mb-1">Estado</label>
+                <select id="f-estado" className="form-select form-select-sm" value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+                  <option value="">Todos</option>
+                  <option value="abierta">Abierta</option>
+                  <option value="programada">Programada</option>
+                  <option value="cerrada">Cerrada</option>
+                  <option value="borrador">Borrador (sin publicar)</option>
+                </select>
+              </div>
+              <div className="col-6 col-md-4 col-xl-2">
+                <label htmlFor="f-res" className="form-label small mb-1">Resultados</label>
+                <select id="f-res" className="form-select form-select-sm" value={filtros.resultados} onChange={(e) => cambiarFiltro('resultados', e.target.value)}>
+                  <option value="">Cualquiera</option>
+                  {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="col-6 col-md-4 col-xl-2">
+                <label htmlFor="f-votos" className="form-label small mb-1">Votos</label>
+                <select id="f-votos" className="form-select form-select-sm" value={filtros.votos} onChange={(e) => cambiarFiltro('votos', e.target.value)}>
+                  <option value="">Todos</option>
+                  <option value="con">Con votos</option>
+                  <option value="sin">Sin votos</option>
+                </select>
+              </div>
+              <div className="col-12 col-md-4 col-xl-2">
+                <label htmlFor="f-orden" className="form-label small mb-1">Ordenar</label>
+                <select id="f-orden" className="form-select form-select-sm" value={filtros.orden} onChange={(e) => cambiarFiltro('orden', e.target.value)}>
+                  {ORDENES.map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-3 mt-3">
