@@ -250,7 +250,8 @@ export function ApiProvider({ children }) {
     }
     const voto = { ...desdeApi('votos', r.datos), usuarioId: usuario?.id };
     setMisVotos((l) => [...l, voto]);
-    await recargar();
+    // Los totales se refrescan en segundo plano: el comprobante se muestra sin esperar la recarga completa
+    recargar();
     return { ok: true, voto };
   };
 
