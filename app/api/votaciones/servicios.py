@@ -86,9 +86,10 @@ def resultados_visibles_para(votacion, usuario):
         return False
     if votacion.resultados_publicados:
         return True
-    if votacion.visibilidad_resultados == Votacion.Visibilidad.TIEMPO_REAL:
+    visibilidad = votacion.visibilidad_efectiva
+    if visibilidad == Votacion.Visibilidad.TIEMPO_REAL:
         return True
-    if votacion.visibilidad_resultados == Votacion.Visibilidad.AL_CIERRE:
+    if visibilidad == Votacion.Visibilidad.AL_CIERRE:
         return votacion.estado == Votacion.Estado.CERRADA
     return False
 

@@ -98,6 +98,11 @@ class Edicion(models.Model):
         max_length=15, choices=PresentacionCategorias.choices, default=PresentacionCategorias.TARJETAS,
         help_text="Cómo se muestran las categorías de la edición al público.",
     )
+    # Visibilidad de resultados de todas las votaciones de la edición (salvo las que la personalizan)
+    visibilidad_resultados = models.CharField(
+        max_length=15, choices=[("tiempo_real", "En tiempo real"), ("al_cierre", "Al cierre"), ("no_publicar", "No publicar")],
+        default="al_cierre", help_text="Cuándo ve el público los resultados de las votaciones de la edición.",
+    )
 
     class Meta:
         db_table = "edicion"
@@ -186,6 +191,10 @@ class Votacion(models.Model):
     visibilidad_resultados = models.CharField(
         max_length=15, choices=Visibilidad.choices, default=Visibilidad.AL_CIERRE
     )
+    # Falso: la votación hereda la visibilidad de resultados de su edición; verdadero: usa la suya
+    personalizar_resultados = models.BooleanField(
+        default=False, help_text="Usar la visibilidad de resultados propia en lugar de la de la edición."
+    )
     publicada = models.BooleanField(default=False)
     cerrada_manualmente = models.BooleanField(default=False)
     resultados_publicados = models.BooleanField(default=False)
@@ -226,6 +235,13 @@ class Votacion(models.Model):
     @property
     def estado(self):
         return self.estado_en()
+
+    @property
+    def visibilidad_efectiva(self):
+        """Visibilidad de resultados que aplica: la propia si se personaliza; si no, la de la edición."""
+        if self.personalizar_resultados:
+            return self.visibilidad_resultados
+        return self.categoria.edicion.visibilidad_resultados
 
 
 class Opcion(models.Model):

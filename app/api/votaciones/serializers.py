@@ -117,7 +117,7 @@ def validar_audio(archivo):
 class EdicionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Edicion
-        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias"]
+        fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias", "visibilidad_resultados"]
 
     def validate(self, datos):
         inicio = datos.get("fecha_inicio", getattr(self.instance, "fecha_inicio", None))
@@ -242,13 +242,15 @@ class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
     categoria_slug = serializers.CharField(source="categoria.slug", read_only=True)
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
     icono_imagen = RutaImagenField(required=False, allow_null=True)
+    visibilidad_efectiva = serializers.CharField(read_only=True)
 
     class Meta:
         model = Votacion
         fields = [
             "id", "categoria", "categoria_slug", "edicion_anio", "titulo", "slug", "descripcion", "imagen", "icono_imagen",
             "presentacion_opciones", "fecha_apertura", "fecha_cierre",
-            "votos_por_usuario", "visibilidad_resultados", "estado", "publicada", "cerrada_manualmente",
+            "votos_por_usuario", "visibilidad_resultados", "personalizar_resultados", "visibilidad_efectiva",
+            "estado", "publicada", "cerrada_manualmente",
             "resultados_publicados", "creada_en", "actualizada_en",
         ]
         read_only_fields = ["publicada", "cerrada_manualmente", "resultados_publicados", "creada_en", "actualizada_en"]
@@ -272,6 +274,7 @@ class VotacionPublicaSerializer(serializers.ModelSerializer):
     categoria_slug = serializers.CharField(source="categoria.slug", read_only=True)
     edicion_anio = serializers.IntegerField(source="categoria.edicion.anio", read_only=True)
     icono_imagen = RutaImagenField(read_only=True)
+    visibilidad_resultados = serializers.CharField(source="visibilidad_efectiva", read_only=True)
 
     class Meta:
         model = Votacion

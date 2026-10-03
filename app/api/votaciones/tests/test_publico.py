@@ -54,6 +54,7 @@ class VisibilidadResultadosTests(BaseAPITest):
 
     def test_tiempo_real_muestra_resultados(self):
         self.abierta.visibilidad_resultados = "tiempo_real"
+        self.abierta.personalizar_resultados = True
         self.abierta.save()
         Voto.objects.create(usuario=self.votante, votacion=self.abierta, opcion=self.opcion_a, codigo_comprobante="FLV27-AAAAAA")
         datos = self.client.get(self.url(self.abierta)).data
@@ -68,12 +69,34 @@ class VisibilidadResultadosTests(BaseAPITest):
 
     def test_no_publicar_oculta_incluso_cerrada(self):
         self.abierta.visibilidad_resultados = "no_publicar"
+        self.abierta.personalizar_resultados = True
         self.abierta.cerrada_manualmente = True
         self.abierta.save()
         self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 403)
 
+    def test_visibilidad_heredada_de_la_edicion(self):
+        self.edicion.visibilidad_resultados = "tiempo_real"
+        self.edicion.save()
+        self.abierta.visibilidad_resultados = "no_publicar"  # sin personalizar: se ignora
+        self.abierta.save()
+        self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 200)
+        self.edicion.visibilidad_resultados = "no_publicar"
+        self.edicion.save()
+        self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 403)
+
+    def test_votacion_personalizada_no_toma_la_de_la_edicion(self):
+        self.edicion.visibilidad_resultados = "no_publicar"
+        self.edicion.save()
+        self.abierta.visibilidad_resultados = "tiempo_real"
+        self.abierta.personalizar_resultados = True
+        self.abierta.save()
+        self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 200)
+        detalle = self.client.get(f"/api/votaciones/{self.abierta.pk}/").data
+        self.assertEqual(detalle["visibilidad_resultados"], "tiempo_real")
+
     def test_resultados_publicados_manualmente(self):
         self.abierta.visibilidad_resultados = "no_publicar"
+        self.abierta.personalizar_resultados = True
         self.abierta.resultados_publicados = True
         self.abierta.save()
         self.assertEqual(self.client.get(self.url(self.abierta)).status_code, 200)
