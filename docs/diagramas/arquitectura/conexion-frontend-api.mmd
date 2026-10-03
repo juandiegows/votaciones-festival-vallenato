@@ -1,0 +1,18 @@
+flowchart TB
+    U([Usuario<br/>móvil · tablet · escritorio]) --> N[Navegador]
+    subgraph FE[Frontend · prototipo navegable]
+        W[Web React + Bootstrap 5<br/>sitio público y panel de administración]
+        D[(Datos simulados<br/>solo en el prototipo)]
+    end
+    subgraph BE[Backend · siguientes entregas]
+        A[API REST con Django<br/>autenticación por token]
+        R[Reglas de negocio<br/>RN-01 a RN-18]
+        O[ORM de Django]
+    end
+    DB[(MySQL)]
+    C[Servicio de correo]
+    N --> W
+    W -. hoy .-> D
+    W -- "HTTPS · JSON<br/>(prevista)" --> A
+    A --> R --> O --> DB
+    A -. confirmación de correo<br/>y comprobante .-> C

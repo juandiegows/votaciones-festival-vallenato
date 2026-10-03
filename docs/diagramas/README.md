@@ -48,6 +48,7 @@ Todos los diagramas viven aquí, con su fuente editable junto a la imagen. Los i
 |---|---|---|
 | Arquitectura de la aplicación | [`aplicacion.png`](arquitectura/aplicacion.png) | [`.mmd`](arquitectura/aplicacion.mmd) |
 | Integración con el sitio del Festival | [`integracion.png`](arquitectura/integracion.png) | [`.mmd`](arquitectura/integracion.mmd) |
+| Conexión prevista entre el frontend y la API (va en el informe) | [`conexion-frontend-api.png`](arquitectura/conexion-frontend-api.png) | [`.mmd`](arquitectura/conexion-frontend-api.mmd) |
 | Componentes y despliegue (propuesta) | [`despliegue.png`](arquitectura/despliegue.png) | [`.mmd`](arquitectura/despliegue.mmd) |
 
 El diagrama de despliegue muestra la arquitectura objetivo; hoy en la VPS solo está publicada la web.

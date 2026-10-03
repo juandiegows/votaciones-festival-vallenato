@@ -22,6 +22,7 @@ Están en [`docs/diagramas/`](../diagramas/README.md), compartidos con la guía 
 | Flujo principal | `comportamiento/flujo-principal` (`.mmd`) |
 | Secuencia del flujo principal | `comportamiento/secuencia-voto` (`.mmd`) |
 | Arquitectura de la aplicación e integración | `arquitectura/aplicacion`, `arquitectura/integracion` (`.mmd`) |
+| Conexión prevista entre el frontend y la API | `arquitectura/conexion-frontend-api` (`.mmd`) |
 
 ## Capturas
 
