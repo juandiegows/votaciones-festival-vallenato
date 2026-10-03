@@ -1,19 +1,19 @@
 import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import CategoriasEdicion from '../components/presentaciones/CategoriasEdicion.jsx';
-import { votacionesPublicas } from '../utils/visibilidad.js';
+import { edicionPublica, votacionesPublicas } from '../utils/visibilidad.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 import NoEncontrado from './NoEncontrado.jsx';
 
 export default function Categorias() {
   const datos = useApp();
-  const { categorias, edicionActiva } = datos;
+  const { categorias } = datos;
   const { edicion } = useRutaPublica();
   const rutas = useRutas();
   if (!edicion) return <NoEncontrado mensaje="No encontramos una edición del Festival con ese año." />;
+  if (!edicionPublica(edicion)) return <NoEncontrado mensaje={`La edición ${edicion.anio} está cerrada y ya no se muestra en el sitio.`} />;
   const publicas = votacionesPublicas(datos, edicion);
   const lista = categorias.filter((c) => c.activa && c.edicionId === edicion.id).sort((a, b) => a.orden - b.orden);
-  const esActiva = edicion.id === edicionActiva?.id;
 
   return (
     <div className="container py-4 py-md-5">
@@ -22,12 +22,6 @@ export default function Categorias() {
         subtitulo={`${edicion.nombre} · Elige una categoría para ver sus votaciones.`}
         migas={[{ label: 'Inicio', to: '/' }, { label: `Edición ${edicion.anio}` }]}
       />
-      {!esActiva && (
-        <div className="alert alert-secondary d-flex align-items-center gap-2 py-2" role="note">
-          <i className="bi bi-archive" aria-hidden="true"></i>
-          <span>Estás consultando una edición anterior ({edicion.estado === 'cerrada' ? 'cerrada' : edicion.estado}).</span>
-        </div>
-      )}
       {lista.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>

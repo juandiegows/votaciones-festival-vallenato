@@ -273,6 +273,7 @@ export function crearDatosSemilla() {
     correo: 'presidencia@festivalvallenato.com',
     textoPie: 'Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.',
     modoBanner: 'carrusel',
+    diasVisibleCerradas: 7,
   };
   const redes = [
     { id: 1, nombre: 'Facebook', url: 'https://www.facebook.com/pages/Festival-de-la-Leyenda-Vallenata/112408762110846', icono: 'facebook', orden: 1, activa: true },

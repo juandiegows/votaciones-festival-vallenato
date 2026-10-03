@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import VotacionCard from '../components/VotacionCard.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
-import { votacionesPublicas } from '../utils/visibilidad.js';
+import { edicionPublica, votacionesPublicas } from '../utils/visibilidad.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
 const FILTROS = [
@@ -19,7 +19,7 @@ export default function CategoriaVotaciones() {
   const [filtro, setFiltro] = useState('todas');
   const { edicion, categoria } = useRutaPublica();
   const rutas = useRutas();
-  if (!categoria || !categoria.activa) return <NoEncontrado mensaje="La categoría no existe o no está activa." />;
+  if (!categoria || !categoria.activa || !edicionPublica(edicion)) return <NoEncontrado mensaje="La categoría no existe o no está activa." />;
 
   const todas = votacionesPublicas(datos, edicion).filter((v) => v.categoriaId === categoria.id);
   const lista = filtro === 'todas' ? todas : todas.filter((v) => v.estado === filtro);

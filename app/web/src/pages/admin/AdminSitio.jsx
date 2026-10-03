@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { DIAS_VISIBLE_CERRADAS } from '../../utils/visibilidad.js';
 
 const ICONOS_REDES = [
   ['facebook', 'Facebook'], ['twitter-x', 'X'], ['instagram', 'Instagram'], ['youtube', 'YouTube'],
@@ -8,11 +9,12 @@ const ICONOS_REDES = [
 ];
 const NUEVA_RED = { nombre: '', url: '', icono: 'facebook', activa: true };
 
-// Datos de contacto y redes sociales del pie de página
+// Datos de contacto y redes sociales del pie de página, y visibilidad de las votaciones cerradas
 export default function AdminSitio() {
   const { configuracion, redes, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
   const [contacto, setContacto] = useState(configuracion);
   const [red, setRed] = useState(NUEVA_RED);
+  const [dias, setDias] = useState(String(configuracion?.diasVisibleCerradas ?? DIAS_VISIBLE_CERRADAS));
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -29,7 +31,21 @@ export default function AdminSitio() {
 
   const guardarContacto = (e) => {
     e.preventDefault();
-    ejecutar(() => guardarConfiguracion(contacto), 'Datos de contacto guardados.');
+    // Se parte de la configuración vigente para no pisar el modo del banner ni los días de visibilidad
+    ejecutar(() => guardarConfiguracion({ ...configuracion, ...contacto, modoBanner: configuracion.modoBanner, diasVisibleCerradas: configuracion.diasVisibleCerradas }), 'Datos de contacto guardados.');
+  };
+
+  const guardarDias = (e) => {
+    e.preventDefault();
+    const n = Number(dias);
+    if (!/^\d+$/.test(dias) || n > 365) {
+      setErrores({ diasVisibleCerradas: 'Escribe un número de días entre 0 y 365.' });
+      return;
+    }
+    ejecutar(
+      () => guardarConfiguracion({ ...configuracion, diasVisibleCerradas: n }),
+      n === 0 ? 'Las votaciones cerradas se ocultan del sitio al cerrar.' : `Las votaciones cerradas se verán ${n} ${n === 1 ? 'día' : 'días'} después del cierre.`,
+    );
   };
 
   const guardarRed = async (e) => {
@@ -63,7 +79,7 @@ export default function AdminSitio() {
 
   return (
     <>
-      <PageHeader titulo="Contacto y redes" subtitulo="Información que aparece en el pie de página del sitio." />
+      <PageHeader titulo="Contacto y redes" subtitulo="Información del pie de página y visibilidad de las votaciones cerradas en el sitio." />
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
           {mensaje.texto}
@@ -80,6 +96,20 @@ export default function AdminSitio() {
             {campo('correo', 'Correo electrónico', 'email')}
             {campo('textoPie', 'Texto del pie de página', 'textarea')}
             <button type="submit" className="btn btn-primary" disabled={procesando}>Guardar contacto</button>
+          </form>
+          <form className="card-flv p-3 p-md-4 mt-4" noValidate onSubmit={guardarDias} aria-labelledby="titulo-cerradas">
+            <h2 id="titulo-cerradas" className="h5">Votaciones cerradas</h2>
+            <p className="small text-secondary-flv">
+              El sitio público muestra las votaciones programadas y abiertas. Las cerradas siguen visibles estos días después de su cierre; con 0 se ocultan al cerrar.
+              Las categorías de ediciones cerradas no se muestran.
+            </p>
+            <label className="form-label" htmlFor="s-dias">Días visibles después del cierre</label>
+            <div className="input-group mb-3" style={{ maxWidth: '16rem' }}>
+              <input id="s-dias" type="number" min="0" max="365" className={`form-control ${errores.diasVisibleCerradas ? 'is-invalid' : ''}`} value={dias} onChange={(e) => setDias(e.target.value)} aria-describedby="s-dias-error" />
+              <span className="input-group-text">días</span>
+              {errores.diasVisibleCerradas && <div id="s-dias-error" className="invalid-feedback">{errores.diasVisibleCerradas}</div>}
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={procesando}>Guardar</button>
           </form>
         </div>
         <div className="col-xl-7">
