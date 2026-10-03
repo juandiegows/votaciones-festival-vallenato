@@ -7,6 +7,8 @@ from django.urls import include, path, re_path
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
+from votaciones.seo import sitemap
+
 
 def salud(request):
     return JsonResponse({"estado": "ok"})
@@ -22,6 +24,8 @@ def media(request, path):
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("api/salud/", salud, name="salud"),
+    # Mapa del sitio de la web (SPA); lo declara robots.txt
+    path("api/sitemap.xml", sitemap, name="sitemap"),
     path("api/esquema/", SpectacularAPIView.as_view(), name="esquema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="esquema"), name="swagger"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="esquema"), name="redoc"),
