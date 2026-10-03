@@ -119,11 +119,7 @@ export default function OpcionesVotacion({ lista, presentacion = 'tarjetas', est
               </span>
               <Check marcada={estaMarcada(o)} />
             </label>
-            {tieneMedio(o) ? (
-              <Reproductor o={o} className="reproductor-pista" textoAbierto />
-            ) : (
-              <p className="reproductor-pista small text-secondary-flv mb-0">Esta opción no tiene audio.</p>
-            )}
+            {tieneMedio(o) && <Reproductor o={o} className="reproductor-pista" textoAbierto />}
           </li>
         ))}
       </ol>
