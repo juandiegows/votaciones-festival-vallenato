@@ -21,7 +21,7 @@ const PASOS = [
 
 export default function Inicio() {
   const datos = useApp();
-  const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners, configuracion, revistas = [] } = datos;
+  const { usuario, edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners, configuracion, revistas = [] } = datos;
   // La primera revista activa de la lista definida en /panel/revista
   const revista = revistas.filter((r) => r.activa).sort((a, b) => a.orden - b.orden || b.id - a.id)[0];
   // Solo los banners de la edición activa (los que no tienen edición se consideran de la activa);
@@ -32,6 +32,9 @@ export default function Inicio() {
   if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);
   const abiertas = publicas.filter((v) => v.estado === 'abierta');
+  // Con sesión iniciada, «Votar» lleva a la categoría de la primera votación abierta pendiente
+  const pendiente = abiertas.find((v) => votosDeUsuario(v.id).length === 0) || abiertas[0];
+  const categoriaPendiente = pendiente && categorias.find((c) => c.id === pendiente.categoriaId);
   const diasFestival = Math.max(0, Math.ceil((new Date(`${edicionActiva.fechaInicio}T00:00:00`) - Date.now()) / 86400000));
   const cifras = [
     [diasFestival, 'días para el Festival'],
@@ -65,7 +68,13 @@ export default function Inicio() {
                 <Link to={rutas.edicion(edicionActiva)} className="btn btn-primary btn-lg">
                   <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Ver votaciones
                 </Link>
-                <Link to="/registro" className="btn btn-outline-light btn-lg">Crear cuenta</Link>
+                {usuario ? (
+                  <Link to={categoriaPendiente ? rutas.categoria(categoriaPendiente) : rutas.edicion(edicionActiva)} className="btn btn-outline-light btn-lg">
+                    <i className="bi bi-hand-index-thumb me-2" aria-hidden="true"></i>Votar
+                  </Link>
+                ) : (
+                  <Link to="/registro" className="btn btn-outline-light btn-lg">Crear cuenta</Link>
+                )}
               </div>
               <ul className="list-inline mt-4 mb-0 small">
                 <li className="list-inline-item me-3"><i className="bi bi-unlock me-1" aria-hidden="true"></i>{abiertas.length} votaciones abiertas</li>
