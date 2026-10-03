@@ -8,6 +8,7 @@ import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
 import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
 
 const SECCIONES = [
+  { id: 'votacion', label: 'Votación', icono: 'check2-square', descripcion: 'Votos por usuario y pausa de emergencia de la edición.' },
   { id: 'resultados', label: 'Resultados', icono: 'bar-chart', descripcion: 'Cuándo ve el público los resultados de la edición.' },
   { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
   { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
@@ -56,9 +57,11 @@ function Fila({ titulo, descripcion, children, id }) {
 
 // Configuración del sitio público: visibilidad de resultados (por edición), votaciones cerradas y presentación
 export default function AdminConfiguracion() {
-  const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, votaciones: todasLasVotaciones } = useApp();
+  const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, publicarResultadosEdicion, votaciones: todasLasVotaciones } = useApp();
   const { edicion, votaciones, categorias } = useEdicionAdmin();
-  const [seccion, setSeccion] = useState('resultados');
+  const [seccion, setSeccion] = useState('votacion');
+  const [votos, setVotos] = useState(String(edicion?.votosPorUsuario ?? 1));
+  useEffect(() => setVotos(String(edicion?.votosPorUsuario ?? 1)), [edicion?.votosPorUsuario]);
   const diasGuardados = diasVisibleCerradas(configuracion);
   const siempre = diasGuardados === null;
   const [dias, setDias] = useState(String(diasGuardados ?? DIAS_VISIBLE_CERRADAS));
@@ -92,6 +95,31 @@ export default function AdminConfiguracion() {
   };
 
   const personalizadas = votaciones.filter((v) => v.personalizarResultados);
+  const votosPropios = votaciones.filter((v) => v.personalizarVotos);
+  const publicadas = votaciones.filter((v) => v.resultadosPublicados).length;
+
+  const guardarVotos = () => {
+    const n = Number(votos);
+    if (!/^\d+$/.test(votos) || n < 1 || n > 5) {
+      setEstado({ tipo: 'danger', texto: 'Los votos por usuario deben estar entre 1 y 5.' });
+      return;
+    }
+    if (n === (edicion.votosPorUsuario ?? 1)) return;
+    guardarEdicion({ votosPorUsuario: n }, `Votos por usuario de la edición: ${n}.`, `Cambió los votos por usuario de "${edicion.nombre}" a ${n}`);
+  };
+
+  const pausar = (pausada) => {
+    if (pausada && !window.confirm(`¿Pausar todas las votaciones de ${edicion.nombre}? Nadie podrá votar hasta que la reanudes.`)) return;
+    guardarEdicion(
+      { votacionesPausadas: pausada },
+      pausada ? 'Votaciones en pausa: nadie puede votar en esta edición.' : 'Votaciones reanudadas.',
+      `${pausada ? 'Pausó' : 'Reanudó'} las votaciones de "${edicion.nombre}"`,
+    );
+  };
+
+  const publicarTodas = (publicar) =>
+    guardar(() => publicarResultadosEdicion(edicion.id, publicar),
+      publicar ? 'Resultados de todas las votaciones publicados.' : 'Publicación manual retirada en todas las votaciones.');
   const presentacionesUsadas = new Set(votaciones.map((v) => v.presentacionOpciones || 'tarjetas'));
   const presentacionComun = presentacionesUsadas.size === 1 ? [...presentacionesUsadas][0] : null;
 
@@ -117,6 +145,7 @@ export default function AdminConfiguracion() {
   const actual = SECCIONES.find((s) => s.id === seccion);
 
   const restablecer = () => {
+    if (seccion === 'votacion') guardarEdicion({ votosPorUsuario: 1, votacionesPausadas: false }, 'Votación restablecida: 1 voto por usuario, sin pausa.', 'Restableció la configuración de votación');
     if (seccion === 'resultados') guardarEdicion({ mostrarResultados: 'al cerrar' }, 'Resultados restablecidos: al cerrar.', 'Restableció la visibilidad de resultados');
     if (seccion === 'visibilidad') guardarSitio({ diasVisibleCerradas: DIAS_VISIBLE_CERRADAS }, `Restablecido: ${DIAS_VISIBLE_CERRADAS} días.`);
     if (seccion === 'presentacion') {
@@ -125,7 +154,7 @@ export default function AdminConfiguracion() {
         if (!r.ok) return r;
         const rv = await presentarOpcionesComo('tarjetas', `Restableció la presentación de opciones de "${edicion.nombre}"`);
         if (!rv.ok) return rv;
-        return guardarConfiguracion({ ...configuracion, modoBanner: 'carrusel' });
+        return guardarConfiguracion({ ...configuracion, modoBanner: 'carrusel', mostrarTotalVotos: false });
       }, 'Presentación restablecida.');
     }
   };
@@ -169,6 +198,43 @@ export default function AdminConfiguracion() {
             {estado && <span className={`text-${estado.tipo === 'info' ? 'secondary' : estado.tipo}`}>{estado.texto}</span>}
           </p>
 
+          {seccion === 'votacion' && (
+            <>
+              <Fila titulo={`Recepción de votos · ${edicion.anio}`} descripcion="Pausa de emergencia: mientras esté en pausa nadie puede votar en ninguna votación de la edición. Las fechas no cambian.">
+                <Opciones
+                  nombre="cfg-pausa"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'activa', etiqueta: 'Recibiendo votos', icono: 'play-circle', descripcion: 'Se vota según las fechas de cada votación.' },
+                    { valor: 'pausada', etiqueta: 'En pausa', icono: 'pause-circle', descripcion: 'Nadie puede votar hasta reanudar.' },
+                  ]}
+                  valor={edicion.votacionesPausadas ? 'pausada' : 'activa'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => pausar(v === 'pausada')}
+                />
+              </Fila>
+              <Fila titulo="Votos por usuario" descripcion="Cuántas veces puede votar cada persona en cada votación de la edición, salvo las que personalizan su propio límite (pendiente de validación con la Fundación, P-03).">
+                <div className="input-group mb-2" style={{ width: '12rem' }}>
+                  <input id="cfg-votos" type="number" min="1" max="5" className="form-control" value={votos} onChange={(e) => setVotos(e.target.value)} onBlur={guardarVotos}
+                    onKeyDown={(e) => e.key === 'Enter' && guardarVotos()} aria-label="Votos por usuario de la edición" disabled={procesando} />
+                  <span className="input-group-text">{Number(votos) === 1 ? 'voto' : 'votos'}</span>
+                </div>
+                {votosPropios.length === 0 ? (
+                  <p className="small mb-0"><i className="bi bi-check2-circle me-1 text-success" aria-hidden="true"></i>Todas las votaciones usan el límite de la edición.</p>
+                ) : (
+                  <ul className="list-unstyled lista-compacta mb-0" aria-label="Votaciones con límite propio">
+                    {votosPropios.map((v) => (
+                      <li key={v.id}>
+                        <span className="flex-grow-1 text-truncate"><strong>{v.titulo}</strong> <span className="text-secondary-flv">· {categoriaDe(v.categoriaId)}</span></span>
+                        <span className="badge text-bg-light border">{v.votosPorUsuario} {Number(v.votosPorUsuario) === 1 ? 'voto' : 'votos'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Fila>
+            </>
+          )}
+
           {seccion === 'resultados' && (
             <>
               <Fila titulo={`Resultados de la edición ${edicion.anio}`} descripcion="Aplica a todas las votaciones de la edición, salvo las que personalizan su propia configuración.">
@@ -179,6 +245,17 @@ export default function AdminConfiguracion() {
                   deshabilitado={procesando}
                   onCambio={(v) => guardarEdicion({ mostrarResultados: v }, `Resultados de la edición: ${v}.`, `Cambió la visibilidad de resultados de "${edicion.nombre}" a "${v}"`)}
                 />
+              </Fila>
+              <Fila titulo="Publicar resultados de toda la edición" descripcion="Publicación manual: muestra al público los resultados de todas las votaciones publicadas de la edición sin importar la configuración anterior (por ejemplo, al terminar el Festival).">
+                <p className="small mb-2">{publicadas} de {votaciones.length} votaciones tienen la publicación manual activa.</p>
+                <div className="d-flex flex-wrap gap-2">
+                  <button type="button" className="btn btn-primary btn-sm" disabled={procesando || !votaciones.length || publicadas === votaciones.length} onClick={() => publicarTodas(true)}>
+                    <i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar todas
+                  </button>
+                  <button type="button" className="btn btn-outline-secondary btn-sm" disabled={procesando || publicadas === 0} onClick={() => publicarTodas(false)}>
+                    <i className="bi bi-eye-slash me-1" aria-hidden="true"></i>Retirar publicación
+                  </button>
+                </div>
               </Fila>
               <Fila titulo="Votaciones con configuración propia" descripcion="Estas no toman la de la edición. Se cambia en el formulario de cada votación (casilla «Personalizar»).">
                 {personalizadas.length === 0 ? (
@@ -271,6 +348,19 @@ export default function AdminConfiguracion() {
                     </ul>
                   </>
                 )}
+              </Fila>
+              <Fila titulo="Total de votos en el inicio" descripcion="Muestra al público, en las cifras del inicio, cuántos votos lleva la edición activa. Si se oculta, en su lugar se muestran las votaciones programadas.">
+                <Opciones
+                  nombre="cfg-total"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'El público no ve el total de votos.' },
+                    { valor: 'mostrar', etiqueta: 'Mostrar', icono: '123', descripcion: 'El inicio muestra los votos registrados.' },
+                  ]}
+                  valor={configuracion?.mostrarTotalVotos ? 'mostrar' : 'ocultar'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ mostrarTotalVotos: v === 'mostrar' }, v === 'mostrar' ? 'El inicio muestra el total de votos.' : 'El total de votos se oculta en el inicio.')}
+                />
               </Fila>
               <Fila titulo="Banner del inicio" descripcion="Aplica a todo el sitio. Los banners se administran en «Banner de inicio».">
                 <Opciones
