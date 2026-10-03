@@ -1,0 +1,19 @@
+# robots.txt · Votaciones · Festival de la Leyenda Vallenata
+# https://votaciones.juandiegows.com/robots.txt
+#
+# Páginas públicas indexables: inicio, registro y /{año}/categorias/{categoría}/{votación}.
+# Fuera del índice: cuenta del votante, comprobantes, panel de administración y la API.
+
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /mis-votos
+Disallow: /confirmar-correo
+Disallow: /panel
+Disallow: /error/
+Disallow: /*/comprobante
+Disallow: /api/
+Allow: /api/sitemap.xml
+Disallow: /django-admin/
+
+Sitemap: https://votaciones.juandiegows.com/api/sitemap.xml

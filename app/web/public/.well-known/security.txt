@@ -1,0 +1,8 @@
+# Política de divulgación responsable · Votaciones · Festival de la Leyenda Vallenata
+# Formato RFC 9116. Si encuentras una vulnerabilidad, repórtala de forma privada: no abras un issue público.
+
+Contact: https://github.com/juandiegows/votaciones-festival-vallenato/security/advisories/new
+Expires: 2027-10-03T05:00:00.000Z
+Preferred-Languages: es, en
+Canonical: https://votaciones.juandiegows.com/.well-known/security.txt
+Policy: https://github.com/juandiegows/votaciones-festival-vallenato/blob/main/SECURITY.md

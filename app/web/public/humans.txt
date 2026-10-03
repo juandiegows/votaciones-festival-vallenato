@@ -1,0 +1,18 @@
+/* EQUIPO */
+Coordinación, UX/UI y desarrollo: Juan Mejía Maestre
+GitHub: juandiegows
+
+Análisis y modelado: Sebastián Bautista Martínez
+Investigación y documentación: María Virginia Labarca Briceño
+
+/* AGRADECIMIENTOS */
+Profesor: Deivys Morales Uribe
+Fundación Universitaria del Área Andina (Areandina) · Desarrollo Web 4324-61
+
+/* SITIO */
+Proyecto académico: no es el sitio oficial del Festival de la Leyenda Vallenata ni de su Fundación.
+Idioma: español (Colombia)
+Estándares: HTML5, CSS3, WCAG 2.1 AA
+Componentes: React, React Router, Vite, Bootstrap 5, Bootstrap Icons, pdf.js, Django REST Framework, MySQL
+Tipografías: Raleway, Poppins (Google Fonts)
+Código: https://github.com/juandiegows/votaciones-festival-vallenato
