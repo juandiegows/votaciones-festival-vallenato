@@ -7,7 +7,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 Trabajas en `app/web` (React 19 + Vite, JavaScript, `react-router-dom` con BrowserRouter y URLs amigables `/{año}/{categoría}/{votación}`, Bootstrap 5 + Bootstrap Icons).
 
 Estructura:
-- `src/App.jsx`: rutas. Las públicas van dentro de `<Layout>`; las que requieren sesión usan `<RequiereSesion>`; la administración va bajo `admin/` con `<RequiereAdmin><AdminLayout/></RequiereAdmin>`.
+- `src/App.jsx`: rutas. Las públicas van dentro de `<Layout>`; las que requieren sesión usan `<RequiereSesion>`; la administración va bajo `panel/` (URL `/panel/…`; `/admin` lo bloquea el WAF de producción) con `<RequiereAdmin><AdminLayout/></RequiereAdmin>`.
 - `src/pages/` y `src/pages/admin/`: una pantalla por archivo (equivale a una futura vista o endpoint de la API).
 - `src/components/`: piezas reutilizables (PageHeader, Modal, EstadoBadge, VotacionCard, ResultadosChart, Countdown…).
 - `src/context/AppContext.jsx`: estado global y acciones (autenticación, votar, CRUD). Toda escritura de datos pasa por aquí.

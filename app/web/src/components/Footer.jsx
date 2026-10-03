@@ -5,7 +5,7 @@ import Modal from './Modal.jsx';
 
 export default function Footer() {
   const { restablecer, edicionActiva, modo, configuracion: contacto, redes } = useApp();
-  // Contacto y redes editables en /admin/sitio
+  // Contacto y redes editables en /panel/sitio
   const redesActivas = [...redes].filter((r) => r.activa).sort((a, b) => a.orden - b.orden);
   const [confirmar, setConfirmar] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -40,7 +40,7 @@ export default function Footer() {
               <li><Link to="/categorias">Categorías</Link></li>
               <li><Link to="/mis-votos">Mis votos</Link></li>
               <li><Link to="/registro">Registro</Link></li>
-              <li><Link to="/admin">Panel admin</Link></li>
+              <li><Link to="/panel">Panel admin</Link></li>
             </ul>
           </div>
           {contacto && <div className="col-sm-6 col-lg-3">

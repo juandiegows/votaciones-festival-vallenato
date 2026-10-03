@@ -33,7 +33,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="registro" element={<Registro />} />
         <Route path="login" element={<Login />} />
-        <Route path="marca" element={<Navigate to="/admin/marca" replace />} />
+        <Route path="marca" element={<Navigate to="/panel/marca" replace />} />
         <Route path="categorias" element={<IrAEdicionActiva />} />
         <Route path="categorias/:id" element={<RedireccionCategoria />} />
         <Route path="votaciones/:id" element={<RedireccionVotacion />} />
@@ -41,7 +41,7 @@ export default function App() {
         {/* Votante autenticado */}
         <Route path="mis-votos" element={<RequiereSesion><MisVotos /></RequiereSesion>} />
         {/* Administración */}
-        <Route path="admin" element={<RequiereAdmin><AdminLayout /></RequiereAdmin>}>
+        <Route path="panel" element={<RequiereAdmin><AdminLayout /></RequiereAdmin>}>
           <Route index element={<AdminPanel />} />
           <Route path="ediciones" element={<AdminEdiciones />} />
           <Route path="categorias" element={<AdminCategorias />} />

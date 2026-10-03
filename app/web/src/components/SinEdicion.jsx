@@ -13,7 +13,7 @@ export default function SinEdicion() {
           Las votaciones del público se publicarán cuando la organización active la próxima edición del Festival.
         </p>
         {esAdmin ? (
-          <Link to="/admin/ediciones" className="btn btn-primary">Configurar una edición</Link>
+          <Link to="/panel/ediciones" className="btn btn-primary">Configurar una edición</Link>
         ) : (
           <Link to="/registro" className="btn btn-outline-primary">Crear una cuenta</Link>
         )}

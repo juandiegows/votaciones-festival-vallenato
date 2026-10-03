@@ -12,7 +12,7 @@ El prototipo respeta los **colores de marca del Festival** (tomados de festivalv
 
 - Paleta completa, contrastes y reglas de uso: [`docs/BRANDING.md`](../../docs/BRANDING.md)
 - Tokens CSS: [`src/styles/brand.css`](src/styles/brand.css)
-- Guía interactiva en el prototipo: ruta `/admin/marca` (solo para el administrador)
+- Guía interactiva en el prototipo: ruta `/panel/marca` (solo para el administrador)
 
 ## Equipo
 
@@ -120,16 +120,16 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/{año}/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
 | `/categorias` | Redirige a `/{año de la edición activa}` | — |
 | `/mis-votos` | Mis votos | — |
-| `/admin` | Panel principal (KPI + actividad reciente) | RF-16 |
-| `/admin/ediciones` | Gestión de ediciones | RF-10 |
-| `/admin/categorias` | Gestión de categorías | RF-11 |
-| `/admin/votaciones` | Gestión de votaciones | RF-12, RN-06, RN-09 |
-| `/admin/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
-| `/admin/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
-| `/admin/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
-| `/admin/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
-| `/admin/sitio` | Contacto y redes sociales del pie de página | — |
-| `/admin/marca` | Guía de identidad visual (solo administrador; `/marca` redirige aquí) | — |
+| `/panel` | Panel principal (KPI + actividad reciente) | RF-16 |
+| `/panel/ediciones` | Gestión de ediciones | RF-10 |
+| `/panel/categorias` | Gestión de categorías | RF-11 |
+| `/panel/votaciones` | Gestión de votaciones | RF-12, RN-06, RN-09 |
+| `/panel/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
+| `/panel/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
+| `/panel/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
+| `/panel/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
+| `/panel/sitio` | Contacto y redes sociales del pie de página | — |
+| `/panel/marca` | Guía de identidad visual (solo administrador; `/marca` redirige aquí) | — |
 
 Las rutas anteriores con ID (`/categorias/:id`, `/votaciones/:id`, `/votaciones/:id/comprobante`) redirigen a la URL
 amigable. En GitHub Pages todas las rutas llevan el prefijo `/votaciones-festival-vallenato/`.

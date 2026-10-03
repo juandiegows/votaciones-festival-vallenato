@@ -27,7 +27,7 @@ export default function Login() {
     const r = await iniciarSesion(correo, contrasena);
     setEnviando(false);
     if (!r.ok) return setError(r.error);
-    const destino = location.state?.desde || (r.usuario.rol === 'administrador' ? '/admin' : '/categorias');
+    const destino = location.state?.desde || (r.usuario.rol === 'administrador' ? '/panel' : '/categorias');
     navigate(destino, { replace: true });
   };
 

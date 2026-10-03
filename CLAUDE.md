@@ -20,6 +20,8 @@ Desacoplada: `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amiga
 → `app/api` (Django REST Framework) → MySQL. La web lee la API si se compila con `VITE_API_URL`; sin ella usa datos
 simulados (`app/web/src/data/`). Nada debe quedar fijo a una edición: todo sale de la edición activa.
 Datos de prueba en la base de datos: `python manage.py cargar_demo --reiniciar`.
+El panel de administración de la web vive en `/panel/…` (no `/admin`: el WAF de producción bloquea esas rutas);
+la API conserva `/api/admin/…`.
 
 ## Comandos
 - Web: `cd app/web && npm run dev` · `npm run build`
