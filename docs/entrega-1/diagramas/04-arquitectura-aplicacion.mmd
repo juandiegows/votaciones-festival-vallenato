@@ -1,0 +1,18 @@
+flowchart TB
+    U(["👤 Usuario: visitante · votante · administrador"]) --> N["🌐 Navegador web (móvil · tablet · escritorio)<br/>HTML5 · CSS3 · Bootstrap · JavaScript"]
+    N -- "HTTPS: petición / respuesta" --> URL
+    subgraph DJ["Aplicación Django – patrón MVT"]
+        direction LR
+        URL["urls.py<br/>enrutamiento"] --> V["Views<br/>lógica y reglas"]
+        V --> T["Templates<br/>HTML + Bootstrap"]
+        V <--> M["Models (ORM)<br/>Edición · Categoría · Votación<br/>Opción · Usuario · Voto"]
+        AUTH["django.contrib.auth<br/>sesiones"] --- V
+        ADM["Panel de<br/>administración"] --- M
+    end
+    M -- "SQL (mysqlclient)" --> DB[("Base de datos MySQL")]
+    classDef c1 fill:#FCE6CC,stroke:#DD3333,color:#1F2421
+    classDef c2 fill:#F6EBD3,stroke:#8A6A2E,color:#1F2421
+    classDef c3 fill:#EFEFEF,stroke:#555555,color:#1F2421
+    class U,N c1
+    class URL,V,T,M,ADM,AUTH c2
+    class DB c3

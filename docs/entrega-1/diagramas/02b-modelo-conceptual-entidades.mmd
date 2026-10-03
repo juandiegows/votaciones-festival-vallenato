@@ -1,0 +1,9 @@
+erDiagram
+    direction LR
+    EDICION ||--|{ CATEGORIA : "agrupa"
+    CATEGORIA ||--o{ VOTACION : "contiene"
+    VOTACION ||--|{ OPCION : "ofrece"
+    OPCION ||--o{ VOTO : "recibe"
+    VOTACION ||--o{ VOTO : "registra"
+    USUARIO ||--o{ VOTO : "emite"
+    USUARIO ||--o{ REGISTRO_AUDITORIA : "genera"

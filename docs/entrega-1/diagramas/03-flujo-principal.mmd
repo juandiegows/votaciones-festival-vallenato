@@ -1,0 +1,22 @@
+flowchart TD
+    A([Usuario ingresa al sitio · Inicio]) --> C{{¿Sesión iniciada?}}
+    C -- No --> D{{¿Tiene cuenta?}}
+    D -- No --> E[Registro · RN-10] --> F[Inicio de sesión]
+    D -- Sí --> F
+    C -- Sí --> G[Selecciona categoría → votación]
+    F --> G
+    G --> I{{¿Votación abierta? · RN-03}}
+    I -- No --> I2[Mensaje: programada o cerrada<br/>resultados si aplica · RN-07]
+    I -- Sí --> J{{¿Ya votó? · RN-04}}
+    J -- Sí --> J2[Mensaje: ya votaste<br/>ver comprobante]
+    J -- No --> K[Elige una opción]
+    K --> L[Confirmación del voto · RN-05]
+    L -- Cancelar --> K
+    L -- Confirmar --> M[(Voto registrado · MySQL)]
+    M --> N([Comprobante + mensaje posterior])
+    classDef ok fill:#FCE6CC,stroke:#DD3333,color:#1F2421
+    classDef dec fill:#F6EBD3,stroke:#8A6A2E,color:#1F2421
+    classDef warn fill:#EFEFEF,stroke:#555555,color:#1F2421
+    class A,E,F,G,K,L,N,M ok
+    class C,D,I,J dec
+    class I2,J2 warn

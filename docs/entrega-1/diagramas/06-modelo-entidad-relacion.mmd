@@ -1,0 +1,60 @@
+erDiagram
+    direction LR
+    EDICION ||--|{ CATEGORIA : agrupa
+    EDICION ||--o{ BANNER_INICIO : muestra
+    CATEGORIA ||--o{ VOTACION : contiene
+    VOTACION ||--|{ OPCION : ofrece
+    VOTACION ||--o{ VOTO : registra
+    OPCION ||--o{ VOTO : recibe
+    USUARIO ||--o{ VOTO : emite
+    USUARIO |o--o{ REGISTRO_AUDITORIA : genera
+    EDICION {
+        bigint id PK
+        smallint anio UK
+        varchar estado
+        smallint votos_por_usuario
+        bool votaciones_pausadas
+    }
+    CATEGORIA {
+        bigint id PK
+        bigint edicion_id FK
+        varchar nombre
+        varchar slug
+    }
+    VOTACION {
+        bigint id PK
+        bigint categoria_id FK
+        varchar titulo
+        datetime fecha_apertura
+        datetime fecha_cierre
+    }
+    OPCION {
+        bigint id PK
+        bigint votacion_id FK
+        varchar nombre
+        bool activa
+    }
+    USUARIO {
+        bigint id PK
+        varchar email UK
+        varchar numero_documento UK
+        bool correo_verificado
+        varchar rol
+    }
+    VOTO {
+        bigint id PK
+        bigint usuario_id FK
+        bigint votacion_id FK
+        bigint opcion_id FK
+        varchar codigo_comprobante UK
+    }
+    REGISTRO_AUDITORIA {
+        bigint id PK
+        bigint usuario_id FK
+        varchar accion
+    }
+    BANNER_INICIO {
+        bigint id PK
+        bigint edicion_id FK
+        varchar imagen
+    }

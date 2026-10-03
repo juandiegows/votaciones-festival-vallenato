@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1040" style="font-family: 'Segoe UI', Arial, sans-serif;">
+<defs><marker id="open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M0,0 L12,6 L0,12" fill="none" stroke="#333" stroke-width="1.6"/></marker><marker id="tri" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="16" markerHeight="16" orient="auto"><path d="M0,0 L14,7 L0,14 z" fill="#fff" stroke="#1F2421" stroke-width="1.6"/></marker></defs>
+<rect width="1420" height="1040" fill="#fff"/>
+<rect x="235" y="60" width="930" height="910" rx="14" fill="#FFFBF6" stroke="#DD3333" stroke-width="2.5"/>
+<text x="700" y="95" text-anchor="middle" font-size="20" font-weight="700" fill="#DD3333">Sistema Web de Votaciones – Festival de la Leyenda Vallenata</text>
+<line x1="123" y1="224" x2="332" y2="150" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="123" y1="224" x2="332" y2="245" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="123" y1="224" x2="332" y2="340" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="123" y1="664" x2="562" y2="505" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="123" y1="664" x2="332" y2="640" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="123" y1="664" x2="332" y2="880" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="838" y2="505" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="150" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="250" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="620" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="720" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="820" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="1297" y1="534" x2="1073" y2="915" stroke="#4a4a4a" stroke-width="1.6"/>
+<line x1="470" y1="674" x2="470" y2="732" stroke="#333" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#open)"/><text x="480" y="708" font-size="14" fill="#333">«include»</text>
+<line x1="700" y1="429" x2="700" y2="467" stroke="#333" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#open)"/><text x="710" y="453" font-size="14" fill="#333">«extend»</text>
+<line x1="95" y1="610" x2="95" y2="340" stroke="#1F2421" stroke-width="2" marker-end="url(#tri)"/>
+<text x="107" y="470" font-size="13" fill="#555">generalización</text>
+<ellipse cx="470" cy="150" rx="138" ry="36" fill="#FCE6CC" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-03</text>
+<text x="470" y="150" text-anchor="middle" font-size="15" fill="#1F2421">Consultar categorías</text>
+<text x="470" y="168" text-anchor="middle" font-size="15" fill="#1F2421">y votaciones</text>
+<ellipse cx="470" cy="245" rx="138" ry="36" fill="#FCE6CC" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="225" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-12</text>
+<text x="470" y="245" text-anchor="middle" font-size="15" fill="#1F2421">Consultar resultados</text>
+<text x="470" y="263" text-anchor="middle" font-size="15" fill="#1F2421">publicados</text>
+<ellipse cx="470" cy="340" rx="138" ry="36" fill="#FCE6CC" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="320" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-01</text>
+<text x="470" y="340" text-anchor="middle" font-size="15" fill="#1F2421">Registrarse</text>
+<text x="470" y="358" text-anchor="middle" font-size="15" fill="#1F2421">como votante</text>
+<ellipse cx="700" cy="395" rx="138" ry="36" fill="#F4F4F4" stroke="#1F2421" stroke-width="1.6"/>
+<text x="700" y="375" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-11</text>
+<text x="700" y="395" text-anchor="middle" font-size="15" fill="#1F2421">Recuperar</text>
+<text x="700" y="413" text-anchor="middle" font-size="15" fill="#1F2421">contraseña</text>
+<ellipse cx="700" cy="505" rx="138" ry="36" fill="#F6EBD3" stroke="#1F2421" stroke-width="1.6"/>
+<text x="700" y="485" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-02</text>
+<text x="700" y="505" text-anchor="middle" font-size="15" fill="#1F2421">Iniciar / cerrar</text>
+<text x="700" y="523" text-anchor="middle" font-size="15" fill="#1F2421">sesión</text>
+<ellipse cx="470" cy="640" rx="138" ry="36" fill="#FCE6CC" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="629" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-04</text>
+<text x="470" y="649" text-anchor="middle" font-size="15" fill="#1F2421">Emitir voto</text>
+<ellipse cx="470" cy="770" rx="138" ry="36" fill="#F4F4F4" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="766" text-anchor="middle" font-size="15" fill="#1F2421">Validar reglas</text>
+<text x="470" y="784" text-anchor="middle" font-size="15" fill="#1F2421">de voto</text>
+<ellipse cx="470" cy="880" rx="138" ry="36" fill="#FCE6CC" stroke="#1F2421" stroke-width="1.6"/>
+<text x="470" y="860" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-10</text>
+<text x="470" y="880" text-anchor="middle" font-size="15" fill="#1F2421">Consultar mis votos</text>
+<text x="470" y="898" text-anchor="middle" font-size="15" fill="#1F2421">y comprobantes</text>
+<ellipse cx="935" cy="150" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-09</text>
+<text x="935" y="150" text-anchor="middle" font-size="15" fill="#1F2421">Gestionar</text>
+<text x="935" y="168" text-anchor="middle" font-size="15" fill="#1F2421">ediciones</text>
+<ellipse cx="935" cy="250" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="230" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-05</text>
+<text x="935" y="250" text-anchor="middle" font-size="15" fill="#1F2421">Gestionar</text>
+<text x="935" y="268" text-anchor="middle" font-size="15" fill="#1F2421">categorías</text>
+<ellipse cx="935" cy="620" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="600" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-06</text>
+<text x="935" y="620" text-anchor="middle" font-size="15" fill="#1F2421">Gestionar</text>
+<text x="935" y="638" text-anchor="middle" font-size="15" fill="#1F2421">votaciones</text>
+<ellipse cx="935" cy="720" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="700" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-07</text>
+<text x="935" y="720" text-anchor="middle" font-size="15" fill="#1F2421">Gestionar</text>
+<text x="935" y="738" text-anchor="middle" font-size="15" fill="#1F2421">opciones</text>
+<ellipse cx="935" cy="820" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="800" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-08</text>
+<text x="935" y="820" text-anchor="middle" font-size="15" fill="#1F2421">Consultar y publicar</text>
+<text x="935" y="838" text-anchor="middle" font-size="15" fill="#1F2421">resultados</text>
+<ellipse cx="935" cy="915" rx="138" ry="36" fill="#EFEFEF" stroke="#1F2421" stroke-width="1.6"/>
+<text x="935" y="895" text-anchor="middle" font-size="12" font-weight="700" fill="#DD3333">CU-13</text>
+<text x="935" y="915" text-anchor="middle" font-size="15" fill="#1F2421">Consultar registro</text>
+<text x="935" y="933" text-anchor="middle" font-size="15" fill="#1F2421">de auditoría</text>
+
+    <g stroke="#1F2421" stroke-width="2.2" fill="none">
+      <circle cx="95" cy="192" r="16" fill="#fff"/>
+      <line x1="95" y1="208" x2="95" y2="250"/>
+      <line x1="69" y1="224" x2="121" y2="224"/>
+      <line x1="95" y1="250" x2="75" y2="284"/>
+      <line x1="95" y1="250" x2="115" y2="284"/>
+    </g>
+    <text x="95" y="308" text-anchor="middle" font-size="17" font-weight="700" fill="#1F2421">Visitante</text>
+    <text x="95" y="328" text-anchor="middle" font-size="13" fill="#555">(no autenticado)</text>
+
+    <g stroke="#1F2421" stroke-width="2.2" fill="none">
+      <circle cx="95" cy="632" r="16" fill="#fff"/>
+      <line x1="95" y1="648" x2="95" y2="690"/>
+      <line x1="69" y1="664" x2="121" y2="664"/>
+      <line x1="95" y1="690" x2="75" y2="724"/>
+      <line x1="95" y1="690" x2="115" y2="724"/>
+    </g>
+    <text x="95" y="748" text-anchor="middle" font-size="17" font-weight="700" fill="#1F2421">Votante</text>
+    <text x="95" y="768" text-anchor="middle" font-size="13" fill="#555">(registrado)</text>
+
+    <g stroke="#1F2421" stroke-width="2.2" fill="none">
+      <circle cx="1325" cy="502" r="16" fill="#fff"/>
+      <line x1="1325" y1="518" x2="1325" y2="560"/>
+      <line x1="1299" y1="534" x2="1351" y2="534"/>
+      <line x1="1325" y1="560" x2="1305" y2="594"/>
+      <line x1="1325" y1="560" x2="1345" y2="594"/>
+    </g>
+    <text x="1325" y="618" text-anchor="middle" font-size="17" font-weight="700" fill="#1F2421">Administrador</text>
+    <text x="1325" y="638" text-anchor="middle" font-size="13" fill="#555">(Fundación)</text>
+<text x="235" y="1005" font-size="14" fill="#555">Nota: el actor <tspan font-weight="700">Jurado</tspan> y la integración con jurados quedan como <tspan font-weight="700">Pendiente de validación</tspan> (pregunta P-05); no se modelan casos de uso para él en esta entrega.</text>
+<text x="235" y="1028" font-size="14" fill="#555">El Votante hereda los casos de uso del Visitante. CU-04 incluye siempre la validación de reglas RN-02 a RN-05.</text>
+</svg>

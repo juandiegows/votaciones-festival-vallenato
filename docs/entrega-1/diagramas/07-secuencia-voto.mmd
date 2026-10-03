@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    actor V as Votante
+    participant W as Web (React)
+    participant A as API Django REST
+    participant DB as MySQL
+    participant C as Servicio de correo
+    V->>W: Se registra con documento, correo y contraseña
+    W->>A: POST /api/auth/registro/
+    A->>DB: Crea el usuario (documento único, RN-17)
+    A-)C: Enlace firmado para confirmar el correo
+    C--)V: Correo de confirmación
+    V->>W: Abre el enlace (/confirmar-correo)
+    W->>A: POST /api/auth/confirmar-correo/ {token}
+    A->>DB: correo_verificado = true (RN-18)
+    V->>W: Inicia sesión, elige categoría, votación y opción
+    W->>V: Pide confirmar el voto
+    V->>W: Confirma
+    W->>A: POST /api/votaciones/{id}/votar/ {opcion} + token
+    A->>DB: SELECT … FOR UPDATE (bloquea la votación)
+    alt Correo sin confirmar · cerrada o en pausa · límite alcanzado
+        A-->>W: 403 / 409 con el motivo (RN-03, RN-04, RN-16, RN-18)
+        W-->>V: Mensaje sin registrar el voto
+    else Voto válido
+        A->>DB: INSERT voto con código de comprobante único
+        A-->>W: 201 {codigo_comprobante, fecha_hora}
+        W-->>V: Comprobante en pantalla (RN-05)
+        A-)C: Comprobante del voto (en segundo plano)
+        C--)V: Correo con el comprobante
+    end

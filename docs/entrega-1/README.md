@@ -19,8 +19,10 @@ Un archivo por caso especificado (CU-01 a CU-08) y uno para los complementarios 
 - `.drawio`: se abre en [diagrams.net](https://app.diagrams.net) (gratis); desde ahí también se exporta a `.vsdx` o `.png`.
 - `.png`: la imagen que va en el informe.
 
-El modelo entidad-relación (`diagramas/06-modelo-entidad-relacion.png`) resume llaves y atributos principales; el modelo
-físico completo y el diagrama de secuencia en Mermaid están en [`../api/diagramas/`](../api/diagramas/).
+Los demás diagramas de `diagramas/` traen su fuente junto a la imagen: `.mmd` (Mermaid; se edita en
+[mermaid.live](https://mermaid.live) o en VS Code) y `01-casos-de-uso.svg` para el diagrama general de casos de uso
+(se abre en Visio, Inkscape o el navegador). El modelo entidad-relación (`06`) resume llaves y atributos principales;
+el modelo físico completo está en [`../api/diagramas/`](../api/diagramas/).
 
 ## Capturas
 

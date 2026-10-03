@@ -1,0 +1,15 @@
+flowchart TB
+    W["🌐 Sitio web oficial del Festival (existente)"] -- "botón / menú «Votaciones»" --> L["Subdominio institucional<br/>ej.: votaciones.dominio-del-festival<br/><i>Pendiente de validación</i>"]
+    L -- "DNS + HTTPS" --> S
+    subgraph SRV["Servidor – pendiente de validación"]
+        direction LR
+        S["Nginx<br/>proxy inverso"] --> G["Gunicorn<br/>WSGI"] --> D["Aplicación Django<br/>independiente"]
+        D -.-> ST["/static · /media<br/>imágenes de opciones"]
+    end
+    D --> DB[("MySQL")]
+    classDef c1 fill:#FCE6CC,stroke:#DD3333,color:#1F2421
+    classDef c2 fill:#F6EBD3,stroke:#8A6A2E,color:#1F2421
+    classDef c3 fill:#EFEFEF,stroke:#555555,color:#1F2421
+    class W,L c1
+    class S,G,D,ST c2
+    class DB c3

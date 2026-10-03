@@ -1,0 +1,71 @@
+erDiagram
+    direction LR
+    EDICION ||--|{ CATEGORIA : "agrupa"
+    CATEGORIA ||--o{ VOTACION : "contiene"
+    VOTACION ||--|{ OPCION : "ofrece (mín. 2 para abrir)"
+    OPCION ||--o{ VOTO : "recibe"
+    VOTACION ||--o{ VOTO : "registra"
+    USUARIO ||--o{ VOTO : "emite"
+    USUARIO ||--o{ REGISTRO_AUDITORIA : "genera"
+    EDICION {
+        int id PK
+        string nombre
+        int anio
+        date fecha_inicio
+        date fecha_fin
+        string estado
+    }
+    CATEGORIA {
+        int id PK
+        int edicion_id FK
+        string nombre
+        string descripcion
+        bool activa
+        int orden
+    }
+    VOTACION {
+        int id PK
+        int categoria_id FK
+        string titulo
+        string descripcion
+        datetime fecha_apertura
+        datetime fecha_cierre
+        string estado
+        int votos_por_usuario
+        string visibilidad_resultados
+    }
+    OPCION {
+        int id PK
+        int votacion_id FK
+        string nombre
+        string descripcion
+        string imagen
+        string enlace_multimedia
+        int orden
+    }
+    USUARIO {
+        int id PK
+        string nombres
+        string apellidos
+        string correo UK
+        string contrasena_hash
+        string rol
+        bool acepta_tratamiento_datos
+        datetime fecha_registro
+    }
+    VOTO {
+        int id PK
+        int usuario_id FK
+        int votacion_id FK
+        int opcion_id FK
+        datetime fecha_hora
+        string codigo_comprobante UK
+    }
+    REGISTRO_AUDITORIA {
+        int id PK
+        int usuario_id FK
+        string accion
+        string entidad
+        datetime fecha_hora
+        string ip
+    }
