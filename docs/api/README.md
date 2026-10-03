@@ -17,7 +17,14 @@ API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (202
   cada petición protegida con el encabezado `Authorization: Token <token>`.
 - **Roles:** `votante` (por defecto al registrarse) y `administrador`. Las rutas `/api/gestion/…` exigen
   administrador; un votante recibe `403`.
-- **Límites de uso (throttling):** login y registro 10/min; votar 30/min por usuario.
+- **Límites de uso (throttling):** login y registro 10/min; votar 30/min por usuario; confirmar o reenviar el
+  correo 5/min. La IP del cliente sale de `REMOTE_ADDR` o, detrás de proxies declarados en `DJANGO_NUM_PROXIES`,
+  de la entrada de `X-Forwarded-For` que agregó el proxy (la que escribe el cliente se ignora).
+- **Filtros por ID** (`?categoria=`, `?edicion=`, `?votacion=`, `?anio=`): un valor no numérico devuelve una lista
+  vacía, no un error.
+- **`publicar-resultados`** recibe `{"publicar": true|false}` validado como booleano; otro valor responde `400`.
+- **CSV de resultados:** los nombres que empiezan por `=`, `+`, `-` o `@` se exportan con un apóstrofo delante
+  para que Excel no los ejecute como fórmula.
 
 ### Respuestas de error
 
@@ -170,7 +177,8 @@ suma por opción no coincide con el total (`suma_por_opcion` ≠ `total_votos`),
 ### Datos de prueba
 
 `python manage.py cargar_demo [--reiniciar]` carga en la base de datos ediciones, categorías, votaciones, opciones
-con audio, unos 100 votantes ficticios y las cuentas `admin@festival.test` y `votante@festival.test`.
+con audio, unos 100 votantes ficticios y las cuentas `admin@festival.test` y `votante@festival.test`. Sin
+`DJANGO_DEBUG` sus contraseñas se toman de `DEMO_CLAVE_ADMIN` y `DEMO_CLAVE_VOTANTE` (obligatorias).
 
 Estado de una votación: `borrador` → (`programada`) → `abierta` → `cerrada`
 (ver [diagrama de estados](diagramas/04-estados-votacion.png)).

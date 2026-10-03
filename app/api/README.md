@@ -49,6 +49,13 @@ borrador con una sola opción), unos 100 votantes ficticios con votos y las cuen
 musicales enlazan a las muestras instrumentales de la web (`/audio/muestras/*.mp3`). `--reiniciar` también
 elimina los votos de otros usuarios en esas ediciones.
 
+Esas contraseñas solo se usan con `DJANGO_DEBUG=true`. En un servidor público (sin DEBUG) el comando exige
+`DEMO_CLAVE_ADMIN` y `DEMO_CLAVE_VOTANTE`, para que nadie entre al panel con una clave publicada en este README:
+
+```bash
+docker exec -e DEMO_CLAVE_ADMIN='<clave>' -e DEMO_CLAVE_VOTANTE='<clave>' votaciones_api python manage.py cargar_demo --reiniciar
+```
+
 ## Ejecutar sin Docker (SQLite)
 
 ```bash
@@ -73,20 +80,23 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 
 | Variable | Valor por defecto | Descripción |
 |---|---|---|
-| `DJANGO_SECRET_KEY` | clave de desarrollo | **Obligatoria en producción** |
+| `DJANGO_SECRET_KEY` | clave de desarrollo | **Obligatoria con `DJANGO_DEBUG=false`**: sin ella la API no arranca |
 | `DJANGO_DEBUG` | `true` | `false` en producción |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Dominios permitidos |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | — | Orígenes https de confianza para formularios (p. ej. `/django-admin/`) |
+| `DJANGO_NUM_PROXIES` | `0` | Proxies delante de Django. Con `0` la IP del cliente es `REMOTE_ADDR` y se ignora `X-Forwarded-For` (no se puede falsear); producción (edge_nginx): `1` |
 | `DB_ENGINE` | `sqlite` | `mysql` para usar MySQL |
 | `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | — | Conexión a MySQL |
 | `CORS_ALLOWED_ORIGINS` | web local, GitHub Pages y votaciones.juandiegows.com | Orígenes que pueden llamar a la API |
-| `THROTTLE_LOGIN` · `THROTTLE_REGISTRO` · `THROTTLE_VOTAR` | `10/min` · `10/min` · `30/min` | Límites de uso |
+| `THROTTLE_LOGIN` · `THROTTLE_REGISTRO` · `THROTTLE_VOTAR` · `THROTTLE_CONFIRMACION` | `10/min` · `10/min` · `30/min` · `5/min` | Límites de uso |
+| `DEMO_CLAVE_ADMIN` · `DEMO_CLAVE_VOTANTE` | claves documentadas (solo con DEBUG) | Contraseñas de las cuentas de `cargar_demo`; obligatorias sin DEBUG |
 | `CORREO_ADAPTADOR` | `consola` | Proveedor de correo: `consola` (solo imprime), `smtp` o `zeptomail` |
 | `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` · `CORREO_RESPONDER_A` | `no-responder@votaciones.juandiegows.com` | Remitente de los correos |
 | `CORREO_URL_SITIO` | `http://localhost:5195` | URL de la web usada en los enlaces de los correos |
 | `CORREO_CONFIRMACION_HORAS` | `48` | Vigencia del enlace para confirmar el correo |
 | `CORREO_EN_SEGUNDO_PLANO` | `true` | Entrega los correos del registro y del voto en un hilo aparte (no demora la respuesta) |
 | `EMAIL_HOST` · `EMAIL_PORT` · `EMAIL_HOST_USER` · `EMAIL_HOST_PASSWORD` · `EMAIL_USE_TLS` · `EMAIL_USE_SSL` | `localhost` · `587` | Adaptador `smtp` |
-| `ZEPTOMAIL_TOKEN` · `ZEPTOMAIL_API_URL` · `ZEPTOMAIL_BOUNCE_ADDRESS` | — · `https://api.zeptomail.com/v1.1/email` | Adaptador `zeptomail` (API de Zoho ZeptoMail) |
+| `ZEPTOMAIL_TOKEN` · `ZEPTOMAIL_API_URL` · `ZEPTOMAIL_BOUNCE_ADDRESS` | — · `https://api.zeptomail.com/v1.1/email` | Adaptador `zeptomail` (API de Zoho ZeptoMail); la URL debe ser `https://` |
 
 Plantilla: [`.env.example`](.env.example). En desarrollo local, `settings.py` lee `app/api/.env` si existe
 (las variables del sistema o de Docker tienen prioridad).
