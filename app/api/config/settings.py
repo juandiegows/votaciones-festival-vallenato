@@ -153,6 +153,8 @@ SPECTACULAR_SETTINGS = {
     ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # El alias /api/admin/ no se documenta: la ruta pública de administración es /api/gestion/
+    "PREPROCESSING_HOOKS": ["votaciones.esquema.sin_alias_admin"],
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_NAME_OVERRIDES": {
         "EstadoEdicionEnum": "votaciones.models.Edicion.Estado",

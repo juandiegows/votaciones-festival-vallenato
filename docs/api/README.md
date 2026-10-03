@@ -15,7 +15,7 @@ API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (202
 - **Base:** `/api/`. Formato JSON en UTF-8; fechas en ISO 8601 con zona horaria (`America/Bogota`).
 - **Autenticación:** token. Se obtiene en `POST /api/auth/registro/` o `POST /api/auth/login/` y se envía en
   cada petición protegida con el encabezado `Authorization: Token <token>`.
-- **Roles:** `votante` (por defecto al registrarse) y `administrador`. Las rutas `/api/admin/…` exigen
+- **Roles:** `votante` (por defecto al registrarse) y `administrador`. Las rutas `/api/gestion/…` exigen
   administrador; un votante recibe `403`.
 - **Límites de uso (throttling):** login y registro 10/min; votar 30/min por usuario.
 
@@ -76,23 +76,23 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| CRUD | `/api/admin/ediciones/` | Gestión de ediciones (RF-10); `presentacion_categorias`: `tarjetas`, `lista`, `mosaico`, `compacta` o `destacada` |
-| GET | `/api/admin/ediciones/{id}/resumen/` | Votos por categoría → votación → opción de la edición (tablero de resultados) |
-| CRUD | `/api/admin/categorias/?edicion={id}` | Gestión de categorías (RF-11); ícono de la lista (`icono`) o subido (`icono_imagen`, multipart) |
-| CRUD | `/api/admin/votaciones/?categoria={id}` | Gestión de votaciones (RF-12); se crean como **borrador** |
-| POST | `/api/admin/votaciones/{id}/publicar/` | Publica si hay al menos dos opciones activas (RN-06) |
-| POST | `/api/admin/votaciones/{id}/despublicar/` | Retira la votación del sitio; `409 votacion_abierta` mientras está abierta |
-| POST | `/api/admin/votaciones/{id}/cerrar/` | Cierre anticipado |
-| GET | `/api/admin/votaciones/{id}/participacion/` | Quién votó, **nunca por qué opción** (ver «Participación») |
-| POST | `/api/admin/votaciones/{id}/publicar-resultados/` | `{ "publicar": true\|false }` (RF-15) |
-| GET | `/api/admin/votaciones/{id}/resultados/` | Resultados completos, siempre visibles para el administrador (RF-14) |
-| GET | `/api/admin/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
-| CRUD | `/api/admin/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart) y `texto_audio` (letra o transcripción) |
-| GET | `/api/admin/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
-| GET | `/api/admin/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
-| CRUD | `/api/admin/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
-| GET | `/api/admin/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
-| GET | `/api/admin/auditoria/integridad/?edicion={id}` | Verifica que los votos cuadren en cada votación (por defecto, la edición activa) |
+| CRUD | `/api/gestion/ediciones/` | Gestión de ediciones (RF-10); `presentacion_categorias`: `tarjetas`, `lista`, `mosaico`, `compacta` o `destacada` |
+| GET | `/api/gestion/ediciones/{id}/resumen/` | Votos por categoría → votación → opción de la edición (tablero de resultados) |
+| CRUD | `/api/gestion/categorias/?edicion={id}` | Gestión de categorías (RF-11); ícono de la lista (`icono`) o subido (`icono_imagen`, multipart) |
+| CRUD | `/api/gestion/votaciones/?categoria={id}` | Gestión de votaciones (RF-12); se crean como **borrador** |
+| POST | `/api/gestion/votaciones/{id}/publicar/` | Publica si hay al menos dos opciones activas (RN-06) |
+| POST | `/api/gestion/votaciones/{id}/despublicar/` | Retira la votación del sitio; `409 votacion_abierta` mientras está abierta |
+| POST | `/api/gestion/votaciones/{id}/cerrar/` | Cierre anticipado |
+| GET | `/api/gestion/votaciones/{id}/participacion/` | Quién votó, **nunca por qué opción** (ver «Participación») |
+| POST | `/api/gestion/votaciones/{id}/publicar-resultados/` | `{ "publicar": true\|false }` (RF-15) |
+| GET | `/api/gestion/votaciones/{id}/resultados/` | Resultados completos, siempre visibles para el administrador (RF-14) |
+| GET | `/api/gestion/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
+| CRUD | `/api/gestion/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart) y `texto_audio` (letra o transcripción) |
+| GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
+| GET | `/api/gestion/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
+| CRUD | `/api/gestion/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
+| GET | `/api/gestion/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
+| GET | `/api/gestion/auditoria/integridad/?edicion={id}` | Verifica que los votos cuadren en cada votación (por defecto, la edición activa) |
 
 `CRUD` = `GET` lista, `POST` crear, `GET/PUT/PATCH/DELETE` sobre `{id}/`. Eliminar una votación u opción con
 votos responde `409` (RN-09); eliminar una edición o categoría con elementos asociados también responde `409`.
@@ -144,7 +144,7 @@ ven las opciones. Ambos campos se exponen también en los endpoints públicos.
 
 ### Participación (quién votó, sin revelar por qué)
 
-`GET /api/admin/votaciones/{id}/participacion/` responde
+`GET /api/gestion/votaciones/{id}/participacion/` responde
 `{votacion_id, votacion, estado, umbral, total_votos, total_votantes, disponible, motivo, votantes[], ocultos}`, con
 `votantes = [{usuario_id, nombres, apellidos, email, fecha}]`. Para que no se pueda deducir el voto de las primeras
 personas comparando la lista con los resultados en tiempo real:
@@ -156,7 +156,7 @@ personas comparando la lista con los resultados en tiempo real:
 
 ### Integridad de los votos
 
-`GET /api/admin/auditoria/integridad/?edicion={id}` revisa cada votación y devuelve `ok` y `alertas` cuando: la
+`GET /api/gestion/auditoria/integridad/?edicion={id}` revisa cada votación y devuelve `ok` y `alertas` cuando: la
 suma por opción no coincide con el total (`suma_por_opcion` ≠ `total_votos`), algún usuario supera el límite
 (`usuarios_excedidos`), hay votos por opciones de otra votación (`votos_opcion_ajena`) o desactivadas
 (`votos_inactivos`), votos fuera del periodo (`votos_fuera_de_plazo`) o comprobantes repetidos

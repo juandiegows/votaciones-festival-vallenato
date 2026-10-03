@@ -7,1417 +7,6 @@ info:
     → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization:
     Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.'
 paths:
-  /api/admin/auditoria/:
-    get:
-      operationId: admin_auditoria_list
-      summary: Registro de acciones (50 por página)
-      parameters:
-      - in: query
-        name: accion
-        schema:
-          type: string
-        description: crear, actualizar, eliminar, publicar, despublicar, cerrar…
-      - in: query
-        name: entidad
-        schema:
-          type: string
-        description: edicion, categoria, votacion, opcion, banner…
-      - name: page
-        required: false
-        in: query
-        description: Un número de página dentro del conjunto de resultados paginado.
-        schema:
-          type: integer
-      - in: query
-        name: q
-        schema:
-          type: string
-        description: Busca en el correo o nombre del usuario y en el ID de la entidad
-      tags:
-      - Auditoría
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedRegistroAuditoriaList'
-          description: ''
-  /api/admin/auditoria/{id}/:
-    get:
-      operationId: admin_auditoria_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este registro de auditoría.
-        required: true
-      tags:
-      - Auditoría
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistroAuditoria'
-          description: ''
-  /api/admin/auditoria/integridad/:
-    get:
-      operationId: admin_auditoria_integridad_retrieve
-      description: Comprueba en cada votación que la suma por opción coincida con
-        el total, que nadie supere el límite de votos y que no haya votos por opciones
-        ajenas o inactivas, fuera de plazo o con comprobantes repetidos.
-      summary: Verificación de integridad de los votos de una edición
-      parameters:
-      - in: query
-        name: edicion
-        schema:
-          type: integer
-        description: ID de la edición; por defecto, la activa
-      tags:
-      - Auditoría
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Integridad'
-          description: ''
-        '404':
-          description: No hay edición
-  /api/admin/banners/:
-    get:
-      operationId: admin_banners_list
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      parameters:
-      - in: query
-        name: edicion
-        schema:
-          type: integer
-        description: ID de la edición
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BannerInicio'
-          description: ''
-    post:
-      operationId: admin_banners_create
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BannerInicio'
-          description: ''
-  /api/admin/banners/{id}/:
-    get:
-      operationId: admin_banners_retrieve
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este banner de inicio.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BannerInicio'
-          description: ''
-    put:
-      operationId: admin_banners_update
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este banner de inicio.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BannerInicioRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BannerInicio'
-          description: ''
-    patch:
-      operationId: admin_banners_partial_update
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este banner de inicio.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBannerInicioRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBannerInicioRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBannerInicioRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BannerInicio'
-          description: ''
-    delete:
-      operationId: admin_banners_destroy
-      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
-        (JPG, PNG o WebP, máximo 3 MB).
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este banner de inicio.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/admin/categorias/:
-    get:
-      operationId: admin_categorias_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: query
-        name: edicion
-        schema:
-          type: integer
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Categoria'
-          description: ''
-    post:
-      operationId: admin_categorias_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Categoria'
-          description: ''
-  /api/admin/categorias/{id}/:
-    get:
-      operationId: admin_categorias_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este categoría.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Categoria'
-          description: ''
-    put:
-      operationId: admin_categorias_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este categoría.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CategoriaRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Categoria'
-          description: ''
-    patch:
-      operationId: admin_categorias_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este categoría.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedCategoriaRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedCategoriaRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedCategoriaRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Categoria'
-          description: ''
-    delete:
-      operationId: admin_categorias_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este categoría.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/admin/configuracion/:
-    get:
-      operationId: admin_configuracion_retrieve
-      summary: Datos de contacto del pie de página
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfiguracionSitio'
-          description: ''
-    put:
-      operationId: admin_configuracion_update
-      summary: Actualizar datos de contacto
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConfiguracionSitioRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ConfiguracionSitioRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ConfiguracionSitioRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfiguracionSitio'
-          description: ''
-    patch:
-      operationId: admin_configuracion_partial_update
-      summary: Actualizar datos de contacto (parcial)
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfiguracionSitio'
-          description: ''
-  /api/admin/ediciones/:
-    get:
-      operationId: admin_ediciones_list
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Edicion'
-          description: ''
-    post:
-      operationId: admin_ediciones_create
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Edicion'
-          description: ''
-  /api/admin/ediciones/{id}/:
-    get:
-      operationId: admin_ediciones_retrieve
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este edición.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Edicion'
-          description: ''
-    put:
-      operationId: admin_ediciones_update
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este edición.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/EdicionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Edicion'
-          description: ''
-    patch:
-      operationId: admin_ediciones_partial_update
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este edición.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEdicionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEdicionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEdicionRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Edicion'
-          description: ''
-    delete:
-      operationId: admin_ediciones_destroy
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este edición.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/admin/ediciones/{id}/resumen/:
-    get:
-      operationId: admin_ediciones_resumen_retrieve
-      description: 'Solo puede haber una edición activa: al activar una, las demás
-        pasan a cerradas.'
-      summary: Resumen de votos por categoría, votación y opción
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este edición.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResumenEdicion'
-          description: ''
-  /api/admin/opciones/:
-    get:
-      operationId: admin_opciones_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: query
-        name: votacion
-        schema:
-          type: integer
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Opcion'
-          description: ''
-    post:
-      operationId: admin_opciones_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Opcion'
-          description: ''
-  /api/admin/opciones/{id}/:
-    get:
-      operationId: admin_opciones_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este opción.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Opcion'
-          description: ''
-    put:
-      operationId: admin_opciones_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este opción.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/OpcionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Opcion'
-          description: ''
-    patch:
-      operationId: admin_opciones_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este opción.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedOpcionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedOpcionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedOpcionRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Opcion'
-          description: ''
-    delete:
-      operationId: admin_opciones_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Eliminar (solo sin votos, RN-09)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este opción.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorRegla'
-          description: ''
-  /api/admin/redes/:
-    get:
-      operationId: admin_redes_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RedSocial'
-          description: ''
-    post:
-      operationId: admin_redes_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RedSocial'
-          description: ''
-  /api/admin/redes/{id}/:
-    get:
-      operationId: admin_redes_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este red social.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RedSocial'
-          description: ''
-    put:
-      operationId: admin_redes_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este red social.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/RedSocialRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RedSocial'
-          description: ''
-    patch:
-      operationId: admin_redes_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este red social.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedRedSocialRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedRedSocialRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedRedSocialRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RedSocial'
-          description: ''
-    delete:
-      operationId: admin_redes_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este red social.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/admin/usuarios/:
-    get:
-      operationId: admin_usuarios_list
-      summary: Usuarios registrados (sin contraseñas)
-      parameters:
-      - in: query
-        name: rol
-        schema:
-          type: string
-          enum:
-          - administrador
-          - votante
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UsuarioAdmin'
-          description: ''
-  /api/admin/usuarios/{id}/:
-    get:
-      operationId: admin_usuarios_retrieve
-      summary: Detalle de usuario
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este usuario.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsuarioAdmin'
-          description: ''
-  /api/admin/votaciones/:
-    get:
-      operationId: admin_votaciones_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: query
-        name: categoria
-        schema:
-          type: integer
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Votacion'
-          description: ''
-    post:
-      operationId: admin_votaciones_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-  /api/admin/votaciones/{id}/:
-    get:
-      operationId: admin_votaciones_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-    put:
-      operationId: admin_votaciones_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/VotacionRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-    patch:
-      operationId: admin_votaciones_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedVotacionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedVotacionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedVotacionRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-    delete:
-      operationId: admin_votaciones_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Eliminar (solo sin votos, RN-09)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorRegla'
-          description: ''
-  /api/admin/votaciones/{id}/cerrar/:
-    post:
-      operationId: admin_votaciones_cerrar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Cerrar votación anticipadamente
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-  /api/admin/votaciones/{id}/despublicar/:
-    post:
-      operationId: admin_votaciones_despublicar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Despublicar votación (no se permite mientras está abierta)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-        '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorRegla'
-          description: ''
-  /api/admin/votaciones/{id}/participacion/:
-    get:
-      operationId: admin_votaciones_participacion_retrieve
-      description: Antes del cierre la lista se revela en bloques de 10 votantes y
-        siempre en orden alfabético, con la fecha sin hora, para que no se pueda deducir
-        el voto de nadie.
-      summary: Quién votó, sin revelar por qué opción
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Participacion'
-          description: ''
-  /api/admin/votaciones/{id}/publicar/:
-    post:
-      operationId: admin_votaciones_publicar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Publicar votación (RN-06)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorRegla'
-          description: ''
-  /api/admin/votaciones/{id}/publicar-resultados/:
-    post:
-      operationId: admin_votaciones_publicar_resultados_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Publicar u ocultar resultados (RF-15)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublicarResultadosRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PublicarResultadosRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PublicarResultadosRequest'
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Votacion'
-          description: ''
-  /api/admin/votaciones/{id}/resultados/:
-    get:
-      operationId: admin_votaciones_resultados_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Resultados completos (RF-14)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Resultados'
-          description: ''
-  /api/admin/votaciones/{id}/resultados/csv/:
-    get:
-      operationId: admin_votaciones_resultados_csv_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
-      summary: Exportar resultados en CSV (RF-14)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este votación.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-          description: Archivo CSV
-  /api/admin/votos/:
-    get:
-      operationId: admin_votos_list
-      summary: Votos registrados para indicadores (sin datos del votante)
-      parameters:
-      - in: query
-        name: votacion
-        schema:
-          type: integer
-        description: ID de la votación
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VotoAdmin'
-          description: ''
-  /api/admin/votos/{id}/:
-    get:
-      operationId: admin_votos_retrieve
-      summary: Detalle de voto (sin datos del votante)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: Un valor de entero único que identifique este voto.
-        required: true
-      tags:
-      - Administración
-      security:
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VotoAdmin'
-          description: ''
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -1611,6 +200,1417 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/gestion/auditoria/:
+    get:
+      operationId: gestion_auditoria_list
+      summary: Registro de acciones (50 por página)
+      parameters:
+      - in: query
+        name: accion
+        schema:
+          type: string
+        description: crear, actualizar, eliminar, publicar, despublicar, cerrar…
+      - in: query
+        name: entidad
+        schema:
+          type: string
+        description: edicion, categoria, votacion, opcion, banner…
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Busca en el correo o nombre del usuario y en el ID de la entidad
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRegistroAuditoriaList'
+          description: ''
+  /api/gestion/auditoria/{id}/:
+    get:
+      operationId: gestion_auditoria_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este registro de auditoría.
+        required: true
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroAuditoria'
+          description: ''
+  /api/gestion/auditoria/integridad/:
+    get:
+      operationId: gestion_auditoria_integridad_retrieve
+      description: Comprueba en cada votación que la suma por opción coincida con
+        el total, que nadie supere el límite de votos y que no haya votos por opciones
+        ajenas o inactivas, fuera de plazo o con comprobantes repetidos.
+      summary: Verificación de integridad de los votos de una edición
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición; por defecto, la activa
+      tags:
+      - Auditoría
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integridad'
+          description: ''
+        '404':
+          description: No hay edición
+  /api/gestion/banners/:
+    get:
+      operationId: gestion_banners_list
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+        description: ID de la edición
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    post:
+      operationId: gestion_banners_create
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+  /api/gestion/banners/{id}/:
+    get:
+      operationId: gestion_banners_retrieve
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    put:
+      operationId: gestion_banners_update
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BannerInicioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    patch:
+      operationId: gestion_banners_partial_update
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBannerInicioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerInicio'
+          description: ''
+    delete:
+      operationId: gestion_banners_destroy
+      description: Banners del inicio por edición. La imagen se envía como multipart/form-data
+        (JPG, PNG o WebP, máximo 3 MB).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este banner de inicio.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gestion/categorias/:
+    get:
+      operationId: gestion_categorias_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: query
+        name: edicion
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+          description: ''
+    post:
+      operationId: gestion_categorias_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+  /api/gestion/categorias/{id}/:
+    get:
+      operationId: gestion_categorias_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    put:
+      operationId: gestion_categorias_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    patch:
+      operationId: gestion_categorias_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoriaRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          description: ''
+    delete:
+      operationId: gestion_categorias_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gestion/configuracion/:
+    get:
+      operationId: gestion_configuracion_retrieve
+      summary: Datos de contacto del pie de página
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+    put:
+      operationId: gestion_configuracion_update
+      summary: Actualizar datos de contacto
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionSitioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+    patch:
+      operationId: gestion_configuracion_partial_update
+      summary: Actualizar datos de contacto (parcial)
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedConfiguracionSitioRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+  /api/gestion/ediciones/:
+    get:
+      operationId: gestion_ediciones_list
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edicion'
+          description: ''
+    post:
+      operationId: gestion_ediciones_create
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+  /api/gestion/ediciones/{id}/:
+    get:
+      operationId: gestion_ediciones_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    put:
+      operationId: gestion_ediciones_update
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EdicionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    patch:
+      operationId: gestion_ediciones_partial_update
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEdicionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edicion'
+          description: ''
+    delete:
+      operationId: gestion_ediciones_destroy
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gestion/ediciones/{id}/resumen/:
+    get:
+      operationId: gestion_ediciones_resumen_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Resumen de votos por categoría, votación y opción
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenEdicion'
+          description: ''
+  /api/gestion/opciones/:
+    get:
+      operationId: gestion_opciones_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: query
+        name: votacion
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Opcion'
+          description: ''
+    post:
+      operationId: gestion_opciones_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+  /api/gestion/opciones/{id}/:
+    get:
+      operationId: gestion_opciones_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    put:
+      operationId: gestion_opciones_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpcionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    patch:
+      operationId: gestion_opciones_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOpcionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opcion'
+          description: ''
+    delete:
+      operationId: gestion_opciones_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Eliminar (solo sin votos, RN-09)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este opción.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/gestion/redes/:
+    get:
+      operationId: gestion_redes_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RedSocial'
+          description: ''
+    post:
+      operationId: gestion_redes_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+  /api/gestion/redes/{id}/:
+    get:
+      operationId: gestion_redes_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    put:
+      operationId: gestion_redes_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RedSocialRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    patch:
+      operationId: gestion_redes_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRedSocialRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedSocial'
+          description: ''
+    delete:
+      operationId: gestion_redes_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este red social.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gestion/usuarios/:
+    get:
+      operationId: gestion_usuarios_list
+      summary: Usuarios registrados (sin contraseñas)
+      parameters:
+      - in: query
+        name: rol
+        schema:
+          type: string
+          enum:
+          - administrador
+          - votante
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
+  /api/gestion/usuarios/{id}/:
+    get:
+      operationId: gestion_usuarios_retrieve
+      summary: Detalle de usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
+  /api/gestion/votaciones/:
+    get:
+      operationId: gestion_votaciones_list
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: query
+        name: categoria
+        schema:
+          type: integer
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Votacion'
+          description: ''
+    post:
+      operationId: gestion_votaciones_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/gestion/votaciones/{id}/:
+    get:
+      operationId: gestion_votaciones_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    put:
+      operationId: gestion_votaciones_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VotacionRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    patch:
+      operationId: gestion_votaciones_partial_update
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVotacionRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+    delete:
+      operationId: gestion_votaciones_destroy
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Eliminar (solo sin votos, RN-09)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/gestion/votaciones/{id}/cerrar/:
+    post:
+      operationId: gestion_votaciones_cerrar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Cerrar votación anticipadamente
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/gestion/votaciones/{id}/despublicar/:
+    post:
+      operationId: gestion_votaciones_despublicar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Despublicar votación (no se permite mientras está abierta)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/gestion/votaciones/{id}/participacion/:
+    get:
+      operationId: gestion_votaciones_participacion_retrieve
+      description: Antes del cierre la lista se revela en bloques de 10 votantes y
+        siempre en orden alfabético, con la fecha sin hora, para que no se pueda deducir
+        el voto de nadie.
+      summary: Quién votó, sin revelar por qué opción
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participacion'
+          description: ''
+  /api/gestion/votaciones/{id}/publicar/:
+    post:
+      operationId: gestion_votaciones_publicar_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Publicar votación (RN-06)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/gestion/votaciones/{id}/publicar-resultados/:
+    post:
+      operationId: gestion_votaciones_publicar_resultados_create
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Publicar u ocultar resultados (RF-15)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicarResultadosRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Votacion'
+          description: ''
+  /api/gestion/votaciones/{id}/resultados/:
+    get:
+      operationId: gestion_votaciones_resultados_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Resultados completos (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resultados'
+          description: ''
+  /api/gestion/votaciones/{id}/resultados/csv/:
+    get:
+      operationId: gestion_votaciones_resultados_csv_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Exportar resultados en CSV (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: Archivo CSV
+  /api/gestion/votos/:
+    get:
+      operationId: gestion_votos_list
+      summary: Votos registrados para indicadores (sin datos del votante)
+      parameters:
+      - in: query
+        name: votacion
+        schema:
+          type: integer
+        description: ID de la votación
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VotoAdmin'
+          description: ''
+  /api/gestion/votos/{id}/:
+    get:
+      operationId: gestion_votos_retrieve
+      summary: Detalle de voto (sin datos del votante)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este voto.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoAdmin'
           description: ''
   /api/mis-votos/:
     get:
@@ -1917,7 +1917,6 @@ components:
       - id
       - imagen
       - texto_alternativo
-      - titulo
     BannerInicioRequest:
       type: object
       properties:
@@ -1925,7 +1924,6 @@ components:
           type: integer
         titulo:
           type: string
-          minLength: 1
           maxLength: 120
         subtitulo:
           type: string
@@ -1956,7 +1954,6 @@ components:
       - edicion
       - imagen
       - texto_alternativo
-      - titulo
     Categoria:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -2085,6 +2082,8 @@ components:
           maxLength: 254
         texto_pie:
           type: string
+        modo_banner:
+          $ref: '#/components/schemas/ModoBannerEnum'
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -2107,6 +2106,8 @@ components:
           maxLength: 254
         texto_pie:
           type: string
+        modo_banner:
+          $ref: '#/components/schemas/ModoBannerEnum'
     Edicion:
       type: object
       properties:
@@ -2363,6 +2364,14 @@ components:
       required:
       - email
       - password
+    ModoBannerEnum:
+      enum:
+      - fijo
+      - carrusel
+      type: string
+      description: |-
+        * `fijo` - Banner fijo
+        * `carrusel` - Carrusel
     Opcion:
       type: object
       properties:
@@ -2612,7 +2621,6 @@ components:
           type: integer
         titulo:
           type: string
-          minLength: 1
           maxLength: 120
         subtitulo:
           type: string
@@ -2697,6 +2705,8 @@ components:
           maxLength: 254
         texto_pie:
           type: string
+        modo_banner:
+          $ref: '#/components/schemas/ModoBannerEnum'
     PatchedEdicionRequest:
       type: object
       properties:

@@ -27,7 +27,11 @@ urlpatterns = [
     path("auth/yo/", views.PerfilView.as_view(), name="auth-yo"),
     path("mis-votos/", views.MisVotosView.as_view(), name="mis-votos"),
     path("sitio/", views.SitioView.as_view(), name="sitio"),
-    path("admin/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion"),
-    path("admin/", include(admin.urls)),
+    # Administración bajo /api/gestion/: el WAF de producción (Cloudflare) bloquea cualquier ruta con /admin.
+    # /api/admin/ se conserva como alias (pruebas y clientes antiguos) y no aparece en el esquema OpenAPI.
+    path("gestion/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion"),
+    path("gestion/", include(admin.urls)),
+    path("admin/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion-alias"),
+    path("admin/", include((admin.urls, "alias-admin"))),
     path("", include(publico.urls)),
 ]
