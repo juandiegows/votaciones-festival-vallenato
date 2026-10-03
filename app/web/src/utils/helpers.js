@@ -30,6 +30,13 @@ export function resultadosVisibles(votacion) {
 /** Visibilidad que aplica a una votación: la de su edición, salvo que la votación la personalice. */
 export const visibilidadResultados = (votacion) => votacion.resultadosEfectivos || votacion.mostrarResultados;
 
+/** Votos que puede emitir cada usuario en la votación: el límite de la edición, salvo que la votación lo personalice. */
+export const votosPermitidos = (votacion) => votacion.votosEfectivos ?? votacion.votosPorUsuario ?? 1;
+
+/** Calcula el límite efectivo a partir de la edición (modo demostración). */
+export const calcularVotos = (votacion, edicion) =>
+  votacion.personalizarVotos ? Number(votacion.votosPorUsuario) || 1 : Number(edicion?.votosPorUsuario) || 1;
+
 /** Calcula la visibilidad efectiva a partir de la edición (modo demostración). */
 export const calcularVisibilidad = (votacion, edicion) =>
   votacion.personalizarResultados ? votacion.mostrarResultados : edicion?.mostrarResultados || 'al cerrar';

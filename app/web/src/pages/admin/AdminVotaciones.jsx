@@ -11,7 +11,7 @@ import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.
 import FormularioOpcion, { opcionNueva } from '../../components/admin/FormularioOpcion.jsx';
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import { PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
-import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados } from '../../utils/helpers.js';
+import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const ORDENES = [
@@ -93,9 +93,10 @@ export default function AdminVotaciones() {
       descripcion: '',
       fechaApertura: isoALocal(new Date(ahora.getTime() + 86400000).toISOString()),
       fechaCierre: isoALocal(new Date(ahora.getTime() + 8 * 86400000).toISOString()),
-      votosPorUsuario: 1,
+      votosPorUsuario: edicion?.votosPorUsuario ?? 1,
       mostrarResultados: edicion?.mostrarResultados || 'al cerrar',
       personalizarResultados: false,
+      personalizarVotos: false,
       imagen: cat?.icono || 'music-note-beamed',
       iconoImagen: '',
       archivoIcono: null,
@@ -578,8 +579,20 @@ export default function AdminVotaciones() {
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-vpu">Votos por usuario</label>
-                <input id="v-vpu" type="number" min="1" max="5" className={`form-control ${errores.votosPorUsuario ? 'is-invalid' : ''}`} value={form.votosPorUsuario} onChange={(e) => setForm({ ...form, votosPorUsuario: e.target.value })} aria-describedby="v-vpu-ayuda" />
-                <div id="v-vpu-ayuda" className="form-text">Por defecto 1 (pendiente de validación con la Fundación).</div>
+                <div className="form-check mb-1">
+                  <input id="v-vpu-propio" className="form-check-input" type="checkbox" checked={!!form.personalizarVotos}
+                    onChange={(e) => setForm({ ...form, personalizarVotos: e.target.checked, votosPorUsuario: e.target.checked ? form.votosPorUsuario : edicion?.votosPorUsuario ?? 1 })} />
+                  <label className="form-check-label small" htmlFor="v-vpu-propio">Personalizar en esta votación (no usar el de la edición)</label>
+                </div>
+                <input id="v-vpu" type="number" min="1" max="5" disabled={!form.personalizarVotos}
+                  className={`form-control ${errores.votosPorUsuario ? 'is-invalid' : ''}`}
+                  value={form.personalizarVotos ? form.votosPorUsuario : edicion?.votosPorUsuario ?? 1}
+                  onChange={(e) => setForm({ ...form, votosPorUsuario: e.target.value })} aria-describedby="v-vpu-ayuda" />
+                <div id="v-vpu-ayuda" className="form-text">
+                  {form.personalizarVotos
+                    ? 'Límite propio de esta votación (pendiente de validación con la Fundación).'
+                    : <>Hereda el límite de la edición. <Link to="/panel/configuracion">Cambiarlo en Configuración</Link>.</>}
+                </div>
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-mr">Mostrar resultados</label>

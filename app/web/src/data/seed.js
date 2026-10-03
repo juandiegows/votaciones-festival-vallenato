@@ -39,6 +39,8 @@ export function crearDatosSemilla() {
       estado: 'activa',
       presentacionCategorias: 'tarjetas',
       mostrarResultados: 'al cerrar',
+      votosPorUsuario: 1,
+      votacionesPausadas: false,
     },
     {
       id: 2,

@@ -9,7 +9,7 @@ import Modal from '../components/Modal.jsx';
 import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
 import OpcionesVotacion from '../components/presentaciones/OpcionesVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
-import { formatearFechaHora, visibilidadResultados } from '../utils/helpers.js';
+import { formatearFechaHora, visibilidadResultados, votosPermitidos } from '../utils/helpers.js';
 import { useRutaPublica, useRutas } from '../hooks/useRutas.js';
 
 const claveSeleccion = (id) => `flv_seleccion_${id}`;
@@ -36,8 +36,8 @@ export default function VotacionDetalle() {
 
   const lista = opciones.filter((o) => o.votacionId === votacion.id && o.activa !== false).sort((a, b) => a.orden - b.orden);
   const misVotos = votosDeUsuario(votacion.id);
-  const yaVoto = misVotos.length >= votacion.votosPorUsuario;
-  const abierta = votacion.estado === 'abierta';
+  const yaVoto = misVotos.length >= votosPermitidos(votacion);
+  const abierta = votacion.estado === 'abierta' && !votacion.pausada;
   const puedeVotar = abierta && !yaVoto;
   const opcionElegida = lista.find((o) => o.id === (yaVoto ? misVotos[0].opcionId : seleccion));
 
@@ -108,7 +108,7 @@ export default function VotacionDetalle() {
               <dt>Cierre</dt>
               <dd>{formatearFechaHora(votacion.fechaCierre)}</dd>
               <dt>Votos por usuario</dt>
-              <dd>{votacion.votosPorUsuario} <span className="text-secondary-flv">(pendiente de validación)</span></dd>
+              <dd>{votosPermitidos(votacion)} <span className="text-secondary-flv">(pendiente de validación)</span></dd>
               <dt>Resultados</dt>
               <dd className="mb-0">{visibilidadResultados(votacion)}</dd>
             </dl>
@@ -163,7 +163,8 @@ export default function VotacionDetalle() {
                 <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Votar
               </button>
               {!usuario && abierta && <span className="small text-secondary-flv">Te pediremos iniciar sesión antes de confirmar.</span>}
-              {!abierta && <span className="small text-secondary-flv">El botón se habilita solo con la votación abierta.</span>}
+              {votacion.pausada && votacion.estado === 'abierta' && <span className="small text-secondary-flv">Las votaciones están en pausa temporalmente. Intenta más tarde.</span>}
+              {!abierta && !votacion.pausada && <span className="small text-secondary-flv">El botón se habilita solo con la votación abierta.</span>}
             </div>
           )}
 

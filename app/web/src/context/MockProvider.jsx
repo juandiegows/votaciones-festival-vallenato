@@ -8,6 +8,8 @@ import {
   generarCodigoComprobante,
   resultadosVisibles,
   calcularVisibilidad,
+  calcularVotos,
+  votosPermitidos,
   siguienteId,
   slugUnico,
 } from '../utils/helpers.js';
@@ -77,7 +79,16 @@ export function MockProvider({ children }) {
 
   const votaciones = useMemo(() => {
     const edicionDe = (v) => datos.ediciones.find((e) => e.id === datos.categorias.find((c) => c.id === v.categoriaId)?.edicionId);
-    return datos.votaciones.map((v) => ({ ...v, estado: calcularEstado(v, ahora), resultadosEfectivos: calcularVisibilidad(v, edicionDe(v)) }));
+    return datos.votaciones.map((v) => {
+      const edicion = edicionDe(v);
+      return {
+        ...v,
+        estado: calcularEstado(v, ahora),
+        resultadosEfectivos: calcularVisibilidad(v, edicion),
+        votosEfectivos: calcularVotos(v, edicion),
+        pausada: !!edicion?.votacionesPausadas,
+      };
+    });
   }, [datos.votaciones, datos.categorias, datos.ediciones, ahora]);
 
   const misVotos = useMemo(
@@ -140,7 +151,8 @@ export function MockProvider({ children }) {
     if (!usuario) return { ok: false, error: 'Debes iniciar sesión para votar.' };
     const votacion = votaciones.find((v) => v.id === votacionId);
     if (!votacion || votacion.estado !== 'abierta') return { ok: false, error: 'La votación no está abierta.' };
-    if (votosDeUsuario(votacionId).length >= votacion.votosPorUsuario) return { ok: false, error: 'Ya registraste tu voto en esta votación.' };
+    if (votacion.pausada) return { ok: false, error: 'Las votaciones están en pausa temporalmente. Intenta más tarde.' };
+    if (votosDeUsuario(votacionId).length >= votosPermitidos(votacion)) return { ok: false, error: 'Ya registraste tu voto en esta votación.' };
     const voto = {
       id: siguienteId(datos.votos),
       usuarioId: usuario.id,
@@ -243,6 +255,23 @@ export function MockProvider({ children }) {
   const reemplazarColeccion = async (coleccion, lista, accion) => {
     actualizar((d) => ({ ...d, [coleccion]: lista }), accion);
     return { ok: true };
+  };
+
+  const edicionDeVotacion = (votacionId) => {
+    const v = datos.votaciones.find((x) => x.id === votacionId);
+    const c = datos.categorias.find((x) => x.id === v?.categoriaId);
+    return datos.ediciones.find((e) => e.id === c?.edicionId);
+  };
+
+  // Publica u oculta los resultados de todas las votaciones de una edición
+  const publicarResultadosEdicion = async (edicionId, publicar) => {
+    const categoriasEd = new Set(datos.categorias.filter((c) => c.edicionId === edicionId).map((c) => c.id));
+    const actualizadas = datos.votaciones.filter((v) => categoriasEd.has(v.categoriaId)).length;
+    actualizar(
+      (d) => ({ ...d, votaciones: d.votaciones.map((v) => (categoriasEd.has(v.categoriaId) ? { ...v, resultadosPublicados: publicar } : v)) }),
+      `${publicar ? 'Publicó' : 'Retiró'} los resultados de todas las votaciones de la edición`,
+    );
+    return { ok: true, actualizadas };
   };
 
   // ---------- Resultados y exportación ----------
@@ -351,7 +380,10 @@ export function MockProvider({ children }) {
     ...datos,
     votaciones,
     misVotos,
-    totalVotos: datos.votos.length,
+    totalVotos: datos.configuracion?.mostrarTotalVotos
+      ? datos.votos.filter((v) => edicionDeVotacion(v.votacionId)?.estado === 'activa').length
+      : null,
+    publicarResultadosEdicion,
     usuario,
     esAdmin: usuario?.rol === 'administrador',
     edicionActiva: buscarEdicionActiva(datos.ediciones),

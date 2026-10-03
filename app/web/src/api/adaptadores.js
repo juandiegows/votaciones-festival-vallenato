@@ -16,6 +16,7 @@ const CAMPOS = {
   ediciones: {
     id: 'id', nombre: 'nombre', anio: 'anio', fechaInicio: 'fecha_inicio', fechaFin: 'fecha_fin', estado: 'estado',
     presentacionCategorias: 'presentacion_categorias', mostrarResultados: 'visibilidad_resultados',
+    votosPorUsuario: 'votos_por_usuario', votacionesPausadas: 'votaciones_pausadas',
   },
   categorias: {
     id: 'id', edicionId: 'edicion', edicionAnio: 'edicion_anio', nombre: 'nombre', slug: 'slug', descripcion: 'descripcion',
@@ -27,6 +28,7 @@ const CAMPOS = {
     votosPorUsuario: 'votos_por_usuario', mostrarResultados: 'visibilidad_resultados', estadoApi: 'estado',
     publicada: 'publicada', cerradaManualmente: 'cerrada_manualmente', resultadosPublicados: 'resultados_publicados',
     iconoImagen: 'icono_imagen', presentacionOpciones: 'presentacion_opciones', personalizarResultados: 'personalizar_resultados',
+    personalizarVotos: 'personalizar_votos',
   },
   opciones: {
     id: 'id', votacionId: 'votacion', nombre: 'nombre', descripcion: 'descripcion', imagen: 'imagen',
@@ -48,7 +50,7 @@ const CAMPOS = {
   redes: { id: 'id', nombre: 'nombre', url: 'url', icono: 'icono', orden: 'orden', activa: 'activa' },
   configuracion: {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
-    modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', marca: 'marca',
+    modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', marca: 'marca',
   },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',
@@ -57,7 +59,7 @@ const CAMPOS = {
 };
 
 // Campos que la API calcula o que solo cambian con acciones específicas (publicar, cerrar…)
-const SOLO_LECTURA = new Set(['id', 'resultadosEfectivos', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
+const SOLO_LECTURA = new Set(['id', 'resultadosEfectivos', 'votosEfectivos', 'pausada', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
 
 // Archivos subidos: solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {
@@ -87,6 +89,10 @@ export function desdeApi(coleccion, objeto) {
     // Visibilidad que aplica (la de la edición o la propia si se personaliza); el público solo recibe esta
     salida.resultadosEfectivos = VISIBILIDAD_DESDE_API[objeto.visibilidad_efectiva || objeto.visibilidad_resultados] || 'al cerrar';
     salida.personalizarResultados = !!objeto.personalizar_resultados;
+    // Límite de votos que aplica (de la edición o propio) y pausa de la edición; el público solo recibe estos
+    salida.votosEfectivos = objeto.votos_efectivos ?? objeto.votos_por_usuario;
+    salida.personalizarVotos = !!objeto.personalizar_votos;
+    salida.pausada = !!objeto.pausada;
     salida.imagen = iconoDesdeUrl(objeto.imagen);
     // Los listados públicos solo traen votaciones publicadas y no exponen las banderas internas.
     if (salida.publicada === undefined) salida.publicada = true;

@@ -115,6 +115,7 @@ export function ApiProvider({ children }) {
     nuevas.redes = mapear('redes', sitio.redes);
     nuevas.revistas = mapear('revistas', sitio.revistas || []);
     nuevas.configuracion = desdeApi('configuracion', sitio.configuracion);
+    nuevas.totalVotosSitio = sitio.total_votos ?? null;
     const mios = u ? mapear('votos', await obtener('/mis-votos/')).map((v) => ({ ...v, usuarioId: u.id })) : [];
     setColecciones(nuevas);
     setMisVotos(mios);
@@ -321,6 +322,12 @@ export function ApiProvider({ children }) {
     return { ok: true };
   };
 
+  const publicarResultadosEdicion = async (edicionId, publicar) => {
+    const r = await api.post(`/admin/ediciones/${edicionId}/publicar-resultados/`, { publicar });
+    await recargar();
+    return r.ok ? { ok: true, actualizadas: r.datos?.actualizadas ?? 0 } : { ok: false, error: r.error };
+  };
+
   const guardarConfiguracion = async (datos) => {
     const r = await api.patch('/admin/configuracion/', haciaApi('configuracion', datos));
     await recargar();
@@ -377,7 +384,7 @@ export function ApiProvider({ children }) {
     return <PantallaCarga error={cargaInicial.error} onReintentar={iniciar} />;
   }
 
-  const { totalAuditoria, ...datos } = colecciones;
+  const { totalAuditoria, totalVotosSitio, ...datos } = colecciones;
   const esAdmin = usuario?.rol === 'administrador';
   const valor = {
     modo: 'api',
@@ -385,7 +392,9 @@ export function ApiProvider({ children }) {
     totalAuditoria,
     votaciones,
     misVotos,
-    totalVotos: esAdmin ? colecciones.votos.length : null,
+    // Lo mismo que ve el público: nulo salvo que Configuración permita mostrar el total
+    totalVotos: colecciones.totalVotosSitio ?? null,
+    publicarResultadosEdicion,
     usuario,
     esAdmin,
     edicionActiva: buscarEdicionActiva(colecciones.ediciones),
