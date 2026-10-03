@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext.jsx';
 import Modal from './Modal.jsx';
 
 export default function Footer() {
-  const { restablecer, edicionActiva, modo, configuracion: contacto, redes } = useApp();
+  const { usuario, esAdmin, restablecer, edicionActiva, modo, configuracion: contacto, redes } = useApp();
   // Contacto y redes editables en /panel/sitio
   const redesActivas = [...redes].filter((r) => r.activa).sort((a, b) => a.orden - b.orden);
   const [confirmar, setConfirmar] = useState(false);
@@ -38,9 +38,10 @@ export default function Footer() {
             <p className="fw-semibold text-white mb-2">Navegación</p>
             <ul className="list-unstyled small mb-0">
               <li><Link to="/categorias">Categorías</Link></li>
-              <li><Link to="/mis-votos">Mis votos</Link></li>
+              {usuario && <li><Link to="/mis-votos">Mis votos</Link></li>}
               <li><Link to="/registro">Registro</Link></li>
-              <li><Link to="/panel">Panel admin</Link></li>
+              {/* El acceso al panel solo aparece aquí, y solo para administradores con sesión */}
+              {esAdmin && <li><Link to="/panel">Panel admin</Link></li>}
             </ul>
           </div>
           {contacto && <div className="col-sm-6 col-lg-3">

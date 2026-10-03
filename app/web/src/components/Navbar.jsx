@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Navbar() {
-  const { usuario, esAdmin, cerrarSesion, edicionActiva } = useApp();
+  const { usuario, cerrarSesion, edicionActiva } = useApp();
   const [saliendo, setSaliendo] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [menuUsuario, setMenuUsuario] = useState(false);
@@ -60,7 +60,6 @@ export default function Navbar() {
             <li className="nav-item"><NavLink className="nav-link" to="/" end>Inicio</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/categorias">Categorías y votaciones</NavLink></li>
             {usuario && <li className="nav-item"><NavLink className="nav-link" to="/mis-votos">Mis votos</NavLink></li>}
-            {esAdmin && <li className="nav-item"><NavLink className="nav-link" to="/panel">Panel admin</NavLink></li>}
           </ul>
           {!usuario ? (
             <div className="d-flex flex-column flex-lg-row gap-2 pb-3 pb-lg-0">
@@ -90,7 +89,6 @@ export default function Navbar() {
                 </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li><Link className="dropdown-item" to="/mis-votos"><i className="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</Link></li>
-                {esAdmin && <li><Link className="dropdown-item" to="/panel"><i className="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel admin</Link></li>}
                 <li><button className="dropdown-item" type="button" onClick={salir} disabled={saliendo}><i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{saliendo ? 'Cerrando sesión…' : 'Cerrar sesión'}</button></li>
               </ul>
             </div>
