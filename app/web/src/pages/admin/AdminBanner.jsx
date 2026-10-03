@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext.jsx';
+import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import { validarEnlaceMultimedia } from '../../utils/helpers.js';
@@ -16,14 +17,16 @@ export default function AdminBanner() {
   const [aEliminar, setAEliminar] = useState(null);
   const [procesando, setProcesando] = useState(false);
   const [vistaPrevia, setVistaPrevia] = useState('');
-  const lista = [...banners].sort((a, b) => a.orden - b.orden || a.id - b.id);
+  const { edicion, edicionId, esActiva } = useEdicionAdmin();
+  // Cada edición tiene sus propios banners (los antiguos sin edición se muestran con la activa)
+  const lista = banners.filter((b) => (b.edicionId ?? (esActiva ? edicionId : null)) === edicionId).sort((a, b) => a.orden - b.orden || a.id - b.id);
 
   useEffect(() => () => vistaPrevia.startsWith('blob:') && URL.revokeObjectURL(vistaPrevia), [vistaPrevia]);
 
   const abrir = (b) => {
     setErrores({});
     setVistaPrevia(b.imagen || '');
-    setForm({ titulo: '', subtitulo: '', textoAlternativo: '', textoBoton: '', enlaceBoton: '', activo: true, orden: lista.length + 1, ...b, archivo: null });
+    setForm({ titulo: '', subtitulo: '', textoAlternativo: '', textoBoton: '', enlaceBoton: '', activo: true, orden: lista.length + 1, edicionId, ...b, archivo: null });
   };
 
   const elegirArchivo = (e) => {
@@ -61,12 +64,14 @@ export default function AdminBanner() {
   const mover = (i, delta) => {
     const nueva = [...lista];
     [nueva[i], nueva[i + delta]] = [nueva[i + delta], nueva[i]];
-    ejecutar(() => reemplazarColeccion('banners', nueva.map((b, j) => ({ ...b, orden: j + 1 })), 'Reordenó los banners'), 'Orden actualizado.');
+    const ordenes = new Map(nueva.map((b, j) => [b.id, j + 1]));
+    const todos = banners.map((b) => (ordenes.has(b.id) ? { ...b, orden: ordenes.get(b.id) } : b));
+    ejecutar(() => reemplazarColeccion('banners', todos, 'Reordenó los banners'), 'Orden actualizado.');
   };
 
   return (
     <>
-      <PageHeader titulo="Banner de inicio" subtitulo="Imágenes y mensajes del carrusel de la página principal. Sin banners activos se muestra el inicio ilustrado.">
+      <PageHeader titulo="Banner de inicio" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Imágenes y mensajes del carrusel de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.`}>
         <button className="btn btn-primary" onClick={() => abrir({})}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</button>
       </PageHeader>
       {mensaje && (

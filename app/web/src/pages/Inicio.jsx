@@ -18,7 +18,8 @@ const PASOS = [
 export default function Inicio() {
   const datos = useApp();
   const { edicionActiva, opciones, categorias, totalVotos, votosDeUsuario, banners } = datos;
-  const bannersActivos = banners.filter((b) => b.activo).sort((a, b) => a.orden - b.orden);
+  // Solo los banners de la edición activa (los que no tienen edición se consideran de la activa)
+  const bannersActivos = banners.filter((b) => b.activo && (b.edicionId ?? edicionActiva?.id) === edicionActiva?.id).sort((a, b) => a.orden - b.orden);
   const rutas = useRutas();
   if (!edicionActiva) return <SinEdicion />;
   const publicas = votacionesPublicas(datos);
