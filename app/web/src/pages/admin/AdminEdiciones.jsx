@@ -5,6 +5,7 @@ import Modal from '../../components/Modal.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { formatearFecha } from '../../utils/helpers.js';
 import { PRESENTACIONES_CATEGORIAS, presentacionCategorias } from '../../data/presentaciones.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 export default function AdminEdiciones() {
   const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
@@ -106,35 +107,21 @@ export default function AdminEdiciones() {
       )}
 
       {ediciones.length > 0 && vista === 'tabla' && (
-        <div className="table-responsive card-flv">
-          <table className="table table-flv align-middle mb-0">
-            <caption className="visually-hidden">Listado de ediciones</caption>
-            <thead>
-              <tr>
-                <th scope="col">Edición</th>
-                <th scope="col">Año</th>
-                <th scope="col">Fechas</th>
-                <th scope="col">Categorías</th>
-                <th scope="col">Presentación</th>
-                <th scope="col">Estado</th>
-                <th scope="col" className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ediciones.map((ed) => (
-                <tr key={ed.id}>
-                  <td className="fw-semibold">{ed.nombre}</td>
-                  <td>{ed.anio}</td>
-                  <td className="small text-nowrap">{fechas(ed)}</td>
-                  <td>{numCategorias(ed.id)}</td>
-                  <td className="small text-nowrap">{presentacion(ed)}</td>
-                  <td>{estado(ed)}</td>
-                  <td className="text-end">{acciones(ed)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TablaResponsiva
+          titulo="Listado de ediciones"
+          filas={ediciones}
+          clave={(ed) => ed.id}
+          nombreFila={(ed) => ed.nombre}
+          columnas={[
+            { id: 'edicion', titulo: 'Edición', celda: (ed) => ed.nombre, claseTd: 'fw-semibold', minimo: '11rem', prioridad: 0 },
+            { id: 'anio', titulo: 'Año', celda: (ed) => ed.anio, prioridad: 4 },
+            { id: 'fechas', titulo: 'Fechas', celda: fechas, claseTd: 'small text-nowrap', prioridad: 3 },
+            { id: 'categorias', titulo: 'Categorías', celda: (ed) => numCategorias(ed.id), prioridad: 4 },
+            { id: 'presentacion', titulo: 'Presentación', celda: presentacion, claseTd: 'small text-nowrap', prioridad: 5 },
+            { id: 'estado', titulo: 'Estado', celda: estado, prioridad: 2 },
+            { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
+          ]}
+        />
       )}
 
       {ediciones.length > 0 && vista === 'tarjetas' && (

@@ -8,6 +8,7 @@ import IconoEntidad from '../../components/IconoEntidad.jsx';
 import SelectorIcono from '../../components/SelectorIcono.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { PATRON_SLUG } from '../../utils/helpers.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -170,39 +171,31 @@ export default function AdminCategorias() {
       )}
 
       {lista.length > 0 && vista === 'tabla' && (
-        <div className="table-responsive card-flv">
-          <table className="table table-flv table-hover align-middle mb-0">
-            <caption className="visually-hidden">Listado de categorías</caption>
-            <thead>
-              <tr>
-                <th scope="col">Orden</th>
-                <th scope="col">Categoría</th>
-                <th scope="col">Votaciones</th>
-                <th scope="col">Estado</th>
-                <th scope="col" className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.orden}</td>
-                  <td>
-                    <span className="d-flex align-items-center gap-2">
-                      <span className="icono-circulo icono-sm"><IconoEntidad icono={c.icono} imagen={c.iconoImagen} /></span>
-                      <span>
-                        <strong>{c.nombre}</strong> <code className="small text-secondary-flv">/{c.slug}</code>
-                        <span className="small text-secondary-flv d-none d-md-block">{c.descripcion}</span>
-                      </span>
-                    </span>
-                  </td>
-                  <td>{resumenVotaciones(c)}</td>
-                  <td>{interruptor(c)}</td>
-                  <td className="text-end">{acciones(c)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TablaResponsiva
+          titulo="Listado de categorías"
+          claseTabla="table-hover"
+          filas={lista}
+          clave={(c) => c.id}
+          nombreFila={(c) => c.nombre}
+          columnas={[
+            { id: 'orden', titulo: 'Orden', celda: (c) => c.orden, prioridad: 4 },
+            {
+              id: 'categoria', titulo: 'Categoría', minimo: '12rem', prioridad: 0,
+              celda: (c) => (
+                <span className="d-flex align-items-center gap-2">
+                  <span className="icono-circulo icono-sm"><IconoEntidad icono={c.icono} imagen={c.iconoImagen} /></span>
+                  <span>
+                    <strong>{c.nombre}</strong> <code className="small text-secondary-flv">/{c.slug}</code>
+                    <span className="small text-secondary-flv d-none d-md-block">{c.descripcion}</span>
+                  </span>
+                </span>
+              ),
+            },
+            { id: 'votaciones', titulo: 'Votaciones', celda: resumenVotaciones, prioridad: 3 },
+            { id: 'estado', titulo: 'Estado', celda: interruptor, prioridad: 2 },
+            { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
+          ]}
+        />
       )}
 
       {lista.length > 0 && vista === 'tarjetas' && (

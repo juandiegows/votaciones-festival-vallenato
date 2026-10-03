@@ -12,6 +12,7 @@ import FormularioOpcion, { opcionNueva } from '../../components/admin/Formulario
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import { PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
+import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const ORDENES = [
@@ -272,48 +273,36 @@ export default function AdminVotaciones() {
   );
 
   const vistaTabla = (vs) => (
-    <div className="table-responsive card-flv">
-      <table className="table table-flv align-middle mb-0">
-        <caption className="visually-hidden">Listado de votaciones</caption>
-        <thead>
-          <tr>
-            <th scope="col">Votación</th>
-            <th scope="col">Fechas</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Opc.</th>
-            <th scope="col">Votos</th>
-            <th scope="col" className="text-end">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vs.map((v) => (
-            <Fragment key={v.id}>
-              <tr>
-                <td>
-                  <span className="d-flex align-items-center gap-2">
-                    <span className="icono-circulo icono-sm"><IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} /></span>
-                    <span>
-                      <strong>{v.titulo}</strong> <code className="small text-secondary-flv">/{v.slug}</code>
-                      <span className="small text-secondary-flv d-block">{agrupar ? '' : `${categoriaDe(v.categoriaId)?.nombre} · `}Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</span>
-                    </span>
-                  </span>
-                </td>
-                <td className="small text-nowrap">{formatearFechaHora(v.fechaApertura)}<br />{formatearFechaHora(v.fechaCierre)}</td>
-                <td>{insignias(v)}</td>
-                <td><span className={numOpciones(v.id) < 2 ? 'text-danger fw-bold' : ''}>{numOpciones(v.id)}</span></td>
-                <td>{numVotos(v.id)}</td>
-                <td className="text-end">{acciones(v)}</td>
-              </tr>
-              {verOpciones && (
-                <tr className="fila-opciones">
-                  <td colSpan="6">{bloqueOpciones(v)}</td>
-                </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <TablaResponsiva
+      titulo="Listado de votaciones"
+      filas={vs}
+      clave={(v) => v.id}
+      nombreFila={(v) => v.titulo}
+      despuesDeFila={(v, columnasVisibles) => verOpciones && (
+        <tr className="fila-opciones">
+          <td colSpan={columnasVisibles}>{bloqueOpciones(v)}</td>
+        </tr>
+      )}
+      columnas={[
+        {
+          id: 'votacion', titulo: 'Votación', minimo: '13rem', prioridad: 0,
+          celda: (v) => (
+            <span className="d-flex align-items-center gap-2">
+              <span className="icono-circulo icono-sm"><IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} /></span>
+              <span>
+                <strong>{v.titulo}</strong> <code className="small text-secondary-flv">/{v.slug}</code>
+                <span className="small text-secondary-flv d-block">{agrupar ? '' : `${categoriaDe(v.categoriaId)?.nombre} · `}Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</span>
+              </span>
+            </span>
+          ),
+        },
+        { id: 'fechas', titulo: 'Fechas', claseTd: 'small text-nowrap', prioridad: 3, celda: (v) => <>{formatearFechaHora(v.fechaApertura)}<br />{formatearFechaHora(v.fechaCierre)}</> },
+        { id: 'estado', titulo: 'Estado', celda: insignias, prioridad: 2 },
+        { id: 'opciones', titulo: 'Opc.', prioridad: 4, celda: (v) => <span className={numOpciones(v.id) < 2 ? 'text-danger fw-bold' : ''}>{numOpciones(v.id)}</span> },
+        { id: 'votos', titulo: 'Votos', celda: (v) => numVotos(v.id), prioridad: 3 },
+        { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
+      ]}
+    />
   );
 
   const vistaTarjetas = (vs) => (
