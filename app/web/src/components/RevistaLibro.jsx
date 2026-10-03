@@ -55,6 +55,8 @@ export default function RevistaLibro({ url, titulo }) {
       cMapPacked: true,
       standardFontDataUrl: `${recursos}standard_fonts/`,
       iccUrl: `${recursos}iccs/`,
+      // La CSP (nginx-seguridad.conf) no permite eval: así pdf.js no intenta compilar fuentes con new Function
+      isEvalSupported: false,
     });
     const dibujadas = new Map();
     setEstado({ cargando: true, error: null });
