@@ -241,8 +241,7 @@ a:hover { color: var(--flv-rojo-hover); }
   background: var(--flv-crema); padding: .5rem .9rem .6rem;
 }
 .opcion-input:checked ~ .reproductor-opcion { border-color: var(--flv-rojo); }
-.reproductor audio { height: 2.5rem; display: block; }
-.reproductor audio:focus-visible, .reproductor-embebido:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
+.reproductor-embebido:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
 .reproductor-embebido { border: 0; border-radius: .5rem; display: block; }
 .reproductor-nota { font-size: .75rem; color: var(--flv-gris-texto); margin-top: .3rem; }
 
@@ -456,3 +455,48 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 .btn-check:focus-visible + .opcion-config { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
 .btn-check:disabled + .opcion-config { opacity: .65; cursor: default; }
 .opcion-config-desc { color: var(--flv-gris-texto); line-height: 1.3; }
+
+/* ---------- Pista de audio propia (opciones con muestra) ---------- */
+.pista-audio {
+  display: flex; align-items: center; gap: .6rem; padding: .35rem .75rem .35rem .35rem;
+  background: var(--flv-blanco); border: 1px solid var(--flv-gris-borde); border-radius: 2rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.pista-audio audio { display: none; }
+.pista-boton {
+  flex-shrink: 0; width: 2.25rem; height: 2.25rem; border: 0; border-radius: 50%;
+  background: var(--flv-rojo); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; transition: background .15s, transform .15s;
+}
+.pista-boton .bi-play-fill { margin-left: .12rem; }
+.pista-boton:hover { background: var(--flv-rojo-hover); transform: scale(1.05); }
+.pista-boton:focus-visible, .pista-silencio:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 2px; }
+.pista-ecualizador { display: none; align-items: flex-end; gap: 2px; height: 1rem; flex-shrink: 0; }
+.pista-audio.sonando .pista-ecualizador { display: inline-flex; }
+.pista-ecualizador span { width: 3px; background: var(--flv-rojo); border-radius: 1px; animation: pista-barras .9s ease-in-out infinite; }
+.pista-ecualizador span:nth-child(2) { animation-delay: -.3s; }
+.pista-ecualizador span:nth-child(3) { animation-delay: -.6s; }
+@keyframes pista-barras { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+@media (prefers-reduced-motion: reduce) { .pista-ecualizador span { animation: none; height: 70%; } }
+.pista-barra {
+  flex-grow: 1; min-width: 3rem; height: 1.25rem; margin: 0; background: transparent; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}
+.pista-barra:disabled { cursor: default; }
+.pista-barra::-webkit-slider-runnable-track {
+  height: .35rem; border-radius: 1rem;
+  background: linear-gradient(to right, var(--flv-rojo) var(--progreso, 0%), var(--flv-gris-borde) var(--progreso, 0%));
+}
+.pista-barra::-moz-range-track { height: .35rem; border-radius: 1rem; background: var(--flv-gris-borde); }
+.pista-barra::-moz-range-progress { height: .35rem; border-radius: 1rem; background: var(--flv-rojo); }
+.pista-barra::-webkit-slider-thumb {
+  -webkit-appearance: none; width: .9rem; height: .9rem; margin-top: -.275rem; border-radius: 50%;
+  background: var(--flv-rojo); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--flv-rojo);
+}
+.pista-barra::-moz-range-thumb { width: .8rem; height: .8rem; border-radius: 50%; background: var(--flv-rojo); border: 2px solid #fff; }
+.pista-barra:disabled::-webkit-slider-thumb { background: var(--flv-gris-borde); box-shadow: none; }
+.pista-barra:focus-visible { outline: none; }
+.pista-barra:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(221, 51, 51, .35); }
+.pista-tiempo { flex-shrink: 0; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--flv-gris-texto); }
+.pista-silencio { flex-shrink: 0; border: 0; background: transparent; color: var(--flv-gris-texto); padding: .25rem; border-radius: 50%; line-height: 1; }
+.pista-silencio:hover, .pista-silencio[aria-pressed="true"] { color: var(--flv-rojo); }
