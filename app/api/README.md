@@ -80,5 +80,27 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 | `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | — | Conexión a MySQL |
 | `CORS_ALLOWED_ORIGINS` | web local, GitHub Pages y votaciones.juandiegows.com | Orígenes que pueden llamar a la API |
 | `THROTTLE_LOGIN` · `THROTTLE_REGISTRO` · `THROTTLE_VOTAR` | `10/min` · `10/min` · `30/min` | Límites de uso |
+| `CORREO_ADAPTADOR` | `consola` | Proveedor de correo: `consola` (solo imprime), `smtp` o `zeptomail` |
+| `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` · `CORREO_RESPONDER_A` | `no-responder@votaciones.juandiegows.com` | Remitente de los correos |
+| `CORREO_URL_SITIO` | `http://localhost:5195` | URL de la web usada en los enlaces de los correos |
+| `EMAIL_HOST` · `EMAIL_PORT` · `EMAIL_HOST_USER` · `EMAIL_HOST_PASSWORD` · `EMAIL_USE_TLS` · `EMAIL_USE_SSL` | `localhost` · `587` | Adaptador `smtp` |
+| `ZEPTOMAIL_TOKEN` · `ZEPTOMAIL_API_URL` · `ZEPTOMAIL_BOUNCE_ADDRESS` | — · `https://api.zeptomail.com/v1.1/email` | Adaptador `zeptomail` (API de Zoho ZeptoMail) |
 
-Plantilla: [`.env.example`](.env.example).
+Plantilla: [`.env.example`](.env.example). En desarrollo local, `settings.py` lee `app/api/.env` si existe
+(las variables del sistema o de Docker tienen prioridad).
+
+### Correo
+
+`votaciones/correo/` envía los correos transaccionales con plantillas HTML + texto (`templates/correo/`):
+bienvenida, confirmación de correo, comprobante de voto y restablecimiento de contraseña.
+
+```python
+from votaciones import correo
+correo.enviar_bienvenida(usuario)
+correo.enviar_confirmacion_correo(usuario, enlace)
+correo.enviar_comprobante_voto(voto)
+correo.enviar_restablecer_clave(usuario, enlace)
+```
+
+El proveedor es un adaptador (`correo/adaptadores/`): para cambiarlo basta con `CORREO_ADAPTADOR`; para agregar
+uno nuevo se crea una subclase de `AdaptadorCorreo` y se registra en `CORREO_ADAPTADORES` (`settings.py`).
