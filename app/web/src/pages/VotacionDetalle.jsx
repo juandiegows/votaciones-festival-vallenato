@@ -164,7 +164,12 @@ export default function VotacionDetalle() {
           {error && <div id="error-voto" className="alert alert-danger mt-3" role="alert">{error}</div>}
 
           {!yaVoto && (
-            <div className="d-flex flex-column flex-sm-row align-items-sm-center gap-2 mt-4">
+            <div className={`d-flex flex-column flex-sm-row align-items-sm-center gap-2 mt-4 ${abierta ? 'barra-votar' : ''}`}>
+              {abierta && (
+                <p className="barra-votar-eleccion small mb-0 d-lg-none" aria-hidden="true">
+                  {opcionElegida ? <>Tu elección: <strong>{opcionElegida.nombre}</strong></> : 'Elige una opción para votar'}
+                </p>
+              )}
               <button type="button" className="btn btn-primary btn-lg px-5" disabled={!abierta} onClick={votar}>
                 <i className="bi bi-check2-square me-2" aria-hidden="true"></i>Votar
               </button>
