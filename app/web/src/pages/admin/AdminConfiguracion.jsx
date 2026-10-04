@@ -11,6 +11,7 @@ const SECCIONES = [
   { id: 'votacion', label: 'Votación', icono: 'check2-square', descripcion: 'Votos por usuario y pausa de emergencia de la edición.' },
   { id: 'resultados', label: 'Resultados', icono: 'bar-chart', descripcion: 'Cuándo ve el público los resultados de la edición.' },
   { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
+  { id: 'registro', label: 'Registro', icono: 'person-vcard', descripcion: 'Qué datos se piden a quien crea una cuenta para votar.' },
   { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
 ];
 
@@ -148,6 +149,7 @@ export default function AdminConfiguracion() {
     if (seccion === 'votacion') guardarEdicion({ votosPorUsuario: 1, votacionesPausadas: false }, 'Votación restablecida: 1 voto por usuario, sin pausa.', 'Restableció la configuración de votación');
     if (seccion === 'resultados') guardarEdicion({ mostrarResultados: 'al cerrar' }, 'Resultados restablecidos: al cerrar.', 'Restableció la visibilidad de resultados');
     if (seccion === 'visibilidad') guardarSitio({ diasVisibleCerradas: DIAS_VISIBLE_CERRADAS }, `Restablecido: ${DIAS_VISIBLE_CERRADAS} días.`);
+    if (seccion === 'registro') guardarSitio({ pedirDocumento: false }, 'Registro restablecido: solo con correo confirmado.');
     if (seccion === 'presentacion') {
       guardar(async () => {
         const r = await guardarEntidad('ediciones', { id: edicion.id, presentacionCategorias: 'tarjetas' }, 'Restableció la presentación de categorías');
@@ -303,6 +305,33 @@ export default function AdminConfiguracion() {
                 </div>
               </div>
               )}
+            </Fila>
+          )}
+
+          {seccion === 'registro' && (
+            <Fila
+              id="cfg-documento-titulo"
+              titulo="Documento de identidad"
+              descripcion="Por defecto el registro es solo con correo confirmado. Si lo activas, quien se registre debe dar su tipo y número de documento (una cuenta por documento), y quien ya tenga cuenta sin documento lo completará antes de su próximo voto. Aplica a todo el sitio; pendiente de validación con la Fundación (P-01)."
+            >
+              <div className="form-check form-switch">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  id="cfg-pedir-documento"
+                  checked={!!configuracion?.pedirDocumento}
+                  disabled={procesando}
+                  aria-describedby="cfg-documento-titulo"
+                  onChange={(e) => guardarSitio(
+                    { pedirDocumento: e.target.checked },
+                    e.target.checked
+                      ? 'El registro pide documento; quienes no lo tengan lo completarán antes de votar.'
+                      : 'El registro ya no pide documento.',
+                  )}
+                />
+                <label className="form-check-label fw-semibold" htmlFor="cfg-pedir-documento">Pedir documento al registrarse</label>
+              </div>
             </Fila>
           )}
 

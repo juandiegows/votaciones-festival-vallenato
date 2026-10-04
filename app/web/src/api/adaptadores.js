@@ -50,7 +50,7 @@ const CAMPOS = {
   redes: { id: 'id', nombre: 'nombre', url: 'url', icono: 'icono', orden: 'orden', activa: 'activa' },
   configuracion: {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
-    modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', marca: 'marca',
+    modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', pedirDocumento: 'pedir_documento', marca: 'marca',
   },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',

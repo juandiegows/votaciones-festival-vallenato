@@ -125,8 +125,8 @@ export function MockProvider({ children }) {
     if (datos.usuarios.some((u) => u.correo.toLowerCase() === form.correo.trim().toLowerCase())) {
       return { ok: false, error: 'Ya existe una cuenta con este correo.', errores: { correo: 'Ya existe una cuenta con este correo.' } };
     }
-    const numeroDocumento = normalizarDocumento(form.numeroDocumento);
-    if (datos.usuarios.some((u) => u.tipoDocumento === form.tipoDocumento && u.numeroDocumento === numeroDocumento)) {
+    const numeroDocumento = normalizarDocumento(form.numeroDocumento || '') || null;
+    if (numeroDocumento && datos.usuarios.some((u) => u.tipoDocumento === form.tipoDocumento && u.numeroDocumento === numeroDocumento)) {
       const error = 'Ya existe una cuenta con este documento.';
       return { ok: false, error, errores: { numeroDocumento: error } };
     }
@@ -135,7 +135,7 @@ export function MockProvider({ children }) {
       nombres: form.nombres.trim(),
       apellidos: form.apellidos.trim(),
       correo: form.correo.trim().toLowerCase(),
-      tipoDocumento: form.tipoDocumento,
+      tipoDocumento: numeroDocumento ? form.tipoDocumento : '',
       numeroDocumento,
       // En la demostración no se envían correos: la cuenta queda confirmada al crearla
       correoVerificado: true,
@@ -162,6 +162,9 @@ export function MockProvider({ children }) {
     const votacion = votaciones.find((v) => v.id === votacionId);
     if (!votacion || votacion.estado !== 'abierta') return { ok: false, error: 'La votación no está abierta.' };
     if (votacion.pausada) return { ok: false, error: 'Las votaciones están en pausa temporalmente. Intenta más tarde.' };
+    if (datos.configuracion?.pedirDocumento && !usuario.numeroDocumento) {
+      return { ok: false, codigo: 'documento_requerido', error: 'Completa tu tipo y número de documento para poder votar.' };
+    }
     if (votosDeUsuario(votacionId).length >= votosPermitidos(votacion)) return { ok: false, error: 'Ya registraste tu voto en esta votación.' };
     const voto = {
       id: siguienteId(datos.votos),
@@ -404,6 +407,17 @@ export function MockProvider({ children }) {
     // Sin correos en la demostración: confirmar y reenviar no tienen nada que hacer
     confirmarCorreo: async () => ({ ok: true, usuario }),
     reenviarConfirmacion: async () => ({ ok: true, mensaje: 'En la demostración la cuenta ya está confirmada.' }),
+    completarDocumento: async (tipoDocumento, numero) => {
+      if (!usuario) return { ok: false, error: 'Debes iniciar sesión.' };
+      if (usuario.numeroDocumento) return { ok: false, codigo: 'documento_ya_registrado', error: 'Tu documento ya está registrado.' };
+      const numeroDocumento = normalizarDocumento(numero);
+      if (datos.usuarios.some((u) => u.tipoDocumento === tipoDocumento && u.numeroDocumento === numeroDocumento)) {
+        const error = 'Ya existe una cuenta con este documento.';
+        return { ok: false, error, errores: { numeroDocumento: error } };
+      }
+      setDatos((d) => ({ ...d, usuarios: d.usuarios.map((u) => (u.id === usuario.id ? { ...u, tipoDocumento, numeroDocumento } : u)) }));
+      return { ok: true };
+    },
     votosDeUsuario,
     emitirVoto,
     guardarEntidad,

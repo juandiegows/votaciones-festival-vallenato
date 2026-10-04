@@ -12,12 +12,14 @@ const INICIAL = {
   aceptaTratamientoDatos: false,
 };
 
-function validar(f) {
+function validar(f, pedirDocumento) {
   const e = {};
   if (f.nombres.trim().length < 2) e.nombres = 'Ingresa tus nombres.';
   if (f.apellidos.trim().length < 2) e.apellidos = 'Ingresa tus apellidos.';
-  const documento = errorDocumento(f.tipoDocumento, f.numeroDocumento);
-  if (documento) e.numeroDocumento = documento;
+  if (pedirDocumento) {
+    const documento = errorDocumento(f.tipoDocumento, f.numeroDocumento);
+    if (documento) e.numeroDocumento = documento;
+  }
   if (!validarCorreo(f.correo)) e.correo = 'Ingresa un correo electrónico válido.';
   if (!validarContrasena(f.contrasena)) e.contrasena = 'Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.';
   if (f.confirmacion !== f.contrasena || !f.confirmacion) e.confirmacion = 'Las contraseñas no coinciden.';
@@ -26,10 +28,12 @@ function validar(f) {
 }
 
 export default function Registro() {
-  const { registrarUsuario } = useApp();
+  const { registrarUsuario, configuracion } = useApp();
+  // La administración decide si se pide documento (Configuración › Registro); por defecto, no
+  const pedirDocumento = !!configuracion?.pedirDocumento;
   useSeo({
     titulo: 'Crea tu cuenta para votar',
-    descripcion: 'Regístrate con tu correo y tu documento para votar por tus favoritos del Festival de la Leyenda Vallenata.',
+    descripcion: 'Regístrate con tu correo para votar por tus favoritos del Festival de la Leyenda Vallenata.',
   });
   const [form, setForm] = useState(INICIAL);
   const [errores, setErrores] = useState({});
@@ -45,14 +49,14 @@ export default function Registro() {
     const { name, value, type, checked } = e.target;
     const nuevo = { ...form, [name]: type === 'checkbox' ? checked : value };
     setForm(nuevo);
-    if (enviado) setErrores(validar(nuevo));
+    if (enviado) setErrores(validar(nuevo, pedirDocumento));
   };
 
   const enviar = async (e) => {
     e.preventDefault();
     if (enviando) return;
     setEnviado(true);
-    const errs = validar(form);
+    const errs = validar(form, pedirDocumento);
     setErrores(errs);
     if (Object.keys(errs).length) {
       document.getElementById(Object.keys(errs)[0])?.focus();
@@ -60,7 +64,7 @@ export default function Registro() {
     }
     setEnviando(true);
     setErrorGeneral('');
-    const r = await registrarUsuario(form);
+    const r = await registrarUsuario(pedirDocumento ? form : { ...form, numeroDocumento: '' });
     setEnviando(false);
     if (!r.ok) {
       // Errores por campo devueltos por el servidor (p. ej. contraseña demasiado común)
@@ -105,6 +109,7 @@ export default function Registro() {
                 <div className="col-sm-6">{campo('nombres', 'Nombres', 'text', { attrs: { autoComplete: 'given-name' } })}</div>
                 <div className="col-sm-6">{campo('apellidos', 'Apellidos', 'text', { attrs: { autoComplete: 'family-name' } })}</div>
               </div>
+              {pedirDocumento && (
               <div className="row">
                 <div className="col-12 mb-3">
                   <label htmlFor="tipoDocumento" className="form-label">Tipo de documento <span className="text-danger" aria-hidden="true">*</span></label>
@@ -119,6 +124,7 @@ export default function Registro() {
                   })}
                 </div>
               </div>
+              )}
               {campo('correo', 'Correo electrónico', 'email', { attrs: { autoComplete: 'email', placeholder: 'nombre@correo.com' } })}
               {campo('contrasena', 'Contraseña', verClave ? 'text' : 'password', {
                 ayuda: 'Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.',
@@ -132,7 +138,7 @@ export default function Registro() {
 
               <div className="alert alert-warning small py-2" role="note">
                 <i className="bi bi-hourglass-split me-1" aria-hidden="true"></i>
-                Campos adicionales (municipio, edad) pendientes de validación con la Fundación.
+                {pedirDocumento ? 'Otros campos' : 'El documento de identidad y otros campos'} (municipio, edad) están pendientes de validación con la Fundación.
               </div>
 
               <div className="form-check mb-4">

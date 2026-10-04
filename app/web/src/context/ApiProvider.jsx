@@ -199,8 +199,8 @@ export function ApiProvider({ children }) {
       email: form.correo.trim().toLowerCase(),
       nombres: form.nombres.trim(),
       apellidos: form.apellidos.trim(),
-      tipo_documento: form.tipoDocumento,
-      numero_documento: form.numeroDocumento.trim(),
+      // El documento solo viaja si se llenó (la administración decide si es obligatorio)
+      ...(form.numeroDocumento?.trim() ? { tipo_documento: form.tipoDocumento, numero_documento: form.numeroDocumento.trim() } : {}),
       password: form.contrasena,
       acepta_tratamiento_datos: form.aceptaTratamientoDatos,
     });
@@ -220,6 +220,18 @@ export function ApiProvider({ children }) {
     const confirmado = usuarioDesdeApi(r.datos);
     setUsuario((u) => (u && u.id === confirmado.id ? { ...u, correoVerificado: true } : u));
     return { ok: true, usuario: confirmado };
+  };
+
+  /** Para cuentas sin documento cuando la administración empieza a pedirlo: se registra una sola vez. */
+  const completarDocumento = async (tipoDocumento, numeroDocumento) => {
+    const r = await api.post('/auth/documento/', { tipo_documento: tipoDocumento, numero_documento: numeroDocumento.trim() });
+    if (!r.ok) {
+      const errores = erroresDesdeApi('usuarios', r.errores);
+      return { ok: false, error: r.error, codigo: r.codigo, errores };
+    }
+    const actualizado = usuarioDesdeApi(r.datos);
+    setUsuario((u) => (u ? { ...u, tipoDocumento: actualizado.tipoDocumento, numeroDocumento: actualizado.numeroDocumento } : u));
+    return { ok: true };
   };
 
   const reenviarConfirmacion = async () => {
@@ -428,6 +440,7 @@ export function ApiProvider({ children }) {
     registrarUsuario,
     confirmarCorreo,
     reenviarConfirmacion,
+    completarDocumento,
     votosDeUsuario,
     emitirVoto,
     guardarEntidad,

@@ -279,6 +279,8 @@ export function crearDatosSemilla() {
     correo: 'presidencia@festivalvallenato.com',
     textoPie: 'Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.',
     modoBanner: 'carrusel',
+    // Pendiente de validación (P-01): por defecto el registro es solo con correo
+    pedirDocumento: false,
     diasVisibleCerradas: 7,
   };
   const redes = [

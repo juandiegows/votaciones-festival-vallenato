@@ -6,6 +6,7 @@ import EstadoBadge from '../components/EstadoBadge.jsx';
 import Countdown from '../components/Countdown.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Modal from '../components/Modal.jsx';
+import CompletarDocumento from '../components/CompletarDocumento.jsx';
 import ResultadosVotacion from '../components/ResultadosVotacion.jsx';
 import OpcionesVotacion from '../components/presentaciones/OpcionesVotacion.jsx';
 import NoEncontrado from './NoEncontrado.jsx';
@@ -24,11 +25,12 @@ function leerSeleccion(id) {
 }
 
 export default function VotacionDetalle() {
-  const { opciones, usuario, esAdmin, votosDeUsuario, emitirVoto } = useApp();
+  const { opciones, usuario, esAdmin, votosDeUsuario, emitirVoto, configuracion } = useApp();
   const { edicion, categoria, votacion } = useRutaPublica();
   const rutas = useRutas();
   const [seleccion, setSeleccion] = useState(() => (votacion ? leerSeleccion(votacion.id) : null));
   const [confirmando, setConfirmando] = useState(false);
+  const [pidiendoDocumento, setPidiendoDocumento] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -55,6 +57,8 @@ export default function VotacionDetalle() {
   const puedeVotar = abierta && !yaVoto;
   // Cuenta registrada sin confirmar el correo: puede ver y elegir, pero el voto se habilita al confirmar
   const sinConfirmar = usuario?.correoVerificado === false;
+  // Si la administración pide documento y la cuenta no lo tiene, se completa antes de confirmar el voto
+  const faltaDocumento = !!configuracion?.pedirDocumento && !!usuario && !usuario.numeroDocumento;
   const opcionElegida = lista.find((o) => o.id === (yaVoto ? misVotos[0].opcionId : seleccion));
 
   const elegir = (opcionId) => {
@@ -82,6 +86,10 @@ export default function VotacionDetalle() {
       setError('Confirma tu correo para poder votar. Revisa tu bandeja de entrada o usa «Reenviar enlace» arriba.');
       return;
     }
+    if (faltaDocumento) {
+      setPidiendoDocumento(true);
+      return;
+    }
     setConfirmando(true);
   };
 
@@ -90,6 +98,7 @@ export default function VotacionDetalle() {
     const r = await emitirVoto(votacion.id, seleccion);
     setEnviando(false);
     setConfirmando(false);
+    if (r.codigo === 'documento_requerido') return setPidiendoDocumento(true);
     if (!r.ok) return setError(r.error);
     try {
       sessionStorage.removeItem(claveSeleccion(votacion.id));
@@ -200,6 +209,12 @@ export default function VotacionDetalle() {
           </section>
         </div>
       </div>
+
+      <CompletarDocumento
+        abierto={pidiendoDocumento}
+        onCerrar={() => setPidiendoDocumento(false)}
+        onListo={() => { setPidiendoDocumento(false); setConfirmando(true); }}
+      />
 
       <Modal
         abierto={confirmando}
