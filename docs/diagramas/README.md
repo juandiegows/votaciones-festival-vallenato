@@ -46,6 +46,7 @@ Todos los diagramas viven aquí, con su fuente editable junto a la imagen. Los i
 
 | Diagrama | Imagen | Fuente |
 |---|---|---|
+| Arquitectura prevista por capas (va en el informe) | [`capas.png`](arquitectura/capas.png) | [`.html`](arquitectura/capas.html) (se abre en el navegador) |
 | Arquitectura de la aplicación | [`aplicacion.png`](arquitectura/aplicacion.png) | [`.mmd`](arquitectura/aplicacion.mmd) |
 | Integración con el sitio del Festival | [`integracion.png`](arquitectura/integracion.png) | [`.mmd`](arquitectura/integracion.mmd) |
 | Conexión prevista entre el frontend y la API (va en el informe) | [`conexion-frontend-api.png`](arquitectura/conexion-frontend-api.png) | [`.mmd`](arquitectura/conexion-frontend-api.mmd) |
