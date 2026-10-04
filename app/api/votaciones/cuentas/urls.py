@@ -12,5 +12,6 @@ urlpatterns = [
     path("auth/logout/", views.LogoutView.as_view(), name="auth-logout"),
     path("auth/yo/", views.PerfilView.as_view(), name="auth-yo"),
     path("auth/confirmar-correo/", views.ConfirmarCorreoView.as_view(), name="auth-confirmar-correo"),
+    path("auth/documento/", views.CompletarDocumentoView.as_view(), name="auth-documento"),
     path("auth/reenviar-confirmacion/", views.ReenviarConfirmacionView.as_view(), name="auth-reenviar-confirmacion"),
 ]

@@ -52,12 +52,13 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
-| POST | `/api/auth/registro/` | Público | Registra un votante con `tipo_documento` y `numero_documento` únicos; exige `acepta_tratamiento_datos=true` y envía el enlace de confirmación (RF-01, RN-10, RN-13) |
+| POST | `/api/auth/registro/` | Público | Registra un votante; exige `acepta_tratamiento_datos=true` y envía el enlace de confirmación (RF-01, RN-10). `tipo_documento` y `numero_documento` son obligatorios solo si la configuración tiene `pedir_documento=true` (por defecto no); si se envían, se validan y deben ser únicos (RN-13) |
 | POST | `/api/auth/confirmar-correo/` | Público | Confirma el correo con el `token` del enlace (vence en 48 h) y envía la bienvenida (RN-14) |
 | POST | `/api/auth/reenviar-confirmacion/` | Token | Envía un nuevo enlace de confirmación; `409 correo_ya_confirmado` si ya lo está |
 | POST | `/api/auth/login/` | Público | Devuelve `token` y datos del usuario (RF-02) |
 | POST | `/api/auth/logout/` | Token | Invalida el token |
 | GET | `/api/auth/yo/` | Token | Usuario autenticado |
+| POST | `/api/auth/documento/` | Token | Registra una sola vez el documento de una cuenta creada sin él (cuando la administración empieza a pedirlo); mismas validaciones del registro; `409 documento_ya_registrado` si ya lo tiene |
 
 ### Consulta pública
 
@@ -124,7 +125,7 @@ Toda creación, modificación, eliminación, publicación, despublicación, cier
 | RN-09 No se elimina con votos | `409 tiene_votos` |
 | RN-10 Aceptar el tratamiento de datos | Validación del registro |
 | RN-12 Auditoría de acciones administrativas | Tabla `registro_auditoria` |
-| RN-13 Una persona, una cuenta: documento (tipo + número) único | Restricción `usuario_documento_unico`; el número se guarda sin puntos ni espacios |
+| RN-13 Si se pide documento: una persona, una cuenta (tipo + número único) | `pedir_documento` en `/api/gestion/configuracion/` (por defecto `false`); restricción `usuario_documento_unico`; el número se guarda sin puntos ni espacios. Con el ajuste activo, quien no tenga documento recibe `403 documento_requerido` en `POST /votar/` hasta completarlo en `/api/auth/documento/` |
 | RN-14 Solo vota quien confirmó su correo | `403 correo_sin_confirmar` en `POST /votar/` |
 
 Una votación **abierta** no se puede despublicar (`409 votacion_abierta`): se espera al cierre o se cierra primero;

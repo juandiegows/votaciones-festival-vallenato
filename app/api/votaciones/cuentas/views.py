@@ -10,8 +10,8 @@ from ..comun.api import ErrorReglaSerializer
 from ..comun.permisos import EsAdministrador
 from . import selectores, servicios
 from .serializers import (
-    ConfirmarCorreoSerializer, LoginSerializer, RegistroSerializer, TokenRespuestaSerializer, UsuarioAdminSerializer,
-    UsuarioSerializer,
+    CompletarDocumentoSerializer, ConfirmarCorreoSerializer, LoginSerializer, RegistroSerializer, TokenRespuestaSerializer,
+    UsuarioAdminSerializer, UsuarioSerializer,
 )
 
 
@@ -47,6 +47,24 @@ class ConfirmarCorreoView(APIView):
         serializer = ConfirmarCorreoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         usuario, _ = servicios.confirmar_correo(serializer.validated_data["token"])
+        return Response(UsuarioSerializer(usuario).data)
+
+
+@extend_schema(tags=["Autenticación"], summary="Completar el documento para poder votar",
+               description="Para cuentas creadas sin documento cuando la administración empieza a pedirlo. "
+                           "Se registra una sola vez; con la misma validación del registro (una cuenta por documento).",
+               request=CompletarDocumentoSerializer,
+               responses={200: UsuarioSerializer, 400: OpenApiResponse(description="Documento inválido o ya usado"),
+                          409: ErrorReglaSerializer})
+class CompletarDocumentoView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "registro"  # mismo límite que el registro: evita probar documentos ajenos
+
+    def post(self, request):
+        serializer = CompletarDocumentoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = servicios.completar_documento(request.user, **serializer.validated_data)
         return Response(UsuarioSerializer(usuario).data)
 
 

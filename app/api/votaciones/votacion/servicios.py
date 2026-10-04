@@ -26,6 +26,12 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
         raise ReglaNegocioError(
             "Confirma tu correo para poder votar. Revisa tu bandeja de entrada.", codigo="correo_sin_confirmar", status=403
         )
+    from ..cuentas.servicios import falta_documento
+
+    if falta_documento(usuario):
+        raise ReglaNegocioError(
+            "Completa tu tipo y número de documento para poder votar.", codigo="documento_requerido", status=403
+        )
 
     votacion = Votacion.objects.select_for_update().select_related("categoria__edicion").get(pk=votacion_id)
 

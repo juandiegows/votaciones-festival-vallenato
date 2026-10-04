@@ -160,6 +160,11 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertTrue(RegistroAuditoria.objects.filter(accion="actualizar", entidad="configuracion").exists())
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"correo": "no-es-correo"}, format="json").status_code, 400)
 
+    def test_pedir_documento_por_defecto_no_y_lo_activa_la_administracion(self):
+        self.assertFalse(self.client.get("/api/sitio/").data["configuracion"]["pedir_documento"])
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"pedir_documento": True}, format="json").status_code, 200)
+        self.assertTrue(self.client.get("/api/sitio/").data["configuracion"]["pedir_documento"])
+
     def test_modo_del_banner_fijo_o_carrusel(self):
         self.assertEqual(self.client.get("/api/sitio/").data["configuracion"]["modo_banner"], "carrusel")
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"modo_banner": "fijo"}, format="json").status_code, 200)

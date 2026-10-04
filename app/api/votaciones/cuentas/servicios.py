@@ -29,6 +29,22 @@ def registrar_votante(**datos):
     return usuario
 
 
+def completar_documento(usuario, tipo_documento, numero_documento):
+    """Registra el documento de quien no lo tenía; una vez guardado no se cambia desde la web."""
+    if usuario.numero_documento:
+        raise ReglaNegocioError("Tu documento ya está registrado.", codigo="documento_ya_registrado", status=409)
+    usuario.tipo_documento, usuario.numero_documento = tipo_documento, numero_documento
+    usuario.save(update_fields=["tipo_documento", "numero_documento"])
+    return usuario
+
+
+def falta_documento(usuario):
+    """True si la administración pide documento y esta cuenta aún no lo tiene (no puede votar hasta completarlo)."""
+    from ..sitio.models import ConfiguracionSitio
+
+    return not usuario.numero_documento and ConfiguracionSitio.obtener().pedir_documento
+
+
 def token_sesion(usuario):
     return Token.objects.get_or_create(user=usuario)[0].key
 

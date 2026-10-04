@@ -67,6 +67,10 @@ class ConfiguracionSitio(ModeloTrazable):
     # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre)
     # Muestra en el inicio el total de votos de la edición activa
     mostrar_total_votos = models.BooleanField(default=False, help_text="Mostrar al público el total de votos en el inicio.")
+    # Pendiente de validación con la Fundación (P-01): por defecto el registro es solo con correo confirmado
+    pedir_documento = models.BooleanField(
+        default=False, help_text="Pedir tipo y número de documento al registrarse (cada documento, una sola cuenta)."
+    )
     dias_visible_cerradas = models.PositiveSmallIntegerField(
         default=7, null=True, blank=True,
         help_text="Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre visible).",

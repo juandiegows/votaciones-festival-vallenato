@@ -27,11 +27,33 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+def validar_documento(tipo, numero):
+    """Formato según el tipo y una sola cuenta por documento (el número ya viene normalizado)."""
+    error = error_formato_documento(tipo, numero)
+    if error:
+        raise serializers.ValidationError({"numero_documento": error})
+    if selectores.documento_registrado(tipo, numero):
+        raise serializers.ValidationError({"numero_documento": "Ya existe una cuenta con este documento."})
+
+
+class CompletarDocumentoSerializer(serializers.Serializer):
+    """Para quien se registró sin documento y la administración luego empezó a pedirlo."""
+
+    tipo_documento = serializers.ChoiceField(choices=Usuario.TipoDocumento.choices)
+    numero_documento = serializers.CharField(max_length=30)
+
+    def validate(self, datos):
+        datos["numero_documento"] = normalizar_documento(datos["numero_documento"])
+        validar_documento(datos["tipo_documento"], datos["numero_documento"])
+        return datos
+
+
 # Solo valida; la cuenta la crea servicios.registrar_votante
 class RegistroSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
-    tipo_documento = serializers.ChoiceField(choices=Usuario.TipoDocumento.choices)
-    numero_documento = serializers.CharField(max_length=30)
+    # Obligatorios solo si la administración activa «Pedir documento» (configuración del sitio)
+    tipo_documento = serializers.ChoiceField(choices=Usuario.TipoDocumento.choices, required=False, allow_blank=True)
+    numero_documento = serializers.CharField(max_length=30, required=False, allow_blank=True)
 
     class Meta:
         model = Usuario
@@ -54,12 +76,21 @@ class RegistroSerializer(serializers.ModelSerializer):
         return valor
 
     def validate(self, datos):
-        datos["numero_documento"] = numero = normalizar_documento(datos["numero_documento"])
-        error = error_formato_documento(datos["tipo_documento"], numero)
-        if error:
-            raise serializers.ValidationError({"numero_documento": error})
-        if selectores.documento_registrado(datos["tipo_documento"], numero):
-            raise serializers.ValidationError({"numero_documento": "Ya existe una cuenta con este documento."})
+        from votaciones.sitio.models import ConfiguracionSitio
+
+        tipo = datos.get("tipo_documento") or ""
+        numero = normalizar_documento(datos.get("numero_documento") or "")
+        if ConfiguracionSitio.obtener().pedir_documento:
+            faltan = {campo: "Este campo es obligatorio." for campo, valor in (("tipo_documento", tipo), ("numero_documento", numero)) if not valor}
+            if faltan:
+                raise serializers.ValidationError(faltan)
+        if tipo or numero:
+            # Si se envía (aunque no se exija), se valida completo: tipo, formato y una cuenta por documento
+            if not tipo or not numero:
+                campo = "numero_documento" if tipo else "tipo_documento"
+                raise serializers.ValidationError({campo: "Indica el tipo y el número de documento, o deja ambos vacíos."})
+            validar_documento(tipo, numero)
+        datos["tipo_documento"], datos["numero_documento"] = tipo, (numero or None)
         validate_password(datos["password"], Usuario(email=datos.get("email"), nombres=datos.get("nombres", "")))
         return datos
 

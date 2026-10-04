@@ -36,7 +36,7 @@ class RevistaSerializer(serializers.ModelSerializer):
 class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
-        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "marca"]
+        fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "pedir_documento", "marca"]
 
     # Valores permitidos del tema (deben coincidir con app/web/src/data/marca.js)
     TOKENS_COLOR = {

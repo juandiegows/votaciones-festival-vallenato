@@ -41,6 +41,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
           description: ''
+  /api/auth/documento/:
+    post:
+      operationId: auth_documento_create
+      description: Para cuentas creadas sin documento cuando la administración empieza
+        a pedirlo. Se registra una sola vez; con la misma validación del registro
+        (una cuenta por documento).
+      summary: Completar el documento para poder votar
+      tags:
+      - Autenticación
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletarDocumentoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CompletarDocumentoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompletarDocumentoRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+        '400':
+          description: Documento inválido o ya usado
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
   /api/auth/login/:
     post:
       operationId: auth_login_create
@@ -2232,6 +2270,9 @@ components:
       - edicion
       - imagen
       - texto_alternativo
+    BlankEnum:
+      enum:
+      - ''
     Categoria:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -2342,6 +2383,20 @@ components:
       - nombre
       - total_votos
       - votaciones
+    CompletarDocumentoRequest:
+      type: object
+      description: Para quien se registró sin documento y la administración luego
+        empezó a pedirlo.
+      properties:
+        tipo_documento:
+          $ref: '#/components/schemas/TipoDocumentoEnum'
+        numero_documento:
+          type: string
+          minLength: 1
+          maxLength: 30
+      required:
+      - numero_documento
+      - tipo_documento
     ConfiguracionSitio:
       type: object
       properties:
@@ -2373,6 +2428,10 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        pedir_documento:
+          type: boolean
+          description: Pedir tipo y número de documento al registrarse (cada documento,
+            una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
     ConfiguracionSitioRequest:
@@ -2410,6 +2469,10 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        pedir_documento:
+          type: boolean
+          description: Pedir tipo y número de documento al registrarse (cada documento,
+            una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
     ConfirmarCorreoRequest:
@@ -3066,6 +3129,10 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        pedir_documento:
+          type: boolean
+          description: Pedir tipo y número de documento al registrarse (cada documento,
+            una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
     PatchedEdicionRequest:
@@ -3430,10 +3497,11 @@ components:
           minLength: 1
           maxLength: 100
         tipo_documento:
-          $ref: '#/components/schemas/TipoDocumentoEnum'
+          oneOf:
+          - $ref: '#/components/schemas/TipoDocumentoEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         numero_documento:
           type: string
-          minLength: 1
           maxLength: 30
         password:
           type: string
@@ -3445,9 +3513,7 @@ components:
       - apellidos
       - email
       - nombres
-      - numero_documento
       - password
-      - tipo_documento
     Resultados:
       type: object
       properties:
