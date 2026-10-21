@@ -24,7 +24,8 @@ votaciones-festival-vallenato/
 │   ├── BRANDING.md       Identidad visual (paleta, tipografías, reglas de uso)
 │   ├── diagramas/        Todos los diagramas con su fuente (casos de uso, datos, comportamiento, arquitectura)
 │   ├── api/              Documentación de la API (guía y OpenAPI)
-│   └── entrega-1/        Informe PDF y capturas del prototipo
+│   ├── entrega-1/        Informe PDF y capturas del prototipo
+│   └── entrega-2/        Informe PDF, capturas de Django Admin y de la web con MySQL, guion del video
 ├── app/
 │   ├── web/              Frontend (React + Vite + Bootstrap; usa la API o, sin ella, datos simulados)
 │   └── api/              Backend Django REST Framework + MySQL (modelos, endpoints y pruebas)
@@ -36,7 +37,46 @@ votaciones-festival-vallenato/
 | Entrega | Contenido | Estado |
 |---|---|---|
 | 1 | Análisis, requerimientos, casos de uso, modelo conceptual, prototipo navegable y panel de administración ([capturas](docs/entrega-1/capturas/)) | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf) |
-| 2 – 4 | Desarrollo con Django (MVT) y MySQL | Pendiente |
+| 2 | Desarrollo inicial: proyecto Django (MVT), MySQL con adaptador, modelos y migraciones, autenticación, panel propio y Django Admin, sitio con datos reales ([capturas](docs/entrega-2/capturas/)) | ✅ [Informe PDF](docs/entrega-2/Eje2_Entrega2_Votaciones_Festival_Vallenato.pdf) · video pendiente |
+| 3 – 4 | Registro definitivo de votos, reglas completas de elegibilidad, resultados, auditoría avanzada y pruebas de carga | Pendiente |
+
+## Instalación y ejecución (Django + MySQL)
+
+Requisitos: [Docker Desktop](https://www.docker.com/products/docker-desktop/) y Git. No hace falta instalar Python,
+Node ni MySQL: cada parte corre en su contenedor.
+
+```bash
+git clone https://github.com/juandiegows/votaciones-festival-vallenato.git
+cd votaciones-festival-vallenato
+docker compose up -d --build                                  # MySQL 8.4 + API Django + web
+docker compose exec api python manage.py cargar_demo           # datos de prueba (ediciones, categorías, votaciones, opciones)
+docker compose exec api python manage.py createsuperuser       # usuario para Django Admin (pide correo y contraseña)
+```
+
+Al arrancar, la API espera a MySQL y ejecuta `migrate` sola (`app/api/entrypoint.sh`).
+
+| Qué | URL |
+|---|---|
+| Sitio Django MVT: público, registro e inicio de sesión (datos de MySQL) | http://localhost:8096/ |
+| Panel de administración propio (CRUD con Django) | http://localhost:8096/panel |
+| Web React (cliente de la API) | http://localhost:8095 |
+| Django Admin (ediciones, categorías, votaciones y opciones) | http://localhost:8096/django-admin/ |
+| Documentación de la API (Swagger) | http://localhost:8096/api/docs/ |
+
+Comprobaciones:
+
+```bash
+docker compose exec api python manage.py showmigrations votaciones   # migraciones aplicadas en MySQL
+docker compose exec api python manage.py test                        # pruebas automatizadas (API + sitio MVT)
+```
+
+Para correr las pruebas contra MySQL, el usuario `votaciones` necesita permiso sobre la base de pruebas (una sola vez):
+
+```bash
+docker compose exec db mysql -uroot -p -e "GRANT ALL PRIVILEGES ON \`test_votaciones_flv\`.* TO 'votaciones'@'%';"
+```
+
+Sin Docker, la API también corre con SQLite: ver [`app/api/README.md`](app/api/README.md).
 
 ## Web
 
