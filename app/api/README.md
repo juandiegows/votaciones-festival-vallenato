@@ -1,7 +1,75 @@
-# app/api – API REST (Django + DRF + MySQL)
+# app/api – Django (MVT + API REST) + MySQL
 
-Backend del Sistema Web de Votaciones del Festival de la Leyenda Vallenata. La documentación funcional de los endpoints está en
-[`docs/api/README.md`](../../docs/api/README.md) y en Swagger (`/api/docs/`).
+Backend del Sistema Web de Votaciones del Festival de la Leyenda Vallenata. Un mismo proyecto Django atiende dos
+entradas que comparten modelos y reglas de negocio:
+
+| Entrada | App | Rutas | Quién la usa |
+|---|---|---|---|
+| **Sitio MVT** (vistas + plantillas Django, sesión) | `portal` | `/`, `/{año}/…`, `/registro`, `/login`, `/panel/…` | navegador (Entrega 2) |
+| **API REST** (DRF, token) | `votaciones` | `/api/…` | web React (`app/web`) |
+| **Django Admin** | `votaciones` | `/django-admin/` | respaldo de administración |
+
+La documentación funcional de los endpoints está en [`docs/api/README.md`](../../docs/api/README.md) y en Swagger (`/api/docs/`).
+
+## Arquitectura en capas
+
+```
+ Presentación   portal/vistas + templates (MVT)      votaciones/*/views.py (API REST)      React (app/web)
+                         │                                   │                                 │ HTTP /api
+                         └──────────────┬────────────────────┘◄────────────────────────────────┘
+ Casos de uso                  votaciones/*/servicios.py   (escrituras + reglas RN-xx, sin HTTP)
+ Consultas                     votaciones/*/selectores.py  (lecturas)  ·  reportes.py
+ Dominio                       votaciones/*/models.py      (Edición → Categoría → Votación → Opción → Voto)
+ Adaptadores   config/base_datos.py (MySQL · SQLite)   votaciones/correo/adaptadores (ZeptoMail · SMTP · consola · memoria)
+```
+
+Una regla de negocio se escribe una sola vez en `servicios.py` y la usan igual el panel MVT, la API y React.
+
+### Patrones usados
+
+| Patrón | Dónde | Para qué |
+|---|---|---|
+| **Puerto/Adaptador** | `config/base_datos.py` (`AdaptadorMySQL`, `AdaptadorSQLite`) y `votaciones/correo/adaptadores/` (`AdaptadorZeptoMail`, `AdaptadorSMTP`…) | cambiar de motor o de proveedor de correo con una variable de entorno (`DB_ENGINE`, `CORREO_ADAPTADOR`) sin tocar el resto del código |
+| **Registro (registry)** | `ADAPTADORES` en `base_datos.py`, `CORREO_ADAPTADORES` en `settings.py` | agregar un adaptador = escribir la clase y registrarla |
+| **Capa de servicios** | `votaciones/*/servicios.py` | reglas de negocio independientes de HTTP; lanzan `ReglaNegocioError` |
+| **Selectores (consultas)** | `votaciones/*/selectores.py`, `portal/consultas.py` | lecturas reutilizables, separadas de las escrituras |
+| **Decorador** | `portal/vistas/panel/base.py: solo_administrador` | control de acceso del panel en una línea |
+| **Plantilla base + parciales** | `portal/templates/portal/base.html`, `parciales/` | un solo diseño; cada pantalla solo define su contenido |
+| **Middleware + ContextVar** | `votaciones/comun/contexto.py` | auditoría automática de quién crea o modifica cada registro |
+| **Mejora progresiva** | `portal/static/portal/js/portal.js` | todo funciona sin JavaScript; el JS solo agrega comodidad (modales, cuenta regresiva) |
+
+### Conexión con MySQL (adaptador)
+
+`DB_ENGINE=mysql` activa `AdaptadorMySQL`: driver PyMySQL, `utf8mb4` (tildes y ñ), modo estricto, conexiones
+persistentes (`DB_CONN_MAX_AGE`) con verificación de salud. Los datos de acceso salen de variables de entorno
+(`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`): nunca quedan en el código.
+
+### Envío de correo (adaptadores)
+
+`CORREO_ADAPTADOR` elige el proveedor: `zeptomail` (API HTTP de ZeptoMail, Zoho), `smtp` (cualquier correo normal:
+Gmail, Outlook, el servidor de la Fundación…), `consola` (desarrollo: imprime el correo) o `memoria` (pruebas).
+Ver la sección [Correo](#correo).
+
+## App `portal` (sitio Django MVT)
+
+```
+portal/
+├── urls.py              rutas amigables (/2027/categorias/musica/…) y del panel (/panel/…)
+├── vistas/
+│   ├── publico.py       inicio, categorías, votaciones y detalle (lectura de MySQL con el ORM)
+│   ├── cuentas.py       registro, inicio y cierre de sesión, confirmación del correo
+│   ├── errores.py       página de error con la marca
+│   └── panel/           CRUD propio: base.py (acceso, guardar, eliminar con auditoría) + un módulo por entidad
+│                        inicio · ediciones · categorias · votaciones · opciones
+├── formularios.py       formularios de Django (validación del registro y del CRUD)
+├── consultas.py         reglas de visibilidad pública (RN-13, RN-14)
+├── contexto.py          procesador de contexto (edición activa, contacto, redes, menú)
+├── catalogos.py         textos e íconos fijos de la interfaz
+├── templatetags/        filtros y etiquetas (fechas es-CO, insignias, íconos, avatares)
+├── templates/portal/    base.html, parciales/ y panel/
+├── static/portal/       Bootstrap 5, Bootstrap Icons y las mismas hojas de estilo de la web React
+└── tests/               pruebas del sitio público, las cuentas y el panel
+```
 
 ## Estructura
 
@@ -105,10 +173,13 @@ python manage.py createsuperuser
 python manage.py runserver 8096
 ```
 
+Con el servidor arriba: sitio MVT en http://localhost:8096/ (panel en `/panel`), API en http://localhost:8096/api/docs/
+y Django Admin en http://localhost:8096/django-admin/. Con Docker es el mismo puerto 8096 (servicio `api`).
+
 ## Pruebas
 
 ```bash
-python manage.py test votaciones          # SQLite local
+python manage.py test                     # SQLite local: API (votaciones) + sitio MVT (portal)
 ```
 
 En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en cada cambio de `app/api/**`.
@@ -124,6 +195,7 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 | `DJANGO_NUM_PROXIES` | `0` | Proxies delante de Django. Con `0` la IP del cliente es `REMOTE_ADDR` y se ignora `X-Forwarded-For` (no se puede falsear); producción (edge_nginx): `1` |
 | `DB_ENGINE` | `sqlite` | `mysql` para usar MySQL |
 | `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | — | Conexión a MySQL |
+| `DB_CONN_MAX_AGE` | `60` | Segundos que se reutiliza una conexión a MySQL |
 | `CORS_ALLOWED_ORIGINS` | web local, GitHub Pages y votaciones.juandiegows.com | Orígenes que pueden llamar a la API |
 | `THROTTLE_LOGIN` · `THROTTLE_REGISTRO` · `THROTTLE_VOTAR` · `THROTTLE_CONFIRMACION` | `10/min` · `10/min` · `30/min` · `5/min` | Límites de uso |
 | `DEMO_CLAVE_ADMIN` · `DEMO_CLAVE_VOTANTE` | claves documentadas (solo con DEBUG) | Contraseñas de las cuentas de `cargar_demo`; obligatorias sin DEBUG |

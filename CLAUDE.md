@@ -16,8 +16,13 @@ María Virginia Labarca Briceño (investigación y documentación).
 - Commits: mensajes en español, sin atribución a herramientas de IA (ver skill `commit-equipo`).
 
 ## Arquitectura
-Desacoplada: `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amigables `/{año}/categorias/{categoría}/{votación}`)
-→ `app/api` (Django REST Framework) → MySQL. La web lee la API si se compila con `VITE_API_URL`; sin ella usa datos
+Un proyecto Django (`app/api`) con dos entradas sobre los mismos servicios y modelos: `portal` (MVT: vistas y
+plantillas Django con sesión, sitio público + CRUD en `/panel/…`; lo exige la Entrega 2) y `votaciones` (API REST
+DRF en `/api/…`). Adaptadores: base de datos en `config/base_datos.py` (DB_ENGINE) y correo en
+`votaciones/correo/adaptadores` (CORREO_ADAPTADOR). Detalle en `app/api/README.md`.
+Además, `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amigables `/{año}/categorias/{categoría}/{votación}`)
+→ `app/api` (Django REST Framework) → MySQL. Las plantillas del portal reutilizan las hojas de estilo de la web
+(copiadas en `app/api/portal/static/portal/css/`): un cambio de estilo se hace en ambas. La web lee la API si se compila con `VITE_API_URL`; sin ella usa datos
 simulados (`app/web/src/data/`). Nada debe quedar fijo a una edición: todo sale de la edición activa.
 Datos de prueba en la base de datos: `python manage.py cargar_demo --reiniciar`.
 El panel de administración de la web vive en `/panel/…` (no `/admin`: el WAF de producción bloquea esas rutas);
@@ -25,7 +30,7 @@ y la API de administración en `/api/gestion/…` (`/api/admin/…` queda solo c
 
 ## Comandos
 - Web: `cd app/web && npm run dev` · `npm run build`
-- API: `cd app/api && python manage.py test votaciones` · esquema: `python manage.py spectacular --file ../../docs/api/openapi.yaml --validate`
+- API y sitio MVT: `cd app/api && python manage.py test` (apps `votaciones` y `portal`) · esquema: `python manage.py spectacular --file ../../docs/api/openapi.yaml --validate`
 - Docker local: `docker compose up -d --build` (web http://localhost:8095 · API http://localhost:8096/api/docs/) · `docker compose --profile dev up -d` (http://localhost:5195)
 - Producción: https://votaciones.juandiegows.com (VPS, ver skill `desplegar`) · Demo: GitHub Pages.
 
