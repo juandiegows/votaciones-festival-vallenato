@@ -1,0 +1,67 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4">
+  <h1 class="h2 mb-1">Panel de administración</h1>
+  <p class="text-secondary-flv mb-0">Hola, {{ user.nombres }}.
+    {% if not edicion %}No hay una edición activa: configura una en «Ediciones».
+    {% elif es_activa %}{{ edicion.nombre }}.
+    {% else %}Consultando {{ edicion.nombre }} (edición anterior{% if edicion_activa_real %}; la activa es {{ edicion_activa_real.anio }}{% endif %}).{% endif %}
+  </p>
+</header>
+
+<section aria-label="Indicadores" class="row g-3 mb-4">
+  {% for k in kpis %}
+    <div class="col-6 col-xl-3">
+      <div class="card-flv kpi {{ k.clase }} p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start">
+          <p class="small fw-semibold text-secondary-flv mb-2">{{ k.etiqueta }}</p>
+          <i class="bi bi-{{ k.icono }} fs-4 text-rojo" aria-hidden="true"></i>
+        </div>
+        <p class="kpi-valor mb-0">{{ k.valor|miles }}</p>
+      </div>
+    </div>
+  {% endfor %}
+</section>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <section class="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-auditoria">
+      <h2 id="titulo-auditoria" class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span class="small fw-normal text-secondary-flv">(auditoría)</span></h2>
+      <ul class="list-group list-group-flush">
+        {% for a in actividad %}
+          <li class="list-group-item px-0">
+            <p class="mb-0 small fw-semibold">{{ a.texto }}</p>
+            <p class="mb-0 small text-secondary-flv">{{ a.fecha|fecha_hora }} · {{ a.usuario }}</p>
+          </li>
+        {% empty %}
+          <li class="list-group-item px-0 small text-secondary-flv">Aún no hay acciones registradas.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+  <div class="col-xl-5">
+    <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-accesos">
+      <h2 id="titulo-accesos" class="h5">Accesos rápidos</h2>
+      <div class="d-grid gap-2">
+        <a class="btn btn-primary text-start" href="{% url 'portal:panel-votaciones' %}"><i class="bi bi-plus-circle me-2" aria-hidden="true"></i>Crear o gestionar votaciones</a>
+        <a class="btn btn-outline-primary text-start" href="{% url 'portal:panel-categorias' %}"><i class="bi bi-grid me-2" aria-hidden="true"></i>Gestionar categorías</a>
+        <a class="btn btn-outline-primary text-start" href="{% url 'portal:panel-ediciones' %}"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Gestionar ediciones</a>
+      </div>
+    </section>
+    <section class="card-flv p-3 p-md-4" aria-labelledby="titulo-abiertas">
+      <h2 id="titulo-abiertas" class="h5">Votaciones abiertas ahora</h2>
+      {% if not abiertas %}<p class="small text-secondary-flv mb-0">No hay votaciones abiertas en esta edición.</p>{% endif %}
+      <ul class="list-unstyled mb-0">
+        {% for v in abiertas %}
+          <li class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+            <span class="small fw-semibold">{{ v.titulo }}</span>
+            <span class="d-flex align-items-center gap-2"><span class="small text-nowrap">{{ v.num_votos }} votos</span>{% estado_badge v.estado %}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

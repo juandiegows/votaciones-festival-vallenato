@@ -1,0 +1,47 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Gestión de ediciones</h1>
+    <p class="text-secondary-flv mb-0">Cada edición agrupa categorías y votaciones.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición</a>
+</header>
+<p class="small text-secondary-flv mb-2">{{ lista|length|plural:"edición,ediciones" }}</p>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table align-middle mb-0">
+    <caption class="visually-hidden">Listado de ediciones</caption>
+    <thead><tr><th scope="col">Edición</th><th scope="col">Año</th><th scope="col">Fechas</th><th scope="col">Categorías</th><th scope="col">Presentación</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for ed in lista %}
+        {% with pres=ed.presentacion_categorias|presentacion_categorias %}
+        <tr>
+          <td class="fw-semibold">{{ ed.nombre }}</td>
+          <td>{{ ed.anio }}</td>
+          <td class="small text-nowrap">{{ ed.fecha_inicio|fecha }} – {{ ed.fecha_fin|fecha }}</td>
+          <td>{{ ed.num_categorias }}</td>
+          <td class="small text-nowrap"><i class="bi bi-{{ pres.icono }} me-1 text-rojo" aria-hidden="true"></i>{{ pres.etiqueta }}</td>
+          <td><span class="badge badge-estado {% if ed.estado == 'activa' %}estado-abierta{% else %}estado-cerrada{% endif %}">{{ ed.get_estado_display }}</span></td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-edicion-editar' ed.pk %}" aria-label="Editar {{ ed.nombre }}" title="Editar"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-edicion-eliminar' ed.pk %}" data-eliminar-nombre="{{ ed.nombre }}" aria-label="Eliminar {{ ed.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+        {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center"><i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i><p class="mb-0">Aún no hay ediciones registradas.</p></div>
+{% endif %}
+
+{% if form %}
+  {% url 'portal:panel-ediciones' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar edición,Nueva edición" plantilla_campos="portal/panel/campos_edicion.html" %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{# Ventana modal con el formulario de alta o edición. Se abre sola al cargar; al cerrarla se vuelve al listado. #}
+{# Recibe: titulo_modal, volver (URL del listado), plantilla_campos, tamano #}
+<div class="modal fade" id="modal-formulario" tabindex="-1" aria-labelledby="titulo-formulario" aria-hidden="true"
+     data-abrir-al-cargar data-volver="{{ volver }}">
+  <div class="modal-dialog modal-dialog-scrollable {{ tamano|default:'' }}">
+    <form method="post" enctype="multipart/form-data" novalidate class="modal-content">
+      {% csrf_token %}
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="titulo-formulario">{{ titulo_modal }}</h2>
+        <a href="{{ volver }}" class="btn-close" aria-label="Cerrar"></a>
+      </div>
+      <div class="modal-body">
+        {% if form.errors %}<div class="alert alert-danger py-2" role="alert">Revisa los campos marcados.{% if form.non_field_errors %} {{ form.non_field_errors|join:" " }}{% endif %}</div>{% endif %}
+        {% include plantilla_campos %}
+      </div>
+      <div class="modal-footer">
+        <a href="{{ volver }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+{% load portal %}
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label" for="id_categoria">Categoría</label>
+    <select id="id_categoria" name="categoria" class="form-select{{ form.categoria|campo_invalido }}">
+      {% for c in form.fields.categoria.queryset %}
+        <option value="{{ c.pk }}"{% if form.categoria.value|stringformat:'s' == c.pk|stringformat:'s' %} selected{% endif %}>{{ c.nombre }}</option>
+      {% endfor %}
+    </select>
+    {% if form.categoria.errors %}<div class="invalid-feedback">{{ form.categoria.errors|join:" " }}</div>{% endif %}
+  </div>
+  <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.titulo %}</div>
+  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública. Déjalo vacío para generarlo desde el título." extra='placeholder="se genera desde el título"' %}</div>
+  <div class="col-12">
+    <label class="form-label" for="id_descripcion">Descripción</label>
+    <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
+    {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
+  </div>
+  <div class="col-12">{% include "portal/panel/selector_icono.html" with leyenda="Ícono de la votación" %}</div>
+  {% for campo in form %}{% if campo.name == "fecha_apertura" or campo.name == "fecha_cierre" %}
+    <div class="col-md-6">
+      <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+      <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="datetime-local" class="form-control{{ campo|campo_invalido }}" value="{{ campo.value|valor_fecha_hora }}">
+      {% if campo.errors %}<div class="invalid-feedback">{{ campo.errors|join:" " }}</div>{% endif %}
+    </div>
+  {% endif %}{% endfor %}
+  <div class="col-md-6" data-personalizable>
+    <label class="form-label" for="id_votos_por_usuario">Votos por usuario</label>
+    <div class="form-check mb-1">
+      <input id="id_personalizar_votos" name="personalizar_votos" class="form-check-input" type="checkbox"{% if form.personalizar_votos.value %} checked{% endif %} data-personalizar>
+      <label class="form-check-label small" for="id_personalizar_votos">{{ form.personalizar_votos.label }}</label>
+    </div>
+    <input id="id_votos_por_usuario" name="votos_por_usuario" type="number" min="1" max="5" class="form-control{{ form.votos_por_usuario|campo_invalido }}" value="{{ form.votos_por_usuario.value|default_if_none:edicion_formulario.votos_por_usuario }}" data-personalizado>
+    {% if form.votos_por_usuario.errors %}<div class="invalid-feedback">{{ form.votos_por_usuario.errors|join:" " }}</div>{% endif %}
+    <div class="form-text">Sin personalizar se usa el de la edición ({{ edicion_formulario.votos_por_usuario }}). Pendiente de validación con la Fundación.</div>
+  </div>
+  <div class="col-md-6" data-personalizable>
+    <label class="form-label" for="id_visibilidad_resultados">Mostrar resultados</label>
+    <div class="form-check mb-1">
+      <input id="id_personalizar_resultados" name="personalizar_resultados" class="form-check-input" type="checkbox"{% if form.personalizar_resultados.value %} checked{% endif %} data-personalizar>
+      <label class="form-check-label small" for="id_personalizar_resultados">{{ form.personalizar_resultados.label }}</label>
+    </div>
+    <select id="id_visibilidad_resultados" name="visibilidad_resultados" class="form-select" data-personalizado>
+      {% for valor, etiqueta in form.visibilidad_resultados.field.choices %}
+        <option value="{{ valor }}"{% if form.visibilidad_resultados.value == valor %} selected{% endif %}>{{ valor|visibilidad }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text">Sin personalizar se usa la de la edición («{{ edicion_formulario.visibilidad_resultados|visibilidad }}»).</div>
+  </div>
+  <div class="col-12">
+    <fieldset>
+      <legend class="form-label mb-1">Cómo ve el público las opciones</legend>
+      <div class="row g-2" role="radiogroup">
+        {% for p in presentaciones %}
+          <div class="col-sm-6 col-lg-4">
+            <input type="radio" class="opcion-input" name="presentacion_opciones" id="v-pres-{{ p.valor }}" value="{{ p.valor }}"{% if form.presentacion_opciones.value == p.valor %} checked{% endif %}>
+            <label for="v-pres-{{ p.valor }}" class="opcion-card presentacion-card">
+              <i class="bi bi-{{ p.icono }} fs-4 text-rojo" aria-hidden="true"></i>
+              <span><span class="d-block fw-semibold">{{ p.etiqueta }}</span><span class="d-block small text-secondary-flv">{{ p.descripcion }}</span></span>
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
+  <div class="col-12">
+    <div class="form-check form-switch">
+      <input id="id_publicada" name="publicada" class="form-check-input{{ form.publicada|campo_invalido }}" type="checkbox" role="switch"{% if form.publicada.value %} checked{% endif %} aria-describedby="v-pub-ayuda">
+      <label class="form-check-label" for="id_publicada">Publicar votación (visible al público)</label>
+      {% if form.publicada.errors %}<div class="invalid-feedback d-block" role="alert">{{ form.publicada.errors|join:" " }}</div>{% endif %}
+      <div id="v-pub-ayuda" class="form-text">{% if instancia %}Opciones activas: {{ instancia.opciones.count }}.{% else %}Las votaciones nuevas se crean como borrador.{% endif %} Se requieren al menos 2 opciones para publicar.</div>
+    </div>
+  </div>
+</div>

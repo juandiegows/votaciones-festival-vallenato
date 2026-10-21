@@ -1,0 +1,21 @@
+{% load portal %}
+{% include "portal/parciales/campo.html" with campo=form.nombre %}
+<div class="row g-3">
+  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.anio tipo="number" %}</div>
+  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.fecha_inicio tipo="date" %}</div>
+  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.fecha_fin tipo="date" %}</div>
+  <div class="col-12">
+    <label class="form-label" for="id_estado">Estado</label>
+    <select id="id_estado" name="estado" class="form-select" aria-describedby="e-estado-ayuda">
+      {% for valor, etiqueta in form.estado.field.choices %}<option value="{{ valor }}"{% if form.estado.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+    </select>
+    <div id="e-estado-ayuda" class="form-text">Solo puede haber una edición activa; al activar esta, las demás se cierran.</div>
+  </div>
+  <div class="col-12">
+    <label class="form-label" for="id_presentacion_categorias">Presentación de categorías al público</label>
+    <select id="id_presentacion_categorias" name="presentacion_categorias" class="form-select" aria-describedby="e-presentacion-ayuda">
+      {% for p in presentaciones %}<option value="{{ p.valor }}"{% if form.presentacion_categorias.value == p.valor %} selected{% endif %}>{{ p.etiqueta }}</option>{% endfor %}
+    </select>
+    <div id="e-presentacion-ayuda" class="form-text">Tarjetas, lista, mosaico, compacta o destacada (la primera categoría en grande).</div>
+  </div>
+</div>

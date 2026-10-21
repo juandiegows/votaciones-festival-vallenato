@@ -1,0 +1,19 @@
+{# Confirmación de borrado compartida: los botones con data-eliminar-url y data-eliminar-nombre la abren (portal.js) #}
+<div class="modal fade" id="modal-eliminar" tabindex="-1" aria-labelledby="titulo-eliminar" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content" data-form-eliminar>
+      {% csrf_token %}
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="titulo-eliminar">Eliminar</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">¿Seguro que deseas eliminar «<span data-eliminar-texto></span>»? Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-peligro">Eliminar</button>
+      </div>
+    </form>
+  </div>
+</div>

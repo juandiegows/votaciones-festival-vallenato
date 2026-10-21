@@ -1,0 +1,41 @@
+{# Selector de ícono (components/SelectorIcono.jsx): ícono de Bootstrap Icons o imagen propia subida. Recibe: form, iconos, leyenda #}
+<fieldset class="selector-icono" data-selector-icono>
+  <legend class="form-label mb-1">{{ leyenda|default:"Ícono de la categoría" }}</legend>
+  <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+    <span class="icono-circulo icono-vista-previa" aria-hidden="true" data-vista-previa>
+      {% if form.instance.icono_imagen %}<img src="{{ form.instance.icono_imagen.url }}" alt="" class="icono-entidad-img">
+      {% else %}<i class="bi bi-{{ form.icono.value|default:'check2-square' }}"></i>{% endif %}
+    </span>
+    <p class="small mb-0 text-secondary-flv">
+      {% if form.instance.icono_imagen %}Imagen subida: reemplaza al ícono de la lista.{% else %}Elige un ícono de la lista o sube una imagen.{% endif %}
+    </p>
+  </div>
+
+  <label for="buscar-icono" class="visually-hidden">Buscar ícono</label>
+  <div class="input-group input-group-sm mb-2">
+    <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+    <input id="buscar-icono" type="search" class="form-control" placeholder="Buscar: música, trofeo, personas…" data-buscar-icono>
+  </div>
+
+  <div class="selector-icono-cuadricula" role="radiogroup" aria-label="Íconos disponibles">
+    {% for nombre, etiqueta in iconos %}
+      <span class="selector-icono-item" data-etiqueta="{{ etiqueta|lower }} {{ nombre }}">
+        <input type="radio" class="opcion-input" name="icono" id="icono-{{ nombre }}" value="{{ nombre }}"{% if form.icono.value == nombre %} checked{% endif %}>
+        <label for="icono-{{ nombre }}" title="{{ etiqueta }}"><i class="bi bi-{{ nombre }}" aria-hidden="true"></i><span class="selector-icono-nombre">{{ etiqueta }}</span></label>
+      </span>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+    <label class="btn btn-sm btn-outline-primary mb-0" for="id_icono_imagen"><i class="bi bi-upload me-1" aria-hidden="true"></i>Subir desde tu equipo</label>
+    <input id="id_icono_imagen" name="icono_imagen" type="file" accept="image/png,image/jpeg,image/webp" class="visually-hidden" aria-describedby="icono-ayuda">
+    {% if form.instance.icono_imagen %}
+      <div class="form-check mb-0">
+        <input class="form-check-input" type="checkbox" id="id_quitar_icono" name="quitar_icono"{% if form.quitar_icono.value %} checked{% endif %}>
+        <label class="form-check-label small" for="id_quitar_icono">Quitar imagen</label>
+      </div>
+    {% endif %}
+    <span id="icono-ayuda" class="form-text mt-0" data-nombre-archivo>PNG, JPG o WebP de hasta 1 MB; se recomienda cuadrada.</span>
+  </div>
+  {% if form.icono_imagen.errors %}<div class="invalid-feedback d-block" role="alert">{{ form.icono_imagen.errors|join:" " }}</div>{% endif %}
+</fieldset>

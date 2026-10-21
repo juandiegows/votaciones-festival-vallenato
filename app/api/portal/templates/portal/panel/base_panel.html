@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Panel de administración · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+{% block mensajes %}{% endblock %}
+
+{% block contenido %}
+{# Diseño del panel de la web React (pages/admin/AdminLayout.jsx): menú lateral + contenido #}
+<div class="container-fluid panel-ancho py-4">
+  <div class="panel-admin">
+    <aside class="panel-admin-menu">
+      <nav aria-label="Menú de administración" class="card-flv p-2 admin-nav">
+        {% if ediciones %}
+        <form method="get" class="px-2 pb-2 mb-1 border-bottom selector-edicion-admin">
+          <label for="admin-edicion" class="small fw-semibold text-secondary-flv mb-1 d-block">Edición</label>
+          <select id="admin-edicion" name="edicion" class="form-select form-select-sm" data-enviar-al-cambiar aria-describedby="admin-edicion-ayuda">
+            {% for ed in ediciones %}
+              <option value="{{ ed.pk }}"{% if ed.pk == edicion.pk %} selected{% endif %}>{{ ed.anio }}{% if ed.estado == "activa" %} · activa{% endif %}</option>
+            {% endfor %}
+          </select>
+          <noscript><button class="btn btn-sm btn-outline-primary mt-1" type="submit">Cambiar</button></noscript>
+          <p id="admin-edicion-ayuda" class="small mb-0 mt-1">
+            {% if edicion.estado == "activa" %}<span class="badge badge-estado estado-abierta">Edición activa</span>
+            {% else %}<span class="badge text-bg-secondary"><i class="bi bi-archive me-1" aria-hidden="true"></i>Consultando {{ edicion.anio }}</span>{% endif %}
+          </p>
+        </form>
+        {% endif %}
+        <p class="small fw-semibold text-secondary-flv px-2 pt-1 mb-1 d-none d-lg-block">Administración</p>
+        <ul class="nav nav-pills flex-row flex-lg-column flex-nowrap overflow-auto gap-1 admin-nav-lista">
+          <li class="nav-item"><a href="{% url 'portal:panel' %}" class="nav-link{% if seccion == 'inicio' %} active{% endif %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-ediciones' %}" class="nav-link{% if seccion == 'ediciones' %} active{% endif %}"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Ediciones</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-categorias' %}" class="nav-link{% if seccion == 'categorias' %} active{% endif %}"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categorías</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-votaciones' %}" class="nav-link{% if seccion == 'votaciones' %} active{% endif %}"><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Votaciones</a></li>
+          {# Lo que aún no tiene pantalla propia (banner, revista, auditoría, usuarios…) se gestiona en Django Admin #}
+          <li class="nav-item"><a href="/django-admin/" class="nav-link"><i class="bi bi-gear me-2" aria-hidden="true"></i>Django Admin <i class="bi bi-box-arrow-up-right small ms-1" aria-hidden="true"></i></a></li>
+        </ul>
+      </nav>
+    </aside>
+    <div class="panel-admin-contenido">
+      {% include "portal/parciales/mensajes.html" %}
+      {% block panel %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% include "portal/panel/modal_eliminar.html" %}
+{% endblock %}

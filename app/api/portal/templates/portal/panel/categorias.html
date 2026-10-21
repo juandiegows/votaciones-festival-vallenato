@@ -1,0 +1,89 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Gestión de categorías</h1>
+    <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Crear, editar, activar o desactivar categorías.</p>
+  </div>
+  {% if hay_ediciones_abiertas %}
+    <a class="btn btn-primary" href="{% url 'portal:panel-categoria-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</a>
+  {% else %}
+    <button class="btn btn-primary" disabled title="Todas las ediciones están cerradas"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
+  {% endif %}
+</header>
+{% if not edicion %}
+  <div class="alert alert-warning" role="alert">No hay ediciones registradas. <a href="{% url 'portal:panel-ediciones' %}" class="alert-link">Crea una edición</a> para agregar categorías.</div>
+{% endif %}
+<p class="badge badge-ilustrativo rounded-pill px-3 py-2">Categorías ilustrativas – pendientes de validación con la Fundación</p>
+
+<form method="get" class="card-flv p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-6">
+      <label for="cat-buscar" class="form-label small mb-1">Buscar</label>
+      <input id="cat-buscar" name="q" type="search" class="form-control form-control-sm" placeholder="Nombre, descripción o URL" value="{{ busqueda }}">
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label for="cat-f-estado" class="form-label small mb-1">Estado</label>
+      <select id="cat-f-estado" name="estado" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todas</option>
+        <option value="activa"{% if filtro_estado == "activa" %} selected{% endif %}>Activas</option>
+        <option value="inactiva"{% if filtro_estado == "inactiva" %} selected{% endif %}>Inactivas</option>
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3 d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
+      {% if busqueda or filtro_estado %}<a class="btn btn-sm btn-link" href="{% url 'portal:panel-categorias' %}">Limpiar</a>{% endif %}
+    </div>
+  </div>
+</form>
+<p class="visually-hidden" aria-live="polite">{{ lista|length }} categorías mostradas</p>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <caption class="visually-hidden">Listado de categorías</caption>
+    <thead><tr><th scope="col">Orden</th><th scope="col">Categoría</th><th scope="col">Votaciones</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for c in lista %}
+        <tr{% if not c.activa %} class="opacity-75"{% endif %}>
+          <td>{{ c.orden }}</td>
+          <td style="min-width: 12rem">
+            <span class="d-flex align-items-center gap-2">
+              <span class="icono-circulo icono-sm">{% icono_entidad c.icono c.icono_imagen %}</span>
+              <span><strong>{{ c.nombre }}</strong> <code class="small text-secondary-flv">/{{ c.slug }}</code>
+                <span class="small text-secondary-flv d-none d-md-block">{{ c.descripcion }}</span></span>
+            </span>
+          </td>
+          <td class="small">
+            <a href="{% url 'portal:panel-votaciones' %}?categoria={{ c.pk }}" class="text-reset">{{ c.num_votaciones|plural:"votación,votaciones" }}</a>
+            {% if c.num_abiertas %}<span class="badge badge-estado estado-abierta ms-1">{{ c.num_abiertas }} abierta{{ c.num_abiertas|pluralize }}</span>{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'portal:panel-categoria-alternar' c.pk %}" class="form-check form-switch mb-0">{% csrf_token %}
+              <input class="form-check-input" type="checkbox" role="switch" id="activa-{{ c.pk }}"{% if c.activa %} checked{% endif %} data-enviar-al-cambiar>
+              <label class="form-check-label small" for="activa-{{ c.pk }}">{{ c.activa|yesno:"Activa,Inactiva" }}</label>
+            </form>
+          </td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-categoria-editar' c.pk %}" aria-label="Editar {{ c.nombre }}" title="Editar"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-categoria-eliminar' c.pk %}" data-eliminar-nombre="{{ c.nombre }}" aria-label="Eliminar {{ c.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center">
+  <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
+  <p class="mb-0">{% if hay_categorias %}No hay categorías con esos filtros.{% else %}Esta edición aún no tiene categorías.{% endif %}</p>
+</div>
+{% endif %}
+
+{% if form %}
+  {% url 'portal:panel-categorias' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar categoría,Nueva categoría" plantilla_campos="portal/panel/campos_categoria.html" tamano="modal-lg" %}
+{% endif %}
+{% endblock %}

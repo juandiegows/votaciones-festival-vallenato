@@ -32,6 +32,8 @@ urlpatterns = [
     path("api/", include("votaciones.urls")),
     # Imágenes subidas: las sirve Django en todos los entornos (el proxy reenvía /media/ a la API)
     re_path(r"^media/(?P<path>.*)$", media, name="media"),
+    # Sitio web con vistas y plantillas Django (Entrega 2): público, registro/sesión y panel /panel/…
+    path("", include("portal.urls")),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,32 @@
+{% load portal %}
+<div class="row g-3">
+  <div class="col-md-8">{% include "portal/parciales/campo.html" with campo=form.nombre %}</div>
+  <div class="col-md-4">{% include "portal/parciales/campo.html" with campo=form.orden tipo="number" extra='min=0' %}</div>
+  <div class="col-12">
+    <label class="form-label" for="id_descripcion">Descripción</label>
+    <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
+  </div>
+  <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.enlace_multimedia ayuda="URL http(s) o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/cancion.mp3)." %}</div>
+  <div class="col-md-6">
+    <label class="form-label" for="id_audio">Archivo de audio</label>
+    <input id="id_audio" name="audio" type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.webm" class="form-control{{ form.audio|campo_invalido }}">
+    {% if form.audio.errors %}<div class="invalid-feedback">{{ form.audio.errors|join:" " }}</div>
+    {% else %}<div class="form-text">MP3, OGG, WAV, M4A o WebM de hasta 10 MB.</div>{% endif %}
+    {% if form.instance.audio %}
+      <div class="form-check mt-1">
+        <input class="form-check-input" type="checkbox" id="id_quitar_audio" name="quitar_audio">
+        <label class="form-check-label small" for="id_quitar_audio">Quitar el audio subido ({{ form.instance.audio.name|cut:"audios/" }})</label>
+      </div>
+    {% endif %}
+  </div>
+  <div class="col-12">
+    <label class="form-label" for="id_texto_audio">Letra o transcripción <span class="fw-normal text-secondary-flv">(accesibilidad)</span></label>
+    <textarea id="id_texto_audio" name="texto_audio" rows="3" class="form-control">{{ form.texto_audio.value|default_if_none:'' }}</textarea>
+  </div>
+  <div class="col-12">
+    <div class="form-check form-switch">
+      <input id="id_activa" name="activa" class="form-check-input" type="checkbox" role="switch"{% if form.activa.value %} checked{% endif %}>
+      <label class="form-check-label" for="id_activa">Opción activa (visible al público)</label>
+    </div>
+  </div>
+</div>

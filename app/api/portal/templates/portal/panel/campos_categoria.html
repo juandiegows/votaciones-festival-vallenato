@@ -1,0 +1,29 @@
+{% load portal %}
+<div class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label" for="id_edicion">Edición</label>
+    <select id="id_edicion" name="edicion" class="form-select{{ form.edicion|campo_invalido }}">
+      {% for ed in form.fields.edicion.queryset %}
+        <option value="{{ ed.pk }}"{% if form.edicion.value|stringformat:'s' == ed.pk|stringformat:'s' %} selected{% endif %}>{{ ed.nombre }}{% if ed.estado == "cerrada" %} (cerrada){% endif %}</option>
+      {% endfor %}
+    </select>
+    {% if form.edicion.errors %}<div class="invalid-feedback">{{ form.edicion.errors|join:" " }}</div>{% endif %}
+  </div>
+  <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.nombre %}</div>
+  <div class="col-12">
+    {% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública, p. ej. /2027/categorias/musica. Déjalo vacío para generarlo automáticamente." extra='placeholder="se genera desde el nombre"' %}
+  </div>
+  <div class="col-12">
+    <label class="form-label" for="id_descripcion">Descripción</label>
+    <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
+    {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
+  </div>
+  <div class="col-12">{% include "portal/panel/selector_icono.html" %}</div>
+  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.orden tipo="number" extra='min=1' %}</div>
+  <div class="col-sm-8 d-flex align-items-end">
+    <div class="form-check form-switch mb-3">
+      <input id="id_activa" name="activa" class="form-check-input" type="checkbox" role="switch"{% if form.activa.value %} checked{% endif %}>
+      <label class="form-check-label" for="id_activa">Categoría activa (visible al público)</label>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,101 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Gestión de votaciones</h1>
+    <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Crear, editar, publicar y cerrar votaciones y sus opciones.</p>
+  </div>
+  {% if categorias %}
+    <a class="btn btn-primary" href="{% url 'portal:panel-votacion-nueva' %}{% if filtro_categoria %}?categoria={{ filtro_categoria }}{% endif %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</a>
+  {% else %}
+    <button class="btn btn-primary" disabled title="Primero crea una categoría"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</button>
+  {% endif %}
+</header>
+
+<form method="get" class="card-flv p-3 mb-3" aria-label="Filtros de votaciones">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label for="f-texto" class="form-label small mb-1">Buscar</label>
+      <input id="f-texto" name="q" type="search" class="form-control form-control-sm" placeholder="Título o descripción" value="{{ busqueda }}">
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label for="f-cat" class="form-label small mb-1">Categoría</label>
+      <select id="f-cat" name="categoria" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todas</option>
+        {% for c in categorias %}<option value="{{ c.pk }}"{% if filtro_categoria == c.pk|stringformat:'s' %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label for="f-estado" class="form-label small mb-1">Estado</label>
+      <select id="f-estado" name="estado" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todos</option>
+        {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if filtro_estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
+      {% if busqueda or filtro_categoria or filtro_estado %}<a class="btn btn-sm btn-link" href="{% url 'portal:panel-votaciones' %}">Limpiar</a>{% endif %}
+    </div>
+  </div>
+</form>
+<p class="visually-hidden" aria-live="polite">{{ lista|length }} votaciones mostradas</p>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <caption class="visually-hidden">Listado de votaciones</caption>
+    <thead><tr><th scope="col">Votación</th><th scope="col">Fechas</th><th scope="col">Estado</th><th scope="col">Opc.</th><th scope="col">Votos</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for v in lista %}
+        <tr>
+          <td style="min-width: 13rem">
+            <span class="d-flex align-items-center gap-2">
+              <span class="icono-circulo icono-sm">{% icono_entidad v|icono_votacion v.icono_imagen %}</span>
+              <span><strong>{{ v.titulo }}</strong>
+                <span class="small text-secondary-flv d-block">{{ v.categoria.nombre }} · <code>/{{ v.slug }}</code></span></span>
+            </span>
+          </td>
+          <td class="small text-nowrap">{{ v.fecha_apertura|fecha_hora }}<br>{{ v.fecha_cierre|fecha_hora }}</td>
+          <td>
+            <span class="d-flex flex-wrap gap-1">
+              {% estado_badge v.estado %}
+              {% if v.publicada and v.categoria.edicion.votaciones_pausadas %}<span class="badge text-bg-warning">En pausa</span>{% endif %}
+            </span>
+          </td>
+          <td><span class="{% if v.num_opciones < 2 %}text-danger fw-bold{% endif %}">{{ v.num_opciones }}</span></td>
+          <td>{{ v.num_votos }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-votacion-editar' v.pk %}" aria-label="Editar {{ v.titulo }}" title="Editar"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-opciones' v.pk %}" aria-label="Opciones de {{ v.titulo }}" title="Opciones"><i class="bi bi-list-ol" aria-hidden="true"></i></a>
+            {% if v.publicada %}
+              <form method="post" action="{% url 'portal:panel-votacion-despublicar' v.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-outline-secondary" type="submit"{% if v.estado == 'abierta' %} disabled title="No se puede despublicar una votación abierta: ciérrala primero"{% else %} title="Despublicar"{% endif %} aria-label="Despublicar {{ v.titulo }}"><i class="bi bi-eye-slash" aria-hidden="true"></i></button>
+              </form>
+            {% else %}
+              <form method="post" action="{% url 'portal:panel-votacion-publicar' v.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-dorado" type="submit" title="Publicar" aria-label="Publicar {{ v.titulo }}"><i class="bi bi-megaphone" aria-hidden="true"></i></button>
+              </form>
+            {% endif %}
+            {% if v.estado == 'abierta' or v.estado == 'programada' %}
+              <form method="post" action="{% url 'portal:panel-votacion-cerrar' v.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-outline-secondary" type="submit" title="Cerrar ahora" aria-label="Cerrar {{ v.titulo }}"><i class="bi bi-lock" aria-hidden="true"></i></button>
+              </form>
+            {% endif %}
+            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-votacion-eliminar' v.pk %}" data-eliminar-nombre="{{ v.titulo }}" aria-label="Eliminar {{ v.titulo }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center"><i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i><p class="mb-0">No hay votaciones con esos filtros.</p></div>
+{% endif %}
+
+{% if form %}
+  {% url 'portal:panel-votaciones' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar votación,Nueva votación" plantilla_campos="portal/panel/campos_votacion.html" tamano="modal-lg" %}
+{% endif %}
+{% endblock %}
