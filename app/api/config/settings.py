@@ -1,7 +1,10 @@
 import os
+import sys
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+
+from config import base_datos
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,6 +53,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "votaciones",
+    # Sitio web con vistas y plantillas Django (público, cuentas y /panel); comparte modelos con la API
+    "portal",
 ]
 
 MIDDLEWARE = [
@@ -78,6 +83,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # Edición activa, contacto y redes del pie para las plantillas del portal
+                "portal.contexto.sitio",
             ],
         },
     },
@@ -85,31 +92,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Base de datos: MySQL en Docker/VPS (DB_ENGINE=mysql); SQLite para desarrollo rápido y pruebas.
-if os.getenv("DB_ENGINE", "sqlite") == "mysql":
-    import pymysql
-
-    pymysql.install_as_MySQLdb()
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.getenv("DB_NAME", "votaciones_flv"),
-            "USER": os.getenv("DB_USER", "votaciones"),
-            "PASSWORD": os.getenv("DB_PASSWORD", ""),
-            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-            "PORT": os.getenv("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4"},
-        }
-    }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+# Base de datos: adaptador elegido con DB_ENGINE (config/base_datos.py). MySQL en Docker/VPS; SQLite para
+# desarrollo rápido y pruebas. El resto del sistema solo conoce el ORM de Django.
+DATABASES = {"default": base_datos.configurar(os.getenv("DB_ENGINE", "sqlite"), BASE_DIR)}
 
 AUTH_USER_MODEL = "votaciones.Usuario"
+
+# Autenticación del portal: sesión de Django (la API sigue usando token)
+LOGIN_URL = "portal:login"
+LOGIN_REDIRECT_URL = "portal:inicio"
+LOGOUT_REDIRECT_URL = "portal:inicio"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -131,7 +123,12 @@ MEDIA_ROOT = Path(os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    # Con DEBUG o en las pruebas no hay collectstatic: el almacenamiento con manifiesto fallaría al resolver {% static %}
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        if DEBUG or "test" in sys.argv
+        else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
 }
 
 # Detrás de Cloudflare + edge_nginx (TLS termina antes de Django)
