@@ -1,0 +1,43 @@
+/* Panel de administración: selector de edición, tiempo real, resumen, participación e integridad */
+.selector-edicion-admin .form-select { font-weight: 600; }
+
+.punto-en-vivo {
+  display: inline-block; width: .6rem; height: .6rem; border-radius: 50%;
+  background: var(--flv-rojo); vertical-align: middle;
+  animation: pulso-en-vivo 1.4s ease-in-out infinite;
+}
+@keyframes pulso-en-vivo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(221, 51, 51, .55); }
+  50% { box-shadow: 0 0 0 .35rem rgba(221, 51, 51, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .punto-en-vivo { animation: none; } }
+
+.icono-circulo.icono-circulo-sm { width: 2.2rem; height: 2.2rem; font-size: 1rem; }
+.icono-circulo .icono-entidad-img { width: 60%; height: 60%; object-fit: contain; }
+
+.resumen-total { font-family: var(--flv-fuente-titulos); font-weight: 800; font-size: 1.6rem; color: var(--flv-negro); }
+.resumen-votacion { padding: .6rem 0; border-bottom: 1px dashed #e3d7c4; }
+.resumen-votacion:last-child { border-bottom: 0; }
+.resumen-opcion {
+  display: grid; grid-template-columns: minmax(8rem, 2fr) minmax(4rem, 3fr) auto;
+  align-items: center; gap: .75rem; padding: .2rem 0 .2rem 1rem; font-size: .9rem;
+}
+.resumen-barra { display: block; height: .55rem; background: #f1ebe2; border-radius: 1rem; overflow: hidden; }
+.resumen-barra > span { display: block; height: 100%; background: var(--flv-dorado); border-radius: 1rem; transition: width .4s ease; }
+.resumen-barra > span.lider { background: var(--flv-rojo); }
+@media (max-width: 575.98px) {
+  .resumen-opcion { grid-template-columns: 1fr auto; padding-left: .5rem; }
+  .resumen-barra { grid-column: 1 / -1; grid-row: 2; }
+}
+
+.participacion-tabla { max-height: 26rem; overflow-y: auto; }
+.participacion-tabla thead th { position: sticky; top: 0; z-index: 1; }
+
+.boton-votacion-auditoria { background: #fff; border: 1px solid transparent; }
+.boton-votacion-auditoria:hover { background: var(--flv-crema); }
+.boton-votacion-auditoria.activa { background: var(--flv-crema); border-color: var(--flv-dorado); box-shadow: inset 4px 0 0 var(--flv-rojo); }
+
+/* Menú lateral: los nombres largos pasan a la siguiente línea en vez de cortarse */
+@media (min-width: 992px) {
+  .admin-nav .nav-link { white-space: normal; line-height: 1.25; }
+}

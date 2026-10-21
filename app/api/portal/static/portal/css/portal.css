@@ -1,0 +1,20 @@
+/*
+ * Ajustes del sitio Django sobre las hojas de la web React (brand.css + styles.css).
+ * En React algunas marcas se pintaban solo si estaban elegidas; aquí lo resuelve CSS con :checked.
+ */
+
+/* Marca de la opción elegida: el ícono de verificación solo se ve cuando el radio está marcado */
+.opcion-input:not(:checked) + .opcion-card .opcion-check i { visibility: hidden; }
+.opcion-input:checked + .opcion-pill .sin-marcar,
+.opcion-input:not(:checked) + .opcion-pill .marcada { display: none; }
+.opcion-pista:has(.opcion-input:checked) { border-color: var(--flv-rojo); }
+
+/* Selector de íconos: la búsqueda oculta los que no coinciden */
+.selector-icono-item[hidden] { display: none !important; }
+
+/* Revista institucional en PDF incrustada en el inicio */
+.revista-pdf { height: min(80vh, 52rem); border: 0; }
+
+/* Botones de acción en línea dentro de las tablas del panel */
+td form.d-inline { margin: 0; }
+td .btn + form, td form + form, td form + .btn { margin-left: .25rem; }
