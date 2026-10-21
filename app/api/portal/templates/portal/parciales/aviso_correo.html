@@ -1,0 +1,13 @@
+{# Barra bajo el menú mientras la cuenta no confirme su correo: sin confirmar no se puede votar #}
+{% if user.is_authenticated and not user.correo_verificado %}
+<div class="barra-aviso py-2 d-print-none" role="status">
+  <div class="container d-flex flex-wrap align-items-center gap-2 small">
+    <i class="bi bi-envelope-exclamation-fill" aria-hidden="true"></i>
+    <span><strong>Confirma tu correo para poder votar.</strong> Te enviamos un enlace a <strong>{{ user.email }}</strong>.</span>
+    <form method="post" action="{% url 'portal:reenviar-confirmacion' %}" class="ms-sm-auto">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit" class="btn btn-sm btn-barra">Reenviar enlace</button>
+    </form>
+  </div>
+</div>
+{% endif %}

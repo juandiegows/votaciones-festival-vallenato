@@ -1,0 +1,16 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Aún no hay una edición activa · Votaciones FLV{% endblock %}
+{% block contenido %}
+<div class="container py-5">
+  <div class="card-flv p-4 p-md-5 text-center mx-auto" style="max-width: 36rem">
+    <i class="bi bi-calendar-x display-5 text-rojo" aria-hidden="true"></i>
+    <h1 class="h3 mt-3">Aún no hay una edición activa</h1>
+    <p class="mb-4">Las votaciones del público se publicarán cuando la organización active la próxima edición del Festival.</p>
+    {% if es_admin %}
+      <a href="{% url 'portal:panel-ediciones' %}" class="btn btn-primary">Configurar una edición</a>
+    {% else %}
+      <a href="{% url 'portal:registro' %}" class="btn btn-outline-primary">Crear una cuenta</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

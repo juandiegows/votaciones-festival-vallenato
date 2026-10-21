@@ -1,0 +1,69 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Iniciar sesión · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card-flv p-4 p-md-5">
+        <h1 class="h3 mb-1">Iniciar sesión</h1>
+        <p class="text-secondary-flv">Ingresa para votar y consultar tus comprobantes.</p>
+        {% if siguiente and not form.is_bound %}
+          <div class="alert alert-info small" role="status"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Inicia sesión para continuar.</div>
+        {% endif %}
+        {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ siguiente }}">
+          <div class="mb-3">
+            <label for="correo" class="form-label">Correo electrónico</label>
+            <input id="correo" name="email" type="email" class="form-control" autocomplete="email" value="{{ form.email.value|default_if_none:'' }}" required>
+          </div>
+          <div class="mb-2">
+            <label for="contrasena" class="form-label">Contraseña</label>
+            <input id="contrasena" name="password" type="password" class="form-control" autocomplete="current-password" required>
+          </div>
+          <div class="text-end mb-3">
+            <button type="button" class="btn btn-link p-0 small" data-bs-toggle="modal" data-bs-target="#modal-recuperar">¿Olvidaste tu contraseña?</button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Ingresando…">
+            <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Ingresar
+          </button>
+        </form>
+        <p class="text-center mt-3">¿No tienes cuenta? <a href="{% url 'portal:registro' %}{% if siguiente %}?next={{ siguiente|urlencode }}{% endif %}">Regístrate</a></p>
+
+        {% if modo_desarrollo %}
+        {# Solo en desarrollo: las cuentas que crea `python manage.py cargar_demo` #}
+        <div class="border rounded-3 p-3 bg-light small" aria-label="Credenciales de demostración">
+          <p class="fw-semibold mb-2"><i class="bi bi-key me-1" aria-hidden="true"></i>Credenciales de demostración</p>
+          <div class="d-flex flex-column gap-2">
+            {% for c in credenciales_demo %}
+              <button type="button" class="btn btn-sm btn-outline-primary text-start" data-demo-correo="{{ c.correo }}" data-demo-clave="{{ c.contrasena }}">
+                <strong>{{ c.rol }}:</strong> {{ c.correo }} / {{ c.contrasena }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-recuperar" tabindex="-1" aria-labelledby="titulo-recuperar" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="titulo-recuperar">Recuperar contraseña</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-0">La recuperación de contraseña se incorpora en una próxima entrega. Mientras tanto, escribe al
+          correo de contacto que aparece en el pie de página.</p>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

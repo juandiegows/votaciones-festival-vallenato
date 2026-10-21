@@ -1,0 +1,46 @@
+<footer class="footer-flv mt-5 d-print-none">
+  <div class="aviso-prototipo text-center py-2 px-3">
+    <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
+    Prototipo académico – Areandina · Desarrollo Web 2026 · Datos ilustrativos de demostración
+  </div>
+  <div class="container py-4">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <p class="font-titulo fw-bold text-white mb-1">Sistema Web de Votaciones</p>
+        <p class="small mb-0">{{ edicion_activa.nombre|default:"Festival de la Leyenda Vallenata" }} · Valledupar, Cesar (Colombia). {{ configuracion.texto_pie }}</p>
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <p class="fw-semibold text-white mb-2">Navegación</p>
+        <ul class="list-unstyled small mb-0">
+          <li><a href="{% url 'portal:categorias' %}">Categorías</a></li>
+          {% if not user.is_authenticated %}<li><a href="{% url 'portal:registro' %}">Registro</a></li>{% endif %}
+          {# El acceso al panel solo aparece aquí, y solo para administradores con sesión #}
+          {% if es_admin %}<li><a href="{% url 'portal:panel' %}">Panel admin</a></li>{% endif %}
+        </ul>
+      </div>
+      {% if configuracion %}
+      <div class="col-sm-6 col-lg-3">
+        <p class="fw-semibold text-white mb-2">Contacto</p>
+        <address class="small mb-3 contacto-flv">
+          <span class="d-block mb-1">{{ configuracion.nombre_organizacion }}</span>
+          <a class="d-block mb-1" href="tel:{{ configuracion.telefono|cut:' '|cut:'('|cut:')'|cut:'-' }}"><i class="bi bi-telephone-fill me-1" aria-hidden="true"></i>{{ configuracion.telefono }}</a>
+          <span class="d-block mb-1"><i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>{{ configuracion.direccion }}</span>
+          <a class="d-block" href="mailto:{{ configuracion.correo }}"><i class="bi bi-envelope-fill me-1" aria-hidden="true"></i>{{ configuracion.correo }}</a>
+        </address>
+        <ul class="list-inline mb-0 redes-flv" aria-label="Redes sociales del Festival">
+          {% for red in redes %}
+            <li class="list-inline-item">
+              <a href="{{ red.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ red.nombre }} del Festival (se abre en una pestaña nueva)" title="{{ red.nombre }}"><i class="bi bi-{{ red.icono }}" aria-hidden="true"></i></a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    <hr class="border-secondary">
+    <p class="small mb-0">
+      <strong>Acerca de:</strong> Sebastián Bautista Martínez, María Labarca Briceño, Juan Mejía Maestre · Fundación
+      Universitaria del Área Andina · Desarrollo Web – Eje 2, Entrega 2 (Django MVT).
+    </p>
+  </div>
+</footer>

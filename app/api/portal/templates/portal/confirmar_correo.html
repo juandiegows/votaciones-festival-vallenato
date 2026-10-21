@@ -1,0 +1,31 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Confirmar correo · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <section class="card-flv p-4 p-md-5 text-center">
+        {% if ok %}
+          <i class="bi bi-patch-check-fill display-4 text-success" aria-hidden="true"></i>
+          <h1 class="h3 mt-2">¡Correo confirmado!</h1>
+          <p>Tu cuenta <strong>{{ correo }}</strong> ya puede votar. Te enviamos un correo de bienvenida.</p>
+          {% if user.is_authenticated %}<a href="{% url 'portal:categorias' %}" class="btn btn-primary">Ir a votar</a>
+          {% else %}<a href="{% url 'portal:login' %}" class="btn btn-primary">Iniciar sesión</a>{% endif %}
+        {% else %}
+          <i class="bi bi-x-octagon-fill display-4 text-danger" aria-hidden="true"></i>
+          <h1 class="h3 mt-2">No pudimos confirmar tu correo</h1>
+          <p>{{ error }}</p>
+          {% if user.is_authenticated %}
+            <p class="small text-secondary-flv">Pide un enlace nuevo con «Reenviar enlace» en la barra amarilla de arriba.</p>
+          {% else %}
+            <p class="small text-secondary-flv">Inicia sesión y pide un enlace nuevo.</p>
+            <a href="{% url 'portal:login' %}" class="btn btn-primary">Iniciar sesión</a>
+          {% endif %}
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

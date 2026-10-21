@@ -1,0 +1,11 @@
+{% load portal %}
+{# Campo de formulario con el estilo de la web: etiqueta, ayuda y error de Bootstrap. Recibe: campo, tipo, ayuda, extra (atributos) #}
+<div class="mb-3">
+  <label for="{{ campo.id_for_label }}" class="form-label">{{ campo.label }}{% if campo.field.required %} <span class="text-danger" aria-hidden="true">*</span>{% endif %}</label>
+  <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="{{ tipo|default:'text' }}"
+         class="form-control{{ campo|campo_invalido }}"{% if tipo != "password" %} value="{{ campo.value|default_if_none:'' }}"{% endif %}
+         {% if campo.field.required %}required{% endif %} {{ extra|default:''|safe }}
+         {% if campo.errors %}aria-invalid="true" aria-describedby="{{ campo.id_for_label }}-error"{% elif ayuda %}aria-describedby="{{ campo.id_for_label }}-ayuda"{% endif %}>
+  {% if ayuda and not campo.errors %}<div id="{{ campo.id_for_label }}-ayuda" class="form-text">{{ ayuda }}</div>{% endif %}
+  {% if campo.errors %}<div id="{{ campo.id_for_label }}-error" class="invalid-feedback">{{ campo.errors|join:" " }}</div>{% endif %}
+</div>

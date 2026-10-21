@@ -1,0 +1,19 @@
+{% load portal %}
+{# Audio o enlace multimedia de la opción, con su letra o transcripción (accesibilidad). Va fuera del <label>. #}
+{% if o|tiene_medio %}
+{% with url=o|url_medio %}
+<div class="{{ clase|default:'reproductor-opcion' }} reproductor-multimedia">
+  {% if url and url|es_audio %}
+    <audio controls preload="none" class="w-100" aria-label="Escuchar {{ o.nombre }}"><source src="{{ url }}"></audio>
+  {% elif url %}
+    <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="small"><i class="bi bi-play-circle me-1" aria-hidden="true"></i>Ver o escuchar «{{ o.nombre }}» (se abre en una pestaña nueva)</a>
+  {% endif %}
+  {% if o.texto_audio %}
+    <details class="small mt-2"{% if abierto %} open{% endif %}>
+      <summary>Letra o transcripción</summary>
+      <p class="mb-0 mt-1" style="white-space: pre-line">{{ o.texto_audio }}</p>
+    </details>
+  {% endif %}
+</div>
+{% endwith %}
+{% endif %}

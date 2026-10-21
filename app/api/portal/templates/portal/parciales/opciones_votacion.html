@@ -1,0 +1,74 @@
+{% load portal %}
+{# Opciones en una de las 5 presentaciones que elige el administrador (presentaciones/OpcionesVotacion.jsx). Todas son radios. #}
+{% with p=votacion.presentacion_opciones %}
+{% if p == "lista" %}
+  <div class="d-grid gap-2 opciones-lista">
+    {% for o in opciones %}
+      <div class="{% if o|tiene_medio %}opcion-con-medio{% endif %}">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="opcion-{{ o.pk }}" class="opcion-card">
+          {% avatar o.nombre 40 %}
+          <span class="flex-grow-1"><span class="d-block fw-semibold">{{ o.nombre }}</span>{% if o.descripcion %}<span class="d-block small text-secondary-flv">{{ o.descripcion }}</span>{% endif %}</span>
+          <span class="opcion-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+        </label>
+        {% include "portal/parciales/reproductor.html" %}
+      </div>
+    {% endfor %}
+  </div>
+{% elif p == "mosaico" %}
+  <div class="row g-3">
+    {% for o in opciones %}
+      <div class="col-sm-6 col-xl-4 {% if o|tiene_medio %}opcion-con-medio{% else %}d-flex{% endif %}">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="opcion-{{ o.pk }}" class="opcion-card opcion-mosaico w-100">
+          <span class="opcion-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+          {% avatar o.nombre 88 %}
+          <span class="d-block fw-semibold mt-2">{{ o.nombre }}</span>
+          {% if o.descripcion %}<span class="d-block small text-secondary-flv">{{ o.descripcion }}</span>{% endif %}
+        </label>
+        {% include "portal/parciales/reproductor.html" %}
+      </div>
+    {% endfor %}
+  </div>
+{% elif p == "compacta" %}
+  <div class="d-flex flex-wrap gap-2 opciones-compacta">
+    {% for o in opciones %}
+      <span class="position-relative">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="opcion-{{ o.pk }}" class="opcion-pill"{% if o.descripcion %} title="{{ o.descripcion }}"{% endif %}>
+          <i class="bi bi-circle me-1 sin-marcar" aria-hidden="true"></i><i class="bi bi-check-circle-fill me-1 marcada" aria-hidden="true"></i>{{ o.nombre }}
+        </label>
+      </span>
+    {% endfor %}
+  </div>
+{% elif p == "reproductor" %}
+  <ol class="list-unstyled d-grid gap-3 opciones-reproductor mb-0">
+    {% for o in opciones %}
+      <li class="opcion-pista">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="opcion-{{ o.pk }}" class="opcion-card opcion-pista-cabecera">
+          <span class="opcion-pista-num" aria-hidden="true">{{ forloop.counter }}</span>
+          <span class="flex-grow-1"><span class="d-block fw-semibold">{{ o.nombre }}</span>{% if o.descripcion %}<span class="d-block small text-secondary-flv">{{ o.descripcion }}</span>{% endif %}</span>
+          <span class="opcion-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+        </label>
+        {% include "portal/parciales/reproductor.html" with clase="reproductor-pista" abierto=True %}
+      </li>
+    {% endfor %}
+  </ol>
+{% else %}
+  <div class="row g-3">
+    {% for o in opciones %}
+      <div class="col-md-6 {% if o|tiene_medio %}opcion-con-medio{% endif %}">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="opcion-{{ o.pk }}" class="opcion-card">
+          {% avatar o.nombre %}
+          <span><span class="d-block fw-semibold">{{ o.nombre }}</span><span class="d-block small text-secondary-flv">{{ o.descripcion }}</span></span>
+          <span class="opcion-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+        </label>
+        {% include "portal/parciales/reproductor.html" %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endwith %}
+{% if not opciones %}<p class="text-secondary-flv mb-0">Esta votación aún no tiene opciones.</p>{% endif %}

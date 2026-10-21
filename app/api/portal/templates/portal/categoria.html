@@ -1,0 +1,46 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}{{ categoria.nombre }} · Edición {{ edicion.anio }}{% endblock %}
+{% block descripcion %}{{ categoria.descripcion|default:"Votaciones de la categoría" }}{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <header class="mb-4">
+    <nav aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'portal:edicion' edicion.anio %}">Edición {{ edicion.anio }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ categoria.nombre }}</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">{{ categoria.nombre }}</h1>
+    <p class="text-secondary-flv mb-0">Votaciones disponibles · {{ categoria.descripcion }}</p>
+  </header>
+
+  {# Filtro por estado con enlaces GET: funciona sin JavaScript #}
+  <fieldset class="mb-4">
+    <legend class="small fw-semibold mb-2">Filtrar por estado</legend>
+    <div class="d-flex flex-wrap gap-2" role="group">
+      {% for valor, etiqueta, n in filtros %}
+        <a href="?estado={{ valor }}" class="btn btn-sm {% if filtro == valor %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if filtro == valor %} aria-current="true"{% endif %}>
+          {{ etiqueta }} <span class="badge text-bg-light ms-1">{{ n }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <p class="visually-hidden" aria-live="polite">{{ votaciones|length }} votaciones mostradas</p>
+
+  {% if votaciones %}
+    <div class="row g-3">
+      {% for v in votaciones %}
+        <div class="col-md-6 col-lg-4">{% include "portal/parciales/votacion_card.html" %}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card-flv p-4 text-center">
+      <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
+      <p class="mb-0">No hay votaciones con este estado en la categoría.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

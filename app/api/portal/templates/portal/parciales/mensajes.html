@@ -1,0 +1,11 @@
+{# Mensajes del framework de Django (guardado, errores de regla de negocio, sesión…) #}
+{% if messages %}
+<div class="{% if contenedor %}container pt-4{% endif %}">
+  {% for mensaje in messages %}
+    <div class="alert alert-{% if mensaje.tags == 'error' %}danger{% else %}{{ mensaje.tags }}{% endif %} alert-dismissible fade show" role="status">
+      {{ mensaje }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar mensaje"></button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

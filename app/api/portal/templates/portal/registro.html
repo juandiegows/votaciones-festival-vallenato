@@ -1,0 +1,80 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}Crea tu cuenta para votar · Votaciones FLV{% endblock %}
+{% block descripcion %}Regístrate con tu correo para votar por tus favoritos del Festival de la Leyenda Vallenata.{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+      <div class="card-flv p-4 p-md-5">
+        <h1 class="h3 mb-1">Crear cuenta de votante</h1>
+        <p class="text-secondary-flv">Regístrate para participar en las votaciones del público.</p>
+        {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ siguiente }}">
+          <div class="row">
+            <div class="col-sm-6">{% include "portal/parciales/campo.html" with campo=form.nombres extra='autocomplete=given-name' %}</div>
+            <div class="col-sm-6">{% include "portal/parciales/campo.html" with campo=form.apellidos extra='autocomplete=family-name' %}</div>
+          </div>
+          {% if pedir_documento %}
+            <div class="mb-3">
+              <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">Tipo de documento <span class="text-danger" aria-hidden="true">*</span></label>
+              <select id="{{ form.tipo_documento.id_for_label }}" name="tipo_documento" class="form-select" required>
+                {% for valor, etiqueta in form.tipo_documento.field.choices %}
+                  <option value="{{ valor }}"{% if form.tipo_documento.value == valor %} selected{% endif %}>{{ etiqueta }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% include "portal/parciales/campo.html" with campo=form.numero_documento ayuda="Una cuenta por persona. Sin puntos ni espacios." extra='autocomplete=off' %}
+          {% endif %}
+          {% include "portal/parciales/campo.html" with campo=form.email tipo="email" extra='autocomplete=email placeholder=nombre@correo.com' %}
+          {% include "portal/parciales/campo.html" with campo=form.password tipo="password" ayuda="Mínimo 8 caracteres, con una mayúscula, un número y un símbolo." extra='autocomplete=new-password data-clave' %}
+          {% include "portal/parciales/campo.html" with campo=form.confirmacion tipo="password" extra='autocomplete=new-password data-clave' %}
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="verClave" data-mostrar-claves>
+            <label class="form-check-label small" for="verClave">Mostrar contraseñas</label>
+          </div>
+
+          <div class="alert alert-warning small py-2" role="note">
+            <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>
+            {% if pedir_documento %}Otros campos{% else %}El documento de identidad y otros campos{% endif %} (municipio, edad) están pendientes de validación con la Fundación.
+          </div>
+
+          <div class="form-check mb-4">
+            <input class="form-check-input{{ form.acepta_tratamiento_datos|campo_invalido }}" type="checkbox" id="id_acepta_tratamiento_datos"
+                   name="acepta_tratamiento_datos"{% if form.acepta_tratamiento_datos.value %} checked{% endif %}
+                   {% if form.acepta_tratamiento_datos.errors %}aria-invalid="true" aria-describedby="acepta-error"{% endif %}>
+            <label class="form-check-label" for="id_acepta_tratamiento_datos">
+              Acepto la <button type="button" class="btn btn-link p-0 align-baseline fw-semibold" data-bs-toggle="modal" data-bs-target="#modal-politica">política de tratamiento de datos personales</button>
+              (Ley 1581 de 2012). <span class="text-danger" aria-hidden="true">*</span>
+            </label>
+            {% if form.acepta_tratamiento_datos.errors %}<div id="acepta-error" class="invalid-feedback">{{ form.acepta_tratamiento_datos.errors|join:" " }}</div>{% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Creando cuenta…">
+            <i class="bi bi-person-check me-2" aria-hidden="true"></i>Crear cuenta
+          </button>
+        </form>
+        <p class="text-center mt-3 mb-0">¿Ya tienes cuenta? <a href="{% url 'portal:login' %}">Inicia sesión</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-politica" tabindex="-1" aria-labelledby="titulo-politica" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="titulo-politica">Política de tratamiento de datos</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">{% include "portal/parciales/politica_datos.html" %}</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-aceptar="#id_acepta_tratamiento_datos">Entendido, acepto</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

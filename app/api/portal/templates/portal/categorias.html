@@ -1,0 +1,81 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}Categorías de votación · {{ edicion.nombre }}{% endblock %}
+{% block descripcion %}Categorías del {{ edicion.nombre }}: elige una y vota por tus favoritos del público.{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <header class="mb-4">
+    <nav aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edición {{ edicion.anio }}</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">Categorías</h1>
+    <p class="text-secondary-flv mb-0">{{ edicion.nombre }} · Elige una categoría para ver sus votaciones.</p>
+  </header>
+
+  {% if not items %}
+    <div class="card-flv p-4 text-center">
+      <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
+      <p class="mb-0">Esta edición aún no tiene categorías publicadas.</p>
+    </div>
+  {% endif %}
+  <div class="alert aviso-crema d-flex align-items-center gap-2 py-2" role="note">
+    <i class="bi bi-exclamation-diamond-fill" aria-hidden="true"></i>
+    <span>Categorías ilustrativas – pendientes de validación con la Fundación.</span>
+  </div>
+
+  {# Una de las 5 presentaciones que elige el administrador para la edición #}
+  {% with p=edicion.presentacion_categorias %}
+  {% if p == "lista" %}
+    <ul class="list-unstyled d-grid gap-2 mb-0">
+      {% for it in items %}{% with c=it.categoria %}
+        <li>
+          <a href="{% url 'portal:categoria' edicion.anio c.slug %}" class="card-flv interactiva d-flex align-items-center gap-3 p-3 text-reset text-decoration-none" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
+            <span class="icono-circulo icono-sm" aria-hidden="true">{% icono_entidad c.icono c.icono_imagen %}</span>
+            <span class="flex-grow-1"><span class="d-block h6 mb-0">{{ c.nombre }}</span><span class="d-block small text-secondary-flv">{{ c.descripcion }}</span></span>
+            <span class="d-none d-sm-block">{% include "portal/parciales/insignias_categoria.html" %}</span>
+            <i class="bi bi-chevron-right text-rojo" aria-hidden="true"></i>
+          </a>
+        </li>
+      {% endwith %}{% endfor %}
+    </ul>
+  {% elif p == "mosaico" %}
+    <div class="row g-3">
+      {% for it in items %}{% with c=it.categoria %}
+        <div class="col-6 col-md-4 col-xl-3">
+          <a href="{% url 'portal:categoria' edicion.anio c.slug %}" class="categoria-mosaico card-flv interactiva text-reset text-decoration-none" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
+            <span class="icono-circulo icono-lg" aria-hidden="true">{% icono_entidad c.icono c.icono_imagen %}</span>
+            <span class="h6 mb-1 mt-3 d-block">{{ c.nombre }}</span>
+            <span class="small text-secondary-flv">{{ it.total|plural:'votación,votaciones' }}</span>
+            {% if it.abiertas %}<span class="badge badge-estado estado-abierta mt-2">{{ it.abiertas }} abierta{{ it.abiertas|pluralize }}</span>{% endif %}
+          </a>
+        </div>
+      {% endwith %}{% endfor %}
+    </div>
+  {% elif p == "compacta" %}
+    <nav aria-label="Categorías de la edición">
+      <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0">
+        {% for it in items %}{% with c=it.categoria %}
+          <li><a href="{% url 'portal:categoria' edicion.anio c.slug %}" class="categoria-chip" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
+            {% icono_entidad c.icono c.icono_imagen "categoria-chip-icono" %}{{ c.nombre }}
+            <span class="badge rounded-pill text-bg-light border ms-1">{{ it.total }}</span></a></li>
+        {% endwith %}{% endfor %}
+      </ul>
+    </nav>
+  {% else %}
+    {# Tarjetas (por defecto) y Destacada: en «destacada» la primera ocupa todo el ancho #}
+    <div class="row g-3">
+      {% for it in items %}{% with c=it.categoria grande=forloop.first %}
+        <div class="{% if p == 'destacada' and grande %}col-12{% elif p == 'destacada' %}col-sm-6 col-lg-3{% else %}col-sm-6 col-lg-4{% endif %}">
+          {% if p == 'destacada' and grande %}{% include "portal/parciales/tarjeta_categoria.html" with grande=True %}
+          {% else %}{% include "portal/parciales/tarjeta_categoria.html" with grande=False %}{% endif %}
+        </div>
+      {% endwith %}{% endfor %}
+    </div>
+  {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

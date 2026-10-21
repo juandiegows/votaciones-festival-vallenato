@@ -1,0 +1,4 @@
+{% load portal %}<span class="d-flex flex-wrap gap-2 small">
+  <span class="badge rounded-pill text-bg-light border">{{ it.total|plural:'votación,votaciones' }}</span>
+  {% if it.abiertas %}<span class="badge badge-estado estado-abierta">{{ it.abiertas }} abierta{{ it.abiertas|pluralize }}</span>{% endif %}
+</span>

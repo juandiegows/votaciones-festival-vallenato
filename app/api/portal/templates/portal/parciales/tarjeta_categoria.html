@@ -1,0 +1,12 @@
+{% load portal %}
+<a href="{% url 'portal:categoria' edicion.anio c.slug %}" class="text-reset text-decoration-none d-block h-100" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
+  <article class="card-flv interactiva h-100 p-4{% if grande %} categoria-destacada{% endif %}">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <span class="icono-circulo{% if grande %} icono-lg{% endif %}" aria-hidden="true">{% icono_entidad c.icono c.icono_imagen %}</span>
+      <h2 class="{% if grande %}h3{% else %}h5{% endif %} mb-0">{{ c.nombre }}</h2>
+    </div>
+    <p class="{% if grande %}mb-3{% else %}small mb-3{% endif %}">{{ c.descripcion }}</p>
+    {% include "portal/parciales/insignias_categoria.html" %}
+    <span class="d-inline-block mt-3 enlace-mas text-rojo">Ver votaciones <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+  </article>
+</a>

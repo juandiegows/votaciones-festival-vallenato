@@ -1,0 +1,39 @@
+{% load static %}<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block titulo %}Votaciones · Festival de la Leyenda Vallenata{% endblock %}</title>
+  <meta name="description" content="{% block descripcion %}Vota por tus favoritos del Festival de la Leyenda Vallenata: canciones, piloneras, vestuario, agrupaciones y más. Regístrate, elige y recibe tu comprobante.{% endblock %}">
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/svg+xml" href="{% static 'portal/favicon.svg' %}">
+  <link rel="apple-touch-icon" href="{% static 'portal/apple-touch-icon.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Raleway:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'portal/vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  {# Mismas hojas de estilo de la web React (app/web/src/styles*) #}
+  <link rel="stylesheet" href="{% static 'portal/css/brand.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/css/admin-analisis.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/css/portal.css' %}">
+  {% if colores_marca %}<style id="flv-marca">:root{ {% for token, valor in colores_marca.items %}{{ token }}:{{ valor }};{% endfor %} }</style>{% endif %}
+</head>
+<body>
+<div class="d-flex flex-column min-vh-100">
+  <a href="#contenido" class="skip-link d-print-none">Saltar al contenido</a>
+  {% include "portal/parciales/navbar.html" %}
+  {% include "portal/parciales/aviso_correo.html" %}
+  <main id="contenido" tabindex="-1" class="flex-grow-1">
+    {% block mensajes %}{% include "portal/parciales/mensajes.html" with contenedor=True %}{% endblock %}
+    {% block contenido %}{% endblock %}
+  </main>
+  {% include "portal/parciales/footer.html" %}
+</div>
+<script src="{% static 'portal/vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'portal/js/portal.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,82 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}{{ votacion.titulo }} · {{ categoria.nombre }} {{ edicion.anio }}{% endblock %}
+{% block descripcion %}{{ votacion.descripcion|default:votacion.titulo }}{% endblock %}
+{% block robots %}{% if votacion.publicada %}index, follow{% else %}noindex{% endif %}{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <header class="mb-4">
+    <nav aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'portal:edicion' edicion.anio %}">Edición {{ edicion.anio }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'portal:categoria' edicion.anio categoria.slug %}">{{ categoria.nombre }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ votacion.titulo }}</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">{{ votacion.titulo }}</h1>
+    <p class="text-secondary-flv mb-0">Detalle de la votación · Categoría {{ categoria.nombre }}</p>
+  </header>
+  {% if not votacion.publicada %}<div class="alert alert-secondary">Vista previa de administrador: esta votación no está publicada.</div>{% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-4 order-lg-2">
+      <aside class="card-flv p-4 mb-3" aria-label="Información de la votación">
+        <div class="mb-3">{% estado_badge estado %}</div>
+        <p>{{ votacion.descripcion }}</p>
+        <dl class="small mb-3">
+          <dt>Apertura</dt><dd>{{ votacion.fecha_apertura|fecha_hora }}</dd>
+          <dt>Cierre</dt><dd>{{ votacion.fecha_cierre|fecha_hora }}</dd>
+          <dt>Votos por usuario</dt><dd>{{ votacion.votos_por_usuario_efectivo }} <span class="text-secondary-flv">(pendiente de validación)</span></dd>
+          <dt>Resultados</dt><dd class="mb-0">{{ votacion.visibilidad_efectiva|visibilidad }}</dd>
+        </dl>
+        {% if abierta %}{% include "portal/parciales/cuenta_regresiva.html" with hasta=votacion.fecha_cierre etiqueta="Cierra en" %}{% endif %}
+        {% if estado == "programada" %}{% include "portal/parciales/cuenta_regresiva.html" with hasta=votacion.fecha_apertura etiqueta="Abre en" %}{% endif %}
+      </aside>
+      <section class="card-flv p-4" aria-labelledby="titulo-reglas">
+        <h2 id="titulo-reglas" class="h6"><i class="bi bi-journal-check me-1" aria-hidden="true"></i>Reglas de la votación</h2>
+        <ul class="small mb-0 ps-3">
+          <li>Debes iniciar sesión para votar.</li>
+          <li>Solo se vota entre la fecha de apertura y la de cierre.</li>
+          <li>Un voto por persona en esta votación.</li>
+          <li>Una vez confirmado, el voto no se puede cambiar.</li>
+          <li>Los resultados se publican según la configuración: «{{ votacion.visibilidad_efectiva|visibilidad }}».</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="col-lg-8 order-lg-1">
+      {% if ya_voto %}
+        <div class="alert alert-success d-flex flex-wrap align-items-center gap-2" role="status">
+          <i class="bi bi-check-circle-fill fs-4" aria-hidden="true"></i>
+          <div class="flex-grow-1"><strong>Ya votaste en esta votación.</strong> Tu voto fue registrado y no se puede modificar.</div>
+        </div>
+      {% endif %}
+      {% if estado == "programada" %}
+        <div class="alert alert-warning" role="status"><i class="bi bi-clock me-1" aria-hidden="true"></i>Esta votación aún no está abierta. Podrás votar a partir del {{ votacion.fecha_apertura|fecha_hora }}.</div>
+      {% elif estado == "cerrada" %}
+        <div class="alert alert-danger" role="status"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i>Esta votación cerró el {{ votacion.fecha_cierre|fecha_hora }}. Ya no se reciben votos.</div>
+      {% endif %}
+
+      <fieldset id="lista-opciones" tabindex="-1">
+        <legend class="h5 mb-3">Opciones disponibles <span class="text-secondary-flv fs-6 fw-normal">({{ opciones|length }})</span></legend>
+        {% include "portal/parciales/opciones_votacion.html" %}
+      </fieldset>
+
+      {% if not ya_voto %}
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2 mt-4">
+          {# El registro del voto (votar, comprobante y mis votos) se incorpora en la siguiente entrega #}
+          <button type="button" class="btn btn-primary btn-lg px-5" disabled><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Votar</button>
+          <span class="small text-secondary-flv">El registro del voto se habilita en la siguiente entrega (proceso de votación).</span>
+        </div>
+      {% endif %}
+
+      <section class="card-flv p-4 mt-4" aria-labelledby="titulo-resultados">
+        <h2 id="titulo-resultados" class="h5"><i class="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
+        {% include "portal/parciales/resultados.html" %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

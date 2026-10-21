@@ -1,0 +1,27 @@
+{% load portal %}
+{# Tarjeta de votación (components/VotacionCard.jsx). Recibe: v, con_voto (IDs con voto del usuario) y, opcional, mostrar_categoria #}
+<article class="card-flv interactiva h-100 p-3 d-flex flex-column">
+  <div class="d-flex align-items-start gap-3 mb-2">
+    <span class="icono-circulo" aria-hidden="true">{% icono_entidad v|icono_votacion v.icono_imagen %}</span>
+    <div class="flex-grow-1">
+      <div class="d-flex flex-wrap gap-1 mb-1">
+        {% estado_badge v.estado %}
+        {% if v.pk in con_voto %}<span class="badge badge-estado estado-abierta"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Ya votaste</span>{% endif %}
+      </div>
+      <h3 class="h5 mb-0">{{ v.titulo }}</h3>
+      {% if mostrar_categoria %}<p class="small text-secondary-flv mb-0">{{ v.categoria.nombre }}</p>{% endif %}
+    </div>
+  </div>
+  <p class="small mb-2">{{ v.descripcion }}</p>
+  <ul class="list-unstyled small text-secondary-flv mb-3">
+    <li><i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Abre: {{ v.fecha_apertura|fecha_hora }}</li>
+    <li><i class="bi bi-calendar-x me-1" aria-hidden="true"></i>Cierra: {{ v.fecha_cierre|fecha_hora }}</li>
+    <li><i class="bi bi-list-ol me-1" aria-hidden="true"></i>{{ v.num_opciones }} opciones</li>
+  </ul>
+  {% url 'portal:votacion' v.categoria.edicion.anio v.categoria.slug v.slug as ruta %}
+  {% if v.estado == 'abierta' and v.pk not in con_voto %}
+    <a href="{{ ruta }}" class="btn btn-primary mt-auto" aria-label="Votar en {{ v.titulo }}">Ver y votar<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+  {% else %}
+    <a href="{{ ruta }}" class="btn btn-outline-primary mt-auto" aria-label="Ver detalle de {{ v.titulo }}">Ver detalle<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+  {% endif %}
+</article>

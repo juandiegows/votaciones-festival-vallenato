@@ -1,0 +1,11 @@
+{% load portal %}
+{# Cuenta regresiva (components/Countdown.jsx); portal.js la actualiza cada segundo #}
+<div>
+  <p class="small fw-semibold mb-1 text-secondary-flv">{{ etiqueta }}</p>
+  <div class="cuenta" role="timer" aria-label="{{ etiqueta }}" data-cuenta-hasta="{{ hasta|iso }}">
+    <div class="cuenta-item" aria-hidden="true"><strong data-parte="dias">00</strong><span>días</span></div>
+    <div class="cuenta-item" aria-hidden="true"><strong data-parte="horas">00</strong><span>horas</span></div>
+    <div class="cuenta-item" aria-hidden="true"><strong data-parte="min">00</strong><span>min</span></div>
+    <div class="cuenta-item" aria-hidden="true"><strong data-parte="seg">00</strong><span>seg</span></div>
+  </div>
+</div>

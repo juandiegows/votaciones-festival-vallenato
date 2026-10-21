@@ -1,0 +1,23 @@
+{% load portal %}
+{# Resultados públicos (RN-07): gráfico de barras o el motivo por el que aún no son públicos #}
+{% if resultados %}
+  <p class="small text-secondary-flv">Total de votos: <strong>{{ resultados.total_votos|miles }}</strong></p>
+  <ul class="list-unstyled d-grid gap-3 mb-0">
+    {% for fila in resultados.resultados %}
+      <li>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="fw-semibold">{% if fila.ganador %}<i class="bi bi-trophy-fill text-dorado-texto me-1" aria-hidden="true"></i>{% endif %}{{ fila.opcion }}</span>
+          <span>{{ fila.votos|miles }} · {{ fila.porcentaje|floatformat:1 }} %</span>
+        </div>
+        <div class="progress" role="progressbar" aria-label="{{ fila.opcion }}" aria-valuenow="{{ fila.porcentaje|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar{% if fila.ganador %} bg-primary{% else %} bg-secondary{% endif %}" style="width: {{ fila.porcentaje|stringformat:'.2f' }}%"></div>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="text-center py-3">
+    <i class="bi bi-hourglass-split fs-1 text-dorado-texto" aria-hidden="true"></i>
+    <p class="mt-2 mb-0">{{ motivo_resultados }}</p>
+  </div>
+{% endif %}

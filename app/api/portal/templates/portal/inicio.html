@@ -1,0 +1,138 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}Vota en el {{ edicion.nombre }} · Votaciones FLV{% endblock %}
+
+{% block contenido %}
+{% if banners %}
+  {# Banner del inicio a todo lo ancho: fijo con uno solo; con varios rota cada 7 s (carrusel de Bootstrap) #}
+  <section id="carrusel-inicio" class="carousel slide hero-banners" aria-roledescription="carrusel" aria-labelledby="titulo-hero"
+           {% if banners|length > 1 %}data-bs-ride="carousel" data-bs-interval="7000"{% endif %}>
+    <h1 id="titulo-hero" class="visually-hidden">{{ edicion.nombre }}</h1>
+    <div class="carousel-inner">
+      {% for b in banners %}
+        <div class="carousel-item{% if forloop.first %} active{% endif %}" role="group" aria-roledescription="diapositiva" aria-label="{{ forloop.counter }} de {{ banners|length }}">
+          <img src="{{ b.imagen.url }}" alt="{{ b.texto_alternativo }}" class="hero-banner-img">
+          {% if b.titulo or b.subtitulo or b.texto_boton and b.enlace_boton %}
+          <div class="hero-banner-texto">
+            <div class="container">
+              {% if b.titulo %}<p class="h1 mb-2">{{ b.titulo }}</p>{% endif %}
+              {% if b.subtitulo %}<p class="lead mb-3">{{ b.subtitulo }}</p>{% endif %}
+              {% if b.texto_boton and b.enlace_boton %}
+                <a href="{{ b.enlace_boton }}" class="btn btn-primary btn-lg"{% if b.enlace_boton|slice:':1' != '/' %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ b.texto_boton }}</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {% if banners|length > 1 %}
+      <button class="carousel-control-prev" type="button" data-bs-target="#carrusel-inicio" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carrusel-inicio" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Siguiente</span>
+      </button>
+      <div class="carousel-indicators">
+        {% for b in banners %}
+          <button type="button" data-bs-target="#carrusel-inicio" data-bs-slide-to="{{ forloop.counter0 }}"{% if forloop.first %} class="active" aria-current="true"{% endif %} aria-label="Ir a la diapositiva {{ forloop.counter }}"></button>
+        {% endfor %}
+      </div>
+      <button type="button" class="btn btn-sm btn-dark hero-banner-pausa" data-pausar-carrusel="#carrusel-inicio" aria-pressed="false">
+        <i class="bi bi-pause-fill" aria-hidden="true"></i><span class="visually-hidden">Pausar el carrusel</span>
+      </button>
+    {% endif %}
+  </section>
+{% else %}
+  <section class="hero py-5" aria-labelledby="titulo-hero">
+    <div class="container py-lg-4">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <span class="badge hero-badge rounded-pill px-3 py-2 mb-3">
+            <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
+            Edición {{ edicion.anio }} · {{ edicion.fecha_inicio|fecha }} – {{ edicion.fecha_fin|fecha }}
+          </span>
+          <h1 id="titulo-hero">Tu voz también hace parte de la leyenda</h1>
+          <p class="lead mb-4">
+            Participa en las votaciones del público del <strong>{{ edicion.nombre }}</strong>. Elige tus canciones,
+            comparsas y agrupaciones favoritas desde cualquier dispositivo.
+          </p>
+          <div class="d-flex flex-wrap gap-2 hero-acciones">
+            <a href="{% url 'portal:edicion' edicion.anio %}" class="btn btn-primary btn-lg"><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Ver votaciones</a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'portal:edicion' edicion.anio %}" class="btn btn-outline-light btn-lg"><i class="bi bi-hand-index-thumb me-2" aria-hidden="true"></i>Votar</a>
+            {% else %}
+              <a href="{% url 'portal:registro' %}" class="btn btn-outline-light btn-lg">Crear cuenta</a>
+            {% endif %}
+          </div>
+          <ul class="list-inline mt-4 mb-0 small">
+            <li class="list-inline-item me-3"><i class="bi bi-unlock me-1" aria-hidden="true"></i>{{ abiertas|length }} votaciones abiertas</li>
+            <li class="list-inline-item me-3"><i class="bi bi-grid me-1" aria-hidden="true"></i>{{ num_categorias }} categorías</li>
+            <li class="list-inline-item"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>1 voto por persona</li>
+          </ul>
+        </div>
+        <div class="col-lg-5 text-center">{% include "portal/parciales/hero_acordeon.svg.html" %}</div>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<section class="banda-negra py-4" aria-label="Cifras de la edición">
+  <div class="container">
+    <ul class="row g-3 list-unstyled mb-0 text-center">
+      {% for valor, etiqueta in cifras %}
+        <li class="col-6 col-md-3"><span class="valor d-block">{{ valor|miles }}</span><span class="etiqueta">{{ etiqueta }}</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% if revista %}
+<section class="seccion-revista py-5" aria-labelledby="titulo-revista">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 id="titulo-revista" class="seccion-titulo seccion-titulo-centro">Revista institucional</h2>
+      <p class="revista-titulo mb-1">{{ revista.titulo }}</p>
+      {% if revista.descripcion %}<p class="revista-descripcion mb-0">{{ revista.descripcion }}</p>{% endif %}
+    </div>
+    <iframe class="revista-pdf card-flv w-100" src="{{ revista.archivo.url }}#view=FitH" title="Revista institucional: {{ revista.titulo }}" loading="lazy"></iframe>
+    <p class="text-center mt-3 mb-0"><a class="btn btn-outline-primary" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">
+      <i class="bi bi-book me-1" aria-hidden="true"></i>Abrir la revista en una pestaña nueva</a></p>
+  </div>
+</section>
+{% endif %}
+
+<section class="container py-5" aria-labelledby="como-funciona">
+  <h2 id="como-funciona" class="seccion-titulo mb-4">¿Cómo funciona?</h2>
+  <ol class="row g-3 list-unstyled">
+    {% for p in pasos %}
+      <li class="col-sm-6 col-lg-3">
+        <div class="card-flv h-100 p-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="paso-num" aria-hidden="true">{{ forloop.counter }}</span>
+            <i class="bi bi-{{ p.icono }} fs-4 text-rojo" aria-hidden="true"></i>
+          </div>
+          <h3 class="h5"><span class="visually-hidden">Paso {{ forloop.counter }}: </span>{{ p.titulo }}</h3>
+          <p class="small mb-0">{{ p.texto }}</p>
+        </div>
+      </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="container pb-4" aria-labelledby="destacadas">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <h2 id="destacadas" class="seccion-titulo mb-0">Votaciones abiertas</h2>
+    <a href="{% url 'portal:edicion' edicion.anio %}" class="enlace-mas">Ver todas las categorías <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  </div>
+  {% if abiertas %}
+    <div class="row g-3">
+      {% for v in abiertas %}
+        <div class="col-md-6 col-lg-4">{% include "portal/parciales/votacion_card.html" with mostrar_categoria=True %}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No hay votaciones abiertas en este momento.</p>
+  {% endif %}
+</section>
+{% endblock %}
