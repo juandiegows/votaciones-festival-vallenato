@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path, re_path
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
@@ -17,6 +18,8 @@ def salud(request):
 mimetypes.add_type("image/webp", ".webp")  # la imagen slim de Python no lo trae registrado
 
 
+# SAMEORIGIN: la portada incrusta la revista (PDF) en un iframe; con el DENY global el navegador la bloquea
+@xframe_options_sameorigin
 def media(request, path):
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
