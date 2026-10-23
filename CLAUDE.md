@@ -25,7 +25,8 @@ Además, `app/web` (React + Vite + Bootstrap 5, BrowserRouter con URLs amigables
 (copiadas en `app/api/portal/static/portal/css/`): un cambio de estilo se hace en ambas. La web lee la API si se compila con `VITE_API_URL`; sin ella usa datos
 simulados (`app/web/src/data/`). Nada debe quedar fijo a una edición: todo sale de la edición activa.
 Datos de prueba en la base de datos: `python manage.py cargar_demo --reiniciar`.
-El panel de administración de la web vive en `/panel/…` (no `/admin`: el WAF de producción bloquea esas rutas);
+El panel de administración de la web vive en `/panel/…` (no `/admin`: el WAF de producción bloquea esas rutas;
+también cualquier URL con `/vendor/` o un segmento que empiece por `admin`, incluidos los estáticos: usar `libs/`);
 y la API de administración en `/api/gestion/…` (`/api/admin/…` queda solo como alias local).
 
 ## Comandos

@@ -12,12 +12,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Raleway:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'portal/vendor/bootstrap/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'portal/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/libs/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/libs/bootstrap-icons/bootstrap-icons.min.css' %}">
   {# Mismas hojas de estilo de la web React (app/web/src/styles*) #}
   <link rel="stylesheet" href="{% static 'portal/css/brand.css' %}">
   <link rel="stylesheet" href="{% static 'portal/css/styles.css' %}">
-  <link rel="stylesheet" href="{% static 'portal/css/admin-analisis.css' %}">
+  <link rel="stylesheet" href="{% static 'portal/css/panel-analisis.css' %}">
   <link rel="stylesheet" href="{% static 'portal/css/portal.css' %}">
   {% if colores_marca %}<style id="flv-marca">:root{ {% for token, valor in colores_marca.items %}{{ token }}:{{ valor }};{% endfor %} }</style>{% endif %}
 </head>
@@ -32,7 +32,7 @@
   </main>
   {% include "portal/parciales/footer.html" %}
 </div>
-<script src="{% static 'portal/vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'portal/libs/bootstrap/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'portal/js/portal.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
