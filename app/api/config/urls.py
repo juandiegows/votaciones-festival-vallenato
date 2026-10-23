@@ -16,6 +16,9 @@ def salud(request):
 
 
 mimetypes.add_type("image/webp", ".webp")  # la imagen slim de Python no lo trae registrado
+# pdf.js (revista) se carga como módulo: con text/plain el navegador lo rechaza
+mimetypes.add_type("text/javascript", ".mjs")
+mimetypes.add_type("application/wasm", ".wasm")
 
 
 # SAMEORIGIN: la portada incrusta la revista (PDF) en un iframe; con el DENY global el navegador la bloquea

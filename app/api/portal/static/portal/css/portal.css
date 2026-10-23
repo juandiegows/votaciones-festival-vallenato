@@ -13,7 +13,6 @@
 .selector-icono-item[hidden] { display: none !important; }
 
 /* Revista institucional en PDF incrustada en el inicio */
-.revista-pdf { height: min(80vh, 52rem); border: 0; }
 
 /* Botones de acción en línea dentro de las tablas del panel */
 td form.d-inline { margin: 0; }

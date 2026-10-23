@@ -1,8 +1,9 @@
 from datetime import timedelta
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
-from votaciones.models import Categoria, Edicion, Votacion
+from votaciones.models import Categoria, Edicion, Revista, Votacion
 
 from .base import BasePortalTest
 
@@ -13,6 +14,14 @@ class SitioPublicoTest(BasePortalTest):
         self.assertContains(respuesta, "Festival de la Leyenda Vallenata 2027")
         self.assertContains(respuesta, "Canción favorita del público")
         self.assertTemplateUsed(respuesta, "portal/inicio.html")
+
+    def test_inicio_muestra_la_revista_como_libro(self):
+        Revista.objects.create(titulo="Revista 2027", archivo=SimpleUploadedFile("revista.pdf", b"%PDF-1.4"))
+        respuesta = self.client.get("/")
+        self.assertContains(respuesta, "data-revista-libro")
+        self.assertContains(respuesta, "portal/libs/pdfjs/pdf.min.mjs")
+        self.assertContains(respuesta, "portal/js/revista-libro.js")
+        self.assertNotContains(respuesta, "<iframe")
 
     def test_inicio_sin_edicion_activa(self):
         Edicion.objects.update(estado=Edicion.Estado.CERRADA)

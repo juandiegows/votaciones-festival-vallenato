@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% load portal %}
+{% load portal static %}
 {% block titulo %}Vota en el {{ edicion.nombre }} · Votaciones FLV{% endblock %}
 
 {% block contenido %}
@@ -95,9 +95,31 @@
       <p class="revista-titulo mb-1">{{ revista.titulo }}</p>
       {% if revista.descripcion %}<p class="revista-descripcion mb-0">{{ revista.descripcion }}</p>{% endif %}
     </div>
-    <iframe class="revista-pdf card-flv w-100" src="{{ revista.archivo.url }}?v={{ revista.actualizado_en|date:'U' }}#view=FitH" title="Revista institucional: {{ revista.titulo }}" loading="lazy"></iframe>
-    <p class="text-center mt-3 mb-0"><a class="btn btn-outline-primary" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">
-      <i class="bi bi-book me-1" aria-hidden="true"></i>Abrir la revista en una pestaña nueva</a></p>
+    <p class="revista-ayuda small text-center mb-4">
+      <i class="bi bi-hand-index me-1" aria-hidden="true"></i>Arrastra la esquina de la página o usa las flechas para hojearla.
+    </p>
+    {# Libro que se hojea (js/revista-libro.js); recursos de pdf.js sin hash porque pdf.js arma sus nombres #}
+    {% get_static_prefix as prefijo_estaticos %}
+    <div class="revista-libro" data-revista-libro role="region" aria-roledescription="libro" tabindex="0"
+         aria-label="Revista institucional: {{ revista.titulo }}" data-titulo="{{ revista.titulo }}"
+         data-url="{{ revista.archivo.url }}?v={{ revista.actualizado_en|date:'U' }}"
+         data-pdfjs="{% static 'portal/libs/pdfjs/pdf.min.mjs' %}"
+         data-worker="{% static 'portal/libs/pdfjs/pdf.worker.min.mjs' %}"
+         data-recursos="{{ prefijo_estaticos }}portal/libs/pdfjs/">
+      <div class="revista-estado" role="status">
+        <span><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando la revista…</span>
+        <noscript><a class="btn btn-outline-light mt-3" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">Abrir la revista (PDF)</a></noscript>
+      </div>
+      <div class="revista-hojas" aria-hidden="true"></div>
+      <div class="revista-controles" hidden>
+        <button type="button" class="btn btn-revista" data-accion="anterior" aria-label="Página anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+        <span class="revista-indicador" aria-live="polite"></span>
+        <button type="button" class="btn btn-revista" data-accion="siguiente" aria-label="Página siguiente"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        <span class="revista-separador" aria-hidden="true"></span>
+        <button type="button" class="btn btn-revista" data-accion="pantalla" aria-label="Ver en pantalla completa"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
+        <a class="btn btn-revista" href="{{ revista.archivo.url }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir el PDF de {{ revista.titulo }} en una pestaña nueva"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></a>
+      </div>
+    </div>
   </div>
 </section>
 {% endif %}
@@ -135,4 +157,11 @@
     <p>No hay votaciones abiertas en este momento.</p>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+{% if revista %}
+<script src="{% static 'portal/libs/page-flip/page-flip.browser.js' %}"></script>
+<script type="module" src="{% static 'portal/js/revista-libro.js' %}"></script>
+{% endif %}
 {% endblock %}
