@@ -95,7 +95,7 @@
       <p class="revista-titulo mb-1">{{ revista.titulo }}</p>
       {% if revista.descripcion %}<p class="revista-descripcion mb-0">{{ revista.descripcion }}</p>{% endif %}
     </div>
-    <iframe class="revista-pdf card-flv w-100" src="{{ revista.archivo.url }}#view=FitH" title="Revista institucional: {{ revista.titulo }}" loading="lazy"></iframe>
+    <iframe class="revista-pdf card-flv w-100" src="{{ revista.archivo.url }}?v={{ revista.actualizado_en|date:'U' }}#view=FitH" title="Revista institucional: {{ revista.titulo }}" loading="lazy"></iframe>
     <p class="text-center mt-3 mb-0"><a class="btn btn-outline-primary" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">
       <i class="bi bi-book me-1" aria-hidden="true"></i>Abrir la revista en una pestaña nueva</a></p>
   </div>
