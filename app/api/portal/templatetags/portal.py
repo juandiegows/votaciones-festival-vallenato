@@ -136,6 +136,12 @@ def tiene_medio(opcion):
 
 
 @register.filter
+def letra(indice):
+    """0 → A, 1 → B… (presentación «respuestas»); después de la Z sigue con números."""
+    return chr(65 + indice) if 0 <= indice < 26 else str(indice + 1)
+
+
+@register.filter
 def campo_invalido(campo):
     """Clase de Bootstrap para un campo de formulario con errores."""
     return " is-invalid" if campo.errors else ""

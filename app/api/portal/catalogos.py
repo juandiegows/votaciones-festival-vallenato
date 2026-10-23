@@ -1,5 +1,7 @@
 """Textos e íconos fijos de la interfaz (los mismos de la web React: app/web/src/data/presentaciones.js y helpers.js)."""
 
+from types import SimpleNamespace
+
 ESTADOS = {
     "abierta": {"etiqueta": "Abierta", "clase": "estado-abierta", "icono": "unlock-fill"},
     "programada": {"etiqueta": "Programada", "clase": "estado-programada", "icono": "calendar-event"},
@@ -44,6 +46,24 @@ PRESENTACIONES_OPCIONES = [
      "descripcion": "Botones tipo píldora solo con el nombre; para muchas opciones cortas."},
     {"valor": "reproductor", "etiqueta": "Reproductor", "icono": "music-note-list",
      "descripcion": "Lista de reproducción: el audio y su texto en primer plano."},
+    {"valor": "colores", "etiqueta": "Colores (tipo Kahoot)", "icono": "palette-fill",
+     "descripcion": "Bloques grandes de colores con una figura; se vota con un toque, ideal en el celular o en pantalla gigante."},
+    {"valor": "respuestas", "etiqueta": "Respuestas (tipo Quizizz)", "icono": "ui-checks",
+     "descripcion": "Botones a todo el ancho con su letra (A, B, C, D) y color; para preguntas tipo trivia o encuesta."},
+    {"valor": "duelo", "etiqueta": "Duelo", "icono": "lightning-charge-fill",
+     "descripcion": "Las opciones frente a frente con un «VS» en medio; ideal para una final entre dos."},
+]
+
+# Opciones de ejemplo para la vista previa del panel cuando la votación aún no tiene dos opciones
+OPCIONES_EJEMPLO = [
+    SimpleNamespace(pk=f"ejemplo{i}", nombre=nombre, descripcion=descripcion, audio=None, enlace_multimedia="",
+                    texto_audio="")
+    for i, (nombre, descripcion) in enumerate([
+        ("Paseo", "El aire más cantado, de ritmo pausado."),
+        ("Merengue", "Alegre y bailable, con el acordeón al frente."),
+        ("Son", "Cadencioso, marcado por el bajo del acordeón."),
+        ("Puya", "El más rápido: virtuosismo de caja y guacharaca."),
+    ], start=1)
 ]
 
 # Íconos de Bootstrap Icons que el administrador puede elegir para categorías y votaciones

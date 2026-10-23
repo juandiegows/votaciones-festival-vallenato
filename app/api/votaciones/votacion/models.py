@@ -106,6 +106,9 @@ class Votacion(ModeloTrazable):
         MOSAICO = "mosaico", "Mosaico"
         COMPACTA = "compacta", "Compacta"
         REPRODUCTOR = "reproductor", "Reproductor"
+        COLORES = "colores", "Colores"
+        RESPUESTAS = "respuestas", "Respuestas"
+        DUELO = "duelo", "Duelo"
 
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField(max_length=150)

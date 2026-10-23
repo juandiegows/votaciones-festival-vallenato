@@ -15,6 +15,17 @@ export const PRESENTACIONES_OPCIONES = [
   { valor: 'mosaico', etiqueta: 'Mosaico', icono: 'grid-fill', descripcion: 'Bloques grandes con la imagen arriba; tres por fila.' },
   { valor: 'compacta', etiqueta: 'Compacta', icono: 'ui-radios-grid', descripcion: 'Botones tipo píldora solo con el nombre; para muchas opciones cortas.' },
   { valor: 'reproductor', etiqueta: 'Reproductor', icono: 'music-note-list', descripcion: 'Lista de reproducción: el audio y su texto en primer plano.' },
+  { valor: 'colores', etiqueta: 'Colores (tipo Kahoot)', icono: 'palette-fill', descripcion: 'Bloques grandes de colores con una figura; se vota con un toque, ideal en el celular o en pantalla gigante.' },
+  { valor: 'respuestas', etiqueta: 'Respuestas (tipo Quizizz)', icono: 'ui-checks', descripcion: 'Botones a todo el ancho con su letra (A, B, C, D) y color; para preguntas tipo trivia o encuesta.' },
+  { valor: 'duelo', etiqueta: 'Duelo', icono: 'lightning-charge-fill', descripcion: 'Las opciones frente a frente con un «VS» en medio; ideal para una final entre dos.' },
+];
+
+// Opciones de ejemplo para la vista previa del panel cuando la votación aún no tiene dos opciones
+export const OPCIONES_EJEMPLO = [
+  { id: 'ejemplo1', nombre: 'Paseo', descripcion: 'El aire más cantado, de ritmo pausado.' },
+  { id: 'ejemplo2', nombre: 'Merengue', descripcion: 'Alegre y bailable, con el acordeón al frente.' },
+  { id: 'ejemplo3', nombre: 'Son', descripcion: 'Cadencioso, marcado por el bajo del acordeón.' },
+  { id: 'ejemplo4', nombre: 'Puya', descripcion: 'El más rápido: virtuosismo de caja y guacharaca.' },
 ];
 
 const buscar = (lista, valor) => lista.find((p) => p.valor === valor) || lista[0];

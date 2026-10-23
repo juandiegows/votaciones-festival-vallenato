@@ -10,7 +10,8 @@ import SelectorIcono from '../../components/SelectorIcono.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import FormularioOpcion, { opcionNueva } from '../../components/admin/FormularioOpcion.jsx';
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
-import { PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
+import OpcionesVotacion from '../../components/presentaciones/OpcionesVotacion.jsx';
+import { OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
@@ -22,6 +23,24 @@ const ORDENES = [
   ['votos', 'Más votos'],
 ];
 const AVISO_ABIERTA = 'Abierta: no se puede despublicar hasta el cierre.';
+
+/** Así verá el público las opciones con la presentación elegida (las reales si ya hay dos, si no, las de ejemplo). */
+function VistaPreviaOpciones({ presentacion, reales }) {
+  const sonReales = reales.length >= 2;
+  const lista = (sonReales ? reales.slice(0, 6) : OPCIONES_EJEMPLO).map((o) => ({ ...o, id: `vp-${o.id}` }));
+  const [marcada, setMarcada] = useState(lista[0].id);
+  return (
+    <div className="mt-3">
+      <p className="small fw-semibold mb-2">
+        <i className="bi bi-eye me-1" aria-hidden="true"></i>Vista previa: así verá el público
+        {sonReales ? ' las opciones de esta votación' : ' las opciones (con opciones de ejemplo)'}. Puedes tocarlas.
+      </p>
+      <div className="vista-previa-marco" aria-label="Vista previa de la presentación">
+        <OpcionesVotacion lista={lista} presentacion={presentacion} estaMarcada={(o) => o.id === marcada} deshabilitada={false} onElegir={setMarcada} />
+      </div>
+    </div>
+  );
+}
 
 function leerPreferencia(clave, porDefecto) {
   try {
@@ -631,6 +650,10 @@ export default function AdminVotaciones() {
                   </div>
                   <p className="form-text mb-0">Elegida: {presentacionElegida.etiqueta}.</p>
                 </fieldset>
+                <VistaPreviaOpciones
+                  presentacion={form.presentacionOpciones}
+                  reales={form.id ? opciones.filter((o) => o.votacionId === form.id && o.activa !== false).sort((x, y) => x.orden - y.orden) : []}
+                />
               </div>
               <div className="col-12">
                 <div className="form-check form-switch">

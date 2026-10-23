@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Avatar from '../Avatar.jsx';
 import ReproductorMultimedia from '../ReproductorMultimedia.jsx';
 
@@ -26,12 +27,78 @@ const Reproductor = ({ o, className = 'reproductor-opcion', textoAbierto = false
     <ReproductorMultimedia audio={o.audio} enlace={o.enlaceMultimedia} textoAudio={o.textoAudio} titulo={o.nombre} className={className} textoAbierto={textoAbierto} />
   ) : null;
 
+// Presentación «respuestas»: A, B, C… y después de la Z, números
+const letra = (i) => (i < 26 ? String.fromCharCode(65 + i) : String(i + 1));
+
 /**
- * Opciones de una votación en una de las 5 presentaciones que elige el administrador:
- * tarjetas, lista, mosaico, compacta y reproductor. Todas conservan la semántica radio.
+ * Opciones de una votación en una de las 8 presentaciones que elige el administrador: tarjetas, lista, mosaico,
+ * compacta, reproductor, colores (tipo Kahoot), respuestas (tipo Quizizz) y duelo. Todas conservan la semántica radio.
  */
 export default function OpcionesVotacion({ lista, presentacion = 'tarjetas', estaMarcada, deshabilitada, onElegir }) {
   const props = (o) => ({ o, marcada: estaMarcada(o), deshabilitada, onElegir });
+
+  if (presentacion === 'colores') {
+    return (
+      <div className="opciones-colores">
+        {lista.map((o) => (
+          <div className={tieneMedio(o) ? 'opcion-con-medio' : ''} key={o.id}>
+            <Radio {...props(o)} />
+            <label htmlFor={`opcion-${o.id}`} className="opcion-color">
+              <span className="flex-grow-1">
+                <span className="d-block opcion-color-nombre">{o.nombre}</span>
+                {o.descripcion && <span className="d-block opcion-color-desc">{o.descripcion}</span>}
+              </span>
+              <Check marcada={estaMarcada(o)} />
+            </label>
+            <Reproductor o={o} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (presentacion === 'respuestas') {
+    return (
+      <div className="opciones-respuestas">
+        {lista.map((o, i) => (
+          <div className={tieneMedio(o) ? 'opcion-con-medio' : ''} key={o.id}>
+            <Radio {...props(o)} />
+            <label htmlFor={`opcion-${o.id}`} className="opcion-respuesta">
+              <span className="opcion-respuesta-letra" aria-hidden="true">{letra(i)}</span>
+              <span className="flex-grow-1">
+                <span className="d-block fw-semibold">{o.nombre}</span>
+                {o.descripcion && <span className="d-block small text-secondary-flv">{o.descripcion}</span>}
+              </span>
+              <Check marcada={estaMarcada(o)} />
+            </label>
+            <Reproductor o={o} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (presentacion === 'duelo') {
+    return (
+      <div className="opciones-duelo">
+        {lista.map((o, i) => (
+          <Fragment key={o.id}>
+            <div className={`opcion-duelo-item ${tieneMedio(o) ? 'opcion-con-medio' : ''}`}>
+              <Radio {...props(o)} />
+              <label htmlFor={`opcion-${o.id}`} className="opcion-card opcion-duelo">
+                <Check marcada={estaMarcada(o)} />
+                <span className="d-flex justify-content-center"><Avatar nombre={o.nombre} tamano={96} /></span>
+                <span className="d-block fw-bold fs-5 mt-2">{o.nombre}</span>
+                {o.descripcion && <span className="d-block small text-secondary-flv">{o.descripcion}</span>}
+              </label>
+              <Reproductor o={o} />
+            </div>
+            {i < lista.length - 1 && <span className="duelo-vs" aria-hidden="true">VS</span>}
+          </Fragment>
+        ))}
+      </div>
+    );
+  }
 
   if (presentacion === 'lista') {
     return (

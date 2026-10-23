@@ -3306,6 +3306,9 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
         fecha_apertura:
           type: string
           format: date-time
@@ -3347,6 +3350,9 @@ components:
       - mosaico
       - compacta
       - reproductor
+      - colores
+      - respuestas
+      - duelo
       type: string
       description: |-
         * `tarjetas` - Tarjetas
@@ -3354,6 +3360,9 @@ components:
         * `mosaico` - Mosaico
         * `compacta` - Compacta
         * `reproductor` - Reproductor
+        * `colores` - Colores
+        * `respuestas` - Respuestas
+        * `duelo` - Duelo
     PublicarResultadosRequest:
       type: object
       properties:
@@ -3827,6 +3836,9 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
         fecha_apertura:
           type: string
           format: date-time
@@ -3947,6 +3959,9 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
         fecha_apertura:
           type: string
           format: date-time
@@ -4044,6 +4059,9 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
         fecha_apertura:
           type: string
           format: date-time
@@ -4121,6 +4139,9 @@ components:
             * `mosaico` - Mosaico
             * `compacta` - Compacta
             * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
         fecha_apertura:
           type: string
           format: date-time

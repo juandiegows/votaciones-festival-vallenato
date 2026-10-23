@@ -15,7 +15,7 @@ from votaciones.comun.errores import ReglaNegocioError
 from votaciones.models import Categoria, Votacion
 from votaciones.votacion import servicios
 
-from ...catalogos import DESCRIPCION_VISIBILIDAD, ICONOS_DISPONIBLES, PRESENTACIONES_OPCIONES
+from ...catalogos import DESCRIPCION_VISIBILIDAD, ICONOS_DISPONIBLES, OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES
 from ...formularios import VotacionForm
 from .base import edicion_panel, eliminar, es_formulario_nuevo, guardar, render_panel, solo_administrador
 
@@ -63,6 +63,12 @@ def listar(edicion, busqueda, categoria, estado):
     return [v for v in consulta if not estado or v.estado == estado]
 
 
+def opciones_vista_previa(instancia):
+    """Opciones reales de la votación para la vista previa; si aún no tiene dos, las de ejemplo."""
+    reales = list(instancia.opciones.filter(activa=True).order_by("orden", "id")[:6]) if instancia else []
+    return (reales, True) if len(reales) >= 2 else (OPCIONES_EJEMPLO, False)
+
+
 @solo_administrador
 def votaciones(request, pk=None):
     edicion = edicion_panel(request)
@@ -76,6 +82,7 @@ def votaciones(request, pk=None):
         if request.method == "POST" and form.is_valid():
             avisar(request, *guardar(request, form, "votacion"))
             return redirect("portal:panel-votaciones")
+    muestra, son_reales = opciones_vista_previa(instancia)
     busqueda, estado = request.GET.get("q", "").strip(), request.GET.get("estado", "")
     categoria = "" if form else request.GET.get("categoria", "")
     return render_panel(request, "portal/panel/votaciones.html", "votaciones", edicion, {
@@ -84,6 +91,8 @@ def votaciones(request, pk=None):
         "categorias": Categoria.objects.filter(edicion=edicion).order_by("orden", "nombre"),
         "presentaciones": PRESENTACIONES_OPCIONES, "iconos": ICONOS_DISPONIBLES,
         "descripcion_visibilidad": DESCRIPCION_VISIBILIDAD, "edicion_formulario": edicion_formulario,
+        "presentacion_actual": (form["presentacion_opciones"].value() if form else None) or Votacion.PresentacionOpciones.TARJETAS,
+        "muestra_opciones": muestra, "muestra_reales": son_reales, "muestra_marcadas": {muestra[0].pk},
     })
 
 

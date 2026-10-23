@@ -53,7 +53,7 @@
       <div class="row g-2" role="radiogroup">
         {% for p in presentaciones %}
           <div class="col-sm-6 col-lg-4">
-            <input type="radio" class="opcion-input" name="presentacion_opciones" id="v-pres-{{ p.valor }}" value="{{ p.valor }}"{% if form.presentacion_opciones.value == p.valor %} checked{% endif %}>
+            <input type="radio" class="opcion-input" name="presentacion_opciones" id="v-pres-{{ p.valor }}" value="{{ p.valor }}"{% if presentacion_actual == p.valor %} checked{% endif %} data-cambiar-vista-previa>
             <label for="v-pres-{{ p.valor }}" class="opcion-card presentacion-card">
               <i class="bi bi-{{ p.icono }} fs-4 text-rojo" aria-hidden="true"></i>
               <span><span class="d-block fw-semibold">{{ p.etiqueta }}</span><span class="d-block small text-secondary-flv">{{ p.descripcion }}</span></span>
@@ -62,6 +62,20 @@
         {% endfor %}
       </div>
     </fieldset>
+    {# Vista previa en vivo: se muestra la presentación marcada (portal.js). Sus radios no pertenecen a este formulario. #}
+    <div class="mt-3" data-vista-previa-opciones>
+      <p class="small fw-semibold mb-2"><i class="bi bi-eye me-1" aria-hidden="true"></i>Vista previa: así verá el público
+        {% if muestra_reales %}las opciones de esta votación{% else %}las opciones (con opciones de ejemplo){% endif %}. Puedes tocarlas.</p>
+      <div class="vista-previa-marco" aria-label="Vista previa de la presentación">
+        {% for p in presentaciones %}
+          <div data-presentacion="{{ p.valor }}"{% if presentacion_actual != p.valor %} hidden{% endif %}>
+            {% with prefijo="vp-"|add:p.valor|add:"-" %}
+              {% include "portal/parciales/opciones_votacion.html" with presentacion=p.valor opciones=muestra_opciones marcadas=muestra_marcadas deshabilitada=False %}
+            {% endwith %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
   <div class="col-12">
     <div class="form-check form-switch">

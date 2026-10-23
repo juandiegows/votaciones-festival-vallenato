@@ -72,6 +72,15 @@
   }
   todos('[data-imprimir]').forEach((boton) => boton.addEventListener('click', () => window.print()));
 
+  // Panel: la vista previa muestra la presentación de opciones que esté marcada
+  todos('[data-vista-previa-opciones]').forEach((previa) => {
+    todos('[data-cambiar-vista-previa]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        todos('[data-presentacion]', previa).forEach((bloque) => { bloque.hidden = bloque.dataset.presentacion !== radio.value; });
+      });
+    });
+  });
+
   // Confirmación de borrado compartida
   const modalEliminar = document.getElementById('modal-eliminar');
   todos('[data-eliminar-url]').forEach((boton) => {
