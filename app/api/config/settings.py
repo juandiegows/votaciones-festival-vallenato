@@ -35,6 +35,8 @@ def env_list(name, default=""):
 CLAVE_DESARROLLO = "dev-insecure-cambiar-en-produccion"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or CLAVE_DESARROLLO
 DEBUG = env_bool("DJANGO_DEBUG", True)
+# Recuadro de cuentas demo en el login (prototipo académico: el docente prueba con ellas, como en la web React)
+MOSTRAR_CREDENCIALES_DEMO = env_bool("MOSTRAR_CREDENCIALES_DEMO", True)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 # Sin DEBUG (producción, CI) la clave es obligatoria: con la de desarrollo cualquiera podría firmar
 # los enlaces de confirmación de correo.

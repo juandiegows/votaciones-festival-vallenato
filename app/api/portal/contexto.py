@@ -36,6 +36,6 @@ def sitio(request):
         "redes": RedSocial.objects.filter(activa=True),
         "colores_marca": colores_marca(configuracion),
         "es_admin": usuario.is_authenticated and usuario.es_administrador,
-        "modo_desarrollo": settings.DEBUG,
+        "mostrar_credenciales_demo": settings.MOSTRAR_CREDENCIALES_DEMO,
         "menu_activo": menu_activo(request),
     }

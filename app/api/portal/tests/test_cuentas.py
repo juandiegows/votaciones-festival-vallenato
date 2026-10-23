@@ -1,3 +1,5 @@
+from django.test import override_settings
+
 from votaciones.cuentas import servicios
 from votaciones.models import Usuario
 
@@ -66,3 +68,15 @@ class SesionTest(BasePortalTest):
 
     def test_confirmar_correo_con_token_invalido(self):
         self.assertContains(self.client.get("/confirmar-correo?token=falso"), "No pudimos confirmar tu correo")
+
+
+class CredencialesDemoTest(BasePortalTest):
+    """El login muestra las cuentas demo también sin DEBUG (producción), salvo que se apaguen por variable."""
+
+    @override_settings(DEBUG=False)
+    def test_login_muestra_credenciales_demo_en_produccion(self):
+        self.assertContains(self.client.get("/login"), "Credenciales de demostración")
+
+    @override_settings(MOSTRAR_CREDENCIALES_DEMO=False)
+    def test_login_oculta_credenciales_demo_si_se_apagan(self):
+        self.assertNotContains(self.client.get("/login"), "Credenciales de demostración")
