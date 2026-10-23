@@ -116,7 +116,9 @@ def votacion(request, anio, categoria, votacion):
         return pagina_error(request, 404, "La votación no existe o aún no ha sido publicada.")
     estado = votacion.estado
     abierta = estado == Votacion.Estado.ABIERTA and not votacion.pausada
+    votadas = consultas.opciones_votadas(request.user, votacion)
     ya_voto = selectores.votos_del_usuario(request.user, votacion) >= votacion.votos_por_usuario_efectivo
+    seleccion = request.GET.get("opcion", "")
     return render(request, "portal/votacion.html", {
         "edicion": edicion,
         "categoria": votacion.categoria,
@@ -125,6 +127,9 @@ def votacion(request, anio, categoria, votacion):
         "abierta": abierta,
         "ya_voto": ya_voto,
         "deshabilitada": not abierta or ya_voto,
+        # Marcadas: lo que votó, o la opción que eligió antes de iniciar sesión (?opcion=)
+        "marcadas": votadas if ya_voto else ({int(seleccion)} if seleccion.isdigit() else set()),
+        "sin_confirmar": request.user.is_authenticated and not request.user.correo_verificado,
         "opciones": votacion.opciones.filter(activa=True).order_by("orden", "id"),
         "resultados": resultados_publicos(votacion, request.user),
         "motivo_resultados": MOTIVO_RESULTADOS.get(votacion.visibilidad_efectiva, MOTIVO_RESULTADOS[Votacion.Visibilidad.AL_CIERRE]),

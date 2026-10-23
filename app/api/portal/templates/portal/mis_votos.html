@@ -1,0 +1,46 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}Mis votos · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <header class="mb-4">
+    <nav aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mis votos</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">Mis votos</h1>
+    <p class="text-secondary-flv mb-0">Historial de tus votos y comprobantes.</p>
+  </header>
+  {% if not votos %}
+    <div class="card-flv p-4 text-center">
+      <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
+      <p>Aún no has votado.</p>
+      <a href="{% url 'portal:categorias' %}" class="btn btn-primary">Ver votaciones</a>
+    </div>
+  {% else %}
+    <ul class="list-unstyled row g-3">
+      {% for voto, url in votos %}
+        <li class="col-md-6">
+          <article class="card-flv p-3 h-100">
+            <div class="d-flex justify-content-between gap-2 mb-2">
+              <span class="small text-secondary-flv">{{ voto.votacion.categoria.nombre }} · {{ voto.votacion.categoria.edicion.anio }}</span>
+              {% estado_badge voto.votacion.estado %}
+            </div>
+            <h2 class="h5 mb-1">{{ voto.votacion.titulo }}</h2>
+            <p class="mb-2">Tu elección: <strong>{{ voto.opcion.nombre }}</strong></p>
+            <p class="small mb-2 text-secondary-flv">{{ voto.fecha_hora|fecha_hora }}</p>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <code class="fs-6 fw-bold text-dorado-texto">{{ voto.codigo_comprobante }}</code>
+              <a href="{{ url }}" class="btn btn-sm btn-outline-primary">Ver comprobante</a>
+            </div>
+          </article>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

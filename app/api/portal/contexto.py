@@ -22,6 +22,8 @@ def menu_activo(request):
         return "panel"
     if nombre in ("edicion", "categoria", "votacion"):
         return "categorias"
+    if nombre in ("mis-votos", "comprobante"):
+        return "mis-votos"
     return "inicio" if nombre == "inicio" else ""
 
 

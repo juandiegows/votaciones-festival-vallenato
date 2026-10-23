@@ -17,6 +17,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 mt-2 mt-lg-0">
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'inicio' %} active{% endif %}" href="{% url 'portal:inicio' %}"{% if menu_activo == 'inicio' %} aria-current="page"{% endif %}>Inicio</a></li>
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'categorias' %} active{% endif %}" href="{% url 'portal:categorias' %}">Categorías y votaciones</a></li>
+        {% if user.is_authenticated %}<li class="nav-item"><a class="nav-link{% if menu_activo == 'mis-votos' %} active{% endif %}" href="{% url 'portal:mis-votos' %}"{% if menu_activo == 'mis-votos' %} aria-current="page"{% endif %}>Mis votos</a></li>{% endif %}
       </ul>
       {% if not user.is_authenticated %}
         <div class="d-flex flex-column flex-lg-row gap-2 pb-3 pb-lg-0">
@@ -31,6 +32,7 @@
           <ul class="dropdown-menu dropdown-menu-lg-end">
             <li class="px-3 py-2 small text-secondary-flv">{{ user.email }}<br>Rol: <strong>{{ user.get_rol_display|lower }}</strong></li>
             <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'portal:mis-votos' %}"><i class="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</a></li>
             {% if es_admin %}<li><a class="dropdown-item" href="{% url 'portal:panel' %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel de administración</a></li>{% endif %}
             <li>
               <form method="post" action="{% url 'portal:logout' %}">{% csrf_token %}

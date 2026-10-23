@@ -1,9 +1,13 @@
-"""Formularios de Django: registro, inicio de sesión y administración de ediciones, categorías, votaciones y opciones."""
+"""
+Formularios de Django: registro, inicio de sesión, documento, recuperación de contraseña y administración de
+ediciones, categorías, votaciones y opciones.
+"""
 
 import re
 
 from django import forms
 from django.contrib.auth import authenticate
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError as ErrorDRF
@@ -105,6 +109,39 @@ class RegistroForm(forms.Form):
             "apellidos": datos["apellidos"], "tipo_documento": datos["tipo_documento"],
             "numero_documento": datos["numero_documento"], "acepta_tratamiento_datos": True,
         }
+
+
+class CompletarDocumentoForm(forms.Form):
+    """Para quien se registró sin documento y la administración luego empezó a pedirlo para votar."""
+
+    tipo_documento = forms.ChoiceField(label="Tipo de documento", choices=Usuario.TipoDocumento.choices)
+    numero_documento = forms.CharField(label="Número de documento", max_length=30)
+
+    def clean(self):
+        datos = super().clean()
+        tipo, numero = datos.get("tipo_documento"), normalizar_documento(datos.get("numero_documento"))
+        if tipo and numero:
+            error = error_formato_documento(tipo, numero)
+            if not error and selectores_cuentas.documento_registrado(tipo, numero):
+                error = "Ya existe una cuenta con este documento."
+            if error:
+                self.add_error("numero_documento", error)
+        datos["numero_documento"] = numero
+        return datos
+
+
+class RecuperarClaveForm(forms.Form):
+    email = forms.EmailField(label="Correo electrónico", error_messages={"invalid": "Ingresa un correo electrónico válido."})
+
+
+class NuevaClaveForm(SetPasswordForm):
+    """Nueva contraseña desde el enlace del correo, con la misma regla de seguridad del registro."""
+
+    def clean_new_password1(self):
+        clave = self.cleaned_data["new_password1"]
+        if not contrasena_segura(clave):
+            raise forms.ValidationError("Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.")
+        return clave
 
 
 class LoginForm(forms.Form):

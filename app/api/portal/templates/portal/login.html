@@ -25,7 +25,7 @@
             <input id="contrasena" name="password" type="password" class="form-control" autocomplete="current-password" required>
           </div>
           <div class="text-end mb-3">
-            <button type="button" class="btn btn-link p-0 small" data-bs-toggle="modal" data-bs-target="#modal-recuperar">¿Olvidaste tu contraseña?</button>
+            <a class="small" href="{% url 'portal:recuperar-clave' %}">¿Olvidaste tu contraseña?</a>
           </div>
           <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Ingresando…">
             <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Ingresar
@@ -47,22 +47,6 @@
         </div>
         {% endif %}
       </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modal-recuperar" tabindex="-1" aria-labelledby="titulo-recuperar" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title h5" id="titulo-recuperar">Recuperar contraseña</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <p class="small mb-0">La recuperación de contraseña se incorpora en una próxima entrega. Mientras tanto, escribe al
-          correo de contacto que aparece en el pie de página.</p>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button></div>
     </div>
   </div>
 </div>

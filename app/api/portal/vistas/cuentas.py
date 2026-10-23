@@ -1,19 +1,28 @@
-"""Registro, inicio y cierre de sesión con el sistema de autenticación de Django (sesión en cookie)."""
+"""
+Registro, inicio y cierre de sesión, confirmación del correo y recuperación de contraseña con el sistema de
+autenticación de Django (sesión en cookie).
+"""
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import PasswordResetConfirmView
 from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.urls import reverse, reverse_lazy
+from django.utils.encoding import force_bytes
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_encode
 from django.views.decorators.http import require_POST
 
+from votaciones import correo
 from votaciones.comun.errores import ReglaNegocioError
 from votaciones.cuentas import servicios
+from votaciones.models import Usuario
 from votaciones.sitio.models import ConfiguracionSitio
 
 from ..catalogos import CREDENCIALES_DEMO
-from ..formularios import LoginForm, RegistroForm
+from ..formularios import LoginForm, NuevaClaveForm, RecuperarClaveForm, RegistroForm
 
 
 def destino_seguro(request, por_defecto):
@@ -61,6 +70,35 @@ def cerrar_sesion(request):
     logout(request)
     messages.info(request, "Cerraste tu sesión.")
     return redirect("portal:inicio")
+
+
+def recuperar_clave(request):
+    """Pide el correo y envía el enlace para crear una contraseña nueva (token de Django, de un solo uso)."""
+    form = RecuperarClaveForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        usuario = Usuario.objects.filter(email=form.cleaned_data["email"].lower(), is_active=True).first()
+        if usuario is not None:
+            uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+            ruta = reverse("portal:restablecer-clave", args=[uid, default_token_generator.make_token(usuario)])
+            correo.enviar_al_confirmar(
+                correo.enviar_restablecer_clave, usuario, f"{correo.servicio.url_sitio()}{ruta}",
+                minutos_validez=settings.PASSWORD_RESET_TIMEOUT // 60,
+            )
+        # El mismo mensaje exista o no la cuenta: así no se puede averiguar qué correos están registrados
+        return render(request, "portal/recuperar_clave.html", {"enviado": True, "correo": form.cleaned_data["email"]})
+    return render(request, "portal/recuperar_clave.html", {"form": form})
+
+
+class RestablecerClave(PasswordResetConfirmView):
+    """Destino del enlace del correo: valida el token y pide la contraseña nueva."""
+
+    template_name = "portal/restablecer_clave.html"
+    form_class = NuevaClaveForm
+    success_url = reverse_lazy("portal:login")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Tu contraseña se cambió. Ya puedes iniciar sesión con la nueva.")
+        return super().form_valid(form)
 
 
 def confirmar_correo(request):

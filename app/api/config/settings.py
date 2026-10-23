@@ -102,6 +102,8 @@ AUTH_USER_MODEL = "votaciones.Usuario"
 
 # Autenticación del portal: sesión de Django (la API sigue usando token)
 LOGIN_URL = "portal:login"
+# Enlace del correo «Restablece tu contraseña»: una hora y un solo uso
+PASSWORD_RESET_TIMEOUT = 3600
 LOGIN_REDIRECT_URL = "portal:inicio"
 LOGOUT_REDIRECT_URL = "portal:inicio"
 

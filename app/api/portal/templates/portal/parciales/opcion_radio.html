@@ -1,1 +1,1 @@
-<input type="radio" class="opcion-input" name="opcion" id="opcion-{{ o.pk }}" value="{{ o.pk }}"{% if deshabilitada %} disabled{% endif %}>
+<input type="radio" class="opcion-input" name="opcion" id="opcion-{{ o.pk }}" value="{{ o.pk }}" data-nombre="{{ o.nombre }}"{% if o.pk in marcadas %} checked{% endif %}{% if deshabilitada %} disabled{% endif %} form="form-voto">

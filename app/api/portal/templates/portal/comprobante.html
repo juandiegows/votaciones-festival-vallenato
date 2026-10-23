@@ -1,0 +1,64 @@
+{% extends "portal/base.html" %}
+{% load portal %}
+{% block titulo %}Comprobante · {{ votacion.titulo }} · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5 comprobante-pagina"{% if imprimir and voto %} data-imprimir-al-cargar{% endif %}>
+  {% if not voto %}
+    <div class="text-center py-4">
+      <h1 class="h3">Aún no has votado en «{{ votacion.titulo }}»</h1>
+      <a href="{{ url_votacion }}" class="btn btn-primary mt-2">Ir a la votación</a>
+    </div>
+  {% else %}
+    {# Al imprimir solo sale la tarjeta del comprobante: encabezado, botones y resultados llevan d-print-none #}
+    <header class="mb-4 d-print-none">
+      <nav aria-label="Ruta de navegación">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_votacion }}">{{ votacion.titulo }}</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Comprobante</li>
+        </ol>
+      </nav>
+      <h1 class="h2 mb-1">Comprobante de voto</h1>
+      <p class="text-secondary-flv mb-0">Constancia de tu participación.</p>
+    </header>
+    <div class="row g-4">
+      <div class="col-lg-6 comprobante-columna">
+        <section class="comprobante p-4 text-center" aria-labelledby="titulo-exito">
+          <i class="bi bi-patch-check-fill display-4 text-success" aria-hidden="true"></i>
+          <h2 id="titulo-exito" class="h4 mt-2">¡Tu voto fue registrado con éxito!</h2>
+          <p class="mb-3">Gracias por participar, {{ user.nombres }}. Guarda este código como constancia.</p>
+          <p class="small text-secondary-flv mb-1">Código de comprobante</p>
+          <p class="codigo-comprobante fw-bold mb-3">{{ voto.codigo_comprobante }}</p>
+          <dl class="row small text-start mx-0 mb-3">
+            <dt class="col-5">Edición</dt><dd class="col-7">{{ edicion.nombre }}</dd>
+            <dt class="col-5">Categoría</dt><dd class="col-7">{{ categoria.nombre }}</dd>
+            <dt class="col-5">Votación</dt><dd class="col-7">{{ votacion.titulo }}</dd>
+            <dt class="col-5">Fecha y hora</dt><dd class="col-7">{{ voto.fecha_hora|fecha_hora }}</dd>
+            <dt class="col-5">Votante</dt><dd class="col-7 text-break">{{ user.email }}</dd>
+          </dl>
+          <div class="d-flex align-items-center gap-3 p-3 rounded-3 text-start" style="background: var(--flv-crema)">
+            {% avatar voto.opcion.nombre 48 %}
+            <div>
+              <p class="small mb-0 text-secondary-flv">Tu elección</p>
+              <p class="fw-semibold mb-0">{{ voto.opcion.nombre }}</p>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 d-print-none">
+            <button type="button" class="btn btn-outline-primary" data-imprimir><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button>
+            <a href="{% url 'portal:mis-votos' %}" class="btn btn-outline-primary"><i class="bi bi-receipt me-1" aria-hidden="true"></i>Mis votos</a>
+            <a href="{% url 'portal:edicion' edicion.anio %}" class="btn btn-primary">Seguir votando</a>
+          </div>
+        </section>
+      </div>
+      <div class="col-lg-6 d-print-none">
+        <section class="card-flv p-4 h-100" aria-labelledby="titulo-resultados">
+          <h2 id="titulo-resultados" class="h5"><i class="bi bi-bar-chart-fill me-1" aria-hidden="true"></i>Resultados</h2>
+          {% include "portal/parciales/resultados.html" with motivo_resultados="Los resultados se publicarán según la configuración de la votación." %}
+        </section>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

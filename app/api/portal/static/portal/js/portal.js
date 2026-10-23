@@ -31,6 +31,47 @@
     modal.show();
   }
 
+  // Votar: exige una opción y, con sesión, pide confirmar en una ventana (sin sesión el servidor lleva al login
+  // guardando la opción). El envío real lo hace «Confirmar voto».
+  const formVoto = document.querySelector('[data-confirmar-voto]');
+  if (formVoto) {
+    const errorVoto = document.getElementById('error-voto');
+    const modalVoto = document.getElementById('modal-confirmar-voto');
+    const elegida = () => document.querySelector('input[name="opcion"][form="form-voto"]:checked');
+    todos('input[name="opcion"][form="form-voto"]').forEach((radio) => {
+      radio.addEventListener('change', () => { errorVoto.hidden = true; });
+    });
+    formVoto.addEventListener('submit', (evento) => {
+      const opcion = elegida();
+      if (!opcion) {
+        evento.preventDefault();
+        errorVoto.textContent = 'Selecciona una opción antes de votar.';
+        errorVoto.hidden = false;
+        document.getElementById('lista-opciones').focus();
+        return;
+      }
+      if (formVoto.dataset.conSesion !== '1' || !modalVoto || !window.bootstrap) return;
+      evento.preventDefault();
+      modalVoto.querySelector('[data-opcion-elegida]').textContent = opcion.dataset.nombre;
+      bootstrap.Modal.getOrCreateInstance(modalVoto).show();
+    });
+    const enviar = modalVoto && modalVoto.querySelector('[data-enviar-voto]');
+    if (enviar) {
+      enviar.addEventListener('click', () => {
+        enviar.disabled = true;
+        enviar.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Registrando voto…';
+        formVoto.submit();
+      });
+    }
+  }
+
+  // Comprobante: el botón «Imprimir» del correo llega con ?imprimir=1; se quita para que recargar no vuelva a imprimir
+  if (document.querySelector('[data-imprimir-al-cargar]')) {
+    window.history.replaceState(null, '', window.location.pathname);
+    window.addEventListener('load', () => window.print());
+  }
+  todos('[data-imprimir]').forEach((boton) => boton.addEventListener('click', () => window.print()));
+
   // Confirmación de borrado compartida
   const modalEliminar = document.getElementById('modal-eliminar');
   todos('[data-eliminar-url]').forEach((boton) => {

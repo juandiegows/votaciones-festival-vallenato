@@ -1,0 +1,30 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Completa tu documento · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card-flv p-4 p-md-5">
+        <h1 class="h3 mb-1">Completa tu documento para votar</h1>
+        <p class="text-secondary-flv">Para votar en esta edición se pide el documento de identidad: una cuenta por persona. Lo registras una sola vez.</p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ siguiente }}">
+          <div class="mb-3">
+            <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">Tipo de documento <span class="text-danger" aria-hidden="true">*</span></label>
+            <select id="{{ form.tipo_documento.id_for_label }}" name="tipo_documento" class="form-select" required>
+              {% for valor, etiqueta in form.tipo_documento.field.choices %}
+                <option value="{{ valor }}"{% if form.tipo_documento.value == valor %} selected{% endif %}>{{ etiqueta }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% include "portal/parciales/campo.html" with campo=form.numero_documento ayuda="Sin puntos ni espacios." extra='autocomplete=off' %}
+          <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Guardando…">Guardar y continuar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

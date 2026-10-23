@@ -42,6 +42,13 @@ def votaciones_con_voto(usuario):
     return set(Voto.objects.filter(usuario=usuario).values_list("votacion_id", flat=True))
 
 
+def opciones_votadas(usuario, votacion):
+    """IDs de las opciones que el usuario eligió en esta votación (se marcan en el detalle)."""
+    if not usuario.is_authenticated:
+        return set()
+    return set(Voto.objects.filter(usuario=usuario, votacion=votacion).values_list("opcion_id", flat=True))
+
+
 def categorias_con_conteo(edicion, visibles):
     """Categorías activas de la edición con su total de votaciones visibles y cuántas están abiertas."""
     filas = []

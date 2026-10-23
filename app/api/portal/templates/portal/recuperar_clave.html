@@ -1,0 +1,31 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Recuperar contraseña · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card-flv p-4 p-md-5">
+        {% if enviado %}
+          <div class="text-center">
+            <i class="bi bi-envelope-check-fill display-4 text-success" aria-hidden="true"></i>
+            <h1 class="h3 mt-2">Revisa tu correo</h1>
+            <p>Si existe una cuenta con <strong>{{ correo }}</strong>, te enviamos un enlace para crear una contraseña nueva. Vence en una hora y solo se puede usar una vez.</p>
+            <a href="{% url 'portal:login' %}" class="btn btn-primary">Volver a iniciar sesión</a>
+          </div>
+        {% else %}
+          <h1 class="h3 mb-1">Recuperar contraseña</h1>
+          <p class="text-secondary-flv">Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.</p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% include "portal/parciales/campo.html" with campo=form.email tipo="email" extra='autocomplete=email' %}
+            <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Enviando…">Enviar enlace</button>
+          </form>
+          <p class="text-center mt-3 mb-0"><a href="{% url 'portal:login' %}">Volver a iniciar sesión</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

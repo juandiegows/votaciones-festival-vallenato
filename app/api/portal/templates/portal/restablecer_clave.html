@@ -1,0 +1,35 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Nueva contraseña · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card-flv p-4 p-md-5">
+        {% if validlink %}
+          <h1 class="h3 mb-1">Crea tu nueva contraseña</h1>
+          <p class="text-secondary-flv">Mínimo 8 caracteres, con una mayúscula, un número y un símbolo.</p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% include "portal/parciales/campo.html" with campo=form.new_password1 tipo="password" extra='autocomplete=new-password data-clave' %}
+            {% include "portal/parciales/campo.html" with campo=form.new_password2 tipo="password" extra='autocomplete=new-password data-clave' %}
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="mostrar-claves" data-mostrar-claves>
+              <label class="form-check-label" for="mostrar-claves">Mostrar contraseñas</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Guardando…">Guardar contraseña</button>
+          </form>
+        {% else %}
+          <div class="text-center">
+            <i class="bi bi-x-octagon-fill display-4 text-danger" aria-hidden="true"></i>
+            <h1 class="h3 mt-2">El enlace no es válido</h1>
+            <p>Venció o ya se usó. Pide uno nuevo.</p>
+            <a href="{% url 'portal:recuperar-clave' %}" class="btn btn-primary">Pedir otro enlace</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
