@@ -116,6 +116,21 @@ def validar_eliminacion(objeto):
         )
 
 
+def opciones_bloqueadas(votacion):
+    """RN-19: desde que la votación abre (o si ya tiene votos) sus opciones quedan congeladas."""
+    return votacion.estado in (Votacion.Estado.ABIERTA, Votacion.Estado.CERRADA) or votacion.votos.exists()
+
+
+def validar_cambio_opciones(votacion):
+    """RN-19: renombrar, agregar, desactivar o quitar opciones con la votación en curso cambiaría a quién cuentan los votos."""
+    if opciones_bloqueadas(votacion):
+        raise ReglaNegocioError(
+            "Las opciones no se pueden cambiar con la votación abierta, cerrada o con votos registrados.",
+            codigo="opciones_bloqueadas",
+            status=409,
+        )
+
+
 def cerrar_otras_ediciones(edicion):
     """Mantiene una sola edición activa: si esta queda activa, las demás se cierran."""
     if edicion.estado != Edicion.Estado.ACTIVA:

@@ -321,7 +321,20 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return selectores.opciones(self.request.query_params.get("votacion"))
 
+    # RN-19: con la votación abierta, cerrada o con votos, las opciones no se crean, editan ni eliminan
+    def perform_create(self, serializer):
+        servicios.validar_cambio_opciones(serializer.validated_data["votacion"])
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        servicios.validar_cambio_opciones(serializer.instance.votacion)
+        destino = serializer.validated_data.get("votacion")
+        if destino and destino != serializer.instance.votacion:
+            servicios.validar_cambio_opciones(destino)
+        super().perform_update(serializer)
+
     def validar_eliminacion(self, opcion):
+        servicios.validar_cambio_opciones(opcion.votacion)
         servicios.validar_eliminacion(opcion)
 
 

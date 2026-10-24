@@ -8,6 +8,7 @@ import NoEncontrado from '../NoEncontrado.jsx';
 import FormularioOpcion, { opcionNueva } from '../../components/admin/FormularioOpcion.jsx';
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import { presentacionOpciones } from '../../data/presentaciones.js';
+import { AVISO_OPCIONES_BLOQUEADAS, opcionesBloqueadas } from '../../utils/helpers.js';
 
 export default function AdminOpciones() {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function AdminOpciones() {
   const lista = opciones.filter((o) => o.votacionId === votacion.id);
   const categoria = categorias.find((c) => c.id === votacion.categoriaId);
   const presentacion = presentacionOpciones(votacion.presentacionOpciones);
+  const bloqueada = opcionesBloqueadas(votacion, votos);
 
   return (
     <>
@@ -28,8 +30,8 @@ export default function AdminOpciones() {
         subtitulo={`${votacion.titulo} · ${categoria?.nombre}`}
         migas={[{ label: 'Votaciones', to: '/panel/votaciones' }, { label: votacion.titulo }, { label: 'Opciones' }]}
       >
-        <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))} disabled={votacion.estado === 'cerrada'}
-          title={votacion.estado === 'cerrada' ? 'La votación está cerrada: no admite opciones nuevas' : undefined}>
+        <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))} disabled={bloqueada}
+          title={bloqueada ? 'Opciones bloqueadas' : undefined}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
         </button>
       </PageHeader>
@@ -44,6 +46,12 @@ export default function AdminOpciones() {
         </span>
       </div>
 
+      {bloqueada && (
+        <div className="alert alert-warning" role="status">
+          <i className="bi bi-lock-fill me-1" aria-hidden="true"></i>
+          {AVISO_OPCIONES_BLOQUEADAS} Si hay un error, cierra la votación y crea una nueva.
+        </div>
+      )}
       {lista.length < 2 && (
         <div className="alert alert-warning" role="alert">
           <i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>

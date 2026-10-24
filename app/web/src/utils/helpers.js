@@ -16,6 +16,13 @@ export const ESTADOS = {
   cerrada: { etiqueta: 'Cerrada', clase: 'estado-cerrada', icono: 'lock-fill' },
 };
 
+/** RN-19: desde que la votación abre (o si ya tiene votos) sus opciones no se crean, editan, reordenan ni eliminan. */
+export const opcionesBloqueadas = (votacion, votos = []) =>
+  (votacion.publicada && ['abierta', 'cerrada'].includes(votacion.estado)) || votos.some((v) => v.votacionId === votacion.id);
+
+export const AVISO_OPCIONES_BLOQUEADAS =
+  'Las opciones están bloqueadas porque la votación está abierta, cerrada o ya tiene votos: así ningún voto termina contando para otra opción.';
+
 export const OPCIONES_MOSTRAR_RESULTADOS = ['al cerrar', 'en tiempo real', 'no publicar'];
 
 /** RN-07: ¿los resultados son visibles para el público? */

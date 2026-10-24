@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from django.utils import timezone
+
 from votaciones.auditoria.models import RegistroAuditoria
 from votaciones.models import Categoria, Edicion, Opcion, Votacion, Voto
 
@@ -16,7 +20,7 @@ class AccesoPanelTest(BasePortalTest):
         self.entrar_como_admin()
         for ruta in ("/panel", "/panel/ediciones", "/panel/ediciones/nueva", "/panel/categorias", "/panel/categorias/nueva",
                      "/panel/votaciones", "/panel/votaciones/nueva", f"/panel/votaciones/{self.votacion.pk}/editar",
-                     f"/panel/votaciones/{self.votacion.pk}/opciones", f"/panel/votaciones/{self.votacion.pk}/opciones/nueva"):
+                     f"/panel/votaciones/{self.votacion.pk}/opciones"):
             with self.subTest(ruta=ruta):
                 self.assertEqual(self.client.get(ruta).status_code, 200)
 
@@ -123,7 +127,34 @@ class OpcionesPanelTest(BasePortalTest):
     def setUp(self):
         super().setUp()
         self.entrar_como_admin()
+        # RN-19: las opciones solo se gestionan antes de que la votación abra
+        ahora = timezone.now()
+        Votacion.objects.filter(pk=self.votacion.pk).update(
+            fecha_apertura=ahora + timedelta(days=1), fecha_cierre=ahora + timedelta(days=5))
         self.base = f"/panel/votaciones/{self.votacion.pk}/opciones"
+
+    def abrir_votacion(self):
+        ahora = timezone.now()
+        Votacion.objects.filter(pk=self.votacion.pk).update(fecha_apertura=ahora - timedelta(days=1))
+
+    def test_votacion_abierta_bloquea_las_opciones(self):
+        self.abrir_votacion()
+        self.assertRedirects(self.client.get(f"{self.base}/nueva"), self.base)
+        self.client.post(f"{self.base}/nueva", {"nombre": "Canción C", "orden": 3, "activa": "on"})
+        self.assertFalse(Opcion.objects.filter(nombre="Canción C").exists())
+        self.client.post(f"{self.base}/{self.opcion_a.pk}/editar", {"nombre": "Otra canción", "orden": 1, "activa": "on"})
+        self.client.post(f"{self.base}/{self.opcion_a.pk}/alternar")
+        self.client.post(f"{self.base}/{self.opcion_b.pk}/eliminar")
+        self.opcion_a.refresh_from_db()
+        self.assertEqual((self.opcion_a.nombre, self.opcion_a.activa), ("Canción A", True))
+        self.assertTrue(Opcion.objects.filter(pk=self.opcion_b.pk).exists())
+        self.assertContains(self.client.get(self.base), "Las opciones están bloqueadas")
+
+    def test_votacion_programada_con_votos_bloquea_las_opciones(self):
+        Voto.objects.create(usuario=self.votante, votacion=self.votacion, opcion=self.opcion_a, codigo_comprobante="FLV27-RN19AA")
+        self.client.post(f"{self.base}/{self.opcion_a.pk}/editar", {"nombre": "Otra canción", "orden": 1, "activa": "on"})
+        self.opcion_a.refresh_from_db()
+        self.assertEqual(self.opcion_a.nombre, "Canción A")
 
     def test_crear_editar_y_eliminar_opcion(self):
         self.assertRedirects(self.client.post(f"{self.base}/nueva", {"nombre": "Canción C", "orden": 3, "activa": "on"}), self.base)

@@ -127,6 +127,7 @@ Toda creación, modificación, eliminación, publicación, despublicación, cier
 | RN-12 Auditoría de acciones administrativas | Tabla `registro_auditoria` |
 | RN-13 Si se pide documento: una persona, una cuenta (tipo + número único) | `pedir_documento` en `/api/gestion/configuracion/` (por defecto `false`); restricción `usuario_documento_unico`; el número se guarda sin puntos ni espacios. Con el ajuste activo, quien no tenga documento recibe `403 documento_requerido` en `POST /votar/` hasta completarlo en `/api/auth/documento/` |
 | RN-14 Solo vota quien confirmó su correo | `403 correo_sin_confirmar` en `POST /votar/` |
+| RN-19 Opciones congeladas desde la apertura: con la votación abierta, cerrada o con votos no se crean, editan, reordenan, desactivan ni eliminan opciones | `409 opciones_bloqueadas` en `/api/gestion/opciones/`; el panel y Django Admin las muestran de solo lectura |
 
 Una votación **abierta** no se puede despublicar (`409 votacion_abierta`): se espera al cierre o se cierra primero;
 programadas y cerradas sí se pueden retirar del sitio con `/despublicar/`. Al activar una edición, las demás

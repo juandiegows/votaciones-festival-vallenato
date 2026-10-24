@@ -237,6 +237,9 @@ class EnlaceMultimediaTests(BaseAPITest):
     def setUp(self):
         super().setUp()
         self.autenticar(self.admin)
+        # RN-19: las opciones solo se editan antes de que la votación abra
+        ahora = timezone.now()
+        Votacion.objects.filter(pk=self.abierta.pk).update(fecha_apertura=ahora + timedelta(days=1))
 
     def guardar(self, enlace):
         return self.client.patch(f"/api/admin/opciones/{self.opcion_a.pk}/", {"enlace_multimedia": enlace}, format="json")

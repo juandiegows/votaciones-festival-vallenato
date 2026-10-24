@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import Avatar from '../Avatar.jsx';
 import Modal from '../Modal.jsx';
 import ReproductorMultimedia, { fuenteMedio } from '../ReproductorMultimedia.jsx';
+import { opcionesBloqueadas } from '../../utils/helpers.js';
 
 /**
  * Opciones de una votación en orden de presentación, con subir/bajar, editar y eliminar.
@@ -14,6 +15,7 @@ export default function OpcionesAdmin({ votacion, onEditar, onMensaje, compacta 
   const [procesando, setProcesando] = useState(false);
   const lista = opciones.filter((o) => o.votacionId === votacion.id).sort((a, b) => a.orden - b.orden);
   const votosDe = (opId) => votos.filter((v) => v.opcionId === opId).length;
+  const bloqueada = opcionesBloqueadas(votacion, votos);
 
   const mover = async (indice, delta) => {
     const destino = indice + delta;
@@ -78,6 +80,9 @@ export default function OpcionesAdmin({ votacion, onEditar, onMensaje, compacta 
                 )}
               </div>
               <span className="small text-nowrap">{votosDe(o.id)} votos</span>
+              {bloqueada ? (
+                <span className="small text-secondary-flv text-nowrap"><i className="bi bi-lock-fill me-1" aria-hidden="true"></i>Bloqueada</span>
+              ) : (
               <div className="btn-group btn-group-sm" role="group" aria-label={`Acciones para ${o.nombre}`}>
                 <button className="btn btn-outline-secondary" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${o.nombre}`} title="Subir">
                   <i className="bi bi-arrow-up" aria-hidden="true"></i>
@@ -92,6 +97,7 @@ export default function OpcionesAdmin({ votacion, onEditar, onMensaje, compacta 
                   <i className="bi bi-trash" aria-hidden="true"></i>
                 </button>
               </div>
+              )}
             </li>
           );
         })}

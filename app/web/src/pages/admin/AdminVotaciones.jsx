@@ -12,7 +12,7 @@ import FormularioOpcion, { opcionNueva } from '../../components/admin/Formulario
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import OpcionesVotacion from '../../components/presentaciones/OpcionesVotacion.jsx';
 import { OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
-import { DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
+import { AVISO_OPCIONES_BLOQUEADAS, DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, opcionesBloqueadas, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -259,8 +259,8 @@ export default function AdminVotaciones() {
       <span className="small fw-semibold">
         Opciones <span className={numOpciones(v.id) < 2 ? 'text-danger' : 'text-secondary-flv'}>({numOpciones(v.id)})</span>
       </span>
-      {v.estado === 'cerrada' ? (
-        <span className="small text-secondary-flv"><i className="bi bi-lock me-1" aria-hidden="true"></i>Cerrada: no admite opciones nuevas</span>
+      {opcionesBloqueadas(v, votos) ? (
+        <span className="small text-secondary-flv" title={AVISO_OPCIONES_BLOQUEADAS}><i className="bi bi-lock me-1" aria-hidden="true"></i>Opciones bloqueadas</span>
       ) : (
         <button type="button" className="btn btn-sm btn-primary py-0 px-2" onClick={() => agregarOpcion(v)} aria-label={`Agregar opción a ${v.titulo}`}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción

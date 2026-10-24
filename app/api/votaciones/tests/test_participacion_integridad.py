@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from PIL import Image
 
-from votaciones.models import Opcion, RegistroAuditoria, Usuario, Voto
+from votaciones.models import Opcion, RegistroAuditoria, Usuario, Votacion, Voto
 
 from .base import BaseAPITest
 
@@ -193,6 +193,9 @@ class ArchivosTests(BaseAPITest):
         self.assertEqual(publica["presentacion_opciones"], "mosaico")
 
     def test_audio_de_opcion_valida_formato_y_se_borra_al_eliminar(self):
+        # RN-19: las opciones solo se editan antes de que la votación abra
+        ahora = timezone.now()
+        Votacion.objects.filter(pk=self.abierta.pk).update(fecha_apertura=ahora + timedelta(days=1))
         url = f"/api/admin/opciones/{self.opcion_a.pk}/"
         audio = SimpleUploadedFile("muestra.mp3", b"ID3" + b"\0" * 100, content_type="audio/mpeg")
         respuesta = self.client.patch(url, {"audio": audio, "texto_audio": "Letra de la canción"}, format="multipart")

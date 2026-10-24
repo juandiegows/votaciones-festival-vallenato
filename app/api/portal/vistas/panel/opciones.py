@@ -11,16 +11,24 @@ from votaciones.votacion import servicios
 from ...formularios import OpcionForm
 from .base import alternar_activa, avisar_guardado, eliminar, es_formulario_nuevo, guardar, render_panel, solo_administrador
 
+# RN-19: desde que la votación abre, nadie puede cambiar a qué opción cuentan los votos
+MENSAJE_BLOQUEO = "Las opciones no se pueden cambiar: la votación está abierta, cerrada o ya tiene votos."
+
+
+def regla_eliminacion(opcion):
+    servicios.validar_cambio_opciones(opcion.votacion)
+    servicios.validar_eliminacion(opcion)
+
 
 @solo_administrador
 def opciones(request, votacion_pk, pk=None):
     votacion = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=votacion_pk)
     instancia = get_object_or_404(Opcion, pk=pk, votacion=votacion) if pk else None
-    cerrada = votacion.estado == Votacion.Estado.CERRADA
+    bloqueada = servicios.opciones_bloqueadas(votacion)
     form = None
     if instancia or es_formulario_nuevo(request, "panel-opcion-nueva"):
-        if not instancia and cerrada:
-            messages.warning(request, "La votación está cerrada: no se pueden agregar opciones.")
+        if bloqueada:
+            messages.warning(request, MENSAJE_BLOQUEO)
             return redirect("portal:panel-opciones", votacion_pk=votacion.pk)
         inicial = None if instancia else {"orden": votacion.opciones.count() + 1, "activa": True}
         form = OpcionForm(request.POST or None, request.FILES or None,
@@ -30,7 +38,7 @@ def opciones(request, votacion_pk, pk=None):
             return redirect("portal:panel-opciones", votacion_pk=votacion.pk)
     lista = list(votacion.opciones.annotate(num_votos=Count("votos")).order_by("orden", "id"))
     return render_panel(request, "portal/panel/opciones.html", "votaciones", votacion.categoria.edicion, {
-        "votacion": votacion, "lista": lista, "form": form, "instancia": instancia, "cerrada": cerrada,
+        "votacion": votacion, "lista": lista, "form": form, "instancia": instancia, "bloqueada": bloqueada,
         "activas": sum(1 for o in lista if o.activa),
     })
 
@@ -38,7 +46,10 @@ def opciones(request, votacion_pk, pk=None):
 @solo_administrador
 @require_POST
 def alternar_opcion(request, votacion_pk, pk):
-    opcion = get_object_or_404(Opcion, pk=pk, votacion_id=votacion_pk)
+    opcion = get_object_or_404(Opcion.objects.select_related("votacion"), pk=pk, votacion_id=votacion_pk)
+    if servicios.opciones_bloqueadas(opcion.votacion):
+        messages.warning(request, MENSAJE_BLOQUEO)
+        return redirect("portal:panel-opciones", votacion_pk=votacion_pk)
     activa = alternar_activa(request, opcion, "opcion")
     messages.info(request, f"Opción «{opcion.nombre}» {'activada' if activa else 'desactivada'}.")
     return redirect("portal:panel-opciones", votacion_pk=votacion_pk)
@@ -47,5 +58,6 @@ def alternar_opcion(request, votacion_pk, pk):
 @solo_administrador
 @require_POST
 def eliminar_opcion(request, votacion_pk, pk):
-    eliminar(request, get_object_or_404(Opcion, pk=pk, votacion_id=votacion_pk), "opcion", servicios.validar_eliminacion)
+    eliminar(request, get_object_or_404(Opcion.objects.select_related("votacion"), pk=pk, votacion_id=votacion_pk), "opcion",
+             regla_eliminacion)
     return redirect("portal:panel-opciones", votacion_pk=votacion_pk)

@@ -80,6 +80,27 @@ class GestionAdminTests(BaseAPITest):
         self.assertEqual(respuesta.status_code, 400)
         self.assertFalse(Opcion.objects.filter(votacion=cerrada, nombre="Tardía").exists())
         opcion = Opcion.objects.create(votacion=cerrada, nombre="Existente")
+        respuesta = self.client.patch(f"/api/admin/opciones/{opcion.pk}/", {"nombre": "Corregida"}, format="json")
+        self.assertEqual((respuesta.status_code, respuesta.data["codigo"]), (409, "opciones_bloqueadas"))
+
+    def test_votacion_abierta_bloquea_las_opciones(self):
+        """RN-19: con la votación abierta las opciones no se crean, renombran, desactivan, mueven ni eliminan."""
+        url = f"/api/admin/opciones/{self.opcion_a.pk}/"
+        nueva = self.client.post("/api/admin/opciones/", {"votacion": self.abierta.pk, "nombre": "Canción C"}, format="json")
+        self.assertEqual((nueva.status_code, nueva.data["codigo"]), (409, "opciones_bloqueadas"))
+        for cambio in ({"nombre": "Canción B"}, {"activa": False}, {"orden": 5}):
+            with self.subTest(cambio=cambio):
+                self.assertEqual(self.client.patch(url, cambio, format="json").status_code, 409)
+        self.assertEqual(self.client.delete(url).status_code, 409)
+        self.opcion_a.refresh_from_db()
+        self.assertEqual((self.opcion_a.nombre, self.opcion_a.activa, self.opcion_a.orden), ("Canción A", True, 1))
+
+    def test_no_mueve_opcion_a_una_votacion_abierta(self):
+        ahora = timezone.now()
+        programada = self.crear_votacion("Programada", ahora + timedelta(days=1), ahora + timedelta(days=3))
+        opcion = Opcion.objects.create(votacion=programada, nombre="Nueva")
+        respuesta = self.client.patch(f"/api/admin/opciones/{opcion.pk}/", {"votacion": self.abierta.pk}, format="json")
+        self.assertEqual(respuesta.status_code, 409)
         self.assertEqual(self.client.patch(f"/api/admin/opciones/{opcion.pk}/", {"nombre": "Corregida"}, format="json").status_code, 200)
 
     def test_edicion_cerrada_no_admite_categorias_nuevas(self):

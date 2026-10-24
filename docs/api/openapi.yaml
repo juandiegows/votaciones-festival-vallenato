@@ -2605,7 +2605,7 @@ components:
         codigo:
           type: string
           description: votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes
-            · tiene_votos · registros_asociados · votaciones_pausadas
+            · opciones_bloqueadas · tiene_votos · registros_asociados · votaciones_pausadas
       required:
       - codigo
       - detail
