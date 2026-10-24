@@ -121,7 +121,10 @@ def url_medio(opcion):
         return opcion.audio.url
     enlace = opcion.enlace_multimedia or ""
     if enlace.startswith("/audio/"):
-        return static("portal" + enlace)
+        try:
+            return static("portal" + enlace)
+        except ValueError:  # muestra ausente del manifiesto de estáticos: no tumbar la página
+            return enlace
     return enlace
 
 
