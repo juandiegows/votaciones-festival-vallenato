@@ -199,7 +199,7 @@ OPCIONES = {
 
 PRESENTACION_OPCIONES = {1: "reproductor", 2: "lista", 3: "mosaico", 4: "tarjetas", 5: "compacta", 6: "tarjetas", 7: "lista",
                          9: "reproductor", 10: "duelo", 11: "tarjetas", 12: "colores",
-                         13: "respuestas", 14: "compacta"}
+                         13: "respuestas", 14: "lista"}
 
 # Votaciones abiertas con pocos votantes: la lista de participación sigue oculta (menos de 10 votantes).
 MAX_VOTANTES = {3: 7}

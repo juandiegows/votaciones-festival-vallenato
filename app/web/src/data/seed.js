@@ -96,7 +96,7 @@ export function crearDatosSemilla() {
   ];
 
   // Cada votación muestra sus opciones de una forma distinta (ver data/presentaciones.js)
-  const presentaciones = { 1: 'reproductor', 2: 'lista', 3: 'mosaico', 4: 'compacta', 5: 'tarjetas', 6: 'lista', 7: 'tarjetas', 8: 'tarjetas', 9: 'reproductor', 10: 'duelo', 11: 'tarjetas', 12: 'colores', 13: 'respuestas', 14: 'compacta' };
+  const presentaciones = { 1: 'reproductor', 2: 'lista', 3: 'mosaico', 4: 'compacta', 5: 'tarjetas', 6: 'lista', 7: 'tarjetas', 8: 'tarjetas', 9: 'reproductor', 10: 'duelo', 11: 'tarjetas', 12: 'colores', 13: 'respuestas', 14: 'lista' };
   votaciones.forEach((v) => {
     v.slug = slugificar(v.titulo);
     v.iconoImagen = '';
