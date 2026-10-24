@@ -77,3 +77,10 @@ class Usuario(AbstractUser):
     @property
     def es_administrador(self):
         return self.rol == self.Rol.ADMINISTRADOR
+
+    # El rol administrador da todos los permisos de Django Admin (sin asignarlos uno por uno)
+    def has_perm(self, perm, obj=None):
+        return (self.is_active and self.es_administrador) or super().has_perm(perm, obj)
+
+    def has_module_perms(self, app_label):
+        return (self.is_active and self.es_administrador) or super().has_module_perms(app_label)

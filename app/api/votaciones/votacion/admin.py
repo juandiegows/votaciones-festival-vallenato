@@ -43,6 +43,10 @@ class VotoAdmin(admin.ModelAdmin):
     list_display = ["codigo_comprobante", "votacion", "opcion", "usuario", "fecha_hora"]
     list_filter = ["votacion"]
 
+    # Los votos solo se registran desde el sitio (RN-02 a RN-05): aquí son de solo lectura
+    def has_add_permission(self, request):
+        return False
+
     def has_change_permission(self, request, obj=None):
         return False
 

@@ -168,3 +168,30 @@ class OpcionesPanelTest(BasePortalTest):
     def test_enlace_multimedia_invalido(self):
         respuesta = self.client.post(f"{self.base}/nueva", {"nombre": "Canción D", "orden": 4, "enlace_multimedia": "ftp://x"})
         self.assertIn("enlace_multimedia", respuesta.context["form"].errors)
+
+
+class DjangoAdminTest(BasePortalTest):
+    """El enlace «Django Admin» del panel entra con la misma sesión del sitio."""
+
+    def test_sin_sesion_va_al_login_del_sitio(self):
+        respuesta = self.client.get("/django-admin/", follow=True)
+        self.assertEqual(respuesta.redirect_chain[-1][0], "/login?next=/django-admin/")
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_administrador_del_panel_entra_y_ve_los_modelos(self):
+        self.admin.is_staff = False
+        self.admin.save(update_fields=["is_staff"])
+        self.entrar_como_admin()
+        respuesta = self.client.get("/django-admin/")
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotContains(respuesta, "No cuenta con permiso")
+        self.assertEqual(self.client.get("/django-admin/votaciones/votacion/").status_code, 200)
+
+    def test_votos_y_auditoria_son_de_solo_lectura(self):
+        self.entrar_como_admin()
+        self.assertEqual(self.client.get("/django-admin/votaciones/voto/add/").status_code, 403)
+        self.assertEqual(self.client.get("/django-admin/votaciones/registroauditoria/add/").status_code, 403)
+
+    def test_votante_no_entra(self):
+        self.client.force_login(self.votante)
+        self.assertNotEqual(self.client.get("/django-admin/").status_code, 200)

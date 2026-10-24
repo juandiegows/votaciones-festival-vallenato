@@ -2,8 +2,10 @@ import mimetypes
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.views import redirect_to_login
 from django.http import JsonResponse
-from django.urls import include, path, re_path
+from django.urls import include, path, re_path, reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
@@ -26,6 +28,22 @@ mimetypes.add_type("application/wasm", ".wasm")
 def media(request, path):
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
+
+login_django_admin = admin.site.login
+
+
+def entrar_django_admin(request, extra_context=None):
+    """Django Admin usa el inicio de sesión del sitio: con la sesión del panel se entra directo."""
+    if request.user.is_authenticated:
+        return login_django_admin(request, extra_context)
+    return redirect_to_login(request.GET.get(REDIRECT_FIELD_NAME) or reverse("admin:index"))
+
+
+admin.site.login = entrar_django_admin
+# Entra quien tenga el rol administrador del sistema, aunque no esté marcado como staff
+admin.site.has_permission = lambda request: request.user.is_active and (
+    request.user.is_staff or getattr(request.user, "es_administrador", False)
+)
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
