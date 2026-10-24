@@ -62,6 +62,10 @@ export function crearDatosSemilla() {
     { id: 3, edicionId: 1, nombre: 'Vestuario', descripcion: 'El vestuario típico que representa la tradición del Cesar.', icono: 'stars', activa: true, orden: 3 },
     { id: 4, edicionId: 1, nombre: 'Agrupaciones', descripcion: 'Conjuntos vallenatos que se presentan en las tarimas del Festival.', icono: 'boombox-fill', activa: true, orden: 4 },
     { id: 5, edicionId: 1, nombre: 'Reconocimientos del público', descripcion: 'Personajes que el público quiere destacar en esta edición.', icono: 'award-fill', activa: true, orden: 5 },
+    { id: 6, edicionId: 1, nombre: 'Acordeoneros', descripcion: 'Los toques de acordeón que más emocionan al público en las tarimas.', icono: 'music-player-fill', activa: true, orden: 6 },
+    { id: 7, edicionId: 1, nombre: 'Piquería', descripcion: 'Duelos de versos improvisados entre cantadores, con caja y guacharaca.', icono: 'mic-fill', activa: true, orden: 7 },
+    { id: 8, edicionId: 1, nombre: 'Parrandas', descripcion: 'Las parrandas vallenatas de patio, guitarra y acordeón que se viven en el Festival.', icono: 'balloon-heart-fill', activa: true, orden: 8 },
+    { id: 9, edicionId: 1, nombre: 'Aires vallenatos', descripcion: 'Paseo, merengue, son y puya: el público elige su aire favorito.', icono: 'soundwave', activa: true, orden: 9 },
   ];
 
   categorias.forEach((c) => {
@@ -79,12 +83,20 @@ export function crearDatosSemilla() {
     { ...base, id: 5, categoriaId: 4, titulo: 'Agrupación favorita', descripcion: 'Selecciona la agrupación que más te ha hecho vibrar en tarima.', fechaApertura: relativa(-2), fechaCierre: relativa(12), mostrarResultados: 'no publicar', imagen: 'boombox-fill' },
     { ...base, id: 6, categoriaId: 4, titulo: 'Mejor agrupación juvenil', descripcion: 'Reconocimiento del público a los semilleros y agrupaciones juveniles.', fechaApertura: relativa(15), fechaCierre: relativa(25), mostrarResultados: 'en tiempo real', imagen: 'music-player-fill' },
     { ...base, id: 7, categoriaId: 5, titulo: 'Personaje del Festival', descripcion: 'El público elige al personaje que mejor representa el espíritu del Festival.', fechaApertura: relativa(-30), fechaCierre: relativa(-8), mostrarResultados: 'al cerrar', imagen: 'award-fill' },
+    // Categorías con votaciones abiertas y muestras de audio (para la demostración en video)
+    { ...base, id: 9, categoriaId: 6, titulo: 'Acordeonero favorito del público', descripcion: 'Escucha el toque de cada acordeonero y vota por el que más te hizo vibrar.', fechaApertura: relativa(-4), fechaCierre: relativa(10), mostrarResultados: 'en tiempo real', imagen: 'music-player-fill' },
+    { ...base, id: 10, categoriaId: 7, titulo: 'Gran final de piquería', descripcion: 'Dos cantadores frente a frente: escucha cada duelo y elige al ganador del público.', fechaApertura: relativa(-1), fechaCierre: relativa(6), mostrarResultados: 'en tiempo real', imagen: 'mic-fill' },
+    { ...base, id: 11, categoriaId: 8, titulo: 'Mejor parranda vallenata', descripcion: 'Vota por la parranda que mejor conserva el espíritu de la música de patio.', fechaApertura: relativa(-5), fechaCierre: relativa(8), mostrarResultados: 'al cerrar', imagen: 'balloon-heart-fill' },
+    { ...base, id: 12, categoriaId: 9, titulo: '¿Cuál es tu aire vallenato favorito?', descripcion: 'Escucha una muestra de cada aire y vota con un toque.', fechaApertura: relativa(-2), fechaCierre: relativa(14), mostrarResultados: 'en tiempo real', imagen: 'soundwave' },
+    // Abiertas sin audio en las mismas categorías: muestran la diferencia con las que tienen muestra
+    { ...base, id: 13, categoriaId: 6, titulo: 'Acordeonero juvenil favorito', descripcion: 'Reconocimiento del público a los acordeoneros menores de 18 años.', fechaApertura: relativa(-3), fechaCierre: relativa(9), mostrarResultados: 'en tiempo real', imagen: 'star-fill' },
+    { ...base, id: 14, categoriaId: 8, titulo: 'Mejor anfitrión de parranda', descripcion: 'El público elige la casa que mejor recibe a los parranderos durante el Festival.', fechaApertura: relativa(-2), fechaCierre: relativa(7), mostrarResultados: 'al cerrar', imagen: 'person-hearts' },
     // Borrador sin publicar: tiene una sola opción (sirve para demostrar RN-06)
     { ...base, id: 8, categoriaId: 1, titulo: 'Mejor acordeonero aficionado', descripcion: 'Votación en preparación. Requiere al menos 2 opciones para publicarse.', fechaApertura: relativa(30), fechaCierre: relativa(40), mostrarResultados: 'al cerrar', imagen: 'music-note', publicada: false },
   ];
 
   // Cada votación muestra sus opciones de una forma distinta (ver data/presentaciones.js)
-  const presentaciones = { 1: 'reproductor', 2: 'lista', 3: 'mosaico', 4: 'compacta', 5: 'tarjetas', 6: 'lista', 7: 'tarjetas', 8: 'tarjetas' };
+  const presentaciones = { 1: 'reproductor', 2: 'lista', 3: 'mosaico', 4: 'compacta', 5: 'tarjetas', 6: 'lista', 7: 'tarjetas', 8: 'tarjetas', 9: 'reproductor', 10: 'duelo', 11: 'tarjetas', 12: 'colores', 13: 'respuestas', 14: 'compacta' };
   votaciones.forEach((v) => {
     v.slug = slugificar(v.titulo);
     v.iconoImagen = '';
@@ -95,6 +107,10 @@ export function crearDatosSemilla() {
   const muestras = {
     1: ['brisas-del-guatapuri', 'luna-de-valledupar', 'el-pilon-de-mi-tierra', 'sabanas-del-cesar', 'caminos-de-la-sierra'],
     2: ['corazon-sabanero', 'recuerdos-de-mi-pueblo', 'la-brisa-y-el-acordeon', 'cantor-de-mi-tierra'],
+    9: ['toque-mateo-arzuaga', 'toque-ivan-daza', 'toque-lucia-mendoza', 'toque-samuel-pumarejo'],
+    10: ['piqueria-versos-del-cardonal', 'piqueria-decimas-de-la-plaza'],
+    11: ['parranda-noche-en-el-patio', 'parranda-amanecer-parrandero', 'parranda-bajo-el-palo-de-mango', 'parranda-recuerdos-de-patillal'],
+    12: ['brisas-del-guatapuri', 'luna-de-valledupar', 'sabanas-del-cesar', 'el-pilon-de-mi-tierra'],
   };
 
   const nombresOpciones = {
@@ -144,6 +160,38 @@ export function crearDatosSemilla() {
       ['Ramiro Arias Gutiérrez (ficticio) – Luthier', 'Artesano que repara acordeones y cajas.'],
     ],
     8: [['Participante 1 (ficticio)', 'Única opción registrada hasta ahora.']],
+    9: [
+      ['Mateo Arzuaga Ríos (ficticio)', 'Toque de puya veloz, con la caja y la guacharaca al límite.'],
+      ['Iván Daza Oñate (ficticio)', 'Merengue alegre con bajos marcados.'],
+      ['Lucía Mendoza Ríos (ficticia)', 'Paseo melódico de la nueva generación de acordeoneras.'],
+      ['Samuel Pumarejo Baute (ficticio)', 'Son cadencioso de la escuela tradicional.'],
+    ],
+    10: [
+      ['Duelo «Versos del Cardonal» (ficticio)', 'Contrapunteo en aire de puya entre dos decimeros.'],
+      ['Duelo «Décimas de la Plaza» (ficticio)', 'Versos improvisados en aire de merengue.'],
+    ],
+    11: [
+      ['Parranda «Noche en el Patio» (ficticia)', 'Paseo para cantar entre amigos.'],
+      ['Parranda «Amanecer Parrandero» (ficticia)', 'Merengue que acompaña hasta el amanecer.'],
+      ['Parranda «Bajo el Palo de Mango» (ficticia)', 'Son de patio, a la sombra y con guitarra.'],
+      ['Parranda «Recuerdos de Patillal» (ficticia)', 'Puya parrandera en homenaje a los pueblos del Cesar.'],
+    ],
+    12: [
+      ['Paseo', 'El aire más cantado, de ritmo pausado.'],
+      ['Merengue', 'Alegre y bailable, con el acordeón al frente.'],
+      ['Son', 'Cadencioso, marcado por el bajo del acordeón.'],
+      ['Puya', 'El más rápido: virtuosismo de caja y guacharaca.'],
+    ],
+    13: [
+      ['Santiago Oñate Molina (ficticio)', '15 años, escuela de música de Valledupar.'],
+      ['Valeria Gutiérrez Zuleta (ficticia)', '16 años, semillero de La Paz.'],
+      ['Emiliano Castro Ariza (ficticio)', '13 años, el más joven de la competencia.'],
+    ],
+    14: [
+      ['Casa de la familia Romero (ficticia)', 'Parranda tradicional en el barrio Cañaguate.'],
+      ['Patio de los Fuentes (ficticio)', 'Anfitriones con más de 20 años de parrandas.'],
+      ['Kiosco Los Compadres (ficticio)', 'Punto de encuentro de compositores.'],
+    ],
   };
 
   const opciones = [];
@@ -157,7 +205,7 @@ export function crearDatosSemilla() {
         descripcion,
         enlaceMultimedia: muestras[votacionId] ? `/audio/muestras/${muestras[votacionId][i]}.mp3` : '',
         audio: '',
-        textoAudio: muestras[votacionId] ? `Muestra instrumental ilustrativa de ${nombre.replace(/\s*\(ficticia\)/, '')}: acordeón, caja y guacharaca. ${descripcion}` : '',
+        textoAudio: muestras[votacionId] ? `Muestra instrumental ilustrativa de ${nombre.replace(/\s*\(fictici[ao]\)/, '')}: acordeón, caja y guacharaca. ${descripcion}` : '',
         orden: i + 1,
       });
     });
@@ -222,7 +270,7 @@ export function crearDatosSemilla() {
   }
 
   // Pesos para que haya un ganador claro en cada votación
-  const pesos = { 1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2], ...pesosPasadas };
+  const pesos = { 1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2], 9: [4, 3, 5, 2], 10: [5, 4], 11: [3, 2, 4, 3], 12: [5, 3, 2, 3], 13: [3, 4, 2], 14: [2, 3, 3], ...pesosPasadas };
   const anioDe = (votacion) => ediciones.find((e) => e.id === categorias.find((c) => c.id === votacion.categoriaId).edicionId).anio;
   // «Mejor comparsa de Piloneras» (abierta) tiene menos de 10 votantes: así se ve que la lista de
   // participación permanece oculta hasta llegar a 10 o al cierre.

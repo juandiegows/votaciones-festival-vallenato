@@ -1,8 +1,8 @@
 // Persistencia simulada en localStorage (reemplaza al backend en el prototipo)
 import { crearDatosSemilla } from './seed.js';
 
-// v4: presentaciones, íconos y audios subidos, texto del audio y votación con menos de 10 votantes
-export const CLAVE_DATOS = 'flv_datos_v4';
+// v5: categorías abiertas con audio para la demostración (acordeoneros, piquería, parrandas y aires)
+export const CLAVE_DATOS = 'flv_datos_v5';
 const CLAVE_SESION = 'flv_sesion_v3';
 
 export function cargarDatos() {

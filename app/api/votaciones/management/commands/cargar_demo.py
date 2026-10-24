@@ -60,6 +60,10 @@ CATEGORIAS = [
     ("Vestuario", "El vestuario típico que representa la tradición del Cesar.", "stars"),
     ("Agrupaciones", "Conjuntos vallenatos que se presentan en las tarimas del Festival.", "boombox-fill"),
     ("Reconocimientos del público", "Personajes que el público quiere destacar en esta edición.", "award-fill"),
+    ("Acordeoneros", "Los toques de acordeón que más emocionan al público en las tarimas.", "music-player-fill"),
+    ("Piquería", "Duelos de versos improvisados entre cantadores, con caja y guacharaca.", "mic-fill"),
+    ("Parrandas", "Las parrandas vallenatas de patio, guitarra y acordeón que se viven en el Festival.", "balloon-heart-fill"),
+    ("Aires vallenatos", "Paseo, merengue, son y puya: el público elige su aire favorito.", "soundwave"),
 ]
 
 V = Votacion.Visibilidad
@@ -86,6 +90,26 @@ VOTACIONES = [
     (7, "Reconocimientos del público", "Personaje del Festival",
      "El público elige al personaje que mejor representa el espíritu del Festival.",
      (-30, 0), (-8, 0), V.AL_CIERRE, "award-fill", True),
+    # Categorías con votaciones abiertas y muestras de audio (para la demostración en video).
+    (9, "Acordeoneros", "Acordeonero favorito del público",
+     "Escucha el toque de cada acordeonero y vota por el que más te hizo vibrar.",
+     (-4, 0), (10, 0), V.TIEMPO_REAL, "music-player-fill", True),
+    (10, "Piquería", "Gran final de piquería",
+     "Dos cantadores frente a frente: escucha cada duelo y elige al ganador del público.",
+     (-1, 0), (6, 0), V.TIEMPO_REAL, "mic-fill", True),
+    (11, "Parrandas", "Mejor parranda vallenata",
+     "Vota por la parranda que mejor conserva el espíritu de la música de patio.",
+     (-5, 0), (8, 0), V.AL_CIERRE, "balloon-heart-fill", True),
+    (12, "Aires vallenatos", "¿Cuál es tu aire vallenato favorito?",
+     "Escucha una muestra de cada aire y vota con un toque.",
+     (-2, 0), (14, 0), V.TIEMPO_REAL, "soundwave", True),
+    # Abiertas sin audio en las mismas categorías: muestran la diferencia con las que tienen muestra.
+    (13, "Acordeoneros", "Acordeonero juvenil favorito",
+     "Reconocimiento del público a los acordeoneros menores de 18 años.",
+     (-3, 0), (9, 0), V.TIEMPO_REAL, "star-fill", True),
+    (14, "Parrandas", "Mejor anfitrión de parranda",
+     "El público elige la casa que mejor recibe a los parranderos durante el Festival.",
+     (-2, 0), (7, 0), V.AL_CIERRE, "person-hearts", True),
     # Borrador sin publicar con una sola opción: sirve para demostrar RN-06.
     (8, "Música", "Mejor acordeonero aficionado",
      "Votación en preparación. Requiere al menos 2 opciones para publicarse.",
@@ -139,9 +163,43 @@ OPCIONES = {
         ("Ramiro Arias Gutiérrez (ficticio) – Luthier", "Artesano que repara acordeones y cajas."),
     ],
     8: [("Participante 1 (ficticio)", "Única opción registrada hasta ahora.")],
+    9: [
+        ("Mateo Arzuaga Ríos (ficticio)", "Toque de puya veloz, con la caja y la guacharaca al límite."),
+        ("Iván Daza Oñate (ficticio)", "Merengue alegre con bajos marcados."),
+        ("Lucía Mendoza Ríos (ficticia)", "Paseo melódico de la nueva generación de acordeoneras."),
+        ("Samuel Pumarejo Baute (ficticio)", "Son cadencioso de la escuela tradicional."),
+    ],
+    10: [
+        ("Duelo «Versos del Cardonal» (ficticio)", "Contrapunteo en aire de puya entre dos decimeros."),
+        ("Duelo «Décimas de la Plaza» (ficticio)", "Versos improvisados en aire de merengue."),
+    ],
+    11: [
+        ("Parranda «Noche en el Patio» (ficticia)", "Paseo para cantar entre amigos."),
+        ("Parranda «Amanecer Parrandero» (ficticia)", "Merengue que acompaña hasta el amanecer."),
+        ("Parranda «Bajo el Palo de Mango» (ficticia)", "Son de patio, a la sombra y con guitarra."),
+        ("Parranda «Recuerdos de Patillal» (ficticia)", "Puya parrandera en homenaje a los pueblos del Cesar."),
+    ],
+    12: [
+        ("Paseo", "El aire más cantado, de ritmo pausado."),
+        ("Merengue", "Alegre y bailable, con el acordeón al frente."),
+        ("Son", "Cadencioso, marcado por el bajo del acordeón."),
+        ("Puya", "El más rápido: virtuosismo de caja y guacharaca."),
+    ],
+    13: [
+        ("Santiago Oñate Molina (ficticio)", "15 años, escuela de música de Valledupar."),
+        ("Valeria Gutiérrez Zuleta (ficticia)", "16 años, semillero de La Paz."),
+        ("Emiliano Castro Ariza (ficticio)", "13 años, el más joven de la competencia."),
+    ],
+    14: [
+        ("Casa de la familia Romero (ficticia)", "Parranda tradicional en el barrio Cañaguate."),
+        ("Patio de los Fuentes (ficticio)", "Anfitriones con más de 20 años de parrandas."),
+        ("Kiosco Los Compadres (ficticio)", "Punto de encuentro de compositores."),
+    ],
 }
 
-PRESENTACION_OPCIONES = {1: "reproductor", 2: "lista", 3: "mosaico", 4: "tarjetas", 5: "compacta", 6: "tarjetas", 7: "lista"}
+PRESENTACION_OPCIONES = {1: "reproductor", 2: "lista", 3: "mosaico", 4: "tarjetas", 5: "compacta", 6: "tarjetas", 7: "lista",
+                         9: "reproductor", 10: "duelo", 11: "tarjetas", 12: "colores",
+                         13: "respuestas", 14: "compacta"}
 
 # Votaciones abiertas con pocos votantes: la lista de participación sigue oculta (menos de 10 votantes).
 MAX_VOTANTES = {3: 7}
@@ -150,11 +208,17 @@ MAX_VOTANTES = {3: 7}
 MUESTRAS = {
     1: ["brisas-del-guatapuri", "luna-de-valledupar", "el-pilon-de-mi-tierra", "sabanas-del-cesar", "caminos-de-la-sierra"],
     2: ["corazon-sabanero", "recuerdos-de-mi-pueblo", "la-brisa-y-el-acordeon", "cantor-de-mi-tierra"],
+    9: ["toque-mateo-arzuaga", "toque-ivan-daza", "toque-lucia-mendoza", "toque-samuel-pumarejo"],
+    10: ["piqueria-versos-del-cardonal", "piqueria-decimas-de-la-plaza"],
+    11: ["parranda-noche-en-el-patio", "parranda-amanecer-parrandero", "parranda-bajo-el-palo-de-mango",
+         "parranda-recuerdos-de-patillal"],
+    12: ["brisas-del-guatapuri", "luna-de-valledupar", "sabanas-del-cesar", "el-pilon-de-mi-tierra"],
 }
 RUTA_MUESTRA = "/audio/muestras/{}.mp3"
 
 # Pesos por opción para que haya un ganador claro en cada votación con votos.
-PESOS = {1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2]}
+PESOS = {1: [5, 3, 4, 2, 1], 2: [2, 5, 3, 2], 3: [4, 3, 2, 5, 2], 5: [3, 4, 2, 3, 1, 2], 7: [5, 3, 2, 2],
+         9: [4, 3, 5, 2], 10: [5, 4], 11: [3, 2, 4, 3], 12: [5, 3, 2, 3], 13: [3, 4, 2], 14: [2, 3, 3]}
 
 # Ediciones anteriores (cerradas, resultados publicados): año → [(categoría, descripción, ícono, votaciones)]
 # votación = (título, descripción, ícono, [(opción, descripción)], pesos)

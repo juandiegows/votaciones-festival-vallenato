@@ -30,6 +30,17 @@ CANCIONES = [  # archivo, aire, tónica (Hz), semilla
     ("recuerdos-de-mi-pueblo", "son", 220.00, 22),
     ("la-brisa-y-el-acordeon", "merengue", 261.63, 23),
     ("cantor-de-mi-tierra", "puya", 246.94, 24),
+    # Demostración de categorías abiertas: acordeoneros, piquería y parrandas
+    ("toque-mateo-arzuaga", "puya", 261.63, 31),
+    ("toque-ivan-daza", "merengue", 233.08, 32),
+    ("toque-lucia-mendoza", "paseo", 246.94, 33),
+    ("toque-samuel-pumarejo", "son", 207.65, 34),
+    ("piqueria-versos-del-cardonal", "puya", 220.00, 41),
+    ("piqueria-decimas-de-la-plaza", "merengue", 196.00, 42),
+    ("parranda-noche-en-el-patio", "paseo", 220.00, 51),
+    ("parranda-amanecer-parrandero", "merengue", 246.94, 52),
+    ("parranda-bajo-el-palo-de-mango", "son", 233.08, 53),
+    ("parranda-recuerdos-de-patillal", "puya", 207.65, 54),
 ]
 
 MAYOR = [0, 2, 4, 5, 7, 9, 11, 12]
