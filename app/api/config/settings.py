@@ -5,6 +5,7 @@ from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 
 from config import base_datos
+from config.estaticos import ESTATICOS_ADMIN
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -121,6 +122,8 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Estáticos de Django Admin también en static/dj-admin/: el WAF bloquea static/admin/ (ver config/estaticos.py)
+STATICFILES_DIRS = [ESTATICOS_ADMIN]
 # Archivos subidos (imágenes del banner). En Docker: volumen persistente en DJANGO_MEDIA_ROOT.
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
@@ -131,7 +134,7 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
         if DEBUG or "test" in sys.argv
-        else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        else "config.estaticos.EstaticosProduccion"
     },
 }
 
