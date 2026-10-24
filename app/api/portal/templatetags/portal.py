@@ -153,3 +153,12 @@ def valor_fecha_hora(valor):
     if hasattr(valor, "hour"):
         return timezone.localtime(valor).strftime("%Y-%m-%dT%H:%M") if timezone.is_aware(valor) else valor.strftime("%Y-%m-%dT%H:%M")
     return valor or ""
+
+
+@register.filter
+def valor_campo(valor):
+    """Valor para el atributo value de un <input>: las fechas en ISO (AAAA-MM-DD), que es lo único que acepta
+    <input type="date">; sin esto la plantilla las localiza («28 de Abril de 2027») y el navegador las deja vacías."""
+    if hasattr(valor, "isoformat") and not hasattr(valor, "hour"):
+        return valor.isoformat()
+    return "" if valor is None else valor
