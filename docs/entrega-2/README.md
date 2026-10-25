@@ -11,7 +11,7 @@ Fecha límite: 26 de octubre de 2026 · Profesor: Deivys Morales Uribe.
 
 ## Capturas
 
-Tomadas el 18 (Django Admin y API) y el 20 de octubre de 2026 (sitio y panel) con Docker local (MySQL 8.4 + API Django + web), escritorio 1366 × 800 px.
+Tomadas el 18 (Django Admin y API), el 20 (sitio y panel) y el 24 de octubre de 2026 (ciclo CRUD del panel) con Docker local (MySQL 8.4 + API Django + web), escritorio 1366 × 800 px.
 Se usaron usuarios temporales de prueba, que se borraron al terminar; ninguna captura muestra contraseñas.
 
 | Archivo | Qué demuestra |
@@ -26,4 +26,6 @@ Se usaron usuarios temporales de prueba, que se borraron al terminar; ninguna ca
 | `15` – `16` | Registro de un votante con formulario de Django y aviso de confirmación del correo |
 | `17` – `19` | Inicio y cierre de sesión (sesión de Django) |
 | `20` | La categoría creada en el panel aparece en el sitio sin cambiar código |
-| `21` – `28` | Panel propio `/panel`: inicio, ediciones, categorías (nueva y guardada), votaciones y opciones |
+| `21` – `28` | Panel propio `/panel` (20 de octubre): inicio, ediciones, categorías (nueva y guardada), votaciones y opciones |
+| `29` – `46` | Panel propio `/panel` (24 de octubre): ciclo CRUD completo — crear edición, crear, editar y eliminar una categoría, crear una votación y crear y eliminar una opción (son las que usa el informe) |
+| `47` | Contribuidores del repositorio en GitHub (25 de octubre): commits de cada integrante |
