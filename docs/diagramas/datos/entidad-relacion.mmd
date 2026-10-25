@@ -1,71 +1,91 @@
 erDiagram
     direction LR
-    EDICION ||--|{ CATEGORIA : agrupa
-    EDICION ||--o{ BANNER_INICIO : muestra
-    CATEGORIA ||--o{ VOTACION : contiene
-    VOTACION ||--|{ OPCION : ofrece
-    VOTACION ||--o{ VOTO : registra
-    OPCION ||--o{ VOTO : recibe
-    USUARIO ||--o{ VOTO : emite
-    USUARIO |o--o{ REGISTRO_AUDITORIA : genera
+    EDICION ||--|{ CATEGORIA : "agrupa"
+    CATEGORIA ||--o{ VOTACION : "contiene"
+    VOTACION ||--|{ OPCION : "ofrece"
+    VOTACION ||--o{ VOTO : "registra"
+    OPCION ||--o{ VOTO : "recibe"
+    USUARIO ||--o{ VOTO : "emite"
+    USUARIO |o--o{ REGISTRO_AUDITORIA : "genera"
+    EDICION ||--o{ BANNER_INICIO : "muestra"
     EDICION {
         bigint id PK
+        varchar nombre
         smallint anio UK
-        varchar estado
+        date fecha_inicio
+        date fecha_fin
+        varchar estado "activa o cerrada"
+        varchar presentacion_categorias
         smallint votos_por_usuario
         bool votaciones_pausadas
-        bigint creado_por FK "soporte"
-        bigint actualizado_por FK "soporte"
     }
     CATEGORIA {
         bigint id PK
         bigint edicion_id FK
-        varchar nombre
+        varchar nombre "único por edición"
         varchar slug
-        bigint creado_por FK "soporte"
-        bigint actualizado_por FK "soporte"
+        text descripcion
+        varchar icono
+        smallint orden
+        bool activa
     }
     VOTACION {
         bigint id PK
         bigint categoria_id FK
         varchar titulo
+        varchar slug
         datetime fecha_apertura
-        datetime fecha_cierre
-        bigint creado_por FK "soporte"
-        bigint actualizado_por FK "soporte"
+        datetime fecha_cierre "posterior a la apertura"
+        smallint votos_por_usuario
+        varchar visibilidad_resultados
+        varchar presentacion_opciones
+        bool publicada
+        bool resultados_publicados
     }
     OPCION {
         bigint id PK
         bigint votacion_id FK
         varchar nombre
+        text descripcion
+        varchar enlace_multimedia
+        varchar audio
+        text texto_audio "accesibilidad"
+        smallint orden
         bool activa
-        bigint creado_por FK "soporte"
-        bigint actualizado_por FK "soporte"
-    }
-    USUARIO {
-        bigint id PK
-        varchar email UK
-        varchar numero_documento UK
-        bool correo_verificado
-        varchar rol
     }
     VOTO {
         bigint id PK
         bigint usuario_id FK
         bigint votacion_id FK
         bigint opcion_id FK
+        datetime fecha_hora
         varchar codigo_comprobante UK
+    }
+    USUARIO {
+        bigint id PK
+        varchar email UK
+        varchar nombres
+        varchar apellidos
+        varchar rol "votante o administrador"
+        varchar tipo_documento
+        varchar numero_documento
+        bool correo_verificado
+        bool acepta_tratamiento_datos
     }
     REGISTRO_AUDITORIA {
         bigint id PK
         bigint usuario_id FK
         varchar accion
+        varchar entidad
+        json detalle
         datetime fecha_hora
+        varchar ip
     }
     BANNER_INICIO {
         bigint id PK
         bigint edicion_id FK
+        varchar titulo
         varchar imagen
-        bigint creado_por FK "soporte"
-        bigint actualizado_por FK "soporte"
+        smallint orden
+        bool activo
     }

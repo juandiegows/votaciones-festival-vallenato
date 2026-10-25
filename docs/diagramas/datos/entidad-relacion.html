@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<title>Modelo entidad-relación</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Raleway:wght@800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --rojo:#DD3333; --negro:#141414; --dorado:#D7AC70; --gris:#F4F1EC; --borde:#D9D2C7; --suave:#5a5a5a; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1640px; padding:22px 20px 20px; background:#fff; font-family:Poppins, sans-serif; color:#222; }
+  h1 { font-family:Raleway; font-weight:800; font-size:30px; color:var(--negro); }
+  h1 span { color:var(--rojo); }
+  .sub { color:var(--suave); font-size:15px; margin:4px 0 0; }
+  #lienzo { position:relative; width:1600px; height:905px; margin-top:20px; }
+  #lineas { position:absolute; inset:0; overflow:visible; }
+  .t { position:absolute; width:330px; border:2px solid var(--negro); border-radius:10px; overflow:hidden; background:#fff; box-shadow:0 3px 0 rgba(0,0,0,.08); z-index:1; }
+  .t.princ .cab { background:var(--negro); }
+  .t.sec { border-color:#8c8c8c; }
+  .t.sec .cab { background:#5c5c5c; }
+  .cab { color:#fff; font-weight:600; font-size:17px; padding:7px 12px; display:flex; justify-content:space-between; align-items:center; }
+  .cab small { font-family:'JetBrains Mono'; font-weight:400; font-size:11px; color:var(--dorado); }
+  .f { display:grid; grid-template-columns:36px 1fr auto; gap:6px; align-items:center; padding:3px 12px; font-size:14.5px; border-top:1px solid #eee; }
+  .f:nth-child(even) { background:var(--gris); }
+  .f .n { font-family:'JetBrains Mono'; font-weight:600; color:var(--negro); }
+  .f .ty { font-family:'JetBrains Mono'; font-size:12.5px; color:var(--suave); }
+  .k { font-size:11.5px; font-weight:700; border-radius:4px; text-align:center; padding:1px 0; }
+  .pk { background:var(--dorado); color:var(--negro); }
+  .fk { background:var(--rojo); color:#fff; }
+  .uk { background:var(--negro); color:#fff; }
+  .rel { position:absolute; background:#fff; border:1.5px solid var(--rojo); color:var(--rojo); font-weight:600; font-size:14px; border-radius:999px; padding:1px 10px; transform:translate(-50%,-50%); z-index:2; white-space:nowrap; }
+  .ley { position:absolute; left:262px; top:338px; width:560px; border:1.5px dashed var(--borde); border-radius:10px; padding:12px 14px; font-size:13.5px; color:var(--suave); background:#fff; }
+  .ley b { color:var(--negro); }
+  .ley .s { display:flex; gap:18px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .ley .s span { display:flex; align-items:center; gap:6px; }
+</style>
+</head>
+<body>
+<h1>Modelo entidad-relación <span>· MySQL 8.4</span></h1>
+<p class="sub">Tablas creadas por las migraciones de Django. Jerarquía: Edición → Categoría → Votación → Opción → Voto, con Usuario y auditoría.</p>
+<div id="lienzo">
+  <svg id="lineas"></svg>
+</div>
+<script>
+const T = {
+  edicion: {x:0, y:20, princ:1, f:[['PK','id','bigint'],['','nombre','varchar(150)'],['UK','anio','smallint'],['','fecha_inicio','date'],['','fecha_fin','date'],['','estado','activa | cerrada'],['','presentacion_categorias','varchar'],['','votos_por_usuario','smallint'],['','votaciones_pausadas','bool']]},
+  categoria: {x:423, y:20, princ:1, f:[['PK','id','bigint'],['FK','edicion_id','→ edicion'],['','nombre','único por edición'],['','slug','varchar'],['','descripcion','text'],['','icono','varchar'],['','orden','smallint'],['','activa','bool']]},
+  votacion: {x:846, y:20, princ:1, f:[['PK','id','bigint'],['FK','categoria_id','→ categoria'],['','titulo','varchar(150)'],['','slug','varchar'],['','fecha_apertura','datetime'],['','fecha_cierre','> apertura'],['','votos_por_usuario','smallint'],['','visibilidad_resultados','varchar'],['','presentacion_opciones','varchar'],['','publicada','bool'],['','resultados_publicados','bool']]},
+  opcion: {x:1270, y:20, princ:1, f:[['PK','id','bigint'],['FK','votacion_id','→ votacion'],['','nombre','varchar(150)'],['','descripcion','text'],['','enlace_multimedia','varchar'],['','audio','archivo'],['','texto_audio','accesibilidad'],['','orden','smallint'],['','activa','bool']]},
+  voto: {x:1036, y:540, princ:1, f:[['PK','id','bigint'],['FK','usuario_id','→ usuario'],['FK','votacion_id','→ votacion'],['FK','opcion_id','→ opcion'],['','fecha_hora','datetime'],['UK','codigo_comprobante','varchar'],['','ip','varchar']]},
+  usuario: {x:606, y:540, princ:1, f:[['PK','id','bigint'],['UK','email','varchar'],['','password','hash'],['','nombres','varchar'],['','apellidos','varchar'],['','rol','votante | admin'],['','tipo_documento','varchar'],['','numero_documento','varchar'],['','correo_verificado','bool'],['','acepta_tratamiento_datos','bool']]},
+  registro_auditoria: {x:176, y:600, princ:0, f:[['PK','id','bigint'],['FK','usuario_id','→ usuario'],['','accion','varchar'],['','entidad','varchar'],['','detalle','json'],['','fecha_hora','datetime'],['','ip','varchar']]},
+  banner_inicio: {x:0, y:410, princ:0, w:230, f:[['PK','id','bigint'],['FK','edicion_id','→ edicion'],['','titulo','varchar'],['','orden','smallint']]},
+};
+const L = document.getElementById('lienzo');
+for (const [nom, t] of Object.entries(T)) {
+  const d = document.createElement('div');
+  d.className = 't ' + (t.princ ? 'princ' : 'sec'); d.id = nom;
+  d.style.left = t.x + 'px'; d.style.top = t.y + 'px';
+  if (t.w) d.style.width = t.w + 'px';
+  d.innerHTML = `<div class="cab">${nom.toUpperCase()}<small>tabla</small></div>` + t.f.map(([k,n,ty]) =>
+    `<div class="f"><span class="k ${k.toLowerCase()}">${k}</span><span class="n">${n}</span><span class="ty">${ty}</span></div>`).join('');
+  L.appendChild(d);
+}
+// banner más compacto: sin columna de tipo
+document.querySelectorAll('#banner_inicio .ty').forEach(e => e.remove());
+document.querySelectorAll('#banner_inicio .f').forEach(e => e.style.gridTemplateColumns = '34px 1fr');
+
+const svg = document.getElementById('lineas'), NS = 'http://www.w3.org/2000/svg';
+const caja = id => { const e = document.getElementById(id), r = L.getBoundingClientRect(), b = e.getBoundingClientRect();
+  return {l:b.left-r.left, t:b.top-r.top, r:b.right-r.left, b:b.bottom-r.top, cx:(b.left+b.right)/2-r.left, cy:(b.top+b.bottom)/2-r.top}; };
+const ln = (x1,y1,x2,y2,w=2) => { const l = document.createElementNS(NS,'line');
+  Object.entries({x1,y1,x2,y2,stroke:'#141414','stroke-width':w}).forEach(([k,v]) => l.setAttribute(k,v)); svg.appendChild(l); };
+const circ = (cx,cy) => { const c = document.createElementNS(NS,'circle');
+  Object.entries({cx,cy,r:5.5,fill:'#fff',stroke:'#141414','stroke-width':2}).forEach(([k,v]) => c.setAttribute(k,v)); svg.appendChild(c); };
+// extremo en (x,y); (dx,dy) apunta desde la tabla hacia afuera
+function extremo(x,y,dx,dy,tipo){
+  const px = -dy, py = dx, P = (a,b) => [x+dx*a+px*b, y+dy*a+py*b];
+  const raya = a => { const [x1,y1]=P(a,-9), [x2,y2]=P(a,9); ln(x1,y1,x2,y2); };
+  if (tipo === 'uno') { raya(10); raya(16); }
+  if (tipo === 'cero-uno') { raya(10); const [c1,c2]=P(24,0); circ(c1,c2); }
+  if (tipo.startsWith('muchos')) {
+    const [a1,a2]=P(0,-10), [b1,b2]=P(0,10), [o1,o2]=P(16,0); ln(a1,a2,o1,o2); ln(b1,b2,o1,o2);
+    if (tipo === 'muchos-uno') raya(22); else { const [c1,c2]=P(28,0); circ(c1,c2); }
+  }
+}
+function path(pts){ const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', 'M' + pts.map(q => q.join(',')).join(' L'));
+  Object.entries({fill:'none',stroke:'#141414','stroke-width':2,'stroke-linejoin':'round'}).forEach(([k,v]) => p.setAttribute(k,v)); svg.appendChild(p); }
+function etiqueta(x,y,t){ const e = document.createElement('div'); e.className='rel'; e.textContent=t; e.style.left=x+'px'; e.style.top=y+'px'; L.appendChild(e); }
+
+// horizontal entre a (izq) y b (der) a la altura y
+function horiz(a,b,y,ta,tb,txt){ const A=caja(a),B=caja(b); path([[A.r,y],[B.l,y]]); extremo(A.r,y,1,0,ta); extremo(B.l,y,-1,0,tb); etiqueta((A.r+B.l)/2,y-16,txt); }
+// vertical de a (arriba) a b (abajo) en x
+function vert(a,b,x,ta,tb,txt){ const A=caja(a),B=caja(b); path([[x,A.b],[x,B.t]]); extremo(x,A.b,0,1,ta); extremo(x,B.t,0,-1,tb); etiqueta(x,(A.b+B.t)/2,txt); }
+
+const E=caja('edicion'), C=caja('categoria'), V=caja('votacion'), O=caja('opcion'), VO=caja('voto'), U=caja('usuario'), RA=caja('registro_auditoria'), BI=caja('banner_inicio');
+horiz('edicion','categoria',C.t+74,'uno','muchos-cero','agrupa');
+horiz('categoria','votacion',C.t+74,'uno','muchos-cero','contiene');
+horiz('votacion','opcion',C.t+74,'uno','muchos-cero','ofrece');
+vert('edicion','banner_inicio',BI.cx,'uno','muchos-cero','muestra');
+// votación → voto (codo)
+{ const x1 = V.r-60, y = VO.t-40; path([[x1,V.b],[x1,y],[VO.l+60,y],[VO.l+60,VO.t]]); extremo(x1,V.b,0,1,'uno'); extremo(VO.l+60,VO.t,0,-1,'muchos-cero'); etiqueta((x1+VO.l+60)/2,y,'registra'); }
+// opción → voto
+{ const x = O.cx; path([[x,O.b],[x,VO.t+30],[VO.r,VO.t+30]]); extremo(x,O.b,0,1,'uno'); extremo(VO.r,VO.t+30,1,0,'muchos-cero'); etiqueta(x,(O.b+VO.t+30)/2,'recibe'); }
+horiz('usuario','voto',VO.t+120,'uno','muchos-cero','emite');
+// usuario → auditoría
+{ const y = RA.t+90; path([[U.l,y],[RA.r,y]]); extremo(U.l,y,-1,0,'cero-uno'); extremo(RA.r,y,1,0,'muchos-cero'); etiqueta((U.l+RA.r)/2,y-16,'genera'); }
+
+const ley = document.createElement('div'); ley.className = 'ley';
+ley.innerHTML = `<b>Notación pata de gallo.</b> Las tablas de contenido (edición, categoría, votación, opción y banner) heredan de <b>ModeloTrazable</b>:
+  creado_en, creado_por, actualizado_en y actualizado_por (FK a usuario); esas líneas se omiten para no saturar el diagrama.
+  En gris, tablas de apoyo. También existen revista, configuracion_sitio y red_social (contenido del sitio, sin relación con el voto).
+  <div class="s"><span><svg width="44" height="22"><line x1="0" y1="11" x2="44" y2="11" stroke="#141414" stroke-width="2"/><line x1="12" y1="2" x2="12" y2="20" stroke="#141414" stroke-width="2"/><line x1="18" y1="2" x2="18" y2="20" stroke="#141414" stroke-width="2"/></svg>uno (obligatorio)</span>
+  <span><svg width="44" height="22"><line x1="0" y1="11" x2="44" y2="11" stroke="#141414" stroke-width="2"/><line x1="44" y1="1" x2="28" y2="11" stroke="#141414" stroke-width="2"/><line x1="44" y1="21" x2="28" y2="11" stroke="#141414" stroke-width="2"/><line x1="22" y1="2" x2="22" y2="20" stroke="#141414" stroke-width="2"/></svg>uno o muchos</span>
+  <span><svg width="50" height="22"><line x1="0" y1="11" x2="50" y2="11" stroke="#141414" stroke-width="2"/><line x1="50" y1="1" x2="34" y2="11" stroke="#141414" stroke-width="2"/><line x1="50" y1="21" x2="34" y2="11" stroke="#141414" stroke-width="2"/><circle cx="22" cy="11" r="5.5" fill="#fff" stroke="#141414" stroke-width="2"/></svg>cero o muchos</span>
+  <span><span class="k pk" style="padding:1px 5px">PK</span> llave primaria <span class="k fk" style="padding:1px 5px">FK</span> llave foránea <span class="k uk" style="padding:1px 5px">UK</span> única</span></div>`;
+L.appendChild(ley);
+</script>
+</body>
+</html>
