@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<title>Diagrama de despliegue UML</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Raleway:wght@800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --rojo:#DD3333; --negro:#141414; --dorado:#D7AC70; --gris:#F4F1EC; --suave:#555; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1640px; padding:22px 20px 20px; background:#fff; font-family:Poppins, sans-serif; color:#1b1b1b; }
+  h1 { font-family:Raleway; font-weight:800; font-size:28px; color:var(--negro); }
+  h1 span { color:var(--rojo); }
+  #lienzo { position:relative; width:1600px; height:960px; margin-top:34px; }
+  #trazos { position:absolute; inset:0; overflow:visible; z-index:2; pointer-events:none; }
+  .nodo { position:absolute; border:2px solid var(--negro); background:#fff; z-index:1; padding:8px 12px; }
+  .nodo > .tit { font-size:13px; color:var(--suave); line-height:1.25; }
+  .nodo > .tit b { display:block; font-size:16.5px; color:var(--negro); font-weight:600; }
+  .nodo.srv { background:#FBFAF7; }
+  .nodo.env { background:var(--gris); border-style:dashed; }
+  .nodo.ext { background:#fff; }
+  .comp, .art { position:relative; border:2px solid var(--negro); background:#fff; padding:6px 34px 7px 10px; margin-top:8px; font-size:14px; line-height:1.3; }
+  .comp small, .art small { display:block; color:var(--rojo); font-size:12px; }
+  .comp b, .art b { font-weight:600; }
+  .comp .d, .art .d { color:var(--suave); font-size:12.5px; }
+  .comp::after { content:''; position:absolute; right:9px; top:8px; width:14px; height:17px; border:1.6px solid var(--negro);
+    box-shadow:-4px 4px 0 -1px #fff, -4px 4px 0 0.5px var(--negro), -4px 9px 0 -1px #fff, -4px 9px 0 0.5px var(--negro); background:#fff; }
+  .art { background:#FFF9EE; border-color:#9c7a45; }
+  .art::after { content:''; position:absolute; right:9px; top:7px; width:13px; height:17px; border:1.6px solid var(--negro);
+    clip-path:polygon(0 0, 65% 0, 100% 30%, 100% 100%, 0 100%); background:#fff; }
+  .rojo { border-color:var(--rojo); }
+  .etq { position:absolute; z-index:3; transform:translate(-50%,-50%); white-space:nowrap; font-size:13px; font-weight:600;
+    color:var(--rojo); background:#fff; border:1.5px solid var(--rojo); border-radius:8px; padding:1px 8px; text-align:center; line-height:1.3; }
+  .etq small { display:block; color:var(--suave); font-weight:400; font-size:12px; }
+  .mult { display:none; }
+  .ley { position:absolute; left:380px; top:880px; width:1220px; font-size:13.5px; color:var(--suave); line-height:1.45;
+    border:1.5px dashed #cfc6b8; border-radius:10px; padding:9px 14px; background:#fff; }
+  .ley b { color:var(--negro); }
+</style>
+</head>
+<body>
+<h1>Diagrama de despliegue UML <span>· producción en la VPS</span></h1>
+<div id="lienzo">
+  <svg id="trazos"></svg>
+
+  <div class="nodo" id="navegador" style="left:0; top:120px; width:300px; height:345px">
+    <div class="tit">«device»<b>Navegador web</b>computador o celular del votante y del administrador</div>
+    <div class="comp"><small>«component»</small><b>Sitio y panel</b><div class="d">HTML de las plantillas Django, Bootstrap 5, CSS de la marca</div></div>
+    <div class="comp"><small>«component»</small><b>Web React</b><div class="d">SPA compilada con Vite; consume la API en JSON</div></div>
+  </div>
+
+  <div class="nodo ext" id="cloudflare" style="left:385px; top:120px; width:255px; height:190px">
+    <div class="tit">«servicio en la nube»<b>Cloudflare</b></div>
+    <div class="comp"><small>«component»</small><b>DNS, TLS y WAF</b><div class="d">certificado HTTPS y filtro de ataques</div></div>
+  </div>
+
+  <div class="nodo ext" id="correo" style="left:385px; top:420px; width:255px; height:150px">
+    <div class="tit">«servicio externo»<b>Correo transaccional</b></div>
+    <div class="comp"><small>«component»</small><b>ZeptoMail o SMTP</b><div class="d">confirmación y recuperación</div></div>
+  </div>
+
+  <div class="nodo ext" id="github" style="left:0; top:640px; width:300px; height:205px">
+    <div class="tit">«servicio en la nube»<b>GitHub</b></div>
+    <div class="art"><small>«artifact»</small><b>Imágenes Docker</b><div class="d">ghcr.io · GitHub Actions</div></div>
+    <div class="art"><small>«artifact»</small><b>GitHub Pages</b><div class="d">demostración sin servidor</div></div>
+  </div>
+
+  <div class="nodo srv" id="vps" style="left:720px; top:60px; width:880px; height:790px">
+    <div class="tit">«device»<b>Servidor VPS · Linux</b></div>
+  </div>
+  <div class="nodo env" id="docker" style="left:745px; top:122px; width:830px; height:705px">
+    <div class="tit">«executionEnvironment»<b>Docker Engine · Docker Compose</b></div>
+  </div>
+
+  <div class="nodo" id="edge" style="left:775px; top:200px; width:265px; height:150px">
+    <div class="tit">«contenedor»<b>edge_nginx</b></div>
+    <div class="comp"><small>«component»</small><b>Proxy inverso</b><div class="d">enruta por dominio y ruta</div></div>
+  </div>
+
+  <div class="nodo" id="web" style="left:1110px; top:200px; width:265px; height:150px">
+    <div class="tit">«contenedor»<b>votaciones_web · nginx</b></div>
+    <div class="art"><small>«artifact»</small><b>dist/</b><div class="d">React + Vite compilado</div></div>
+  </div>
+
+  <div class="nodo rojo" id="api" style="left:775px; top:440px; width:405px; height:330px">
+    <div class="tit">«contenedor» · Python 3.12 + Gunicorn<b>votaciones_api</b></div>
+    <div class="comp rojo" style="padding-bottom:10px"><small>«component»</small><b>Proyecto Django 5.2 (config)</b>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:4px">
+        <div class="comp" style="margin:0"><small>«component»</small><b>portal</b><div class="d">MVT: vistas, formularios, plantillas</div></div>
+        <div class="comp" style="margin:0"><small>«component»</small><b>votaciones</b><div class="d">API REST con DRF</div></div>
+        <div class="comp" style="margin:0"><small>«component»</small><b>Django Admin</b><div class="d">complementario</div></div>
+        <div class="comp" style="margin:0"><small>«component»</small><b>Servicios + ORM</b><div class="d">reglas y modelos</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nodo" id="mysql" style="left:1305px; top:440px; width:250px; height:180px">
+    <div class="tit">«contenedor»<b>MySQL 8.4</b></div>
+    <div class="art"><small>«schema»</small><b>votaciones_flv</b><div class="d">tablas creadas por las migraciones</div></div>
+  </div>
+
+  <div class="nodo" id="media" style="left:1305px; top:660px; width:250px; height:130px">
+    <div class="tit">«volumen»<b>media</b></div>
+    <div class="art"><small>«artifact»</small><b>Archivos subidos</b><div class="d">íconos, audios, banners</div></div>
+  </div>
+
+  <div class="ley"><b>Cómo leerlo.</b> Las cajas en 3D son nodos (hardware o entornos de ejecución); dentro van los componentes de software y los artefactos que se despliegan. Las líneas son rutas de comunicación con su protocolo.
+    <b>En local</b>, <span style="font-family:'JetBrains Mono'">docker compose up</span> levanta los mismos contenedores web (:8095), api (:8096) y db (:3317), sin Cloudflare ni edge_nginx.</div>
+</div>
+<script src="../uml.js"></script>
+<script>
+const { caja, conector, nodo3d, texto } = UML;
+for (const id of ['navegador', 'cloudflare', 'correo', 'github', 'vps', 'edge', 'web', 'api', 'mysql', 'media']) nodo3d(id, id === 'vps' ? 20 : 14);
+
+const N = caja('navegador'), CF = caja('cloudflare'), CO = caja('correo'), G = caja('github'), V = caja('vps'),
+      E = caja('edge'), W = caja('web'), A = caja('api'), M = caja('mysql'), ME = caja('media');
+const et = (x, y, t, s) => texto(x, y, t + (s ? `<small>${s}</small>` : ''), 'etq');
+
+conector([[N.r, CF.t + 80], [CF.l, CF.t + 80]], { fin: 'flecha' });                 et((N.r + CF.l) / 2, CF.t + 46, 'HTTPS', 'puerto 443');
+conector([[CF.r, CF.t + 80], [E.l, CF.t + 80]], { fin: 'flecha' });                 et((CF.r + V.l) / 2 + 4, CF.t + 46, 'HTTPS', 'origen');
+conector([[E.r, E.t + 90], [W.l, E.t + 90]], { fin: 'flecha' });                   et((E.r + W.l) / 2, E.t + 50, 'HTTP :80', 'ruta /');
+conector([[E.l + 130, E.b], [E.l + 130, A.t]], { fin: 'flecha' });                  et(E.l + 300, (E.b + A.t) / 2, 'HTTP :8000', '/api · /panel · /login · /django-admin');
+conector([[A.r, M.t + 80], [M.l, M.t + 80]], { fin: 'flecha' });                   et((A.r + M.l) / 2, M.t + 30, 'TCP 3306', 'SQL · PyMySQL');
+conector([[A.r, ME.t + 70], [ME.l, ME.t + 70]], { fin: 'flecha', discontinua: true }); et((A.r + ME.l) / 2, ME.t + 30, 'lee y escribe');
+conector([[A.l, CO.t + 90], [CO.r, CO.t + 90]], { fin: 'flecha' });                et((A.l + CO.r) / 2 - 12, CO.t + 50, 'HTTPS o SMTP');
+conector([[N.l + 150, N.b], [N.l + 150, G.t]], { fin: 'flecha' });                  et(N.l + 220, (N.b + G.t) / 2, 'HTTPS', 'demostración');
+conector([[G.r, G.t + 120], [V.l, G.t + 120]], { fin: 'flecha', discontinua: true }); et((G.r + V.l) / 2, G.t + 86, '«deploy»', 'docker pull desde ghcr.io');
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@ Todos los diagramas viven aquí, con su fuente editable junto a la imagen. Los i
 | `.vsdx` | Microsoft Visio. |
 | `.drawio` | [diagrams.net](https://app.diagrams.net) (gratis); también exporta a `.vsdx` y `.png`. |
 | `.svg` | Visio, Inkscape o el navegador. |
+| `.html` | Se abre en el navegador; usa [`uml.js`](uml.js) para las líneas y se exporta a PNG con una captura de pantalla. |
 
 ## Casos de uso — [`casos-de-uso/`](casos-de-uso/)
 
@@ -31,7 +32,8 @@ Todos los diagramas viven aquí, con su fuente editable junto a la imagen. Los i
 |---|---|---|
 | Modelo conceptual (entidades, relaciones y cardinalidades) | [`modelo-conceptual.png`](datos/modelo-conceptual.png) | [`.mmd`](datos/modelo-conceptual.mmd) |
 | Entidades del modelo conceptual | [`entidades.png`](datos/entidades.png) | [`.mmd`](datos/entidades.mmd) |
-| Entidad-relación (llaves y atributos principales; va en el informe) | [`entidad-relacion.png`](datos/entidad-relacion.png) | [`.mmd`](datos/entidad-relacion.mmd) |
+| Clases UML de los modelos de Django (va en el informe de la Entrega 2) | [`clases-uml.png`](datos/clases-uml.png) | [`.html`](datos/clases-uml.html) (se abre en el navegador) |
+| Entidad-relación (llaves y atributos principales; va en el informe de la Entrega 2) | [`entidad-relacion.png`](datos/entidad-relacion.png) | [`.html`](datos/entidad-relacion.html) (se abre en el navegador) · [`.mmd`](datos/entidad-relacion.mmd) |
 | Modelo físico completo (todas las columnas de la base de datos) | [`modelo-fisico.png`](datos/modelo-fisico.png) | [`.mmd`](datos/modelo-fisico.mmd) |
 
 ## Comportamiento — [`comportamiento/`](comportamiento/)
@@ -46,7 +48,8 @@ Todos los diagramas viven aquí, con su fuente editable junto a la imagen. Los i
 
 | Diagrama | Imagen | Fuente |
 |---|---|---|
-| Arquitectura prevista por capas (va en el informe) | [`capas.png`](arquitectura/capas.png) | [`.html`](arquitectura/capas.html) (se abre en el navegador) |
+| Despliegue UML: VPS, Cloudflare, contenedores Docker y MySQL (va en el informe de la Entrega 2) | [`despliegue-uml.png`](arquitectura/despliegue-uml.png) | [`.html`](arquitectura/despliegue-uml.html) (se abre en el navegador) |
+| Arquitectura prevista por capas (Entrega 1) | [`capas.png`](arquitectura/capas.png) | [`.html`](arquitectura/capas.html) (se abre en el navegador) |
 | Arquitectura de la aplicación | [`aplicacion.png`](arquitectura/aplicacion.png) | [`.mmd`](arquitectura/aplicacion.mmd) |
 | Integración con el sitio del Festival | [`integracion.png`](arquitectura/integracion.png) | [`.mmd`](arquitectura/integracion.mmd) |
 | Conexión prevista entre el frontend y la API (va en el informe) | [`conexion-frontend-api.png`](arquitectura/conexion-frontend-api.png) | [`.mmd`](arquitectura/conexion-frontend-api.mmd) |
