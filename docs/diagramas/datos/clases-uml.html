@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<title>Diagrama de clases UML</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Raleway:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root { --rojo:#DD3333; --negro:#141414; --dorado:#D7AC70; --gris:#F4F1EC; --suave:#555; }
+  * { box-sizing:border-box; margin:0; }
+  body { width:1640px; padding:22px 20px 20px; background:#fff; font-family:Poppins, sans-serif; color:#1b1b1b; }
+  h1 { font-family:Raleway; font-weight:800; font-size:28px; color:var(--negro); }
+  h1 span { color:var(--rojo); }
+  #lienzo { position:relative; width:1600px; height:900px; margin-top:22px; }
+  #trazos { position:absolute; inset:0; overflow:visible; }
+  .cl { position:absolute; border:2px solid var(--negro); background:#fff; z-index:1; font-size:14px; white-space:nowrap; }
+  .cl .m { font-size:13.5px; }
+  .cl .n { background:var(--negro); color:#fff; text-align:center; padding:5px 8px 6px; font-weight:600; font-size:16.5px; line-height:1.15; }
+  .cl .n small { display:block; font-weight:400; font-size:12.5px; color:var(--dorado); }
+  .cl .n i { font-style:italic; }
+  .cl .a, .cl .m { padding:5px 9px; line-height:1.42; }
+  .cl .m { border-top:2px solid var(--negro); background:var(--gris); }
+  .cl .t { color:var(--suave); }
+  .cl .k { color:var(--rojo); font-weight:600; }
+  .cl.ext .n { background:#6b6b6b; }
+  .cl.enum .n { background:#fff; color:var(--negro); border-bottom:2px solid var(--negro); }
+  .cl.enum .n small { color:var(--rojo); }
+  .cl.enum .a { font-size:13.5px; line-height:1.35; }
+  .etq, .mult, .rel { position:absolute; z-index:2; white-space:nowrap; transform:translate(-50%,-50%); }
+  .mult { font-weight:600; font-size:14.5px; color:var(--negro); background:#fff; padding:0 3px; }
+  .rel { font-size:13.5px; font-weight:600; color:var(--rojo); background:#fff; border:1.5px solid var(--rojo); border-radius:999px; padding:0 9px; }
+  .ley { position:absolute; left:868px; top:0px; width:420px; font-size:13px; color:var(--suave); line-height:1.45; border:1.5px dashed #cfc6b8; border-radius:10px; padding:9px 12px; background:#fff; }
+  .ley b { color:var(--negro); }
+</style>
+</head>
+<body>
+<h1>Diagrama de clases UML <span>· modelos de Django</span></h1>
+<div id="lienzo">
+  <svg id="trazos"></svg>
+
+  <div class="cl" id="trazable" style="left:470px; top:8px; width:350px">
+    <div class="n"><small>«abstract»</small><i>ModeloTrazable</i></div>
+    <div class="a">+ creado_en: DateTime<br>+ creado_por: Usuario [0..1]<br>+ actualizado_en: DateTime<br>+ actualizado_por: Usuario [0..1]</div>
+    <div class="m">+ save() <span class="t">// llena el usuario del request</span></div>
+  </div>
+
+  <div class="cl ext" id="abstractuser" style="left:1335px; top:8px; width:265px">
+    <div class="n"><small>django.contrib.auth</small>AbstractUser</div>
+    <div class="a">+ password: str <span class="t">(hash)</span><br>+ is_staff: bool<br>+ is_active: bool</div>
+    <div class="m">+ set_password(clave)<br>+ check_password(clave): bool</div>
+  </div>
+
+  <div class="cl" id="edicion" style="left:0; top:228px; width:292px">
+    <div class="n">Edicion</div>
+    <div class="a">+ nombre: str<br>+ anio: int <span class="k">{único}</span><br>+ fecha_inicio: Date<br>+ fecha_fin: Date<br>+ estado: EstadoEdicion<br>+ votos_por_usuario: int<br>+ visibilidad_resultados: Visibilidad<br>+ votaciones_pausadas: bool</div>
+  </div>
+
+  <div class="cl" id="categoria" style="left:352px; top:228px; width:222px">
+    <div class="n">Categoria</div>
+    <div class="a">+ nombre: str<br>+ slug: str<br>+ descripcion: str<br>+ icono: str<br>+ orden: int<br>+ activa: bool</div>
+    <div class="m">+ save() <span class="t">// genera el slug</span></div>
+  </div>
+
+  <div class="cl" id="votacion" style="left:634px; top:228px; width:360px">
+    <div class="n">Votacion</div>
+    <div class="a">+ titulo: str<br>+ slug: str<br>+ fecha_apertura: DateTime<br>+ fecha_cierre: DateTime<br>+ votos_por_usuario: int<br>+ visibilidad_resultados: Visibilidad<br>+ presentacion_opciones: str<br>+ publicada: bool<br>+ cerrada_manualmente: bool<br>+ resultados_publicados: bool</div>
+    <div class="m">+ estado_en(momento): EstadoVotacion<br>+ «property» estado: EstadoVotacion<br>+ «property» votos_por_usuario_efectivo: int<br>+ «property» visibilidad_efectiva: Visibilidad<br>+ «property» pausada: bool</div>
+  </div>
+
+  <div class="cl" id="opcion" style="left:1054px; top:228px; width:222px">
+    <div class="n">Opcion</div>
+    <div class="a">+ nombre: str<br>+ descripcion: str<br>+ enlace_multimedia: str<br>+ audio: File<br>+ texto_audio: str<br>+ orden: int<br>+ activa: bool</div>
+  </div>
+
+  <div class="cl" id="usuario" style="left:1335px; top:228px; width:265px">
+    <div class="n">Usuario</div>
+    <div class="a">+ email: str <span class="k">{único}</span><br>+ nombres: str<br>+ apellidos: str<br>+ rol: Rol<br>+ tipo_documento: str<br>+ numero_documento: str<br>+ correo_verificado: bool<br>+ acepta_tratamiento_datos: bool</div>
+    <div class="m">+ «property» es_administrador: bool<br>+ has_perm(perm): bool</div>
+  </div>
+
+  <div class="cl" id="banner" style="left:0; top:660px; width:292px">
+    <div class="n">BannerInicio</div>
+    <div class="a">+ titulo: str<br>+ imagen: File<br>+ orden: int<br>+ activo: bool</div>
+  </div>
+
+  <div class="cl enum" id="e1" style="left:352px; top:590px; width:222px">
+    <div class="n"><small>«enumeration»</small>EstadoVotacion</div>
+    <div class="a">BORRADOR · PROGRAMADA<br>ABIERTA · CERRADA</div>
+  </div>
+  <div class="cl enum" id="e2" style="left:352px; top:702px; width:222px">
+    <div class="n"><small>«enumeration»</small>EstadoEdicion</div>
+    <div class="a">ACTIVA · CERRADA</div>
+  </div>
+  <div class="cl enum" id="e3" style="left:352px; top:792px; width:222px">
+    <div class="n"><small>«enumeration»</small>Rol</div>
+    <div class="a">VOTANTE · ADMINISTRADOR</div>
+  </div>
+
+  <div class="cl" id="voto" style="left:660px; top:700px; width:290px">
+    <div class="n">Voto</div>
+    <div class="a">+ fecha_hora: DateTime<br>+ codigo_comprobante: str <span class="k">{único}</span><br>+ ip: str</div>
+  </div>
+
+  <div class="cl" id="auditoria" style="left:1395px; top:690px; width:205px">
+    <div class="n">RegistroAuditoria</div>
+    <div class="a">+ accion: str<br>+ entidad: str<br>+ detalle: JSON<br>+ fecha_hora: DateTime<br>+ ip: str</div>
+  </div>
+
+  <div class="ley"><b>Notación UML.</b> Triángulo blanco: herencia. Rombo negro: composición (la parte pertenece al todo). Los números son multiplicidades. Las clases heredan de <b>ModeloTrazable</b> y <b>Usuario</b> extiende el usuario de Django (AUTH_USER_MODEL).</div>
+</div>
+<script src="../uml.js"></script>
+<script>
+const { caja, conector, linea, remate } = UML;
+const T = caja('trazable'), AU = caja('abstractuser'), E = caja('edicion'), C = caja('categoria'), V = caja('votacion'),
+      O = caja('opcion'), U = caja('usuario'), B = caja('banner'), VO = caja('voto'), RA = caja('auditoria');
+
+// herencia: bus horizontal bajo ModeloTrazable
+const bus = 200;
+linea([[T.cx, T.b], [T.cx, bus]]); remate(T.cx, T.b, 0, 1, 'herencia');
+linea([[-12, bus], [O.cx, bus]]);
+for (const k of [E, C, V, O]) linea([[k.cx, bus], [k.cx, k.t]]);
+linea([[-12, bus], [-12, B.t + 30], [B.l, B.t + 30]]);
+// Usuario hereda de AbstractUser
+conector([[U.cx + 40, U.t], [U.cx + 40, AU.b]], { fin: 'herencia' });
+
+// composiciones de la jerarquía
+const y = E.t + 48;
+conector([[E.r, y], [C.l, y]], { ini: 'composicion', multIni: '1', multFin: '0..*' });
+conector([[C.r, y], [V.l, y]], { ini: 'composicion', multIni: '1', multFin: '0..*' });
+conector([[V.r, y], [O.l, y]], { ini: 'composicion', multIni: '1', multFin: '0..*' });
+
+// votos
+conector([[V.l + 80, V.b], [V.l + 80, VO.t]], { multIni: '1', multFin: '0..*' });
+UML.texto(V.l + 150, (V.b + VO.t) / 2, 'registra', 'rel');
+conector([[O.cx, O.b], [O.cx, VO.t + 40], [VO.r, VO.t + 40]], { multIni: '1', multFin: '0..*', nombre: 'recibe', nombreEn: 0 });
+conector([[U.l + 20, U.b], [U.l + 20, VO.b + 40], [VO.cx + 60, VO.b + 40], [VO.cx + 60, VO.b]], { multIni: '1', multFin: '0..*', nombre: 'emite', nombreEn: 1 });
+
+// auditoría y trazabilidad
+conector([[U.r - 40, U.b], [U.r - 40, RA.t]], { multIni: '0..1', multFin: '0..*', nombre: 'genera' });
+conector([[T.r, T.b - 22], [1305, T.b - 22], [1305, U.t + 60], [U.l, U.t + 60]], { multIni: '0..*', multFin: '0..1', nombre: 'creado_por / actualizado_por', nombreEn: 0 });
+</script>
+</body>
+</html>
