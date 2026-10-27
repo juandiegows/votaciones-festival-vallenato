@@ -55,6 +55,20 @@ class VotarTests(BaseAPITest):
         self.autenticar(self.votante)
         self.assertEqual(self.votar(self.abierta, self.opcion_a).status_code, 409)
 
+    def test_peticion_directa_a_la_api_respeta_las_reglas_del_boton(self):
+        """CP-05 sin interfaz: aunque se salte el botón deshabilitado, el servidor rechaza el voto."""
+        self.autenticar(self.votante)
+        self.edicion.estado = "cerrada"
+        self.edicion.save()
+        respuesta = self.votar(self.abierta, self.opcion_a)
+        self.assertEqual((respuesta.status_code, respuesta.data["codigo"]), (409, "categoria_no_habilitada"))
+        self.edicion.estado = "activa"
+        self.edicion.save()
+        self.categoria.activa = False
+        self.categoria.save()
+        self.assertEqual(self.votar(self.abierta, self.opcion_a).status_code, 404)
+        self.assertEqual(Voto.objects.count(), 0)
+
     def test_opcion_de_otra_votacion_es_invalida(self):
         ahora = timezone.now()
         otra = self.crear_votacion("Otra", ahora - timedelta(days=1), ahora + timedelta(days=1))

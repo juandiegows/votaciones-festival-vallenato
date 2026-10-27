@@ -132,7 +132,7 @@ class PruebasEntrega3(Entrega3Mixin, BasePortalTest):
         """Simula la carrera: la validación previa no ve el voto que otra solicitud acaba de guardar."""
         self.client.force_login(self.votante)
         self.votar(URL_CANCION, self.opcion_a)
-        with mock.patch("votaciones.votacion.servicios.voto_en_categoria", return_value=None):
+        with mock.patch("votaciones.votacion.servicios.voto_que_bloquea", return_value=None):
             respuesta = self.votar(URL_INEDITA, self.inedita_a)
         self.assertEqual(Voto.objects.filter(usuario=self.votante).count(), 1)
         self.assertContains(self.client.get(respuesta.url), "Solo se permite un voto por categoría")
@@ -149,6 +149,47 @@ class PruebasEntrega3(Entrega3Mixin, BasePortalTest):
         self.assertEqual(titulos["Canción favorita del público"], ["Canción A", "Canción B"])
         self.assertEqual(titulos["Canción inédita revelación"], ["Inédita A", "Inédita B"])
         self.assertIn("piloneras", [c["slug"] for c in filas])
+
+
+class VotoUnicoConfigurable(Entrega3Mixin, BasePortalTest):
+    """Check «Un solo voto en toda la categoría»: desmarcado, cada votación de la categoría se vota aparte."""
+
+    def setUp(self):
+        super().setUp()
+        self.crear_escenario()
+
+    def votar(self, url, opcion):
+        return self.client.post(f"{url}/votar", {"opcion": opcion.pk})
+
+    def test_por_defecto_la_categoria_es_de_voto_unico(self):
+        self.assertTrue(Categoria.objects.create(edicion=self.edicion, nombre="Nueva", descripcion="x").voto_unico)
+
+    def test_desmarcado_permite_votar_en_cada_subevento_una_vez(self):
+        self.categoria.voto_unico = False
+        self.categoria.save()
+        self.client.force_login(self.votante)
+        self.assertRedirects(self.votar(URL_CANCION, self.opcion_a), f"{URL_CANCION}/comprobante")
+        self.assertRedirects(self.votar(URL_INEDITA, self.inedita_a), f"{URL_INEDITA}/comprobante")
+        respuesta = self.votar(URL_CANCION, self.opcion_b)
+        self.assertContains(self.client.get(respuesta.url), "Ya votaste en esta votación")
+        self.assertEqual(Voto.objects.filter(usuario=self.votante, categoria=self.categoria).count(), 2)
+
+    def test_panel_guarda_el_check_y_lo_bloquea_con_votos(self):
+        self.entrar_como_admin()
+        datos = {"edicion": self.edicion.pk, "nombre": "Música", "slug": "musica", "descripcion": "Canciones",
+                 "icono": "music-note-beamed", "orden": 1, "activa": "on"}  # sin «voto_unico»: desmarcado
+        self.client.post(f"/panel/categorias/{self.categoria.pk}/editar", datos)
+        self.categoria.refresh_from_db()
+        self.assertFalse(self.categoria.voto_unico)
+        Voto.objects.create(usuario=self.votante, votacion=self.votacion, opcion=self.opcion_a, codigo_comprobante="FLV27-CFG001")
+        respuesta = self.client.post(f"/panel/categorias/{self.categoria.pk}/editar", {**datos, "voto_unico": "on"})
+        self.assertContains(respuesta, "la categoría ya tiene votos")
+        self.categoria.refresh_from_db()
+        self.assertFalse(self.categoria.voto_unico)
+
+    def test_api_expone_el_modo_de_voto(self):
+        musica = next(c for c in self.client.get("/api/categorias/").json() if c["slug"] == "musica")
+        self.assertTrue(musica["voto_unico"])
 
 
 @skipUnless(connection.vendor == "mysql", "La concurrencia real se prueba contra MySQL (DB_ENGINE=mysql)")
