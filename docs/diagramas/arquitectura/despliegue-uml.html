@@ -94,7 +94,7 @@
   </div>
 
   <div class="nodo" id="mysql" style="left:1305px; top:440px; width:250px; height:180px">
-    <div class="tit">«contenedor»<b>MySQL 8.4</b></div>
+    <div class="tit">«contenedor» shared_mysql<b>MySQL 9.7</b></div>
     <div class="art"><small>«schema»</small><b>votaciones_flv</b><div class="d">tablas creadas por las migraciones</div></div>
   </div>
 
@@ -104,7 +104,7 @@
   </div>
 
   <div class="ley"><b>Cómo leerlo.</b> Las cajas en 3D son nodos (hardware o entornos de ejecución); dentro van los componentes de software y los artefactos que se despliegan. Las líneas son rutas de comunicación con su protocolo.
-    <b>En local</b>, <span style="font-family:'JetBrains Mono'">docker compose up</span> levanta los mismos contenedores web (:8095), api (:8096) y db (:3317), sin Cloudflare ni edge_nginx.</div>
+    <b>En local</b>, <span style="font-family:'JetBrains Mono'">docker compose up</span> levanta los mismos contenedores web (:8095) y api (:8096), y la base db con MySQL 8.4 (:3317), sin Cloudflare ni edge_nginx.</div>
 </div>
 <script src="../uml.js"></script>
 <script>
