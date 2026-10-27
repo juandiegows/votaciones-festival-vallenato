@@ -40,8 +40,10 @@ class VotacionAdmin(TrazableAdmin):
 
 @admin.register(Voto)
 class VotoAdmin(admin.ModelAdmin):
-    list_display = ["codigo_comprobante", "votacion", "opcion", "usuario", "fecha_hora"]
-    list_filter = ["votacion"]
+    list_display = ["codigo_comprobante", "edicion", "categoria", "votacion", "opcion", "usuario", "fecha_hora"]
+    list_filter = ["edicion", "categoria", "votacion"]
+    search_fields = ["codigo_comprobante", "usuario__email"]
+    list_select_related = ["edicion", "categoria", "votacion", "opcion", "usuario"]
 
     # Los votos solo se registran desde el sitio (RN-02 a RN-05): aquí son de solo lectura
     def has_add_permission(self, request):

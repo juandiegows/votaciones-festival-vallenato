@@ -7,14 +7,14 @@ class ConfiguracionEdicionTests(BaseAPITest):
     def votar(self, votacion, opcion):
         return self.client.post(f"/api/votaciones/{votacion.pk}/votar/", {"opcion": opcion.pk}, format="json")
 
-    def test_limite_de_votos_heredado_de_la_edicion(self):
+    def test_limite_de_la_edicion_no_habilita_mas_votos(self):
+        # RN-04: un voto por categoría y edición, aunque la edición conserve otro valor en votos_por_usuario
         self.edicion.votos_por_usuario = 2
         self.edicion.save()
         self.autenticar(self.votante)
         self.assertEqual(self.votar(self.abierta, self.opcion_a).status_code, 201)
-        self.assertEqual(self.votar(self.abierta, self.opcion_b).status_code, 201)
-        self.assertEqual(self.votar(self.abierta, self.opcion_a).data["codigo"], "limite_votos")
-        self.assertEqual(self.client.get(f"/api/votaciones/{self.abierta.pk}/").data["votos_por_usuario"], 2)
+        self.assertEqual(self.votar(self.abierta, self.opcion_b).data["codigo"], "voto_duplicado_categoria")
+        self.assertEqual(self.client.get(f"/api/votaciones/{self.abierta.pk}/").data["votos_por_usuario"], 1)
 
     def test_limite_personalizado_no_toma_el_de_la_edicion(self):
         self.edicion.votos_por_usuario = 3

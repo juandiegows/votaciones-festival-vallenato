@@ -37,5 +37,5 @@ def ip_cliente(request):
 class ErrorReglaSerializer(serializers.Serializer):
     detail = serializers.CharField(help_text="Mensaje legible; cita la regla de negocio (RN-xx).")
     codigo = serializers.CharField(
-        help_text="votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes · opciones_bloqueadas · tiene_votos · registros_asociados · votaciones_pausadas"
+        help_text="votacion_no_abierta · categoria_no_habilitada · opcion_invalida · voto_duplicado_categoria · opciones_insuficientes · opciones_bloqueadas · tiene_votos · registros_asociados · votaciones_pausadas"
     )

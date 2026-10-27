@@ -1,5 +1,7 @@
 """Lecturas del dominio: consultas que usan las vistas y los reportes. No modifican datos."""
 
+from django.db.models import Prefetch
+
 from ..comun.consultas import filtrar_por_id
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
 
@@ -16,8 +18,15 @@ def edicion_o_activa(edicion_id=""):
 
 
 def categorias_publicas(edicion_id=None, anio=None):
-    """Categorías activas de una edición (por ID o año); por defecto, de la edición activa."""
-    consulta = Categoria.objects.filter(activa=True).select_related("edicion")
+    """Categorías activas de una edición (por ID o año); por defecto, de la edición activa.
+    Precarga sus votaciones publicadas con las opciones activas (GET /api/categorias/) en tres consultas."""
+    opciones_activas = Prefetch("opciones", queryset=Opcion.objects.filter(activa=True), to_attr="opciones_activas")
+    votaciones = Prefetch(
+        "votaciones",
+        queryset=Votacion.objects.filter(publicada=True).select_related("categoria__edicion").prefetch_related(opciones_activas),
+        to_attr="votaciones_publicas",
+    )
+    consulta = Categoria.objects.filter(activa=True).select_related("edicion").prefetch_related(votaciones)
     if edicion_id:
         return filtrar_por_id(consulta, "edicion_id", edicion_id)
     if anio:
@@ -80,6 +89,16 @@ def votos_del_usuario(usuario, votacion):
     if not usuario.is_authenticated:
         return 0
     return Voto.objects.filter(usuario=usuario, votacion=votacion).count()
+
+
+def voto_en_categoria(usuario, categoria):
+    """RN-04: el voto del usuario en la categoría (en cualquiera de sus votaciones), o None si aún no vota en ella."""
+    if not usuario.is_authenticated:
+        return None
+    return (
+        Voto.objects.filter(usuario=usuario, categoria=categoria, edicion_id=categoria.edicion_id)
+        .select_related("votacion", "opcion").first()
+    )
 
 
 def total_votos_edicion(edicion):

@@ -465,12 +465,15 @@ class Command(BaseCommand):
         a_votar = [(votaciones[c], opciones[c], pesos, ANIO_ACTIVO, MAX_VOTANTES.get(c)) for c, pesos in PESOS.items()]
         a_votar += [(*fila, None) for fila in self.cargar_pasadas(ediciones)]
         votos, fechas = [], []
+        # RN-04: cada votante ficticio vota una sola vez por categoría (en una de sus votaciones)
+        ya_votaron = set()
         for votacion, lista_opciones, pesos, anio, maximo in a_votar:
             desde = votacion.fecha_apertura
             hasta = min(votacion.fecha_cierre, tope)
             for usuario in ficticios[:maximo]:
-                if rnd.random() < 0.3:  # ~70 % de participación
+                if rnd.random() < 0.3 or (usuario.pk, votacion.categoria_id) in ya_votaron:  # ~70 % de participación
                     continue
+                ya_votaron.add((usuario.pk, votacion.categoria_id))
                 opcion = rnd.choices(lista_opciones, weights=pesos)[0]
                 votos.append(Voto(usuario=usuario, votacion=votacion, opcion=opcion, codigo_comprobante=codigo(anio)))
                 fechas.append(desde + (hasta - desde) * rnd.random())
@@ -478,7 +481,8 @@ class Command(BaseCommand):
         votos.append(Voto(usuario=votante, votacion=votaciones[7], opcion=opciones[7][0],
                           codigo_comprobante=COMPROBANTE_VOTANTE_DEMO))
         fechas.append(relativa(-12))
-        Voto.objects.bulk_create(votos, batch_size=500)
+        # bulk_create no llama a save(): la categoría y la edición del voto se completan antes
+        Voto.objects.bulk_create([voto.completar_ambito() for voto in votos], batch_size=500)
         # `fecha_hora` es auto_now_add: se ajusta después para repartir los votos en el periodo de cada votación.
         fecha_por_codigo = {v.codigo_comprobante: f for v, f in zip(votos, fechas, strict=True)}
         guardados = list(Voto.objects.filter(codigo_comprobante__in=fecha_por_codigo))

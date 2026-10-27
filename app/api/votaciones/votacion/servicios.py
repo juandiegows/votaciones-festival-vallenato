@@ -3,11 +3,11 @@
 import secrets
 import string
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from ..comun.errores import ReglaNegocioError
 from .models import Edicion, Opcion, Votacion, Voto
-from .selectores import votos_del_usuario
+from .selectores import voto_en_categoria
 
 ALFABETO_COMPROBANTE = string.ascii_uppercase + string.digits
 
@@ -33,7 +33,17 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
             "Completa tu tipo y número de documento para poder votar.", codigo="documento_requerido", status=403
         )
 
-    votacion = Votacion.objects.select_for_update().select_related("categoria__edicion").get(pk=votacion_id)
+    try:
+        votacion = Votacion.objects.select_for_update().select_related("categoria__edicion").get(pk=votacion_id)
+    except Votacion.DoesNotExist:
+        raise ReglaNegocioError("La votación no existe.", codigo="votacion_inexistente", status=404)
+    categoria = votacion.categoria
+
+    # Categoría habilitada: activa y de la edición en curso (una edición cerrada no recibe votos)
+    if not categoria.activa or categoria.edicion.estado != Edicion.Estado.ACTIVA:
+        raise ReglaNegocioError(
+            "La categoría no está habilitada para votar.", codigo="categoria_no_habilitada", status=409
+        )
 
     if votacion.estado != Votacion.Estado.ABIERTA:
         raise ReglaNegocioError(
@@ -50,17 +60,33 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
     except Opcion.DoesNotExist:
         raise ReglaNegocioError("La opción no pertenece a esta votación.", codigo="opcion_invalida")
 
-    if votos_del_usuario(usuario, votacion) >= votacion.votos_por_usuario_efectivo:
-        raise ReglaNegocioError(
-            "Ya alcanzaste el límite de votos de esta votación.", codigo="limite_votos", status=409
-        )
+    # RN-04: una sola opción por categoría y edición, aunque la categoría tenga varias votaciones (subeventos)
+    if voto_en_categoria(usuario, categoria):
+        raise voto_duplicado(categoria)
 
-    return Voto.objects.create(
-        usuario=usuario,
-        votacion=votacion,
-        opcion=opcion,
-        codigo_comprobante=generar_codigo_comprobante(votacion),
-        ip=ip,
+    try:
+        # Punto de guardado: si otra solicitud simultánea ganó, MySQL rechaza esta por la restricción única
+        with transaction.atomic():
+            return Voto.objects.create(
+                usuario=usuario,
+                edicion_id=categoria.edicion_id,
+                categoria=categoria,
+                votacion=votacion,
+                opcion=opcion,
+                codigo_comprobante=generar_codigo_comprobante(votacion),
+                ip=ip,
+            )
+    except IntegrityError:
+        # InnoDB hace esperar este INSERT hasta que la otra transacción confirme y luego lo rechaza por duplicado.
+        # No se vuelve a consultar: con REPEATABLE READ esta transacción no vería el voto recién confirmado.
+        raise voto_duplicado(categoria) from None
+
+
+def voto_duplicado(categoria):
+    return ReglaNegocioError(
+        f"Ya votaste en la categoría «{categoria.nombre}». Solo se permite un voto por categoría en cada edición.",
+        codigo="voto_duplicado_categoria",
+        status=409,
     )
 
 

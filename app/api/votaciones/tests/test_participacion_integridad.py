@@ -3,6 +3,7 @@ import io
 from datetime import timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from PIL import Image
 
@@ -139,22 +140,28 @@ class IntegridadTests(ConVotantesMixin, BaseAPITest):
         self.assertEqual(fila["alertas"], [])
         self.assertEqual(datos["resumen"]["votaciones_con_alertas"], 0)
 
-    def test_detecta_voto_repetido_y_opcion_ajena(self):
-        votantes = self.crear_votantes(2)
+    def test_mysql_rechaza_voto_repetido_en_la_categoria(self):
+        votantes = self.crear_votantes(1)
         self.votar(self.abierta, votantes, self.opcion_a)
-        # Se fuerzan inconsistencias directamente en la base de datos (la API nunca las permitiría)
-        Voto.objects.create(usuario=votantes[0], votacion=self.abierta, opcion=self.opcion_b, codigo_comprobante="DUP-1")
+        # Ni forzándolo en la base de datos se guarda un segundo voto en la categoría (RN-04)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Voto.objects.create(usuario=votantes[0], votacion=self.abierta, opcion=self.opcion_b, codigo_comprobante="DUP-1")
+        self.assertEqual(Voto.objects.filter(usuario=votantes[0]).count(), 1)
+
+    def test_detecta_opcion_ajena(self):
+        votantes = self.crear_votantes(3)
+        self.votar(self.abierta, votantes[:2], self.opcion_a)
+        # Se fuerza una inconsistencia directamente en la base de datos (la API nunca la permitiría)
         ahora = timezone.now()
         otra = self.crear_votacion("Otra votación", ahora - timedelta(days=1), ahora + timedelta(days=1))
-        Voto.objects.create(usuario=votantes[1], votacion=otra, opcion=self.opcion_a, codigo_comprobante="AJENA-1")
+        Voto.objects.create(usuario=votantes[2], votacion=otra, opcion=self.opcion_a, codigo_comprobante="AJENA-1")
         datos = self.client.get("/api/admin/auditoria/integridad/", {"edicion": self.edicion.pk}).data
         self.assertFalse(datos["ok"])
         fila = self.fila(datos, self.abierta)
-        self.assertEqual(fila["usuarios_excedidos"], 1)
-        self.assertEqual(fila["total_votos"], 3)
-        self.assertEqual(fila["suma_por_opcion"], 4)  # incluye el voto de «otra» que apunta a una opción de esta
+        self.assertEqual(fila["usuarios_excedidos"], 0)
+        self.assertEqual(fila["total_votos"], 2)
+        self.assertEqual(fila["suma_por_opcion"], 3)  # incluye el voto de «otra» que apunta a una opción de esta
         self.assertFalse(fila["ok"])
-        self.assertTrue(any("límite" in a for a in fila["alertas"]))
         self.assertEqual(self.fila(datos, otra)["votos_opcion_ajena"], 1)
         self.assertEqual(datos["resumen"]["votaciones_con_alertas"], 2)
 

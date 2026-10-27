@@ -177,8 +177,8 @@ class Votacion(ModeloTrazable):
 
     @property
     def votos_por_usuario_efectivo(self):
-        """Límite de votos que aplica: el propio si se personaliza; si no, el de la edición."""
-        return self.votos_por_usuario if self.personalizar_votos else self.categoria.edicion.votos_por_usuario
+        """RN-04 (Entrega 3): un solo voto por categoría y edición. votos_por_usuario queda solo por compatibilidad."""
+        return 1
 
     @property
     def pausada(self):
@@ -217,6 +217,9 @@ class Opcion(ModeloTrazable):
 
 class Voto(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="votos")
+    # Edición y categoría se copian de la votación al guardar: así MySQL puede exigir la regla de unicidad (RN-04)
+    edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="votos")
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votos")
     votacion = models.ForeignKey(Votacion, on_delete=models.PROTECT, related_name="votos")
     opcion = models.ForeignKey(Opcion, on_delete=models.PROTECT, related_name="votos")
     fecha_hora = models.DateTimeField(auto_now_add=True)
@@ -229,6 +232,25 @@ class Voto(models.Model):
         verbose_name = "voto"
         verbose_name_plural = "votos"
         indexes = [models.Index(fields=["usuario", "votacion"], name="voto_usuario_votacion_idx")]
+        constraints = [
+            # RN-04: un voto por usuario, categoría y edición, aunque la categoría tenga varias votaciones (subeventos).
+            # Es la última barrera ante dos solicitudes simultáneas: la segunda falla con IntegrityError.
+            models.UniqueConstraint(
+                fields=["usuario", "categoria", "edicion"], name="voto_unico_usuario_categoria_edicion"
+            ),
+        ]
 
     def __str__(self):
         return self.codigo_comprobante
+
+    def completar_ambito(self):
+        """Toma la categoría y la edición de la votación (también antes de un bulk_create, que no llama a save)."""
+        if self.categoria_id is None or self.edicion_id is None:
+            categoria = self.votacion.categoria
+            self.categoria_id = categoria.pk
+            self.edicion_id = categoria.edicion_id
+        return self
+
+    def save(self, *args, **kwargs):
+        self.completar_ambito()
+        super().save(*args, **kwargs)
