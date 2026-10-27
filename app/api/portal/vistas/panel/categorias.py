@@ -18,7 +18,7 @@ from .base import (
 def valores_nueva_categoria(edicion):
     abierta = edicion if edicion and edicion.estado != Edicion.Estado.CERRADA else None
     orden = Categoria.objects.filter(edicion=edicion).count() + 1
-    return {"edicion": abierta, "icono": "music-note-beamed", "activa": True, "orden": orden}
+    return {"edicion": abierta, "icono": "music-note-beamed", "activa": True, "voto_unico": True, "orden": orden}
 
 
 def abiertas_por_categoria(edicion):

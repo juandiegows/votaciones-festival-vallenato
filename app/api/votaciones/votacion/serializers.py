@@ -4,8 +4,10 @@ from rest_framework import serializers
 from ..comun.campos import (
     RutaArchivoField, RutaImagenField, SlugOpcionalMixin, validar_audio, validar_enlace, validar_icono,
 )
+from ..comun.errores import ReglaNegocioError
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
-from .selectores import voto_en_categoria
+from .selectores import voto_que_bloquea
+from .servicios import validar_cambio_voto_unico
 
 
 class EdicionSerializer(serializers.ModelSerializer):
@@ -29,7 +31,8 @@ class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Categoria
-        fields = ["id", "edicion", "edicion_anio", "nombre", "slug", "descripcion", "icono", "icono_imagen", "activa", "orden"]
+        fields = ["id", "edicion", "edicion_anio", "nombre", "slug", "descripcion", "icono", "icono_imagen", "activa", "orden",
+                  "voto_unico"]
         extra_kwargs = {"slug": {"required": False}}
 
     def validate_icono_imagen(self, archivo):
@@ -40,6 +43,11 @@ class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
         edicion = datos.get("edicion")
         if edicion and edicion.estado == Edicion.Estado.CERRADA and getattr(self.instance, "edicion_id", None) != edicion.pk:
             raise serializers.ValidationError({"edicion": "La edición está cerrada: no se pueden agregar categorías."})
+        if self.instance is not None and "voto_unico" in datos:
+            try:
+                validar_cambio_voto_unico(self.instance, datos["voto_unico"])
+            except ReglaNegocioError as error:
+                raise serializers.ValidationError({"voto_unico": error.mensaje}) from None
         self.validar_slug_unico(datos)
         return datos
 
@@ -150,9 +158,9 @@ class VotacionDetalleSerializer(VotacionPublicaSerializer):
 
     @extend_schema_field(serializers.IntegerField())
     def get_mis_votos(self, votacion):
-        """RN-04: 1 si el usuario ya votó en la categoría (en esta u otra de sus votaciones); si no, 0."""
+        """RN-04: 1 si un voto previo impide votar aquí (en la categoría de voto único o en esta votación); si no, 0."""
         request = self.context.get("request")
-        return int(voto_en_categoria(request.user, votacion.categoria) is not None) if request else 0
+        return int(voto_que_bloquea(request.user, votacion) is not None) if request else 0
 
 
 class VotacionConOpcionesSerializer(serializers.ModelSerializer):
@@ -174,7 +182,7 @@ class CategoriaConOpcionesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = ["id", "edicion", "edicion_anio", "edicion_nombre", "nombre", "slug", "descripcion", "icono", "orden",
-                  "activa", "votaciones"]
+                  "activa", "voto_unico", "votaciones"]
 
 
 class VotarSerializer(serializers.Serializer):

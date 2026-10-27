@@ -7,7 +7,7 @@ from django.db import IntegrityError, transaction
 
 from ..comun.errores import ReglaNegocioError
 from .models import Edicion, Opcion, Votacion, Voto
-from .selectores import voto_en_categoria
+from .selectores import voto_que_bloquea
 
 ALFABETO_COMPROBANTE = string.ascii_uppercase + string.digits
 
@@ -60,8 +60,8 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
     except Opcion.DoesNotExist:
         raise ReglaNegocioError("La opción no pertenece a esta votación.", codigo="opcion_invalida")
 
-    # RN-04: una sola opción por categoría y edición, aunque la categoría tenga varias votaciones (subeventos)
-    if voto_en_categoria(usuario, categoria):
+    # RN-04: una sola opción por categoría y edición (o por votación, si la categoría no es de voto único)
+    if voto_que_bloquea(usuario, votacion):
         raise voto_duplicado(categoria)
 
     try:
@@ -83,11 +83,23 @@ def emitir_voto(usuario, votacion_id, opcion_id, ip=None):
 
 
 def voto_duplicado(categoria):
+    if not categoria.voto_unico:
+        return ReglaNegocioError("Ya votaste en esta votación.", codigo="voto_duplicado_votacion", status=409)
     return ReglaNegocioError(
         f"Ya votaste en la categoría «{categoria.nombre}». Solo se permite un voto por categoría en cada edición.",
         codigo="voto_duplicado_categoria",
         status=409,
     )
+
+
+def validar_cambio_voto_unico(categoria, voto_unico):
+    """RN-04: el modo de voto de la categoría no cambia con votos registrados (cambiaría a quién se le permitió votar)."""
+    if categoria.pk and categoria.voto_unico != voto_unico and categoria.votos.exists():
+        raise ReglaNegocioError(
+            "No se puede cambiar «Un solo voto en toda la categoría» porque la categoría ya tiene votos.",
+            codigo="voto_unico_bloqueado",
+            status=409,
+        )
 
 
 def publicar_votacion(votacion):

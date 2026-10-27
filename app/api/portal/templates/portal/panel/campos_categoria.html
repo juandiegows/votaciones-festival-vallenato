@@ -26,4 +26,12 @@
       <label class="form-check-label" for="id_activa">Categoría activa (visible al público)</label>
     </div>
   </div>
+  <div class="col-12">
+    <div class="form-check form-switch">
+      <input id="id_voto_unico" name="voto_unico" class="form-check-input{{ form.voto_unico|campo_invalido }}" type="checkbox" role="switch" aria-describedby="ayuda-voto-unico"{% if form.voto_unico.value %} checked{% endif %}>
+      <label class="form-check-label" for="id_voto_unico">Un solo voto en toda la categoría</label>
+      {% if form.voto_unico.errors %}<div class="invalid-feedback">{{ form.voto_unico.errors|join:" " }}</div>{% endif %}
+    </div>
+    <div id="ayuda-voto-unico" class="form-text">Marcado (regla RN-04): cada persona vota una sola vez en la categoría, aunque tenga varias votaciones. Desmarcado: puede votar una vez en cada votación. No se puede cambiar cuando la categoría ya tiene votos.</div>
+  </div>
 </div>

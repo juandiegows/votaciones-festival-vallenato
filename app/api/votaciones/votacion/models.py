@@ -68,6 +68,13 @@ class Categoria(ModeloTrazable):
     )
     activa = models.BooleanField(default=True)
     orden = models.PositiveSmallIntegerField(default=0)
+    # RN-04: marcado (regla de la Entrega 3), un voto en toda la categoría aunque tenga varias votaciones (subeventos);
+    # desmarcado, un voto en cada votación de la categoría
+    voto_unico = models.BooleanField(
+        "un solo voto en toda la categoría", default=True,
+        help_text="Marcado: cada persona vota una sola vez en la categoría, aunque tenga varias votaciones. "
+                  "Desmarcado: puede votar una vez en cada votación. No se puede cambiar cuando la categoría ya tiene votos.",
+    )
 
     class Meta:
         db_table = "categoria"
@@ -221,6 +228,8 @@ class Voto(models.Model):
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="votos")
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votos")
     votacion = models.ForeignKey(Votacion, on_delete=models.PROTECT, related_name="votos")
+    # 0 si el voto cuenta para toda la categoría (voto_unico); si no, el ID de la votación. Entra en la restricción única
+    ambito_votacion = models.PositiveIntegerField(default=0, editable=False)
     opcion = models.ForeignKey(Opcion, on_delete=models.PROTECT, related_name="votos")
     fecha_hora = models.DateTimeField(auto_now_add=True)
     codigo_comprobante = models.CharField(max_length=20, unique=True)
@@ -233,10 +242,10 @@ class Voto(models.Model):
         verbose_name_plural = "votos"
         indexes = [models.Index(fields=["usuario", "votacion"], name="voto_usuario_votacion_idx")]
         constraints = [
-            # RN-04: un voto por usuario, categoría y edición, aunque la categoría tenga varias votaciones (subeventos).
+            # RN-04: un voto por usuario, categoría y edición (o por votación si la categoría no es de voto único).
             # Es la última barrera ante dos solicitudes simultáneas: la segunda falla con IntegrityError.
             models.UniqueConstraint(
-                fields=["usuario", "categoria", "edicion"], name="voto_unico_usuario_categoria_edicion"
+                fields=["usuario", "categoria", "edicion", "ambito_votacion"], name="voto_unico_usuario_categoria_edicion"
             ),
         ]
 
@@ -244,11 +253,11 @@ class Voto(models.Model):
         return self.codigo_comprobante
 
     def completar_ambito(self):
-        """Toma la categoría y la edición de la votación (también antes de un bulk_create, que no llama a save)."""
-        if self.categoria_id is None or self.edicion_id is None:
-            categoria = self.votacion.categoria
-            self.categoria_id = categoria.pk
-            self.edicion_id = categoria.edicion_id
+        """Toma categoría, edición y ámbito de la votación (también antes de un bulk_create, que no llama a save)."""
+        categoria = self.votacion.categoria
+        self.categoria_id = categoria.pk
+        self.edicion_id = categoria.edicion_id
+        self.ambito_votacion = 0 if categoria.voto_unico else self.votacion_id
         return self
 
     def save(self, *args, **kwargs):

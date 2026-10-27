@@ -117,8 +117,8 @@ def votacion(request, anio, categoria, votacion):
     estado = votacion.estado
     abierta = estado == Votacion.Estado.ABIERTA and not votacion.pausada
     votadas = consultas.opciones_votadas(request.user, votacion)
-    # RN-04: el voto cuenta para toda la categoría, aunque se haya emitido en otra de sus votaciones
-    voto_categoria = selectores.voto_en_categoria(request.user, votacion.categoria)
+    # RN-04: con voto único, el voto cuenta para toda la categoría aunque se haya emitido en otra de sus votaciones
+    voto_categoria = selectores.voto_que_bloquea(request.user, votacion)
     ya_voto = voto_categoria is not None
     seleccion = request.GET.get("opcion", "")
     return render(request, "portal/votacion.html", {

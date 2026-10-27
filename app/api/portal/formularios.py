@@ -13,9 +13,11 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError as ErrorDRF
 
 from votaciones.comun import campos
+from votaciones.comun.errores import ReglaNegocioError
 from votaciones.cuentas import selectores as selectores_cuentas
 from votaciones.cuentas.documentos import error_formato_documento, normalizar_documento
 from votaciones.models import Categoria, Edicion, Opcion, Usuario, Votacion
+from votaciones.votacion.servicios import validar_cambio_voto_unico
 
 from .catalogos import ICONOS_DISPONIBLES
 from .templatetags.portal import URL_ICONO, icono_desde_url
@@ -237,8 +239,11 @@ class CategoriaForm(IconoMixin, FormularioPanel):
 
     class Meta:
         model = Categoria
-        fields = ["edicion", "nombre", "slug", "descripcion", "icono", "icono_imagen", "orden", "activa"]
-        labels = {"slug": "Identificador en la URL", "icono_imagen": "Ícono propio", "activa": "Categoría activa (visible al público)"}
+        fields = ["edicion", "nombre", "slug", "descripcion", "icono", "icono_imagen", "orden", "activa", "voto_unico"]
+        labels = {
+            "slug": "Identificador en la URL", "icono_imagen": "Ícono propio", "activa": "Categoría activa (visible al público)",
+            "voto_unico": "Un solo voto en toda la categoría",
+        }
         widgets = {"descripcion": forms.Textarea(attrs={"rows": 2})}
         error_messages = {"edicion": {"required": "Toda categoría debe pertenecer a una edición."}}
 
@@ -262,6 +267,11 @@ class CategoriaForm(IconoMixin, FormularioPanel):
         edicion = datos.get("edicion")
         if edicion and edicion.estado == Edicion.Estado.CERRADA and self.instance.edicion_id != edicion.pk:
             self.add_error("edicion", "La edición está cerrada: no se pueden agregar categorías.")
+        if "voto_unico" in datos:
+            try:
+                validar_cambio_voto_unico(self.instance, datos["voto_unico"])
+            except ReglaNegocioError as error:
+                self.add_error("voto_unico", error.mensaje)
         self.validar_slug_unico(datos)
         return datos
 

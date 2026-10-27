@@ -91,14 +91,16 @@ def votos_del_usuario(usuario, votacion):
     return Voto.objects.filter(usuario=usuario, votacion=votacion).count()
 
 
-def voto_en_categoria(usuario, categoria):
-    """RN-04: el voto del usuario en la categoría (en cualquiera de sus votaciones), o None si aún no vota en ella."""
+def voto_que_bloquea(usuario, votacion):
+    """RN-04: el voto previo que impide votar en esta votación, o None.
+    Con voto único cuenta cualquier votación de la categoría; si no, solo esta votación."""
     if not usuario.is_authenticated:
         return None
-    return (
-        Voto.objects.filter(usuario=usuario, categoria=categoria, edicion_id=categoria.edicion_id)
-        .select_related("votacion", "opcion").first()
-    )
+    categoria = votacion.categoria
+    consulta = Voto.objects.filter(usuario=usuario, categoria=categoria, edicion_id=categoria.edicion_id)
+    if not categoria.voto_unico:
+        consulta = consulta.filter(votacion=votacion)
+    return consulta.select_related("votacion", "opcion").first()
 
 
 def total_votos_edicion(edicion):

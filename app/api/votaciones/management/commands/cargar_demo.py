@@ -401,6 +401,10 @@ class Command(BaseCommand):
             for i, (nombre, desc, icono) in enumerate(CATEGORIAS, start=1)
         }
 
+        # Acordeoneros permite un voto en cada una de sus votaciones; Parrandas (y las demás) un solo voto en la categoría
+        categorias["Acordeoneros"].voto_unico = False
+        categorias["Acordeoneros"].save(update_fields=["voto_unico"])
+
         votaciones = {}
         for clave, cat, titulo, desc, apertura, cierre, visibilidad, icono, publicada in VOTACIONES:
             votaciones[clave] = Votacion.objects.create(
@@ -465,15 +469,16 @@ class Command(BaseCommand):
         a_votar = [(votaciones[c], opciones[c], pesos, ANIO_ACTIVO, MAX_VOTANTES.get(c)) for c, pesos in PESOS.items()]
         a_votar += [(*fila, None) for fila in self.cargar_pasadas(ediciones)]
         votos, fechas = [], []
-        # RN-04: cada votante ficticio vota una sola vez por categoría (en una de sus votaciones)
+        # RN-04: cada votante ficticio vota una sola vez por categoría de voto único (o por votación, si no lo es)
         ya_votaron = set()
         for votacion, lista_opciones, pesos, anio, maximo in a_votar:
             desde = votacion.fecha_apertura
             hasta = min(votacion.fecha_cierre, tope)
             for usuario in ficticios[:maximo]:
-                if rnd.random() < 0.3 or (usuario.pk, votacion.categoria_id) in ya_votaron:  # ~70 % de participación
+                ambito = votacion.categoria_id if votacion.categoria.voto_unico else f"v{votacion.pk}"
+                if rnd.random() < 0.3 or (usuario.pk, ambito) in ya_votaron:  # ~70 % de participación
                     continue
-                ya_votaron.add((usuario.pk, votacion.categoria_id))
+                ya_votaron.add((usuario.pk, ambito))
                 opcion = rnd.choices(lista_opciones, weights=pesos)[0]
                 votos.append(Voto(usuario=usuario, votacion=votacion, opcion=opcion, codigo_comprobante=codigo(anio)))
                 fechas.append(desde + (hasta - desde) * rnd.random())

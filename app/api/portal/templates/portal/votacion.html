@@ -28,7 +28,7 @@
         <dl class="small mb-3">
           <dt>Apertura</dt><dd>{{ votacion.fecha_apertura|fecha_hora }}</dd>
           <dt>Cierre</dt><dd>{{ votacion.fecha_cierre|fecha_hora }}</dd>
-          <dt>Votos por usuario</dt><dd>1 por categoría en esta edición</dd>
+          <dt>Votos por usuario</dt><dd>{% if categoria.voto_unico %}1 por categoría en esta edición{% else %}1 en esta votación{% endif %}</dd>
           <dt>Resultados</dt><dd class="mb-0">{{ votacion.visibilidad_efectiva|visibilidad }}</dd>
         </dl>
         {% if abierta %}{% include "portal/parciales/cuenta_regresiva.html" with hasta=votacion.fecha_cierre etiqueta="Cierra en" %}{% endif %}
@@ -39,7 +39,7 @@
         <ul class="small mb-0 ps-3">
           <li>Debes iniciar sesión y confirmar tu correo para votar.</li>
           <li>Solo se vota entre la fecha de apertura y la de cierre.</li>
-          <li>Un voto por persona en la categoría «{{ categoria.nombre }}», aunque tenga varias votaciones.</li>
+          {% if categoria.voto_unico %}<li>Un voto por persona en la categoría «{{ categoria.nombre }}», aunque tenga varias votaciones.</li>{% else %}<li>Un voto por persona en esta votación; las demás votaciones de «{{ categoria.nombre }}» se votan aparte.</li>{% endif %}
           <li>Una vez confirmado, el voto no se puede cambiar.</li>
           <li>Los resultados se publican según la configuración: «{{ votacion.visibilidad_efectiva|visibilidad }}».</li>
         </ul>

@@ -36,12 +36,14 @@ def votaciones_visibles(edicion):
 
 
 def votaciones_con_voto(usuario):
-    """IDs de las votaciones con la insignia «Ya votaste»: todas las de las categorías donde el usuario ya votó,
-    porque el voto cuenta para toda la categoría (RN-04)."""
+    """IDs de las votaciones con la insignia «Ya votaste»: las votadas y, en las categorías de voto único (RN-04),
+    todas las de la categoría, porque el voto cuenta para toda ella."""
     if not usuario.is_authenticated:
         return set()
-    categorias = Voto.objects.filter(usuario=usuario).values("categoria_id")
-    return set(Votacion.objects.filter(categoria_id__in=categorias).values_list("id", flat=True))
+    votos = Voto.objects.filter(usuario=usuario)
+    votadas = set(votos.values_list("votacion_id", flat=True))
+    unicas = votos.filter(categoria__voto_unico=True).values("categoria_id")
+    return votadas | set(Votacion.objects.filter(categoria_id__in=unicas).values_list("id", flat=True))
 
 
 def opciones_votadas(usuario, votacion):

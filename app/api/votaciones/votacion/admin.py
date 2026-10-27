@@ -27,8 +27,13 @@ class EdicionAdmin(TrazableAdmin):
 
 @admin.register(Categoria)
 class CategoriaAdmin(TrazableAdmin):
-    list_display = ["nombre", "edicion", "activa", "orden"]
-    list_filter = ["edicion", "activa"]
+    list_display = ["nombre", "edicion", "activa", "voto_unico", "orden"]
+    list_filter = ["edicion", "activa", "voto_unico"]
+
+    # RN-04: con votos registrados el modo de voto queda de solo lectura
+    def get_readonly_fields(self, request, obj=None):
+        campos = list(super().get_readonly_fields(request, obj))
+        return campos + ["voto_unico"] if obj and obj.votos.exists() else campos
 
 
 @admin.register(Votacion)
