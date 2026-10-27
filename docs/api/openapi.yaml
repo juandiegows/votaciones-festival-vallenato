@@ -185,7 +185,9 @@ paths:
   /api/categorias/:
     get:
       operationId: categorias_list
-      summary: Categorías activas (RF-04)
+      description: 'GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías,
+        sus votaciones y sus opciones.'
+      summary: Categorías activas con votaciones y opciones (RF-04)
       parameters:
       - in: query
         name: anio
@@ -209,11 +211,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Categoria'
+                  $ref: '#/components/schemas/CategoriaConOpciones'
           description: ''
   /api/categorias/{id}/:
     get:
       operationId: categorias_retrieve
+      description: 'GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías,
+        sus votaciones y sus opciones.'
       summary: Detalle de categoría
       parameters:
       - in: path
@@ -232,7 +236,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Categoria'
+                $ref: '#/components/schemas/CategoriaConOpciones'
           description: ''
   /api/ediciones/:
     get:
@@ -2319,6 +2323,59 @@ components:
       - edicion_anio
       - id
       - nombre
+    CategoriaConOpciones:
+      type: object
+      description: 'GET /api/categorias/ (Entrega 3): categorías de la edición con
+        sus votaciones publicadas y opciones activas.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        edicion:
+          type: integer
+        edicion_anio:
+          type: integer
+          readOnly: true
+        edicion_nombre:
+          type: string
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 120
+        slug:
+          description: Identificador para la URL pública; se genera desde el nombre
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 120
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
+        descripcion:
+          type: string
+        icono:
+          type: string
+          maxLength: 60
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        activa:
+          type: boolean
+        votaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/VotacionConOpciones'
+          readOnly: true
+      required:
+      - edicion
+      - edicion_anio
+      - edicion_nombre
+      - id
+      - nombre
+      - slug
+      - votaciones
     CategoriaRequest:
       type: object
       description: El slug es opcional (se genera desde el nombre o título), así que
@@ -2604,8 +2661,9 @@ components:
           description: Mensaje legible; cita la regla de negocio (RN-xx).
         codigo:
           type: string
-          description: votacion_no_abierta · opcion_invalida · limite_votos · opciones_insuficientes
-            · opciones_bloqueadas · tiene_votos · registros_asociados · votaciones_pausadas
+          description: votacion_no_abierta · categoria_no_habilitada · opcion_invalida
+            · voto_duplicado_categoria · opciones_insuficientes · opciones_bloqueadas
+            · tiene_votos · registros_asociados · votaciones_pausadas
       required:
       - codigo
       - detail
@@ -3905,6 +3963,49 @@ components:
       - titulo
       - visibilidad_efectiva
       - votos_efectivos
+    VotacionConOpciones:
+      type: object
+      description: 'Votación (subevento) dentro de GET /api/categorias/: sus opciones
+        vienen precargadas por el selector.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titulo:
+          type: string
+          maxLength: 150
+        slug:
+          description: Identificador para la URL pública; se genera desde el título
+            si se deja vacío.
+          oneOf:
+          - type: string
+            maxLength: 150
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
+        descripcion:
+          type: string
+        estado:
+          type: string
+          readOnly: true
+        fecha_apertura:
+          type: string
+          format: date-time
+        fecha_cierre:
+          type: string
+          format: date-time
+        opciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpcionPublica'
+          readOnly: true
+      required:
+      - estado
+      - fecha_apertura
+      - fecha_cierre
+      - id
+      - opciones
+      - titulo
     VotacionDetalle:
       type: object
       properties:

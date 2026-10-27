@@ -18,6 +18,7 @@ from ..comun.permisos import EsAdministrador
 from . import reportes, selectores, servicios
 from .models import Edicion
 from .serializers import (
+    CategoriaConOpcionesSerializer,
     CategoriaSerializer,
     EdicionSerializer,
     OpcionListadoPublicoSerializer,
@@ -69,15 +70,16 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(summary="Categorías activas (RF-04)", parameters=[
+    list=extend_schema(summary="Categorías activas con votaciones y opciones (RF-04)", parameters=[
         OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la edición activa"),
         OpenApiParameter("anio", OpenApiTypes.INT, description="Año de la edición (URL amigable /{año})")]),
     retrieve=extend_schema(summary="Detalle de categoría"),
 )
 @extend_schema(tags=["Consulta pública"])
 class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
+    """GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías, sus votaciones y sus opciones."""
     permission_classes = [AllowAny]
-    serializer_class = CategoriaSerializer
+    serializer_class = CategoriaConOpcionesSerializer
 
     def get_queryset(self):
         parametros = self.request.query_params

@@ -5,7 +5,7 @@ from ..comun.campos import (
     RutaArchivoField, RutaImagenField, SlugOpcionalMixin, validar_audio, validar_enlace, validar_icono,
 )
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
-from .selectores import votos_del_usuario
+from .selectores import voto_en_categoria
 
 
 class EdicionSerializer(serializers.ModelSerializer):
@@ -150,8 +150,31 @@ class VotacionDetalleSerializer(VotacionPublicaSerializer):
 
     @extend_schema_field(serializers.IntegerField())
     def get_mis_votos(self, votacion):
+        """RN-04: 1 si el usuario ya votó en la categoría (en esta u otra de sus votaciones); si no, 0."""
         request = self.context.get("request")
-        return votos_del_usuario(request.user, votacion) if request else 0
+        return int(voto_en_categoria(request.user, votacion.categoria) is not None) if request else 0
+
+
+class VotacionConOpcionesSerializer(serializers.ModelSerializer):
+    """Votación (subevento) dentro de GET /api/categorias/: sus opciones vienen precargadas por el selector."""
+    estado = serializers.CharField(read_only=True)
+    opciones = OpcionPublicaSerializer(many=True, read_only=True, source="opciones_activas")
+
+    class Meta:
+        model = Votacion
+        fields = ["id", "titulo", "slug", "descripcion", "estado", "fecha_apertura", "fecha_cierre", "opciones"]
+
+
+class CategoriaConOpcionesSerializer(serializers.ModelSerializer):
+    """GET /api/categorias/ (Entrega 3): categorías de la edición con sus votaciones publicadas y opciones activas."""
+    edicion_anio = serializers.IntegerField(source="edicion.anio", read_only=True)
+    edicion_nombre = serializers.CharField(source="edicion.nombre", read_only=True)
+    votaciones = VotacionConOpcionesSerializer(many=True, read_only=True, source="votaciones_publicas")
+
+    class Meta:
+        model = Categoria
+        fields = ["id", "edicion", "edicion_anio", "edicion_nombre", "nombre", "slug", "descripcion", "icono", "orden",
+                  "activa", "votaciones"]
 
 
 class VotarSerializer(serializers.Serializer):

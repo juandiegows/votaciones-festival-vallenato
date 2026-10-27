@@ -40,10 +40,10 @@ API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (202
 Las reglas de negocio responden con un cuerpo uniforme:
 
 ```json
-{ "detail": "Ya alcanzaste el límite de votos de esta votación (RN-04).", "codigo": "limite_votos" }
+{ "detail": "Ya votaste en la categoría «Música». Solo se permite un voto por categoría en cada edición.", "codigo": "voto_duplicado_categoria" }
 ```
 
-Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `opciones_insuficientes`,
+Códigos posibles: `votacion_no_abierta`, `categoria_no_habilitada`, `opcion_invalida`, `voto_duplicado_categoria`, `opciones_insuficientes`,
 `tiene_votos`, `registros_asociados`.
 
 ## Endpoints
@@ -66,7 +66,7 @@ Códigos posibles: `votacion_no_abierta`, `opcion_invalida`, `limite_votos`, `op
 |---|---|---|
 | GET | `/api/ediciones/` · `/api/ediciones/{id}/` | Ediciones del Festival |
 | GET | `/api/ediciones/vigente/` | Edición activa más reciente |
-| GET | `/api/categorias/?edicion={id}` · `?anio=2027` | Categorías activas; sin parámetro, las de la edición activa (RF-04) |
+| GET | `/api/categorias/?edicion={id}` · `?anio=2027` | Categorías activas con sus votaciones publicadas y opciones activas (JSON desde MySQL); sin parámetro, las de la edición activa (RF-04, Entrega 3) |
 | GET | `/api/votaciones/?categoria={id}&estado={programada\|abierta\|cerrada}` | Votaciones publicadas (RF-05) |
 | GET | `/api/votaciones/?anio=&categoria_slug=&slug=` | Filtros por año de la edición y slugs |
 | GET | `/api/votaciones/por-ruta/?anio=2027&categoria=musica&votacion=cancion-favorita-del-publico` | Busca una votación por su URL amigable |
@@ -118,7 +118,7 @@ Toda creación, modificación, eliminación, publicación, despublicación, cier
 | RN-01 Jerarquía Edición → Categoría → Votación → Opción → Voto | Claves foráneas protegidas en los modelos |
 | RN-02 Solo usuarios autenticados votan | `POST /votar/` exige token |
 | RN-03 Solo se vota entre apertura y cierre | Estado calculado `abierta`; si no, `409 votacion_no_abierta` |
-| RN-04 Límite de votos por usuario (configurable, por defecto 1) | `409 limite_votos`, con bloqueo de fila en la transacción |
+| RN-04 Un voto por usuario, categoría y edición (aunque la categoría tenga varias votaciones) | `409 voto_duplicado_categoria`; validación en `servicios.emitir_voto` y `UniqueConstraint(usuario, categoria, edicion)` en MySQL ante solicitudes simultáneas |
 | RN-05 El voto confirmado no se modifica | No existen endpoints para editar ni borrar votos |
 | RN-06 Mínimo dos opciones para publicar | `400 opciones_insuficientes` |
 | RN-07 Visibilidad de resultados (`tiempo_real`, `al_cierre`, `no_publicar`) | `403` mientras no sean públicos |
