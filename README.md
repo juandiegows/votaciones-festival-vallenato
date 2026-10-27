@@ -96,13 +96,15 @@ categorías, pero no emitir un segundo voto en la misma categoría, aunque esta 
 | Consulta administrativa de votos | Django Admin `/django-admin/votaciones/voto/` (filtros por edición, categoría y votación) · API `/api/gestion/votos/` |
 | Pruebas funcionales CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](app/api/portal/tests/test_entrega3.py) |
 
+Las migraciones funcionan igual en MySQL 8.4 (Docker local) y en MySQL 9.7.2 (producción).
+
 Validaciones al votar: sesión iniciada, correo confirmado, categoría activa de la edición en curso, votación abierta y sin
 pausa, opción activa de esa votación y ningún voto previo del usuario en la categoría. Si dos solicitudes llegan a la
 vez, MySQL rechaza la segunda por la restricción única y el usuario ve «Ya votaste en la categoría».
 
 ```bash
 docker compose up -d --build
-docker compose exec api python manage.py migrate                     # aplica 0004 en MySQL
+docker compose exec api python manage.py migrate                     # aplica 0004 y 0005 en MySQL
 docker compose exec api python manage.py cargar_demo --reiniciar     # datos de prueba
 docker compose exec api python manage.py test portal.tests.test_entrega3   # CP-01 a CP-10 (CP-09 con hilos reales en MySQL)
 curl http://localhost:8096/api/categorias/                           # JSON con categorías y opciones
