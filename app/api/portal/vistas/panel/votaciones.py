@@ -25,13 +25,12 @@ ESTADOS_FILTRO = [
 
 
 def valores_nueva_votacion(request, edicion):
-    """Abre en la próxima hora en punto y dura una semana; hereda votos y visibilidad de la edición."""
+    """Abre en la próxima hora en punto y dura una semana; hereda la visibilidad de la edición."""
     apertura = timezone.localtime().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     categoria = request.GET.get("categoria", "")
     return {
         "categoria": categoria if categoria.isdigit() else None, "icono": "check2-square",
         "fecha_apertura": apertura, "fecha_cierre": apertura + timedelta(days=7),
-        "votos_por_usuario": edicion.votos_por_usuario if edicion else 1,
         "visibilidad_resultados": edicion.visibilidad_resultados if edicion else Votacion.Visibilidad.AL_CIERRE,
         "presentacion_opciones": Votacion.PresentacionOpciones.TARJETAS,
     }

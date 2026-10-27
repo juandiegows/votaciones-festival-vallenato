@@ -24,15 +24,10 @@
       {% if campo.errors %}<div class="invalid-feedback">{{ campo.errors|join:" " }}</div>{% endif %}
     </div>
   {% endif %}{% endfor %}
-  <div class="col-md-6" data-personalizable>
-    <label class="form-label" for="id_votos_por_usuario">Votos por usuario</label>
-    <div class="form-check mb-1">
-      <input id="id_personalizar_votos" name="personalizar_votos" class="form-check-input" type="checkbox"{% if form.personalizar_votos.value %} checked{% endif %} data-personalizar>
-      <label class="form-check-label small" for="id_personalizar_votos">{{ form.personalizar_votos.label }}</label>
-    </div>
-    <input id="id_votos_por_usuario" name="votos_por_usuario" type="number" min="1" max="5" class="form-control{{ form.votos_por_usuario|campo_invalido }}" value="{{ form.votos_por_usuario.value|default_if_none:edicion_formulario.votos_por_usuario }}" data-personalizado>
-    {% if form.votos_por_usuario.errors %}<div class="invalid-feedback">{{ form.votos_por_usuario.errors|join:" " }}</div>{% endif %}
-    <div class="form-text">Sin personalizar se usa el de la edición ({{ edicion_formulario.votos_por_usuario }}). Pendiente de validación con la Fundación.</div>
+  <div class="col-md-6">
+    <span class="form-label d-block">Votos por usuario</span>
+    <p class="form-control-plaintext py-1 mb-0">1 por categoría en la edición</p>
+    <div class="form-text">Regla RN-04: cada persona elige una sola opción por categoría, aunque la categoría tenga varias votaciones.</div>
   </div>
   <div class="col-md-6" data-personalizable>
     <label class="form-label" for="id_visibilidad_resultados">Mostrar resultados</label>

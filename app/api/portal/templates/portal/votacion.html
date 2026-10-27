@@ -28,7 +28,7 @@
         <dl class="small mb-3">
           <dt>Apertura</dt><dd>{{ votacion.fecha_apertura|fecha_hora }}</dd>
           <dt>Cierre</dt><dd>{{ votacion.fecha_cierre|fecha_hora }}</dd>
-          <dt>Votos por usuario</dt><dd>{{ votacion.votos_por_usuario_efectivo }} <span class="text-secondary-flv">(pendiente de validación)</span></dd>
+          <dt>Votos por usuario</dt><dd>1 por categoría en esta edición</dd>
           <dt>Resultados</dt><dd class="mb-0">{{ votacion.visibilidad_efectiva|visibilidad }}</dd>
         </dl>
         {% if abierta %}{% include "portal/parciales/cuenta_regresiva.html" with hasta=votacion.fecha_cierre etiqueta="Cierra en" %}{% endif %}
@@ -39,7 +39,7 @@
         <ul class="small mb-0 ps-3">
           <li>Debes iniciar sesión y confirmar tu correo para votar.</li>
           <li>Solo se vota entre la fecha de apertura y la de cierre.</li>
-          <li>Un voto por persona en esta votación.</li>
+          <li>Un voto por persona en la categoría «{{ categoria.nombre }}», aunque tenga varias votaciones.</li>
           <li>Una vez confirmado, el voto no se puede cambiar.</li>
           <li>Los resultados se publican según la configuración: «{{ votacion.visibilidad_efectiva|visibilidad }}».</li>
         </ul>
@@ -47,11 +47,17 @@
     </div>
 
     <div class="col-lg-8 order-lg-1">
-      {% if ya_voto %}
+      {% if ya_voto and voto_categoria.votacion_id == votacion.pk %}
         <div class="alert alert-success d-flex flex-wrap align-items-center gap-2" role="status">
           <i class="bi bi-check-circle-fill fs-4" aria-hidden="true"></i>
           <div class="flex-grow-1"><strong>Ya votaste en esta votación.</strong> Tu voto fue registrado y no se puede modificar.</div>
           <a class="btn btn-sm btn-outline-success" href="{% url 'portal:comprobante' edicion.anio categoria.slug votacion.slug %}"><i class="bi bi-receipt me-1" aria-hidden="true"></i>Ver comprobante</a>
+        </div>
+      {% elif ya_voto %}
+        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
+          <i class="bi bi-info-circle-fill fs-4" aria-hidden="true"></i>
+          <div class="flex-grow-1"><strong>Ya votaste en la categoría «{{ categoria.nombre }}».</strong> Tu voto quedó en «{{ voto_categoria.votacion.titulo }}» y solo se permite uno por categoría en cada edición.</div>
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:comprobante' edicion.anio categoria.slug voto_categoria.votacion.slug %}"><i class="bi bi-receipt me-1" aria-hidden="true"></i>Ver comprobante</a>
         </div>
       {% endif %}
       {% if estado == "programada" %}

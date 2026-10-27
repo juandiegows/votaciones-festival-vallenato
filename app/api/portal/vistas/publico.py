@@ -117,7 +117,9 @@ def votacion(request, anio, categoria, votacion):
     estado = votacion.estado
     abierta = estado == Votacion.Estado.ABIERTA and not votacion.pausada
     votadas = consultas.opciones_votadas(request.user, votacion)
-    ya_voto = selectores.votos_del_usuario(request.user, votacion) >= votacion.votos_por_usuario_efectivo
+    # RN-04: el voto cuenta para toda la categoría, aunque se haya emitido en otra de sus votaciones
+    voto_categoria = selectores.voto_en_categoria(request.user, votacion.categoria)
+    ya_voto = voto_categoria is not None
     seleccion = request.GET.get("opcion", "")
     return render(request, "portal/votacion.html", {
         "edicion": edicion,
@@ -126,6 +128,7 @@ def votacion(request, anio, categoria, votacion):
         "estado": estado,
         "abierta": abierta,
         "ya_voto": ya_voto,
+        "voto_categoria": voto_categoria,
         "deshabilitada": not abierta or ya_voto,
         # Marcadas: lo que votó, o la opción que eligió antes de iniciar sesión (?opcion=)
         "marcadas": votadas if ya_voto else ({int(seleccion)} if seleccion.isdigit() else set()),

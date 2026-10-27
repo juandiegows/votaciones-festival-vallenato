@@ -282,14 +282,13 @@ class VotacionForm(IconoMixin, FormularioPanel):
         model = Votacion
         fields = [
             "categoria", "titulo", "slug", "descripcion", "icono_imagen", "fecha_apertura", "fecha_cierre",
-            "votos_por_usuario", "personalizar_votos", "visibilidad_resultados", "personalizar_resultados",
+            "visibilidad_resultados", "personalizar_resultados",
             "presentacion_opciones", "publicada",
         ]
         labels = {
             "titulo": "Título", "slug": "Identificador en la URL", "descripcion": "Descripción", "icono_imagen": "Ícono propio",
             "fecha_apertura": "Fecha y hora de apertura", "fecha_cierre": "Fecha y hora de cierre",
-            "votos_por_usuario": "Votos por usuario", "visibilidad_resultados": "Mostrar resultados",
-            "personalizar_votos": "Personalizar en esta votación (no usar el de la edición)",
+            "visibilidad_resultados": "Mostrar resultados",
             "personalizar_resultados": "Personalizar en esta votación (no usar la de la edición)",
             "publicada": "Publicar votación (visible al público)",
         }
@@ -297,7 +296,6 @@ class VotacionForm(IconoMixin, FormularioPanel):
             "descripcion": forms.Textarea(attrs={"rows": 2}),
             "fecha_apertura": forms.DateTimeInput(attrs={"type": "datetime-local"}, format=FORMATO_FECHA_HORA),
             "fecha_cierre": forms.DateTimeInput(attrs={"type": "datetime-local"}, format=FORMATO_FECHA_HORA),
-            "votos_por_usuario": forms.NumberInput(attrs={"min": 1, "max": 5}),
             "presentacion_opciones": forms.RadioSelect,
         }
 
@@ -317,12 +315,6 @@ class VotacionForm(IconoMixin, FormularioPanel):
         if len(valor) < 3:
             raise forms.ValidationError("El título debe tener al menos 3 caracteres.")
         return valor
-
-    def clean_votos_por_usuario(self):
-        votos = self.cleaned_data["votos_por_usuario"]
-        if not 1 <= votos <= 5:
-            raise forms.ValidationError("Usa un número entre 1 y 5.")
-        return votos
 
     def clean(self):
         datos = super().clean()
