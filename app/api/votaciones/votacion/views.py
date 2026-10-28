@@ -3,7 +3,7 @@ import csv
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -70,7 +70,28 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(summary="Categorías activas con votaciones y opciones (RF-04)", parameters=[
+    list=extend_schema(
+        tags=["Entrega 3", "Consulta pública"],
+        summary="Categorías activas con votaciones y opciones (RF-04)",
+        description=(
+            "Lee de MySQL las categorías activas de la edición, cada una con sus votaciones publicadas y, "
+            "dentro de cada votación, sus opciones activas. No requiere sesión.\n\n"
+            "`voto_unico = true`: un solo voto en toda la categoría (aunque tenga varias votaciones). "
+            "`voto_unico = false`: un voto por cada votación de la categoría."
+        ),
+        examples=[OpenApiExample("Respuesta", response_only=True, value=[{
+            "id": 15, "edicion": 6, "edicion_anio": 2027, "edicion_nombre": "Festival de la Leyenda Vallenata 2027",
+            "nombre": "Música", "slug": "musica", "descripcion": "Votaciones del público sobre las canciones del Festival.",
+            "icono": "music-note-beamed", "orden": 1, "activa": True, "voto_unico": True,
+            "votaciones": [{
+                "id": 23, "titulo": "Canción inédita revelación", "slug": "cancion-inedita-revelacion",
+                "descripcion": "Votación del público entre canciones inéditas.", "estado": "abierta",
+                "fecha_apertura": "2026-09-29T16:00:00-05:00", "fecha_cierre": "2026-11-21T16:00:00-05:00",
+                "opciones": [{"id": 85, "nombre": "'Corazón Sabanero' (ficticia)", "descripcion": "Aire de paseo.",
+                              "imagen": "", "enlace_multimedia": "", "audio": None, "texto_audio": "", "orden": 1}],
+            }],
+        }])],
+        parameters=[
         OpenApiParameter("edicion", OpenApiTypes.INT, description="ID de la edición; por defecto, la edición activa"),
         OpenApiParameter("anio", OpenApiTypes.INT, description="Año de la edición (URL amigable /{año})")]),
     retrieve=extend_schema(summary="Detalle de categoría"),
@@ -134,8 +155,35 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         votaciones = selectores.filtrar_por_estado(self.get_queryset(), request.query_params.get("estado"))
         return Response(self.get_serializer(votaciones, many=True).data)
 
-    @extend_schema(tags=["Votación"], summary="Emitir voto (RF-07, RF-08; RN-02 a RN-05)", request=VotarSerializer,
-                   responses={201: VotoSerializer, 400: ErrorReglaSerializer, 409: ErrorReglaSerializer})
+    @extend_schema(
+        tags=["Entrega 3", "Votación"],
+        summary="Emitir voto (RF-07, RF-08; RN-02 a RN-05)",
+        description=(
+            "Requiere `Authorization: Token <token>`. El servidor valida, en este orden: correo confirmado y documento, "
+            "que la votación exista, que la categoría esté activa y la edición en curso, que la votación esté abierta "
+            "y sin pausa, que la opción pertenezca a la votación y que el usuario no haya votado ya en la categoría "
+            "de esta edición (o en la votación, si la categoría tiene `voto_unico = false`).\n\n"
+            "La restricción única de MySQL respalda la regla: si llegan dos votos al mismo tiempo, solo uno se guarda "
+            "y el otro recibe 409. Límite: 30 votos por minuto por usuario."
+        ),
+        request=VotarSerializer,
+        examples=[OpenApiExample("Voto", request_only=True, value={"opcion": 85})],
+        responses={
+            201: OpenApiResponse(VotoSerializer, description="Voto registrado; incluye el código de comprobante"),
+            400: OpenApiResponse(ErrorReglaSerializer, description="Opción inválida o de otra votación", examples=[
+                OpenApiExample("opcion_invalida", value={"detail": "La opción no pertenece a esta votación.", "codigo": "opcion_invalida"})]),
+            401: OpenApiResponse(description="Sin token: hay que iniciar sesión", examples=[
+                OpenApiExample("Sin sesión", value={"detail": "Las credenciales de autenticación no se proveyeron."})]),
+            403: OpenApiResponse(ErrorReglaSerializer, description="Correo sin confirmar o documento pendiente", examples=[
+                OpenApiExample("correo_sin_confirmar", value={"detail": "Confirma tu correo para poder votar. Revisa tu bandeja de entrada.", "codigo": "correo_sin_confirmar"})]),
+            404: OpenApiResponse(description="La votación no existe o no está publicada"),
+            409: OpenApiResponse(ErrorReglaSerializer, description="Ya votó en la categoría, o la votación no está abierta", examples=[
+                OpenApiExample("voto_duplicado_categoria", value={"detail": "Ya votaste en la categoría «Música». Solo se permite un voto por categoría en cada edición.", "codigo": "voto_duplicado_categoria"}),
+                OpenApiExample("voto_duplicado_votacion", value={"detail": "Ya votaste en esta votación.", "codigo": "voto_duplicado_votacion"}),
+                OpenApiExample("votacion_no_abierta", value={"detail": "La votación no está abierta.", "codigo": "votacion_no_abierta"})]),
+            429: OpenApiResponse(description="Demasiados intentos de voto en un minuto"),
+        },
+    )
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated],
             throttle_classes=[ScopedRateThrottle], throttle_scope="votar")
     def votar(self, request, pk=None):
@@ -170,7 +218,8 @@ class OpcionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return selectores.opciones_publicas(self.request.query_params.get("votacion"))
 
 
-@extend_schema(tags=["Votación"], summary="Mis votos y comprobantes (RF-09)")
+@extend_schema(tags=["Entrega 3", "Votación"], summary="Mis votos y comprobantes (RF-09)",
+               description="Historial de participación del usuario autenticado: votación, opción elegida, fecha y comprobante.")
 class MisVotosView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = VotoSerializer
@@ -341,7 +390,8 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(summary="Votos registrados para indicadores (sin datos del votante)", parameters=[
+    list=extend_schema(tags=["Entrega 3", "Administración"], summary="Votos registrados para indicadores (sin datos del votante)",
+                       description="Consulta administrativa de los votos (requiere rol administrador).", parameters=[
         OpenApiParameter("votacion", OpenApiTypes.INT, description="ID de la votación")]),
     retrieve=extend_schema(summary="Detalle de voto (sin datos del votante)"),
 )

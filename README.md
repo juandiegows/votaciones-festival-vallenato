@@ -95,8 +95,34 @@ categorías, pero no emitir un segundo voto en la misma categoría, aunque esta 
 | API `GET /api/categorias/` (categorías → votaciones → opciones en JSON) | [`app/api/votaciones/votacion/views.py`](app/api/votaciones/votacion/views.py) (`CategoriaPublicaViewSet`) · [`serializers.py`](app/api/votaciones/votacion/serializers.py) (`CategoriaConOpcionesSerializer`) |
 | Consulta administrativa de votos | Django Admin `/django-admin/votaciones/voto/` (filtros por edición, categoría y votación) · API `/api/gestion/votos/` |
 | Pruebas funcionales CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](app/api/portal/tests/test_entrega3.py) |
+| Documentación interactiva de la API (Swagger, etiqueta **Entrega 3**) | https://votaciones.juandiegows.com/api/docs/ · ReDoc: https://votaciones.juandiegows.com/api/redoc/ · esquema versionado: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
+| Colección de Postman (CP-01 a CP-10 contra producción o local) | [`docs/api/postman/`](docs/api/postman/) |
+| Informe PDF, guion del video y capturas | [`docs/entrega-3/`](docs/entrega-3/) |
 
 Las migraciones funcionan igual en MySQL 8.4 (Docker local) y en MySQL 9.7.2 (producción).
+
+### Cómo revisar la Entrega 3
+
+1. **Sitio:** https://votaciones.juandiegows.com/2027 → iniciar sesión y votar (CP-01 a CP-07).
+2. **Swagger:** https://votaciones.juandiegows.com/api/docs/ → etiqueta **Entrega 3**. La descripción de arriba trae los pasos:
+   `POST /api/auth/login/` → copiar el `token` → **Authorize** con `Token <token>` → `GET /api/categorias/` →
+   `POST /api/votaciones/{id}/votar/`. Un segundo voto en la misma categoría responde `409 voto_duplicado_categoria`;
+   sin token, `401`. Cada endpoint muestra ejemplos de respuesta y todos sus códigos de error.
+3. **Postman:** importar la colección y el entorno de [`docs/api/postman/`](docs/api/postman/) y ejecutar la carpeta completa.
+4. **Pruebas automáticas:** `python manage.py test portal.tests.test_entrega3` (una prueba por cada CP).
+
+| Caso | Prueba automática (`test_entrega3.py`) | Evidencia en el informe |
+|---|---|---|
+| CP-01 Voto válido | `test_cp01_usuario_autenticado_registra_un_voto_valido` | Figuras 4, 5 y 19 |
+| CP-02 Segundo voto en la misma categoría | `test_cp02_rechaza_segundo_voto_en_la_misma_categoria` | Figuras 6 y 7 |
+| CP-03 Voto en otra categoría | `test_cp03_permite_votar_en_otra_categoria` | Figura 8 |
+| CP-04 Sin sesión | `test_cp04_usuario_no_autenticado_debe_iniciar_sesion` | Figura 2 |
+| CP-05 Votación o categoría no habilitada | `test_cp05_rechaza_votacion_y_categoria_no_habilitadas` | Figuras 10 y 17 |
+| CP-06 Opción de otra categoría | `test_cp06_rechaza_opcion_de_otra_categoria` | Figura 11 |
+| CP-07 Historial «Mis votos» | `test_cp07_mis_votos_muestra_las_categorias_votadas` | Figura 12 |
+| CP-08 Consulta del administrador | `test_cp08_administrador_consulta_los_votos` | Figuras 13 y 19 |
+| CP-09 Concurrencia | `test_cp09_carrera_resuelta_por_la_restriccion_unica` y `test_cp09_dos_solicitudes_simultaneas_dejan_un_solo_voto` (hilos en MySQL) | Figuras 18 y 19 |
+| CP-10 `GET /api/categorias/` | `test_cp10_api_get_categorias_entrega_json_con_opciones` | Figura 16 |
 
 Validaciones al votar: sesión iniciada, correo confirmado, categoría activa de la edición en curso, votación abierta y sin
 pausa, opción activa de esa votación y ningún voto previo del usuario en la categoría. Si dos solicitudes llegan a la

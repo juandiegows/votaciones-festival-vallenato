@@ -3,12 +3,18 @@
 API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (2027 y ediciones futuras), construida con
 **Django 5.2 + Django REST Framework** sobre **MySQL**. Código en [`app/api`](../../app/api).
 
-| Recurso | Enlace (entorno local con Docker) |
-|---|---|
-| Swagger UI (interactivo) | http://localhost:8096/api/docs/ |
-| ReDoc | http://localhost:8096/api/redoc/ |
-| Esquema OpenAPI 3 | http://localhost:8096/api/esquema/ · copia versionada: [`openapi.yaml`](openapi.yaml) |
-| Salud del servicio | http://localhost:8096/api/salud/ |
+| Recurso | Producción | Local con Docker |
+|---|---|---|
+| Swagger UI (interactivo) | https://votaciones.juandiegows.com/api/docs/ | http://localhost:8096/api/docs/ |
+| ReDoc | https://votaciones.juandiegows.com/api/redoc/ | http://localhost:8096/api/redoc/ |
+| Esquema OpenAPI 3 | https://votaciones.juandiegows.com/api/esquema/ | http://localhost:8096/api/esquema/ · copia versionada: [`openapi.yaml`](openapi.yaml) |
+| Salud del servicio | https://votaciones.juandiegows.com/api/salud/ | http://localhost:8096/api/salud/ |
+| Colección de Postman | [`postman/`](postman/) | |
+
+En Swagger, la etiqueta **Entrega 3** agrupa los endpoints de esa entrega (login, `GET /api/categorias/`, votar,
+«Mis votos» y la consulta administrativa de votos), con ejemplos y todos los códigos de error. Para probar las rutas
+con sesión: **Authorize** → `Token <token>` (el token sale de `POST /api/auth/login/`); la autorización se conserva
+al recargar la página.
 
 ## Convenciones
 
@@ -32,9 +38,9 @@ API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (202
 |---|---|
 | `400` | Datos inválidos o regla de negocio incumplida (p. ej., opción ajena, menos de dos opciones) |
 | `401` | Falta el token o es inválido |
-| `403` | Sin permiso (rol) o resultados aún no públicos (RN-07) |
+| `403` | Sin permiso (rol), correo sin confirmar o documento pendiente al votar, o resultados aún no públicos (RN-07) |
 | `404` | Recurso inexistente o no publicado |
-| `409` | Conflicto con el estado: votación no abierta, límite de votos, eliminar con votos |
+| `409` | Conflicto con el estado: ya votó en la categoría (o en la votación), votación no abierta o en pausa, eliminar con votos |
 | `429` | Demasiadas peticiones |
 
 Las reglas de negocio responden con un cuerpo uniforme:
@@ -43,8 +49,9 @@ Las reglas de negocio responden con un cuerpo uniforme:
 { "detail": "Ya votaste en la categoría «Música». Solo se permite un voto por categoría en cada edición.", "codigo": "voto_duplicado_categoria" }
 ```
 
-Códigos posibles: `votacion_no_abierta`, `categoria_no_habilitada`, `opcion_invalida`, `voto_duplicado_categoria`, `opciones_insuficientes`,
-`tiene_votos`, `registros_asociados`.
+Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inexistente`, `votacion_no_abierta`, `categoria_no_habilitada`,
+`votaciones_pausadas`, `opcion_invalida`, `voto_duplicado_categoria`, `voto_duplicado_votacion`, `voto_unico_bloqueado`,
+`opciones_insuficientes`, `opciones_bloqueadas`, `tiene_votos`, `registros_asociados`.
 
 ## Endpoints
 

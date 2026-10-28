@@ -2,10 +2,26 @@ openapi: 3.0.3
 info:
   title: API – Sistema Web de Votaciones del Festival de la Leyenda Vallenata
   version: 1.0.0
-  description: 'API REST del Sistema Web de Votaciones del Festival de la Leyenda
-    Vallenata (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición
-    → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization:
-    Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.'
+  description: |-
+    API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.
+
+    ## Entrega 3 – módulo de votación
+
+    Los endpoints de esta entrega están agrupados en la etiqueta **Entrega 3**:
+
+    | Endpoint | Qué demuestra |
+    |---|---|
+    | `GET /api/categorias/` | Categorías con sus votaciones y opciones, en JSON leído de MySQL (sin sesión). |
+    | `POST /api/auth/login/` | Devuelve el token para votar. |
+    | `POST /api/votaciones/{id}/votar/` | Emite el voto; todas las validaciones se hacen en el servidor. |
+    | `GET /api/mis-votos/` | Historial de participación del usuario con sus comprobantes. |
+    | `GET /api/gestion/votos/` | Consulta administrativa de votos (sin datos del votante). |
+
+    **Regla:** un voto por usuario, por categoría y por edición, aunque la categoría tenga varias votaciones. La garantiza una restricción única en MySQL (`voto_unico_usuario_categoria_edicion`), así que también se cumple con peticiones simultáneas. Si en el administrador se desmarca *un solo voto en toda la categoría*, la regla pasa a ser un voto por votación.
+
+    **Cómo probar aquí:** 1) `POST /api/auth/login/` en *Try it out* y copiar el `token`; 2) botón **Authorize** → escribir `Token <token>` (con la palabra Token y un espacio); 3) `GET /api/categorias/` para ver los IDs de votación y opción; 4) `POST /api/votaciones/{id}/votar/` con `{"opcion": <id>}`. Repetir el voto en la misma categoría responde **409** `voto_duplicado_categoria`; sin token responde **401**.
+
+    Errores de negocio: siempre `{"detail": "…", "codigo": "…"}`.
 paths:
   /api/auth/confirmar-correo/:
     post:
@@ -84,6 +100,7 @@ paths:
       operationId: auth_login_create
       summary: Iniciar sesión (RF-02)
       tags:
+      - Entrega 3
       - Autenticación
       requestBody:
         content:
@@ -185,8 +202,10 @@ paths:
   /api/categorias/:
     get:
       operationId: categorias_list
-      description: 'GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías,
-        sus votaciones y sus opciones.'
+      description: |-
+        Lee de MySQL las categorías activas de la edición, cada una con sus votaciones publicadas y, dentro de cada votación, sus opciones activas. No requiere sesión.
+
+        `voto_unico = true`: un solo voto en toda la categoría (aunque tenga varias votaciones). `voto_unico = false`: un voto por cada votación de la categoría.
       summary: Categorías activas con votaciones y opciones (RF-04)
       parameters:
       - in: query
@@ -200,6 +219,7 @@ paths:
           type: integer
         description: ID de la edición; por defecto, la edición activa
       tags:
+      - Entrega 3
       - Consulta pública
       security:
       - tokenAuth: []
@@ -212,6 +232,38 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CategoriaConOpciones'
+              examples:
+                Respuesta:
+                  value:
+                  - - id: 15
+                      edicion: 6
+                      edicion_anio: 2027
+                      edicion_nombre: Festival de la Leyenda Vallenata 2027
+                      nombre: Música
+                      slug: musica
+                      descripcion: Votaciones del público sobre las canciones del
+                        Festival.
+                      icono: music-note-beamed
+                      orden: 1
+                      activa: true
+                      voto_unico: true
+                      votaciones:
+                      - id: 23
+                        titulo: Canción inédita revelación
+                        slug: cancion-inedita-revelacion
+                        descripcion: Votación del público entre canciones inéditas.
+                        estado: abierta
+                        fecha_apertura: '2026-09-29T16:00:00-05:00'
+                        fecha_cierre: '2026-11-21T16:00:00-05:00'
+                        opciones:
+                        - id: 85
+                          nombre: '''Corazón Sabanero'' (ficticia)'
+                          descripcion: Aire de paseo.
+                          imagen: ''
+                          enlace_multimedia: ''
+                          audio: null
+                          texto_audio: ''
+                          orden: 1
           description: ''
   /api/categorias/{id}/:
     get:
@@ -1875,6 +1927,7 @@ paths:
   /api/gestion/votos/:
     get:
       operationId: gestion_votos_list
+      description: Consulta administrativa de los votos (requiere rol administrador).
       summary: Votos registrados para indicadores (sin datos del votante)
       parameters:
       - in: query
@@ -1883,6 +1936,7 @@ paths:
           type: integer
         description: ID de la votación
       tags:
+      - Entrega 3
       - Administración
       security:
       - tokenAuth: []
@@ -1920,8 +1974,11 @@ paths:
   /api/mis-votos/:
     get:
       operationId: mis_votos_list
+      description: 'Historial de participación del usuario autenticado: votación,
+        opción elegida, fecha y comprobante.'
       summary: Mis votos y comprobantes (RF-09)
       tags:
+      - Entrega 3
       - Votación
       security:
       - tokenAuth: []
@@ -2096,6 +2153,10 @@ paths:
   /api/votaciones/{id}/votar/:
     post:
       operationId: votaciones_votar_create
+      description: |-
+        Requiere `Authorization: Token <token>`. El servidor valida, en este orden: correo confirmado y documento, que la votación exista, que la categoría esté activa y la edición en curso, que la votación esté abierta y sin pausa, que la opción pertenezca a la votación y que el usuario no haya votado ya en la categoría de esta edición (o en la votación, si la categoría tiene `voto_unico = false`).
+
+        La restricción única de MySQL respalda la regla: si llegan dos votos al mismo tiempo, solo uno se guarda y el otro recibe 409. Límite: 30 votos por minuto por usuario.
       summary: Emitir voto (RF-07, RF-08; RN-02 a RN-05)
       parameters:
       - in: path
@@ -2105,12 +2166,17 @@ paths:
         description: Un valor de entero único que identifique este votación.
         required: true
       tags:
+      - Entrega 3
       - Votación
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/VotarRequest'
+            examples:
+              Voto:
+                value:
+                  opcion: 85
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/VotarRequest'
@@ -2126,19 +2192,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Voto'
-          description: ''
+          description: Voto registrado; incluye el código de comprobante
         '400':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
-          description: ''
+              examples:
+                OpcionInvalida:
+                  value:
+                    detail: La opción no pertenece a esta votación.
+                    codigo: opcion_invalida
+                  summary: opcion_invalida
+          description: Opción inválida o de otra votación
+        '401':
+          description: 'Sin token: hay que iniciar sesión'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+              examples:
+                CorreoSinConfirmar:
+                  value:
+                    detail: Confirma tu correo para poder votar. Revisa tu bandeja
+                      de entrada.
+                    codigo: correo_sin_confirmar
+                  summary: correo_sin_confirmar
+          description: Correo sin confirmar o documento pendiente
+        '404':
+          description: La votación no existe o no está publicada
         '409':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
-          description: ''
+              examples:
+                VotoDuplicadoCategoria:
+                  value:
+                    detail: Ya votaste en la categoría «Música». Solo se permite un
+                      voto por categoría en cada edición.
+                    codigo: voto_duplicado_categoria
+                  summary: voto_duplicado_categoria
+                VotoDuplicadoVotacion:
+                  value:
+                    detail: Ya votaste en esta votación.
+                    codigo: voto_duplicado_votacion
+                  summary: voto_duplicado_votacion
+                VotacionNoAbierta:
+                  value:
+                    detail: La votación no está abierta.
+                    codigo: votacion_no_abierta
+                  summary: votacion_no_abierta
+          description: Ya votó en la categoría, o la votación no está abierta
+        '429':
+          description: Demasiados intentos de voto en un minuto
   /api/votaciones/por-ruta/:
     get:
       operationId: votaciones_por_ruta_retrieve
@@ -2298,6 +2406,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 120
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -2318,6 +2427,12 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+        voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Marcado: cada persona vota una sola vez en la categoría, aunque
+            tenga varias votaciones. Desmarcado: puede votar una vez en cada votación.
+            No se puede cambiar cuando la categoría ya tiene votos.'
       required:
       - edicion
       - edicion_anio
@@ -2347,6 +2462,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 120
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -2363,6 +2479,12 @@ components:
           format: int64
         activa:
           type: boolean
+        voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Marcado: cada persona vota una sola vez en la categoría, aunque
+            tenga varias votaciones. Desmarcado: puede votar una vez en cada votación.
+            No se puede cambiar cuando la categoría ya tiene votos.'
         votaciones:
           type: array
           items:
@@ -2374,7 +2496,6 @@ components:
       - edicion_nombre
       - id
       - nombre
-      - slug
       - votaciones
     CategoriaRequest:
       type: object
@@ -2392,6 +2513,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 120
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -2412,6 +2534,12 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+        voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Marcado: cada persona vota una sola vez en la categoría, aunque
+            tenga varias votaciones. Desmarcado: puede votar una vez en cada votación.
+            No se puede cambiar cuando la categoría ya tiene votos.'
       required:
       - edicion
       - nombre
@@ -2661,9 +2789,10 @@ components:
           description: Mensaje legible; cita la regla de negocio (RN-xx).
         codigo:
           type: string
-          description: votacion_no_abierta · categoria_no_habilitada · opcion_invalida
-            · voto_duplicado_categoria · opciones_insuficientes · opciones_bloqueadas
-            · tiene_votos · registros_asociados · votaciones_pausadas
+          description: correo_sin_confirmar · documento_requerido · votacion_inexistente
+            · votacion_no_abierta · categoria_no_habilitada · opcion_invalida · voto_duplicado_categoria
+            · voto_duplicado_votacion · voto_unico_bloqueado · opciones_insuficientes
+            · opciones_bloqueadas · tiene_votos · registros_asociados · votaciones_pausadas
       required:
       - codigo
       - detail
@@ -3132,6 +3261,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 120
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -3152,6 +3282,12 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
+        voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Marcado: cada persona vota una sola vez en la categoría, aunque
+            tenga varias votaciones. Desmarcado: puede votar una vez en cada votación.
+            No se puede cambiar cuando la categoría ya tiene votos.'
     PatchedConfiguracionSitioRequest:
       type: object
       properties:
@@ -3336,6 +3472,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 150
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -3762,6 +3899,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/TipoDocumentoEnum'
           readOnly: true
+          default: ''
         numero_documento:
           type: string
           readOnly: true
@@ -3814,6 +3952,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/TipoDocumentoEnum'
           readOnly: true
+          default: ''
         numero_documento:
           type: string
           readOnly: true
@@ -3866,6 +4005,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 150
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -4031,6 +4171,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 150
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -4102,7 +4243,6 @@ components:
       - mis_votos
       - opciones
       - pausada
-      - slug
       - titulo
       - visibilidad_resultados
       - votos_por_usuario
@@ -4131,6 +4271,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 150
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -4192,7 +4333,6 @@ components:
       - icono_imagen
       - id
       - pausada
-      - slug
       - titulo
       - visibilidad_resultados
       - votos_por_usuario
@@ -4212,6 +4352,7 @@ components:
             si se deja vacío.
           oneOf:
           - type: string
+            default: ''
             maxLength: 150
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
@@ -4398,6 +4539,9 @@ components:
       name: Authorization
       description: Token-based authentication with required prefix "Token"
 tags:
+- name: Entrega 3
+  description: 'Módulo de votación: categorías desde MySQL, emisión del voto con la
+    regla de un voto por categoría y edición, historial y consulta administrativa.'
 - name: Autenticación
   description: Registro, inicio y cierre de sesión (RF-01, RF-02).
 - name: Consulta pública

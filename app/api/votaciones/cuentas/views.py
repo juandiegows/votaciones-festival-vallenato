@@ -80,7 +80,7 @@ class ReenviarConfirmacionView(APIView):
         return Response({"detail": f"Te enviamos un nuevo enlace a {request.user.email}."}, status=status.HTTP_202_ACCEPTED)
 
 
-@extend_schema(tags=["Autenticación"], summary="Iniciar sesión (RF-02)", request=LoginSerializer,
+@extend_schema(tags=["Entrega 3", "Autenticación"], summary="Iniciar sesión (RF-02)", request=LoginSerializer,
                responses={200: TokenRespuestaSerializer, 400: OpenApiResponse(description="Credenciales incorrectas")})
 class LoginView(APIView):
     permission_classes = [AllowAny]

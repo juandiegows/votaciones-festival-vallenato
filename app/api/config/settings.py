@@ -221,7 +221,27 @@ SPECTACULAR_SETTINGS = {
         "API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata "
         "(proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → "
         "Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` "
-        "obtenido en `/api/auth/login/` o `/api/auth/registro/`."
+        "obtenido en `/api/auth/login/` o `/api/auth/registro/`.\n\n"
+        "## Entrega 3 – módulo de votación\n\n"
+        "Los endpoints de esta entrega están agrupados en la etiqueta **Entrega 3**:\n\n"
+        "| Endpoint | Qué demuestra |\n"
+        "|---|---|\n"
+        "| `GET /api/categorias/` | Categorías con sus votaciones y opciones, en JSON leído de MySQL (sin sesión). |\n"
+        "| `POST /api/auth/login/` | Devuelve el token para votar. |\n"
+        "| `POST /api/votaciones/{id}/votar/` | Emite el voto; todas las validaciones se hacen en el servidor. |\n"
+        "| `GET /api/mis-votos/` | Historial de participación del usuario con sus comprobantes. |\n"
+        "| `GET /api/gestion/votos/` | Consulta administrativa de votos (sin datos del votante). |\n\n"
+        "**Regla:** un voto por usuario, por categoría y por edición, aunque la categoría tenga varias "
+        "votaciones. La garantiza una restricción única en MySQL "
+        "(`voto_unico_usuario_categoria_edicion`), así que también se cumple con peticiones simultáneas. "
+        "Si en el administrador se desmarca *un solo voto en toda la categoría*, la regla pasa a ser un voto por votación.\n\n"
+        "**Cómo probar aquí:** 1) `POST /api/auth/login/` en *Try it out* y copiar el `token`; "
+        "2) botón **Authorize** → escribir `Token <token>` (con la palabra Token y un espacio); "
+        "3) `GET /api/categorias/` para ver los IDs de votación y opción; "
+        "4) `POST /api/votaciones/{id}/votar/` con `{\"opcion\": <id>}`. "
+        "Repetir el voto en la misma categoría responde **409** `voto_duplicado_categoria`; "
+        "sin token responde **401**.\n\n"
+        "Errores de negocio: siempre `{\"detail\": \"…\", \"codigo\": \"…\"}`."
     ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
@@ -232,7 +252,15 @@ SPECTACULAR_SETTINGS = {
         "EstadoEdicionEnum": "votaciones.votacion.models.Edicion.Estado",
         "EstadoVotacionEnum": "votaciones.votacion.models.Votacion.Estado",
     },
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+        "filter": True,
+        "docExpansion": "none",
+        "defaultModelsExpandDepth": 0,
+    },
     "TAGS": [
+        {"name": "Entrega 3", "description": "Módulo de votación: categorías desde MySQL, emisión del voto con la regla de un voto por categoría y edición, historial y consulta administrativa."},
         {"name": "Autenticación", "description": "Registro, inicio y cierre de sesión (RF-01, RF-02)."},
         {"name": "Consulta pública", "description": "Ediciones, categorías, votaciones y resultados (RF-04 a RF-06, RF-15)."},
         {"name": "Votación", "description": "Emisión de voto y comprobantes (RF-07 a RF-09)."},
