@@ -391,6 +391,19 @@ export default function AdminConfiguracion() {
                   onCambio={(v) => guardarSitio({ mostrarTotalVotos: v === 'mostrar' }, v === 'mostrar' ? 'El inicio muestra el total de votos.' : 'El total de votos se oculta en el inicio.')}
                 />
               </Fila>
+              <Fila titulo="Documentación de la API" descripcion="Swagger, ReDoc y el esquema OpenAPI. Apagada, esas rutas responden 404.">
+                <Opciones
+                  nombre="cfg-swagger"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'mostrar', etiqueta: 'Mostrar', icono: 'file-earmark-code', descripcion: 'Cualquiera puede consultar y probar la API.' },
+                    { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'La documentación deja de estar disponible.' },
+                  ]}
+                  valor={configuracion?.mostrarSwagger === false ? 'ocultar' : 'mostrar'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ mostrarSwagger: v === 'mostrar' }, v === 'mostrar' ? 'La documentación de la API está visible.' : 'La documentación de la API se ocultó.')}
+                />
+              </Fila>
               <Fila titulo="Banner del inicio" descripcion="Aplica a todo el sitio. Los banners se administran en «Banner de inicio».">
                 <Opciones
                   nombre="cfg-banner"

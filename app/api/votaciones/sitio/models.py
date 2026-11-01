@@ -67,6 +67,10 @@ class ConfiguracionSitio(ModeloTrazable):
     # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre)
     # Muestra en el inicio el total de votos de la edición activa
     mostrar_total_votos = models.BooleanField(default=False, help_text="Mostrar al público el total de votos en el inicio.")
+    mostrar_swagger = models.BooleanField(
+        "mostrar la documentación de la API", default=True,
+        help_text="Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema (/api/esquema/). Apagado responden 404.",
+    )
     # Pendiente de validación con la Fundación (P-01): por defecto el registro es solo con correo confirmado
     pedir_documento = models.BooleanField(
         default=False, help_text="Pedir tipo y número de documento al registrarse (cada documento, una sola cuenta)."

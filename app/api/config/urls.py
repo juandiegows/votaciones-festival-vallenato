@@ -4,13 +4,23 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.views import redirect_to_login
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.urls import include, path, re_path, reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
+from votaciones.sitio.models import ConfiguracionSitio
 from votaciones.sitio.seo import sitemap
+
+
+def documentacion_api(vista):
+    """Swagger, ReDoc y el esquema responden 404 si la administración apagó la documentación."""
+    def envoltura(request, *args, **kwargs):
+        if not ConfiguracionSitio.obtener().mostrar_swagger:
+            raise Http404
+        return vista(request, *args, **kwargs)
+    return envoltura
 
 
 def salud(request):
@@ -50,9 +60,9 @@ urlpatterns = [
     path("api/salud/", salud, name="salud"),
     # Mapa del sitio de la web (SPA); lo declara robots.txt
     path("api/sitemap.xml", sitemap, name="sitemap"),
-    path("api/esquema/", SpectacularAPIView.as_view(), name="esquema"),
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="esquema"), name="swagger"),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="esquema"), name="redoc"),
+    path("api/esquema/", documentacion_api(SpectacularAPIView.as_view()), name="esquema"),
+    path("api/docs/", documentacion_api(SpectacularSwaggerView.as_view(url_name="esquema")), name="swagger"),
+    path("api/redoc/", documentacion_api(SpectacularRedocView.as_view(url_name="esquema")), name="redoc"),
     path("api/", include("votaciones.urls")),
     # Imágenes subidas: las sirve Django en todos los entornos (el proxy reenvía /media/ a la API)
     re_path(r"^media/(?P<path>.*)$", media, name="media"),

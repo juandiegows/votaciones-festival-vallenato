@@ -160,6 +160,17 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertTrue(RegistroAuditoria.objects.filter(accion="actualizar", entidad="configuracion").exists())
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"correo": "no-es-correo"}, format="json").status_code, 400)
 
+    def test_la_administracion_apaga_y_enciende_la_documentacion_de_la_api(self):
+        rutas = ("/api/docs/", "/api/redoc/", "/api/esquema/")
+        for ruta in rutas:
+            self.assertEqual(self.client.get(ruta).status_code, 200)
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"mostrar_swagger": False}, format="json").status_code, 200)
+        for ruta in rutas:
+            self.assertEqual(self.client.get(ruta).status_code, 404)
+        self.assertEqual(self.client.get("/api/categorias/").status_code, 200)
+        self.assertEqual(self.client.patch("/api/admin/configuracion/", {"mostrar_swagger": True}, format="json").status_code, 200)
+        self.assertEqual(self.client.get("/api/docs/").status_code, 200)
+
     def test_pedir_documento_por_defecto_no_y_lo_activa_la_administracion(self):
         self.assertFalse(self.client.get("/api/sitio/").data["configuracion"]["pedir_documento"])
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"pedir_documento": True}, format="json").status_code, 200)
