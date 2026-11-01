@@ -95,7 +95,7 @@ categorías, pero no emitir un segundo voto en la misma categoría, aunque esta 
 | API `GET /api/categorias/` (categorías → votaciones → opciones en JSON) | [`app/api/votaciones/votacion/views.py`](app/api/votaciones/votacion/views.py) (`CategoriaPublicaViewSet`) · [`serializers.py`](app/api/votaciones/votacion/serializers.py) (`CategoriaConOpcionesSerializer`) |
 | Consulta administrativa de votos | Django Admin `/django-admin/votaciones/voto/` (filtros por edición, categoría y votación) · API `/api/gestion/votos/` |
 | Pruebas funcionales CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](app/api/portal/tests/test_entrega3.py) |
-| Documentación interactiva de la API (Swagger, etiqueta **Entrega 3**) | https://votaciones.juandiegows.com/api/docs/ · ReDoc: https://votaciones.juandiegows.com/api/redoc/ · esquema versionado: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
+| Documentación interactiva de la API (Swagger) | https://votaciones.juandiegows.com/api/docs/ · ReDoc: https://votaciones.juandiegows.com/api/redoc/ · esquema versionado: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
 | Colección de Postman (CP-01 a CP-10 contra producción o local) | [`docs/api/postman/`](docs/api/postman/) |
 | Informe PDF, guion del video y capturas | [`docs/entrega-3/`](docs/entrega-3/) |
 
@@ -104,7 +104,7 @@ Las migraciones funcionan igual en MySQL 8.4 (Docker local) y en MySQL 9.7.2 (pr
 ### Cómo revisar la Entrega 3
 
 1. **Sitio:** https://votaciones.juandiegows.com/2027 → iniciar sesión y votar (CP-01 a CP-07).
-2. **Swagger:** https://votaciones.juandiegows.com/api/docs/ → etiqueta **Entrega 3**. La descripción de arriba trae los pasos:
+2. **Swagger:** https://votaciones.juandiegows.com/api/docs/. La descripción de arriba trae los pasos:
    `POST /api/auth/login/` → copiar el `token` → **Authorize** con `Token <token>` → `GET /api/categorias/` →
    `POST /api/votaciones/{id}/votar/`. Un segundo voto en la misma categoría responde `409 voto_duplicado_categoria`;
    sin token, `401`. Cada endpoint muestra ejemplos de respuesta y todos sus códigos de error.

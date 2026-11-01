@@ -222,8 +222,8 @@ SPECTACULAR_SETTINGS = {
         "(proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → "
         "Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` "
         "obtenido en `/api/auth/login/` o `/api/auth/registro/`.\n\n"
-        "## Entrega 3 – módulo de votación\n\n"
-        "Los endpoints de esta entrega están agrupados en la etiqueta **Entrega 3**:\n\n"
+        "## Flujo de votación\n\n"
+        "Endpoints principales del flujo; cada uno está en su módulo:\n\n"
         "| Endpoint | Qué demuestra |\n"
         "|---|---|\n"
         "| `GET /api/categorias/` | Categorías con sus votaciones y opciones, en JSON leído de MySQL (sin sesión). |\n"
@@ -260,7 +260,6 @@ SPECTACULAR_SETTINGS = {
         "defaultModelsExpandDepth": 0,
     },
     "TAGS": [
-        {"name": "Entrega 3", "description": "Módulo de votación: categorías desde MySQL, emisión del voto con la regla de un voto por categoría y edición, historial y consulta administrativa."},
         {"name": "Autenticación", "description": "Registro, inicio y cierre de sesión (RF-01, RF-02)."},
         {"name": "Consulta pública", "description": "Ediciones, categorías, votaciones y resultados (RF-04 a RF-06, RF-15)."},
         {"name": "Votación", "description": "Emisión de voto y comprobantes (RF-07 a RF-09)."},

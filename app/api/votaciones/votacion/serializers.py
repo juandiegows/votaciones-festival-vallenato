@@ -174,7 +174,7 @@ class VotacionConOpcionesSerializer(serializers.ModelSerializer):
 
 
 class CategoriaConOpcionesSerializer(serializers.ModelSerializer):
-    """GET /api/categorias/ (Entrega 3): categorías de la edición con sus votaciones publicadas y opciones activas."""
+    """GET /api/categorias/: categorías de la edición con sus votaciones publicadas y opciones activas."""
     edicion_anio = serializers.IntegerField(source="edicion.anio", read_only=True)
     edicion_nombre = serializers.CharField(source="edicion.nombre", read_only=True)
     votaciones = VotacionConOpcionesSerializer(many=True, read_only=True, source="votaciones_publicas")

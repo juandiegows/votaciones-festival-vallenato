@@ -5,9 +5,9 @@ info:
   description: |-
     API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (proyecto académico, Areandina – Desarrollo Web). Jerarquía: Edición → Categoría → Votación → Opción → Voto. Autenticación: encabezado `Authorization: Token <token>` obtenido en `/api/auth/login/` o `/api/auth/registro/`.
 
-    ## Entrega 3 – módulo de votación
+    ## Flujo de votación
 
-    Los endpoints de esta entrega están agrupados en la etiqueta **Entrega 3**:
+    Endpoints principales del flujo; cada uno está en su módulo:
 
     | Endpoint | Qué demuestra |
     |---|---|
@@ -100,7 +100,6 @@ paths:
       operationId: auth_login_create
       summary: Iniciar sesión (RF-02)
       tags:
-      - Entrega 3
       - Autenticación
       requestBody:
         content:
@@ -219,7 +218,6 @@ paths:
           type: integer
         description: ID de la edición; por defecto, la edición activa
       tags:
-      - Entrega 3
       - Consulta pública
       security:
       - tokenAuth: []
@@ -268,8 +266,8 @@ paths:
   /api/categorias/{id}/:
     get:
       operationId: categorias_retrieve
-      description: 'GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías,
-        sus votaciones y sus opciones.'
+      description: 'GET /api/categorias/: JSON de MySQL con las categorías, sus votaciones
+        y sus opciones.'
       summary: Detalle de categoría
       parameters:
       - in: path
@@ -1936,7 +1934,6 @@ paths:
           type: integer
         description: ID de la votación
       tags:
-      - Entrega 3
       - Administración
       security:
       - tokenAuth: []
@@ -1978,7 +1975,6 @@ paths:
         opción elegida, fecha y comprobante.'
       summary: Mis votos y comprobantes (RF-09)
       tags:
-      - Entrega 3
       - Votación
       security:
       - tokenAuth: []
@@ -2166,7 +2162,6 @@ paths:
         description: Un valor de entero único que identifique este votación.
         required: true
       tags:
-      - Entrega 3
       - Votación
       requestBody:
         content:
@@ -2440,8 +2435,8 @@ components:
       - nombre
     CategoriaConOpciones:
       type: object
-      description: 'GET /api/categorias/ (Entrega 3): categorías de la edición con
-        sus votaciones publicadas y opciones activas.'
+      description: 'GET /api/categorias/: categorías de la edición con sus votaciones
+        publicadas y opciones activas.'
       properties:
         id:
           type: integer
@@ -4539,9 +4534,6 @@ components:
       name: Authorization
       description: Token-based authentication with required prefix "Token"
 tags:
-- name: Entrega 3
-  description: 'Módulo de votación: categorías desde MySQL, emisión del voto con la
-    regla de un voto por categoría y edición, historial y consulta administrativa.'
 - name: Autenticación
   description: Registro, inicio y cierre de sesión (RF-01, RF-02).
 - name: Consulta pública

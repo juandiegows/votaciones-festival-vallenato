@@ -71,7 +71,6 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(
-        tags=["Entrega 3", "Consulta pública"],
         summary="Categorías activas con votaciones y opciones (RF-04)",
         description=(
             "Lee de MySQL las categorías activas de la edición, cada una con sus votaciones publicadas y, "
@@ -98,7 +97,7 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
 )
 @extend_schema(tags=["Consulta pública"])
 class CategoriaPublicaViewSet(viewsets.ReadOnlyModelViewSet):
-    """GET /api/categorias/ (Entrega 3): JSON de MySQL con las categorías, sus votaciones y sus opciones."""
+    """GET /api/categorias/: JSON de MySQL con las categorías, sus votaciones y sus opciones."""
     permission_classes = [AllowAny]
     serializer_class = CategoriaConOpcionesSerializer
 
@@ -156,7 +155,7 @@ class VotacionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(self.get_serializer(votaciones, many=True).data)
 
     @extend_schema(
-        tags=["Entrega 3", "Votación"],
+        tags=["Votación"],
         summary="Emitir voto (RF-07, RF-08; RN-02 a RN-05)",
         description=(
             "Requiere `Authorization: Token <token>`. El servidor valida, en este orden: correo confirmado y documento, "
@@ -218,7 +217,7 @@ class OpcionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
         return selectores.opciones_publicas(self.request.query_params.get("votacion"))
 
 
-@extend_schema(tags=["Entrega 3", "Votación"], summary="Mis votos y comprobantes (RF-09)",
+@extend_schema(tags=["Votación"], summary="Mis votos y comprobantes (RF-09)",
                description="Historial de participación del usuario autenticado: votación, opción elegida, fecha y comprobante.")
 class MisVotosView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -390,7 +389,7 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=["Entrega 3", "Administración"], summary="Votos registrados para indicadores (sin datos del votante)",
+    list=extend_schema(summary="Votos registrados para indicadores (sin datos del votante)",
                        description="Consulta administrativa de los votos (requiere rol administrador).", parameters=[
         OpenApiParameter("votacion", OpenApiTypes.INT, description="ID de la votación")]),
     retrieve=extend_schema(summary="Detalle de voto (sin datos del votante)"),

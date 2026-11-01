@@ -11,7 +11,7 @@ API REST del Sistema Web de Votaciones del Festival de la Leyenda Vallenata (202
 | Salud del servicio | https://votaciones.juandiegows.com/api/salud/ | http://localhost:8096/api/salud/ |
 | Colección de Postman | [`postman/`](postman/) | |
 
-En Swagger, la etiqueta **Entrega 3** agrupa los endpoints de esa entrega (login, `GET /api/categorias/`, votar,
+Swagger organiza los endpoints por módulo. La descripción inicial resume el flujo de votación (login, `GET /api/categorias/`, votar,
 «Mis votos» y la consulta administrativa de votos), con ejemplos y todos los códigos de error. Para probar las rutas
 con sesión: **Authorize** → `Token <token>` (el token sale de `POST /api/auth/login/`); la autorización se conserva
 al recargar la página.
