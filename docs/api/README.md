@@ -16,6 +16,9 @@ Swagger organiza los endpoints por módulo. La descripción inicial resume el fl
 con sesión: **Authorize** → `Token <token>` (el token sale de `POST /api/auth/login/`); la autorización se conserva
 al recargar la página.
 
+La documentación se apaga desde Django Admin (*Configuración del sitio → mostrar la documentación de la API*) o con
+`mostrar_swagger` en `/api/gestion/configuracion/`; apagada, `/api/docs/`, `/api/redoc/` y `/api/esquema/` responden `404`.
+
 ## Convenciones
 
 - **Base:** `/api/`. Formato JSON en UTF-8; fechas en ISO 8601 con zona horaria (`America/Bogota`).
