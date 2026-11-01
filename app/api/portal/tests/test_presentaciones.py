@@ -54,7 +54,7 @@ class VistaPreviaPanelTest(BasePortalTest):
         datos = {
             "categoria": self.categoria.pk, "titulo": "Final de acordeoneros", "descripcion": "Duelo final",
             "fecha_apertura": "2027-04-28T08:00", "fecha_cierre": "2027-04-30T20:00", "presentacion_opciones": "colores",
-            "icono": "trophy-fill", "votos_por_usuario": 1, "visibilidad_resultados": "al_cierre",
+            "icono": "trophy-fill", "visibilidad_resultados": "al_cierre",
         }
         self.client.post("/panel/votaciones/nueva", datos)
         self.assertEqual(Votacion.objects.get(titulo="Final de acordeoneros").presentacion_opciones, "colores")

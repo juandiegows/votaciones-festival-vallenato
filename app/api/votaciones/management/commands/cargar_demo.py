@@ -409,7 +409,7 @@ class Command(BaseCommand):
         for clave, cat, titulo, desc, apertura, cierre, visibilidad, icono, publicada in VOTACIONES:
             votaciones[clave] = Votacion.objects.create(
                 categoria=categorias[cat], titulo=titulo, descripcion=desc, imagen=URL_ICONO.format(icono),
-                fecha_apertura=relativa(*apertura), fecha_cierre=relativa(*cierre), votos_por_usuario=1,
+                fecha_apertura=relativa(*apertura), fecha_cierre=relativa(*cierre),
                 visibilidad_resultados=visibilidad, publicada=publicada,
                 presentacion_opciones=PRESENTACION_OPCIONES.get(clave, Votacion.PresentacionOpciones.TARJETAS),
             )

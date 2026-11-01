@@ -31,15 +31,6 @@ class VotarTests(BaseAPITest):
         self.assertEqual(respuesta.data["codigo"], "voto_duplicado_categoria")
         self.assertEqual(Voto.objects.count(), 1)
 
-    def test_limite_de_la_votacion_no_habilita_mas_votos(self):
-        # RN-04 manda sobre el campo heredado votos_por_usuario: sigue siendo un voto por categoría
-        self.abierta.votos_por_usuario = 2
-        self.abierta.personalizar_votos = True
-        self.abierta.save()
-        self.autenticar(self.votante)
-        self.assertEqual(self.votar(self.abierta, self.opcion_a).status_code, 201)
-        self.assertEqual(self.votar(self.abierta, self.opcion_b).status_code, 409)
-
     def test_votacion_programada_rechaza_voto(self):
         ahora = timezone.now()
         futura = self.crear_votacion("Futura", ahora + timedelta(days=1), ahora + timedelta(days=3))

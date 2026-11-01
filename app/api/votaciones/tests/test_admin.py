@@ -28,7 +28,7 @@ class GestionAdminTests(BaseAPITest):
             "categoria": self.categoria.pk, "titulo": "Mejor comparsa",
             "fecha_apertura": (ahora - timedelta(hours=1)).isoformat(),
             "fecha_cierre": (ahora + timedelta(days=2)).isoformat(),
-            "votos_por_usuario": 1, "visibilidad_resultados": "al_cierre",
+            "visibilidad_resultados": "al_cierre",
         }
         datos.update(cambios)
         return self.client.post("/api/admin/votaciones/", datos, format="json")

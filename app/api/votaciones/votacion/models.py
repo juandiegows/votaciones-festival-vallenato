@@ -36,7 +36,6 @@ class Edicion(ModeloTrazable):
         default="al_cierre", help_text="Cuándo ve el público los resultados de las votaciones de la edición.",
     )
     # Límite de votos por usuario de todas las votaciones de la edición (salvo las que lo personalizan)
-    votos_por_usuario = models.PositiveSmallIntegerField(default=1, help_text="Votos por usuario en cada votación de la edición.")
     # Interruptor de emergencia: mientras esté activo nadie puede votar en la edición
     votaciones_pausadas = models.BooleanField(default=False, help_text="Suspende temporalmente la recepción de votos de la edición.")
 
@@ -59,7 +58,7 @@ class Categoria(ModeloTrazable):
     edicion = models.ForeignKey(Edicion, on_delete=models.PROTECT, related_name="categorias")
     nombre = models.CharField(max_length=120)
     slug = models.SlugField(
-        max_length=120, blank=True, help_text="Identificador para la URL pública; se genera desde el nombre si se deja vacío."
+        db_index=False, max_length=120, blank=True, help_text="Identificador para la URL pública; se genera desde el nombre si se deja vacío."
     )
     descripcion = models.TextField(blank=True)
     icono = models.CharField(max_length=60, blank=True)
@@ -120,7 +119,7 @@ class Votacion(ModeloTrazable):
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField(max_length=150)
     slug = models.SlugField(
-        max_length=150, blank=True, help_text="Identificador para la URL pública; se genera desde el título si se deja vacío."
+        db_index=False, max_length=150, blank=True, help_text="Identificador para la URL pública; se genera desde el título si se deja vacío."
     )
     descripcion = models.TextField(blank=True)
     imagen = models.URLField(blank=True)
@@ -133,7 +132,6 @@ class Votacion(ModeloTrazable):
     )
     fecha_apertura = models.DateTimeField()
     fecha_cierre = models.DateTimeField()
-    votos_por_usuario = models.PositiveSmallIntegerField(default=1)
     visibilidad_resultados = models.CharField(
         max_length=15, choices=Visibilidad.choices, default=Visibilidad.AL_CIERRE
     )
@@ -141,8 +139,6 @@ class Votacion(ModeloTrazable):
     personalizar_resultados = models.BooleanField(
         default=False, help_text="Usar la visibilidad de resultados propia en lugar de la de la edición."
     )
-    # Falso: hereda el límite de votos de la edición; verdadero: usa votos_por_usuario
-    personalizar_votos = models.BooleanField(default=False, help_text="Usar el límite de votos propio en lugar del de la edición.")
     publicada = models.BooleanField(default=False)
     cerrada_manualmente = models.BooleanField(default=False)
     resultados_publicados = models.BooleanField(default=False)
@@ -156,7 +152,6 @@ class Votacion(ModeloTrazable):
             models.CheckConstraint(
                 condition=Q(fecha_cierre__gt=F("fecha_apertura")), name="votacion_cierre_posterior_apertura"
             ),
-            models.CheckConstraint(condition=Q(votos_por_usuario__gte=1), name="votacion_minimo_un_voto"),
             models.UniqueConstraint(fields=["categoria", "slug"], name="votacion_slug_unico_por_categoria"),
         ]
 
@@ -184,7 +179,7 @@ class Votacion(ModeloTrazable):
 
     @property
     def votos_por_usuario_efectivo(self):
-        """RN-04 (Entrega 3): un solo voto por categoría y edición. votos_por_usuario queda solo por compatibilidad."""
+        """RN-04: la regla es fija, un voto por categoría y edición (o por votación si la categoría lo permite)."""
         return 1
 
     @property
@@ -240,7 +235,6 @@ class Voto(models.Model):
         ordering = ["-fecha_hora"]
         verbose_name = "voto"
         verbose_name_plural = "votos"
-        indexes = [models.Index(fields=["usuario", "votacion"], name="voto_usuario_votacion_idx")]
         constraints = [
             # RN-04: un voto por usuario, categoría y edición (o por votación si la categoría no es de voto único).
             # Es la última barrera ante dos solicitudes simultáneas: la segunda falla con IntegrityError.

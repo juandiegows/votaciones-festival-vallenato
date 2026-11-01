@@ -19,7 +19,16 @@ info:
 
     **Regla:** un voto por usuario, por categoría y por edición, aunque la categoría tenga varias votaciones. La garantiza una restricción única en MySQL (`voto_unico_usuario_categoria_edicion`), así que también se cumple con peticiones simultáneas. Si en el administrador se desmarca *un solo voto en toda la categoría*, la regla pasa a ser un voto por votación.
 
-    **Cómo probar aquí:** 1) `POST /api/auth/login/` en *Try it out* y copiar el `token`; 2) botón **Authorize** → escribir `Token <token>` (con la palabra Token y un espacio); 3) `GET /api/categorias/` para ver los IDs de votación y opción; 4) `POST /api/votaciones/{id}/votar/` con `{"opcion": <id>}`. Repetir el voto en la misma categoría responde **409** `voto_duplicado_categoria`; sin token responde **401**.
+    **Cómo probar aquí:**
+
+    1. `POST /api/auth/login/` en *Try it out* y copiar el `token`.
+    2. Botón **Authorize** → escribir `Token <token>` (con la palabra Token y un espacio).
+    3. `GET /api/categorias/` para ver los IDs de votación y opción.
+    4. `POST /api/votaciones/{id}/votar/` con `{"opcion": <id>}`.
+
+    Repetir el voto en la misma categoría responde **409** `voto_duplicado_categoria`.
+
+    Sin token responde **401**.
 
     Errores de negocio: siempre `{"detail": "…", "codigo": "…"}`.
 paths:
@@ -2608,6 +2617,11 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        mostrar_swagger:
+          type: boolean
+          title: Mostrar la documentación de la API
+          description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
+            (/api/esquema/). Apagado responden 404.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,
@@ -2649,6 +2663,11 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        mostrar_swagger:
+          type: boolean
+          title: Mostrar la documentación de la API
+          description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
+            (/api/esquema/). Apagado responden 404.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,
@@ -2706,12 +2725,6 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-          description: Votos por usuario en cada votación de la edición.
         votaciones_pausadas:
           type: boolean
           description: Suspende temporalmente la recepción de votos de la edición.
@@ -2762,12 +2775,6 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-          description: Votos por usuario en cada votación de la edición.
         votaciones_pausadas:
           type: boolean
           description: Suspende temporalmente la recepción de votos de la edición.
@@ -3318,6 +3325,11 @@ components:
         mostrar_total_votos:
           type: boolean
           description: Mostrar al público el total de votos en el inicio.
+        mostrar_swagger:
+          type: boolean
+          title: Mostrar la documentación de la API
+          description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
+            (/api/esquema/). Apagado responden 404.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,
@@ -3365,12 +3377,6 @@ components:
             * `tiempo_real` - En tiempo real
             * `al_cierre` - Al cierre
             * `no_publicar` - No publicar
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-          description: Votos por usuario en cada votación de la edición.
         votaciones_pausadas:
           type: boolean
           description: Suspende temporalmente la recepción de votos de la edición.
@@ -3505,14 +3511,6 @@ components:
         fecha_cierre:
           type: string
           format: date-time
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-        personalizar_votos:
-          type: boolean
-          description: Usar el límite de votos propio en lugar del de la edición.
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
         personalizar_resultados:
@@ -4038,14 +4036,6 @@ components:
         fecha_cierre:
           type: string
           format: date-time
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-        personalizar_votos:
-          type: boolean
-          description: Usar el límite de votos propio en lugar del de la edición.
         votos_efectivos:
           type: integer
           readOnly: true
@@ -4385,14 +4375,6 @@ components:
         fecha_cierre:
           type: string
           format: date-time
-        votos_por_usuario:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
-        personalizar_votos:
-          type: boolean
-          description: Usar el límite de votos propio en lugar del de la edición.
         visibilidad_resultados:
           $ref: '#/components/schemas/VisibilidadResultadosEnum'
         personalizar_resultados:

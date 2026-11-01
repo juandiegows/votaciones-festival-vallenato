@@ -91,7 +91,7 @@ class VotacionesPanelTest(BasePortalTest):
     def datos(self, **extra):
         return {"categoria": self.categoria.pk, "titulo": "Mejor pilonera", "descripcion": "Baile tradicional",
                 "icono": "people-fill", "fecha_apertura": "2027-04-28T08:00", "fecha_cierre": "2027-05-01T18:00",
-                "votos_por_usuario": 1, "visibilidad_resultados": "al_cierre", "presentacion_opciones": "tarjetas", **extra}
+                "visibilidad_resultados": "al_cierre", "presentacion_opciones": "tarjetas", **extra}
 
     def test_crear_votacion_como_borrador(self):
         self.assertRedirects(self.client.post("/panel/votaciones/nueva", self.datos()), "/panel/votaciones")
