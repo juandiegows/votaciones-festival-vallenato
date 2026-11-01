@@ -84,12 +84,9 @@ ICONOS_DISPONIBLES = [
 ]
 
 EQUIPO = [
-    {"nombre": "Sebastián Bautista Martínez", "iniciales": "SB",
-     "aporte": "Modelo de datos, migraciones, reglas del voto y API."},
-    {"nombre": "María Virginia Labarca Briceño", "iniciales": "ML",
-     "aporte": "Documentación del proyecto, guion del video e informes."},
-    {"nombre": "Juan Mejía Maestre", "iniciales": "JM",
-     "aporte": "Pantallas de votación, pruebas y coordinación."},
+    {"nombre": "Sebastián Bautista Martínez", "iniciales": "SB", "github": "sbautista15"},
+    {"nombre": "María Virginia Labarca Briceño", "iniciales": "ML", "github": "mlabarca-jpg"},
+    {"nombre": "Juan Mejía Maestre", "iniciales": "JM", "github": "juandiegows"},
 ]
 
 PASOS_INICIO = [

@@ -20,6 +20,8 @@ class SitioPublicoTest(BasePortalTest):
         self.assertEqual(respuesta.status_code, 200)
         for nombre in ("Sebastián Bautista Martínez", "María Virginia Labarca Briceño", "Juan Mejía Maestre"):
             self.assertContains(respuesta, nombre)
+        for usuario in ("sbautista15", "mlabarca-jpg", "juandiegows"):
+            self.assertContains(respuesta, f"https://github.com/{usuario}")
         self.assertNotContains(respuesta, "Eje 2")
 
     def test_inicio_muestra_la_revista_como_libro(self):

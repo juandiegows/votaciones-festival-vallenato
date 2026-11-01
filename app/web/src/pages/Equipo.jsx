@@ -2,9 +2,9 @@ import PageHeader from '../components/PageHeader.jsx';
 import { useSeo } from '../hooks/useSeo.js';
 
 const INTEGRANTES = [
-  { nombre: 'Sebastián Bautista Martínez', iniciales: 'SB', aporte: 'Modelo de datos, migraciones, reglas del voto y API.' },
-  { nombre: 'María Virginia Labarca Briceño', iniciales: 'ML', aporte: 'Documentación del proyecto, guion del video e informes.' },
-  { nombre: 'Juan Mejía Maestre', iniciales: 'JM', aporte: 'Pantallas de votación, pruebas y coordinación.' },
+  { nombre: 'Sebastián Bautista Martínez', iniciales: 'SB', github: 'sbautista15' },
+  { nombre: 'María Virginia Labarca Briceño', iniciales: 'ML', github: 'mlabarca-jpg' },
+  { nombre: 'Juan Mejía Maestre', iniciales: 'JM', github: 'juandiegows' },
 ];
 
 export default function Equipo() {
@@ -23,7 +23,9 @@ export default function Equipo() {
             <article className="card-flv p-4 h-100 text-center">
               <span className="icono-circulo fw-bold mb-3" aria-hidden="true">{integrante.iniciales}</span>
               <h2 className="h5 mb-2">{integrante.nombre}</h2>
-              <p className="text-secondary-flv mb-0">{integrante.aporte}</p>
+              <a href={`https://github.com/${integrante.github}`} target="_blank" rel="noopener noreferrer" aria-label={`Perfil de GitHub de ${integrante.nombre} (se abre en una pestaña nueva)`}>
+                <i className="bi bi-github me-1" aria-hidden="true"></i>{integrante.github}
+              </a>
             </article>
           </li>
         ))}

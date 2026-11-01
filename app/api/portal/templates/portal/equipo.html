@@ -19,7 +19,7 @@
         <article class="card-flv p-4 h-100 text-center">
           <span class="icono-circulo fw-bold mb-3" aria-hidden="true">{{ integrante.iniciales }}</span>
           <h2 class="h5 mb-2">{{ integrante.nombre }}</h2>
-          <p class="text-secondary-flv mb-0">{{ integrante.aporte }}</p>
+          <a href="https://github.com/{{ integrante.github }}" target="_blank" rel="noopener noreferrer" aria-label="Perfil de GitHub de {{ integrante.nombre }} (se abre en una pestaña nueva)"><i class="bi bi-github me-1" aria-hidden="true"></i>{{ integrante.github }}</a>
         </article>
       </li>
     {% endfor %}
