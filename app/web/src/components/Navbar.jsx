@@ -59,6 +59,7 @@ export default function Navbar() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 mt-2 mt-lg-0">
             <li className="nav-item"><NavLink className="nav-link" to="/" end>Inicio</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/categorias">Categorías y votaciones</NavLink></li>
+            <li className="nav-item"><NavLink className="nav-link" to="/equipo">Equipo</NavLink></li>
             {usuario && <li className="nav-item"><NavLink className="nav-link" to="/mis-votos">Mis votos</NavLink></li>}
           </ul>
           {!usuario ? (

@@ -8,7 +8,7 @@ from votaciones.sitio import selectores as selectores_sitio
 from votaciones.votacion import reportes, selectores
 
 from .. import consultas
-from ..catalogos import FILTROS_ESTADO, PASOS_INICIO
+from ..catalogos import EQUIPO, FILTROS_ESTADO, PASOS_INICIO
 from .errores import pagina_error
 
 MOTIVO_RESULTADOS = {
@@ -45,6 +45,10 @@ def inicio(request):
         "cifras": [(dias_festival, "días para el Festival"), (len(abiertas), "votaciones abiertas"),
                    (num_categorias, "categorías"), cuarta],
     })
+
+
+def equipo(request):
+    return render(request, "portal/equipo.html", {"integrantes": EQUIPO})
 
 
 def ir_a_edicion_activa(request):

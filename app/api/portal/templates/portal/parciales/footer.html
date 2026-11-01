@@ -13,6 +13,7 @@
         <p class="fw-semibold text-white mb-2">Navegación</p>
         <ul class="list-unstyled small mb-0">
           <li><a href="{% url 'portal:categorias' %}">Categorías</a></li>
+          <li><a href="{% url 'portal:equipo' %}">Equipo</a></li>
           {% if not user.is_authenticated %}<li><a href="{% url 'portal:registro' %}">Registro</a></li>{% endif %}
           {# El acceso al panel solo aparece aquí, y solo para administradores con sesión #}
           {% if es_admin %}<li><a href="{% url 'portal:panel' %}">Panel admin</a></li>{% endif %}
@@ -39,8 +40,8 @@
     </div>
     <hr class="border-secondary">
     <p class="small mb-0">
-      <strong>Acerca de:</strong> Sebastián Bautista Martínez, María Labarca Briceño, Juan Mejía Maestre · Fundación
-      Universitaria del Área Andina · Desarrollo Web – Eje 2, Entrega 2 (Django MVT).
+      <strong>Acerca de:</strong> Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina ·
+      <a href="{% url 'portal:equipo' %}">Conoce al equipo</a>.
     </p>
   </div>
 </footer>

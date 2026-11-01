@@ -56,6 +56,7 @@ panel = [
 urlpatterns = [
     path("", publico.inicio, name="inicio"),
     path("categorias", publico.ir_a_edicion_activa, name="categorias"),
+    path("equipo", publico.equipo, name="equipo"),
     # Cuentas (autenticación de Django con sesión)
     path("registro", cuentas.registro, name="registro"),
     path("login", cuentas.iniciar_sesion, name="login"),

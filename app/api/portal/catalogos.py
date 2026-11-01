@@ -83,6 +83,15 @@ ICONOS_DISPONIBLES = [
     ("pencil-fill", "Composición"), ("check2-square", "Votación"),
 ]
 
+EQUIPO = [
+    {"nombre": "Sebastián Bautista Martínez", "iniciales": "SB",
+     "aporte": "Modelo de datos, migraciones, reglas del voto y API."},
+    {"nombre": "María Virginia Labarca Briceño", "iniciales": "ML",
+     "aporte": "Documentación del proyecto, guion del video e informes."},
+    {"nombre": "Juan Mejía Maestre", "iniciales": "JM",
+     "aporte": "Pantallas de votación, pruebas y coordinación."},
+]
+
 PASOS_INICIO = [
     {"icono": "person-plus", "titulo": "Regístrate",
      "texto": "Crea tu cuenta con tu correo y acepta la política de tratamiento de datos."},

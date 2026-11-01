@@ -3,6 +3,7 @@ import Layout from './components/Layout.jsx';
 import { RequiereAdmin, RequiereSesion } from './components/Guards.jsx';
 import { IrAEdicionActiva, RedireccionCategoria, RedireccionRutaAnterior, RedireccionVotacion } from './components/Redirecciones.jsx';
 import Inicio from './pages/Inicio.jsx';
+import Equipo from './pages/Equipo.jsx';
 import Registro from './pages/Registro.jsx';
 import Login from './pages/Login.jsx';
 import ConfirmarCorreo from './pages/ConfirmarCorreo.jsx';
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="confirmar-correo" element={<ConfirmarCorreo />} />
         <Route path="marca" element={<Navigate to="/panel/marca" replace />} />
         <Route path="error/:codigo" element={<RutaError />} />
+        <Route path="equipo" element={<Equipo />} />
         <Route path="categorias" element={<IrAEdicionActiva />} />
         <Route path="categorias/:id" element={<RedireccionCategoria />} />
         <Route path="votaciones/:id" element={<RedireccionVotacion />} />

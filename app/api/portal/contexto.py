@@ -24,7 +24,7 @@ def menu_activo(request):
         return "categorias"
     if nombre in ("mis-votos", "comprobante"):
         return "mis-votos"
-    return "inicio" if nombre == "inicio" else ""
+    return nombre if nombre in ("inicio", "equipo") else ""
 
 
 def sitio(request):

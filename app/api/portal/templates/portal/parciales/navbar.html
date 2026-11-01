@@ -17,6 +17,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 mt-2 mt-lg-0">
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'inicio' %} active{% endif %}" href="{% url 'portal:inicio' %}"{% if menu_activo == 'inicio' %} aria-current="page"{% endif %}>Inicio</a></li>
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'categorias' %} active{% endif %}" href="{% url 'portal:categorias' %}">Categorías y votaciones</a></li>
+        <li class="nav-item"><a class="nav-link{% if menu_activo == 'equipo' %} active{% endif %}" href="{% url 'portal:equipo' %}"{% if menu_activo == 'equipo' %} aria-current="page"{% endif %}>Equipo</a></li>
         {% if user.is_authenticated %}<li class="nav-item"><a class="nav-link{% if menu_activo == 'mis-votos' %} active{% endif %}" href="{% url 'portal:mis-votos' %}"{% if menu_activo == 'mis-votos' %} aria-current="page"{% endif %}>Mis votos</a></li>{% endif %}
       </ul>
       {% if not user.is_authenticated %}

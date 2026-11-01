@@ -38,6 +38,7 @@ export default function Footer() {
             <p className="fw-semibold text-white mb-2">Navegación</p>
             <ul className="list-unstyled small mb-0">
               <li><Link to="/categorias">Categorías</Link></li>
+              <li><Link to="/equipo">Equipo</Link></li>
               {usuario && <li><Link to="/mis-votos">Mis votos</Link></li>}
               <li><Link to="/registro">Registro</Link></li>
               {/* El acceso al panel solo aparece aquí, y solo para administradores con sesión */}
@@ -79,8 +80,8 @@ export default function Footer() {
         </div>
         <hr className="border-secondary" />
         <p className="small mb-0">
-          <strong>Acerca de:</strong> Sebastián Bautista Martínez, María Labarca Briceño, Juan Mejía Maestre · Fundación
-          Universitaria del Área Andina · Desarrollo Web – Eje 1, Entrega 1.
+          <strong>Acerca de:</strong> Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina ·{' '}
+          <Link to="/equipo">Conoce al equipo</Link>.
         </p>
       </div>
 

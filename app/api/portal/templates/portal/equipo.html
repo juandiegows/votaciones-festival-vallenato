@@ -1,0 +1,28 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Equipo · Votaciones FLV{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <header class="mb-4">
+    <nav aria-label="Ruta de navegación">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{% url 'portal:inicio' %}">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Equipo</li>
+      </ol>
+    </nav>
+    <h1 class="h2 mb-1">Equipo</h1>
+    <p class="text-secondary-flv mb-0">Integrantes del proyecto Votaciones FLV · Desarrollo Web · Fundación Universitaria del Área Andina.</p>
+  </header>
+  <ul class="list-unstyled row g-3 mb-0">
+    {% for integrante in integrantes %}
+      <li class="col-md-4">
+        <article class="card-flv p-4 h-100 text-center">
+          <span class="icono-circulo fw-bold mb-3" aria-hidden="true">{{ integrante.iniciales }}</span>
+          <h2 class="h5 mb-2">{{ integrante.nombre }}</h2>
+          <p class="text-secondary-flv mb-0">{{ integrante.aporte }}</p>
+        </article>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

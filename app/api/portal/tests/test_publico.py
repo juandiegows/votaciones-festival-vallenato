@@ -15,6 +15,13 @@ class SitioPublicoTest(BasePortalTest):
         self.assertContains(respuesta, "Canción favorita del público")
         self.assertTemplateUsed(respuesta, "portal/inicio.html")
 
+    def test_pagina_de_equipo_lista_a_los_integrantes(self):
+        respuesta = self.client.get("/equipo")
+        self.assertEqual(respuesta.status_code, 200)
+        for nombre in ("Sebastián Bautista Martínez", "María Virginia Labarca Briceño", "Juan Mejía Maestre"):
+            self.assertContains(respuesta, nombre)
+        self.assertNotContains(respuesta, "Eje 2")
+
     def test_inicio_muestra_la_revista_como_libro(self):
         Revista.objects.create(titulo="Revista 2027", archivo=SimpleUploadedFile("revista.pdf", b"%PDF-1.4"))
         respuesta = self.client.get("/")
