@@ -172,7 +172,9 @@ ven las opciones. Ambos campos se exponen también en los endpoints públicos.
 `GET /api/gestion/votaciones/{id}/participacion/` responde
 `{votacion_id, votacion, estado, umbral, total_votos, total_votantes, disponible, motivo, votantes[], ocultos}`, con
 `votantes = [{usuario_id, nombres, apellidos, email, fecha}]`. Para que no se pueda deducir el voto de las primeras
-personas comparando la lista con los resultados en tiempo real:
+personas comparando la lista con los resultados en tiempo real (el mínimo `umbral_participacion`, 10 por defecto, y
+`mostrar_participantes` se configuran en Django Admin → *Configuración del sitio*; con menos votantes la lista queda oculta
+también al cerrar la votación):
 
 - Con la votación **cerrada** se muestran todos los votantes.
 - **Abierta con menos de 10 votantes**: la lista no se muestra (`disponible: false`).

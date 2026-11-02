@@ -13,7 +13,7 @@
 | CP-05 | Intenta votar en categoría no habilitada | Se rechaza la operación | 5 y 9 | Votación cerrada, categoría apagada con 404 y API con 409 |
 | CP-06 | Envía una opción que pertenece a otra categoría | Se rechaza la operación | 9 | API: 400 opcion_invalida |
 | CP-07 | Consulta sus categorías votadas | Se muestran registros correctos | 6 | «Mis votos», con opción y comprobante |
-| CP-08 | Administrador consulta los votos | Los datos coinciden con MySQL | 6 y 8 | Mismos comprobantes en Django Admin y phpMyAdmin |
+| CP-08 | Administrador consulta los votos | Los datos coinciden con MySQL | 6 y 8 | Conteos y participantes por separado; mismos comprobantes en Django Admin y phpMyAdmin, sin mostrar al votante |
 | CP-09 | Se envían dos solicitudes simultáneas a la misma categoría | Solo queda un voto válido | 8 y 9 | Restricción única, API con 201 y 409, y prueba con hilos |
 | CP-10 | Se consulta GET /api/categorias/ | JSON válido con categorías y opciones reales | 7 y 9 | JSON en pantalla, código y Swagger |
 
@@ -103,14 +103,16 @@
 **En pantalla:**
 
 - Ventana 1: menú «Mis votos». Señalar Parrandas y Acordeoneros.
-- Ventana 3 (admin): Django Admin → Votos. Buscar tu correo → «Buscar».
-- Señalar los mismos códigos y los filtros de edición, categoría y votación.
+- Ventana 3 (admin): «Detalle de votaciones» → «Mejor parranda vallenata» → «Ver detalle». Señalar los votos por opción y la lista de participantes.
+- Ventana 3: Django Admin → Votos. Buscar tu código FLV27-… → «Buscar». Señalar la opción y que no aparece el votante.
 
 **Decir:**
 
 > En Mis votos consulto mi participación: las categorías donde voté, la opción y el comprobante. Esta es la prueba CP-07.
 >
-> Ahora, como administrador, entro a Django Admin, en Votos. Busco mi correo y aparecen exactamente los mismos comprobantes, con la edición, la categoría, la votación y la opción. También se puede filtrar. Esta consulta es de solo lectura: desde aquí no se crean ni se modifican votos. Esta es la prueba CP-08; enseguida la comparo con MySQL.
+> Como administrador, en Detalle de votaciones veo cuántos votos tiene cada opción y quién participó, por separado. El voto es secreto: nadie puede ver quién votó por quién, y con pocos votantes la lista se oculta. Ese mínimo se configura en el administrador.
+>
+> En Django Admin busco mi comprobante y aparece con su opción, sin datos del votante. Es de solo lectura. Esta es la prueba CP-08; enseguida la comparo con MySQL.
 
 ## Bloque 7 · 5:00–6:00 · API GET y Swagger (CP-10)
 
@@ -135,7 +137,7 @@
 
 **En pantalla:**
 
-- phpMyAdmin, votaciones_flv → SQL: consulta de tus votos → «Continuar». Señalar los códigos.
+- phpMyAdmin, votaciones_flv → SQL: consulta de los últimos votos → «Continuar». Señalar tus códigos.
 - Consulta de la restricción (NON_UNIQUE = 0) y consulta de migraciones.
 - VS Code: votacion/models.py, línea 225 (Voto) y línea 247 (UniqueConstraint).
 - votacion/servicios.py, línea 24 (emitir_voto) y línea 79 (except IntegrityError).
@@ -143,7 +145,7 @@
 
 **Decir:**
 
-> Esta es la base MySQL de producción. Aquí están mis votos, con los mismos comprobantes del sitio y del administrador: los datos coinciden y persisten. Eso confirma las pruebas CP-01 y CP-08. Las migraciones 0004 y 0005 están aplicadas, y esta es la restricción única.
+> Esta es la base MySQL de producción. Aquí están los últimos votos, con los mismos comprobantes del sitio y del administrador: los datos coinciden y persisten. Eso confirma las pruebas CP-01 y CP-08. Las migraciones 0004 y 0005 están aplicadas, y esta es la restricción única.
 >
 > En el código, el modelo Voto une al usuario con la edición, la categoría, la votación y la opción, sobre los modelos de la Entrega 2.
 >
