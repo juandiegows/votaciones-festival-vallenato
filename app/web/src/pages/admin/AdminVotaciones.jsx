@@ -13,6 +13,7 @@ import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import OpcionesVotacion from '../../components/presentaciones/OpcionesVotacion.jsx';
 import { OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { AVISO_OPCIONES_BLOQUEADAS, DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, opcionesBloqueadas, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
+import { opcionesActivas } from '../../utils/guiaPanel.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -66,8 +67,8 @@ export default function AdminVotaciones() {
     texto: '', categoria: location.state?.categoriaId ? String(location.state.categoriaId) : '', estado: '', resultados: '', votos: '', orden: 'apertura',
   });
   const [agrupar, setAgrupar] = useState(() => leerPreferencia('flv_votaciones_agrupar', true));
-  const [verOpciones, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', true));
-  // Móvil: los filtros avanzados se pliegan para que la lista quede a la vista
+  // Por defecto solo las votaciones: las opciones se despliegan a pedido para que la lista se pueda recorrer
+  const [verOpciones, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', false));
   const [masFiltros, setMasFiltros] = useState(false);
   const [vista, setVista] = useVistaGuardada('votaciones', 'lista');
   const [form, setForm] = useState(null);
@@ -79,7 +80,8 @@ export default function AdminVotaciones() {
   const [mensajeFormulario, setMensajeFormulario] = useState('');
 
   const cambiarFiltro = (campo, valor) => setFiltros((f) => ({ ...f, [campo]: valor }));
-  const numOpciones = (id) => opciones.filter((o) => o.votacionId === id).length;
+  // Solo las activas cuentan para publicar (la misma regla del servidor)
+  const numOpciones = (id) => opcionesActivas(opciones, id);
   const numVotos = (id) => votos.filter((v) => v.votacionId === id).length;
   const categoriaDe = (id) => categorias.find((c) => c.id === id);
 
@@ -222,31 +224,45 @@ export default function AdminVotaciones() {
   // ---------- Piezas reutilizadas por las vistas ----------
   const insignias = (v) => (
     <span className="d-inline-flex flex-wrap gap-1 align-items-center">
-      <EstadoBadge estado={v.estado} />
-      {!v.publicada && <span className="badge text-bg-secondary">Borrador</span>}
+      {v.publicada ? <EstadoBadge estado={v.estado} /> : <span className="badge text-bg-secondary">Borrador</span>}
     </span>
   );
 
   const acciones = (v) => {
-    const bloqueada = v.publicada && v.estado === 'abierta';
+    const abierta = v.publicada && v.estado === 'abierta';
+    const faltanOpciones = numOpciones(v.id) < 2;
+    const rutaOpciones = `/panel/votaciones/${v.id}/opciones`;
     return (
-      <span className="d-inline-flex flex-nowrap justify-content-end gap-1">
-        <button className="btn btn-sm btn-outline-primary" onClick={() => editar(v)} aria-label={`Editar ${v.titulo}`} title="Editar">
-          <i className="bi bi-pencil" aria-hidden="true"></i>
-        </button>
-        <Link className="btn btn-sm btn-outline-primary" to={`/panel/votaciones/${v.id}/opciones`} aria-label={`Página de opciones de ${v.titulo}`} title="Página de opciones">
-          <i className="bi bi-list-ol" aria-hidden="true"></i>
-        </Link>
-        <span title={bloqueada ? AVISO_ABIERTA : v.publicada ? 'Despublicar' : 'Publicar'}>
-          <button
-            className={`btn btn-sm ${v.publicada ? 'btn-outline-secondary' : 'btn-dorado'}`}
-            disabled={procesando || bloqueada}
-            onClick={() => alternarPublicada(v)}
-            aria-label={bloqueada ? `${v.titulo}: ${AVISO_ABIERTA}` : `${v.publicada ? 'Despublicar' : 'Publicar'} ${v.titulo}`}
-          >
-            <i className={`bi ${bloqueada ? 'bi-lock' : v.publicada ? 'bi-eye-slash' : 'bi-megaphone'}`} aria-hidden="true"></i>
+      <span className="acciones-fila">
+        {/* Primero, el siguiente paso según el estado de la votación */}
+        {!v.publicada && faltanOpciones && (
+          <Link className="btn btn-sm btn-dorado" to={rutaOpciones} aria-label={`Agregar opciones a ${v.titulo}`}>
+            <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opciones
+          </Link>
+        )}
+        {!v.publicada && !faltanOpciones && (
+          <button className="btn btn-sm btn-dorado" disabled={procesando} onClick={() => alternarPublicada(v)} aria-label={`Publicar ${v.titulo}`}>
+            <i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar
           </button>
-        </span>
+        )}
+        {v.publicada && (
+          <Link className="btn btn-sm btn-outline-primary" to="/panel/resultados" state={{ votacionId: v.id }} aria-label={`Ver votos de ${v.titulo}`}>
+            <i className="bi bi-bar-chart me-1" aria-hidden="true"></i>Ver votos
+          </Link>
+        )}
+        <button className="btn btn-sm btn-outline-primary" onClick={() => editar(v)} aria-label={`Editar ${v.titulo}`}>
+          <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+        </button>
+        {(v.publicada || !faltanOpciones) && (
+          <Link className="btn btn-sm btn-outline-primary" to={rutaOpciones} aria-label={`Página de opciones de ${v.titulo}`}>
+            <i className="bi bi-list-ol me-1" aria-hidden="true"></i>Opciones
+          </Link>
+        )}
+        {v.publicada && !abierta && (
+          <button className="btn btn-sm btn-outline-secondary" disabled={procesando} onClick={() => alternarPublicada(v)} aria-label={`Despublicar ${v.titulo}`}>
+            <i className="bi bi-eye-slash me-1" aria-hidden="true"></i>Despublicar
+          </button>
+        )}
         <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(v)} aria-label={`Eliminar ${v.titulo}`} title="Eliminar">
           <i className="bi bi-trash" aria-hidden="true"></i>
         </button>
@@ -280,10 +296,6 @@ export default function AdminVotaciones() {
     </div>
   );
 
-  const avisoAbierta = (v) => v.publicada && v.estado === 'abierta' && (
-    <span className="small text-secondary-flv"><i className="bi bi-lock me-1" aria-hidden="true"></i>{AVISO_ABIERTA}</span>
-  );
-
   const fechas = (v) => (
     <span className="small text-secondary-flv">
       <i className="bi bi-calendar-check me-1" aria-hidden="true"></i>{formatearFechaHora(v.fechaApertura)}
@@ -309,15 +321,21 @@ export default function AdminVotaciones() {
             <span className="d-flex align-items-center gap-2">
               <span className="icono-circulo icono-sm"><IconoEntidad icono={v.imagen || categoriaDe(v.categoriaId)?.icono} imagen={v.iconoImagen} /></span>
               <span>
-                <strong>{v.titulo}</strong> <code className="small text-secondary-flv">/{v.slug}</code>
+                <strong>{v.titulo}</strong>
                 <span className="small text-secondary-flv d-block">{agrupar ? '' : `${categoriaDe(v.categoriaId)?.nombre} · `}Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</span>
               </span>
             </span>
           ),
         },
-        { id: 'fechas', titulo: 'Fechas', claseTd: 'small text-nowrap', prioridad: 3, celda: (v) => <>{formatearFechaHora(v.fechaApertura)}<br />{formatearFechaHora(v.fechaCierre)}</> },
+        { id: 'fechas', titulo: 'Abre y cierra', claseTd: 'small text-nowrap', prioridad: 3, celda: (v) => <><span className="text-secondary-flv">Abre:</span> {formatearFechaHora(v.fechaApertura)}<br /><span className="text-secondary-flv">Cierra:</span> {formatearFechaHora(v.fechaCierre)}</> },
         { id: 'estado', titulo: 'Estado', celda: insignias, prioridad: 2 },
-        { id: 'opciones', titulo: 'Opc.', prioridad: 4, celda: (v) => <span className={numOpciones(v.id) < 2 ? 'text-danger fw-bold' : ''}>{numOpciones(v.id)}</span> },
+        {
+          id: 'opciones', titulo: 'Opciones', prioridad: 4, claseTd: 'text-nowrap',
+          celda: (v) => {
+            const n = numOpciones(v.id);
+            return <>{n}{n < 2 && <span className="small text-danger fw-semibold d-block">{n === 0 ? 'Faltan 2' : 'Falta 1'}</span>}</>;
+          },
+        },
         { id: 'votos', titulo: 'Votos', celda: (v) => numVotos(v.id), prioridad: 3 },
         { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
       ]}
@@ -341,10 +359,7 @@ export default function AdminVotaciones() {
             <div className="mb-2">{fechas(v)}</div>
             <p className="small mb-2">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos · Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</p>
             {verOpciones && <div className="border-top pt-2 mb-2">{bloqueOpciones(v)}</div>}
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-auto border-top pt-2">
-              {avisoAbierta(v) || <span></span>}
-              {acciones(v)}
-            </div>
+            <div className="mt-auto border-top pt-2 text-end">{acciones(v)}</div>
           </article>
         </div>
       ))}
@@ -365,7 +380,6 @@ export default function AdminVotaciones() {
             <span className="small text-nowrap">{numVotos(v.id)} votos</span>
             {acciones(v)}
           </div>
-          {avisoAbierta(v) && <div className="mt-1">{avisoAbierta(v)}</div>}
           {verOpciones && <div className="mt-2 ps-md-5">{bloqueOpciones(v)}</div>}
         </li>
       ))}
@@ -415,7 +429,7 @@ export default function AdminVotaciones() {
 
   return (
     <>
-      <PageHeader titulo="Gestión de votaciones" subtitulo={edicion ? `${edicion.nombre} · Crear, editar, publicar y cerrar votaciones y sus opciones.` : 'Crear, editar, publicar y cerrar votaciones.'}>
+      <PageHeader titulo="Gestión de votaciones" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Crea la votación como borrador, agrégale al menos 2 opciones y publícala.`}>
         <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)} disabled={!categorias.length}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</button>
       </PageHeader>
 
@@ -442,42 +456,37 @@ export default function AdminVotaciones() {
 
       <section className="card-flv p-3 mb-3" aria-label="Filtros de votaciones">
         <div className="row g-2">
-          <div className="col-md-6 col-xl-4">
+          <div className="col-md-6">
             <label htmlFor="f-texto" className="form-label small mb-1">Buscar</label>
-            <div className="d-flex gap-2">
-              <input id="f-texto" type="search" className="form-control form-control-sm" placeholder="Título, descripción u opción" value={filtros.texto} onChange={(e) => cambiarFiltro('texto', e.target.value)} />
-              <button type="button" className="btn btn-sm btn-outline-secondary d-md-none text-nowrap" aria-expanded={masFiltros} aria-controls="filtros-avanzados" onClick={() => setMasFiltros((m) => !m)}>
-                <i className="bi bi-sliders me-1" aria-hidden="true"></i>Filtros
-              </button>
-            </div>
+            <input id="f-texto" type="search" className="form-control form-control-sm" placeholder="Título, descripción u opción" value={filtros.texto} onChange={(e) => cambiarFiltro('texto', e.target.value)} />
           </div>
-          <div id="filtros-avanzados" className={`col-12 col-md-6 col-xl-8 ${masFiltros ? '' : 'd-none d-md-block'}`}>
+          <div className="col-6 col-md-3">
+            <label htmlFor="f-cat" className="form-label small mb-1">Categoría</label>
+            <select id="f-cat" className="form-select form-select-sm" value={filtros.categoria} onChange={(e) => cambiarFiltro('categoria', e.target.value)}>
+              <option value="">Todas</option>
+              {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </select>
+          </div>
+          <div className="col-6 col-md-3">
+            <label htmlFor="f-estado" className="form-label small mb-1">Estado</label>
+            <select id="f-estado" className="form-select form-select-sm" value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+              <option value="">Todos</option>
+              <option value="abierta">Abierta</option>
+              <option value="programada">Programada</option>
+              <option value="cerrada">Cerrada</option>
+              <option value="borrador">Borrador (sin publicar)</option>
+            </select>
+          </div>
+          <div id="filtros-avanzados" className={`col-12 ${masFiltros ? '' : 'd-none'}`}>
             <div className="row g-2">
-              <div className="col-6 col-md-6 col-xl-3">
-                <label htmlFor="f-cat" className="form-label small mb-1">Categoría</label>
-                <select id="f-cat" className="form-select form-select-sm" value={filtros.categoria} onChange={(e) => cambiarFiltro('categoria', e.target.value)}>
-                  <option value="">Todas</option>
-                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                </select>
-              </div>
-              <div className="col-6 col-md-6 col-xl-3">
-                <label htmlFor="f-estado" className="form-label small mb-1">Estado</label>
-                <select id="f-estado" className="form-select form-select-sm" value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
-                  <option value="">Todos</option>
-                  <option value="abierta">Abierta</option>
-                  <option value="programada">Programada</option>
-                  <option value="cerrada">Cerrada</option>
-                  <option value="borrador">Borrador (sin publicar)</option>
-                </select>
-              </div>
-              <div className="col-6 col-md-4 col-xl-2">
+              <div className="col-6 col-md-4">
                 <label htmlFor="f-res" className="form-label small mb-1">Resultados</label>
                 <select id="f-res" className="form-select form-select-sm" value={filtros.resultados} onChange={(e) => cambiarFiltro('resultados', e.target.value)}>
                   <option value="">Cualquiera</option>
                   {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
-              <div className="col-6 col-md-4 col-xl-2">
+              <div className="col-6 col-md-4">
                 <label htmlFor="f-votos" className="form-label small mb-1">Votos</label>
                 <select id="f-votos" className="form-select form-select-sm" value={filtros.votos} onChange={(e) => cambiarFiltro('votos', e.target.value)}>
                   <option value="">Todos</option>
@@ -485,7 +494,7 @@ export default function AdminVotaciones() {
                   <option value="sin">Sin votos</option>
                 </select>
               </div>
-              <div className="col-12 col-md-4 col-xl-2">
+              <div className="col-12 col-md-4">
                 <label htmlFor="f-orden" className="form-label small mb-1">Ordenar</label>
                 <select id="f-orden" className="form-select form-select-sm" value={filtros.orden} onChange={(e) => cambiarFiltro('orden', e.target.value)}>
                   {ORDENES.map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
@@ -495,6 +504,9 @@ export default function AdminVotaciones() {
           </div>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-3 mt-3">
+          <button type="button" className="btn btn-sm btn-outline-secondary text-nowrap" aria-expanded={masFiltros} aria-controls="filtros-avanzados" onClick={() => setMasFiltros((m) => !m)}>
+            <i className="bi bi-sliders me-1" aria-hidden="true"></i>{masFiltros ? 'Menos filtros' : 'Más filtros'}
+          </button>
           <div className="form-check form-switch mb-0">
             <input id="f-agrupar" className="form-check-input" type="checkbox" role="switch" checked={agrupar} onChange={(e) => { setAgrupar(e.target.checked); guardarPreferencia('flv_votaciones_agrupar', e.target.checked); }} />
             <label className="form-check-label small" htmlFor="f-agrupar">Agrupar por categoría</label>
@@ -516,7 +528,8 @@ export default function AdminVotaciones() {
       {lista.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-          <p className="mb-0">{votaciones.length ? 'No hay votaciones con esos filtros.' : 'Esta edición aún no tiene votaciones.'}</p>
+          <p className={!votaciones.length && categorias.length ? 'mb-2' : 'mb-0'}>{votaciones.length ? 'No hay votaciones con esos filtros.' : 'Esta edición aún no tiene votaciones.'}</p>
+          {!votaciones.length && categorias.length > 0 && <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)}>Crear la primera votación</button>}
         </div>
       )}
 
@@ -553,6 +566,7 @@ export default function AdminVotaciones() {
           <form id="form-votacion" noValidate onSubmit={guardar}>
             {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
             <div className="row g-3">
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">1</span>Datos de la votación</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-cat">Categoría</label>
                 <select id="v-cat" className={`form-select ${errores.categoriaId ? 'is-invalid' : ''}`} value={form.categoriaId} onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}>
@@ -566,14 +580,14 @@ export default function AdminVotaciones() {
                 {errores.titulo && <div className="invalid-feedback">{errores.titulo}</div>}
               </div>
               <div className="col-12">
-                <label className="form-label" htmlFor="v-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
-                <input id="v-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el título" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="v-slug-ayuda" />
-                {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="v-slug-ayuda" className="form-text">Última parte de la dirección pública de la votación. Déjalo vacío para generarlo automáticamente.</div>}
-              </div>
-              <div className="col-12">
                 <label className="form-label" htmlFor="v-desc">Descripción</label>
                 <textarea id="v-desc" rows="2" className={`form-control ${errores.descripcion ? 'is-invalid' : ''}`} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })}></textarea>
                 {errores.descripcion && <div className="invalid-feedback">{errores.descripcion}</div>}
+              </div>
+              <div className="col-12">
+                <label className="form-label" htmlFor="v-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
+                <input id="v-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el título" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="v-slug-ayuda" />
+                {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="v-slug-ayuda" className="form-text">Última parte de la dirección pública de la votación. Déjalo vacío para generarlo automáticamente.</div>}
               </div>
               <div className="col-12">
                 <SelectorIcono
@@ -586,6 +600,7 @@ export default function AdminVotaciones() {
                 />
                 {errores.iconoImagen && <div className="invalid-feedback d-block">{errores.iconoImagen}</div>}
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">2</span>Cuándo se puede votar</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-ap">Fecha y hora de apertura</label>
                 <input id="v-ap" type="datetime-local" className={`form-control ${errores.fechaApertura ? 'is-invalid' : ''}`} value={form.fechaApertura} onChange={(e) => setForm({ ...form, fechaApertura: e.target.value })} />
@@ -596,6 +611,7 @@ export default function AdminVotaciones() {
                 <input id="v-ci" type="datetime-local" className={`form-control ${errores.fechaCierre ? 'is-invalid' : ''}`} value={form.fechaCierre} onChange={(e) => setForm({ ...form, fechaCierre: e.target.value })} />
                 {errores.fechaCierre && <div className="invalid-feedback">{errores.fechaCierre}</div>}
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">3</span>Reglas y resultados</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-vpu">Votos por usuario</label>
                 <div className="form-check mb-1">
@@ -631,6 +647,7 @@ export default function AdminVotaciones() {
                     : <>Hereda la configuración de la edición. <Link to="/panel/configuracion">Cambiarla en Configuración</Link>.</>}
                 </div>
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">4</span>Cómo se ve para el público</h3></div>
               <div className="col-12">
                 <fieldset>
                   <legend className="form-label mb-1">Cómo ve el público las opciones</legend>
@@ -655,6 +672,7 @@ export default function AdminVotaciones() {
                   reales={form.id ? opciones.filter((o) => o.votacionId === form.id && o.activa !== false).sort((x, y) => x.orden - y.orden) : []}
                 />
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">5</span>Publicación</h3></div>
               <div className="col-12">
                 <div className="form-check form-switch">
                   <input id="v-pub" className={`form-check-input ${errores.publicada ? 'is-invalid' : ''}`} type="checkbox" role="switch" checked={form.publicada} disabled={publicacionBloqueada} onChange={(e) => setForm({ ...form, publicada: e.target.checked })} aria-describedby="v-pub-ayuda" />

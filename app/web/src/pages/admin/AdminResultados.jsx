@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -15,7 +16,9 @@ import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnV
 export default function AdminResultados() {
   const { guardarEntidad, exportarResultadosCSV, obtenerResumen } = useApp();
   const { edicion, categorias, votaciones } = useEdicionAdmin();
-  const [seleccion, setSeleccion] = useState('');
+  const { state } = useLocation();
+  // Desde «Ver votos» de otra pantalla se llega con la votación ya elegida
+  const [seleccion, setSeleccion] = useState(state?.votacionId ? String(state.votacionId) : '');
   const [enVivo, setEnVivo] = useState(true);
   const [mensaje, setMensaje] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -54,7 +57,7 @@ export default function AdminResultados() {
   if (!edicion) {
     return (
       <>
-        <PageHeader titulo="Consulta de resultados" />
+        <PageHeader titulo="Votos y resultados" />
         <div className="alert alert-info">Crea una edición en «Ediciones» para ver resultados.</div>
       </>
     );
@@ -62,7 +65,7 @@ export default function AdminResultados() {
 
   return (
     <>
-      <PageHeader titulo="Consulta de resultados" subtitulo={`${edicion.nombre} · Conteo en tiempo real, exportación y publicación.`} />
+      <PageHeader titulo="Votos y resultados" subtitulo={`${edicion.nombre} · Elige una votación para ver sus votos por opción y quién participó. El voto es secreto: no se muestra quién votó por quién.`} />
       <div className="card-flv p-3 mb-3">
         <div className="row g-2 align-items-end">
           <div className="col-md">
@@ -95,7 +98,7 @@ export default function AdminResultados() {
           <>
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <p className="small mb-0">
-                <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién votó.
+                <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién participó.
               </p>
               <SelectorVista valor={vista} onCambio={setVista} />
             </div>
@@ -123,7 +126,7 @@ export default function AdminResultados() {
               )}
             </section>
             <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-participacion">
-              <h2 id="titulo-participacion" className="h6"><i className="bi bi-people me-1" aria-hidden="true"></i>Quién votó</h2>
+              <h2 id="titulo-participacion" className="h6"><i className="bi bi-people me-1" aria-hidden="true"></i>Quién participó</h2>
               <ParticipacionVotacion votacionId={votacion.id} intervalo={intervalo} />
             </section>
           </div>
@@ -151,9 +154,9 @@ export default function AdminResultados() {
                 <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando || !votacion.publicada} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
                 <label className="form-check-label fw-semibold" htmlFor="publicar-res">Publicar resultados</label>
               </div>
-              <p id="publicar-ayuda" className="small text-secondary-flv mt-2 mb-1">
-                Configuración: «{visibilidadResultados(votacion)}» ({votacion.personalizarResultados ? 'personalizada en la votación' : 'de la edición'}). Visibles al público ahora:{' '}
-                <strong>{votacion.publicada && resultadosVisibles(votacion) ? 'Sí' : 'No'}</strong>.
+              <p id="publicar-ayuda" className="small mt-2 mb-1">
+                <strong>¿El público los ve ahora? {votacion.publicada && resultadosVisibles(votacion) ? 'Sí' : 'No'}.</strong>{' '}
+                <span className="text-secondary-flv">Ajuste: «{visibilidadResultados(votacion)}» ({votacion.personalizarResultados ? 'propio de esta votación' : 'de la edición'}).</span>
               </p>
               {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2 mt-2 mb-0`} role="status">{mensaje.texto}</div>}
             </section>

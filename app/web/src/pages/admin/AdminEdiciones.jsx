@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
@@ -10,6 +12,7 @@ import VistaPreviaCategorias from '../../components/presentaciones/VistaPreviaCa
 
 export default function AdminEdiciones() {
   const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { setEdicionId } = useEdicionAdmin();
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
@@ -68,6 +71,11 @@ export default function AdminEdiciones() {
   };
 
   const numCategorias = (id) => categorias.filter((c) => c.edicionId === id).length;
+  // Lleva a las categorías dejando elegida esta edición en el selector del menú
+  const enlaceCategorias = (ed) => {
+    const n = numCategorias(ed.id);
+    return <Link to="/panel/categorias" onClick={() => setEdicionId(ed.id)} aria-label={`Ver categorías de ${ed.nombre}: ${n}`}>{n} {n === 1 ? 'categoría' : 'categorías'}</Link>;
+  };
   const fechas = (ed) => `${formatearFecha(ed.fechaInicio)} – ${formatearFecha(ed.fechaFin)}`;
   const presentacion = (ed) => (
     <><i className={`bi bi-${presentacionCategorias(ed.presentacionCategorias).icono} me-1 text-rojo`} aria-hidden="true"></i>{presentacionCategorias(ed.presentacionCategorias).etiqueta}</>
@@ -77,14 +85,14 @@ export default function AdminEdiciones() {
   );
   const acciones = (ed) => (
     <span className="text-nowrap">
-      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`} title="Editar"><i className="bi bi-pencil" aria-hidden="true"></i></button>
+      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar</button>
       <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`} title="Eliminar"><i className="bi bi-trash" aria-hidden="true"></i></button>
     </span>
   );
 
   return (
     <>
-      <PageHeader titulo="Gestión de ediciones" subtitulo="Cada edición agrupa categorías y votaciones.">
+      <PageHeader titulo="Gestión de ediciones" subtitulo="Una edición es un año del Festival y agrupa sus categorías y votaciones. El público solo ve la edición activa.">
         <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: 'tarjetas' })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>
@@ -103,7 +111,7 @@ export default function AdminEdiciones() {
       {ediciones.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-          <p className="mb-0">Aún no hay ediciones registradas.</p>
+          <p className="mb-0">Aún no hay ediciones registradas. Usa «Nueva edición» para crear la primera.</p>
         </div>
       )}
 
@@ -117,7 +125,7 @@ export default function AdminEdiciones() {
             { id: 'edicion', titulo: 'Edición', celda: (ed) => ed.nombre, claseTd: 'fw-semibold', minimo: '11rem', prioridad: 0 },
             { id: 'anio', titulo: 'Año', celda: (ed) => ed.anio, prioridad: 4 },
             { id: 'fechas', titulo: 'Fechas', celda: fechas, claseTd: 'small text-nowrap', prioridad: 3 },
-            { id: 'categorias', titulo: 'Categorías', celda: (ed) => numCategorias(ed.id), prioridad: 4 },
+            { id: 'categorias', titulo: 'Categorías', celda: enlaceCategorias, claseTd: 'text-nowrap', prioridad: 4 },
             { id: 'presentacion', titulo: 'Presentación', celda: presentacion, claseTd: 'small text-nowrap', prioridad: 5 },
             { id: 'estado', titulo: 'Estado', celda: estado, prioridad: 2 },
             { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
@@ -193,6 +201,7 @@ export default function AdminEdiciones() {
 
       <Modal
         abierto={!!form}
+        tamano="modal-lg"
         titulo={form?.id ? 'Editar edición' : 'Nueva edición'}
         onCerrar={() => setForm(null)}
         pie={
@@ -205,12 +214,13 @@ export default function AdminEdiciones() {
         {form && (
           <form id="form-edicion" noValidate onSubmit={guardar}>
             {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
-            <div className="mb-3">
-              <label className="form-label" htmlFor="e-nombre">Nombre</label>
-              <input id="e-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder={`Festival de la Leyenda Vallenata ${siguienteAnio}`} />
-              {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
-            </div>
             <div className="row g-3">
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">1</span>Datos de la edición</h3></div>
+              <div className="col-12">
+                <label className="form-label" htmlFor="e-nombre">Nombre</label>
+                <input id="e-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder={`Festival de la Leyenda Vallenata ${siguienteAnio}`} />
+                {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
+              </div>
               <div className="col-sm-4">
                 <label className="form-label" htmlFor="e-anio">Año</label>
                 <input id="e-anio" type="number" className={`form-control ${errores.anio ? 'is-invalid' : ''}`} value={form.anio} onChange={(e) => setForm({ ...form, anio: e.target.value })} />
@@ -226,6 +236,7 @@ export default function AdminEdiciones() {
                 <input id="e-fin" type="date" className={`form-control ${errores.fechaFin ? 'is-invalid' : ''}`} value={form.fechaFin} onChange={(e) => setForm({ ...form, fechaFin: e.target.value })} />
                 {errores.fechaFin && <div className="invalid-feedback">{errores.fechaFin}</div>}
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">2</span>Visibilidad</h3></div>
               <div className="col-12">
                 <label className="form-label" htmlFor="e-estado">Estado</label>
                 <select id="e-estado" className="form-select" value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })} aria-describedby="e-estado-ayuda">
@@ -234,6 +245,7 @@ export default function AdminEdiciones() {
                 </select>
                 <div id="e-estado-ayuda" className="form-text">Solo puede haber una edición activa; al activar esta, las demás se cierran.</div>
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">3</span>Cómo se ve para el público</h3></div>
               <div className="col-12">
                 <label className="form-label" htmlFor="e-presentacion">Presentación de categorías al público</label>
                 <select id="e-presentacion" className="form-select" value={form.presentacionCategorias} onChange={(e) => setForm({ ...form, presentacionCategorias: e.target.value })} aria-describedby="e-presentacion-ayuda">

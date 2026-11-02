@@ -9,12 +9,14 @@ import FormularioOpcion, { opcionNueva } from '../../components/admin/Formulario
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import { presentacionOpciones } from '../../data/presentaciones.js';
 import { AVISO_OPCIONES_BLOQUEADAS, opcionesBloqueadas } from '../../utils/helpers.js';
+import { opcionesActivas } from '../../utils/guiaPanel.js';
 
 export default function AdminOpciones() {
   const { id } = useParams();
-  const { votaciones, opciones, votos, categorias } = useApp();
+  const { votaciones, opciones, votos, categorias, guardarEntidad } = useApp();
   const [form, setForm] = useState(null);
   const [mensaje, setMensaje] = useState(null);
+  const [publicando, setPublicando] = useState(false);
 
   const votacion = votaciones.find((v) => v.id === Number(id));
   if (!votacion) return <NoEncontrado mensaje="La votación no existe." />;
@@ -22,6 +24,14 @@ export default function AdminOpciones() {
   const categoria = categorias.find((c) => c.id === votacion.categoriaId);
   const presentacion = presentacionOpciones(votacion.presentacionOpciones);
   const bloqueada = opcionesBloqueadas(votacion, votos);
+  const activas = opcionesActivas(opciones, votacion.id);
+
+  const publicar = async () => {
+    setPublicando(true);
+    const r = await guardarEntidad('votaciones', { id: votacion.id, publicada: true }, `Publicó la votación "${votacion.titulo}"`);
+    setPublicando(false);
+    setMensaje(r.ok ? { tipo: 'success', texto: `Votación «${votacion.titulo}» publicada.` } : { tipo: 'danger', texto: `No se puede publicar «${votacion.titulo}»: ${r.error}` });
+  };
 
   return (
     <>
@@ -38,8 +48,7 @@ export default function AdminOpciones() {
 
       <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
         <span className="icono-circulo icono-sm"><IconoEntidad icono={votacion.imagen || categoria?.icono} imagen={votacion.iconoImagen} /></span>
-        <EstadoBadge estado={votacion.estado} />
-        {!votacion.publicada && <span className="badge text-bg-secondary">Borrador</span>}
+        {votacion.publicada ? <EstadoBadge estado={votacion.estado} /> : <span className="badge text-bg-secondary">Borrador</span>}
         <span className="small">{lista.length} opciones · {votos.filter((v) => v.votacionId === votacion.id).length} votos</span>
         <span className="small text-secondary-flv">
           · El público las ve como <strong><i className={`bi bi-${presentacion.icono} me-1`} aria-hidden="true"></i>{presentacion.etiqueta}</strong>
@@ -52,10 +61,16 @@ export default function AdminOpciones() {
           {AVISO_OPCIONES_BLOQUEADAS} Si hay un error, cierra la votación y crea una nueva.
         </div>
       )}
-      {lista.length < 2 && (
-        <div className="alert alert-warning" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
-          Esta votación tiene {lista.length} opción(es). Se necesitan <strong>al menos 2 opciones</strong> para publicarla o abrirla.
+      {!votacion.publicada && activas < 2 && (
+        <div className="alert alert-warning" role="status">
+          <i className="bi bi-list-ol me-1" aria-hidden="true"></i>
+          <strong>Siguiente paso:</strong> agrega {activas === 0 ? '2 opciones activas' : '1 opción activa más'}. Se necesitan al menos 2 para publicar.
+        </div>
+      )}
+      {!votacion.publicada && activas >= 2 && (
+        <div className="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+          <span><i className="bi bi-check-circle-fill me-1" aria-hidden="true"></i><strong>Lista para publicar.</strong> Tiene {activas} opciones activas y el público aún no la ve.</span>
+          <button type="button" className="btn btn-sm btn-dorado" disabled={publicando} onClick={publicar}><i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar votación</button>
         </div>
       )}
       {mensaje && (

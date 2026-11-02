@@ -104,8 +104,8 @@ export default function AdminCategorias() {
 
   const acciones = (c) => (
     <span className="text-nowrap">
-      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => editar(c)} aria-label={`Editar ${c.nombre}`} title="Editar">
-        <i className="bi bi-pencil" aria-hidden="true"></i>
+      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => editar(c)} aria-label={`Editar ${c.nombre}`}>
+        <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
       </button>
       <button className="btn btn-sm btn-outline-danger" onClick={() => pedirEliminar(c)} aria-label={`Eliminar ${c.nombre}`} title="Eliminar">
         <i className="bi bi-trash" aria-hidden="true"></i>
@@ -118,7 +118,7 @@ export default function AdminCategorias() {
     const a = numAbiertas(c.id);
     return (
       <span className="small">
-        <Link to="/panel/votaciones" state={{ categoriaId: c.id }} className="text-reset">{n} {n === 1 ? 'votación' : 'votaciones'}</Link>
+        <Link to="/panel/votaciones" state={{ categoriaId: c.id }} aria-label={`Ver votaciones de ${c.nombre}: ${n}`}>{n} {n === 1 ? 'votación' : 'votaciones'}</Link>
         {a > 0 && <span className="badge badge-estado estado-abierta ms-1">{a} abierta{a > 1 ? 's' : ''}</span>}
       </span>
     );
@@ -126,7 +126,7 @@ export default function AdminCategorias() {
 
   return (
     <>
-      <PageHeader titulo="Gestión de categorías" subtitulo={edicion ? `${edicion.nombre} · Crear, editar, activar o desactivar categorías.` : 'Crear, editar, activar o desactivar categorías.'}>
+      <PageHeader titulo="Gestión de categorías" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Las categorías agrupan las votaciones. Una categoría inactiva no se muestra al público.`}>
         <button className="btn btn-primary" onClick={nueva} disabled={!edicionesAbiertas.length} title={edicionesAbiertas.length ? undefined : 'Todas las ediciones están cerradas'}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
       </PageHeader>
       {!edicion && (
@@ -166,7 +166,8 @@ export default function AdminCategorias() {
       {lista.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-          <p className="mb-0">{categorias.length ? 'No hay categorías con esos filtros.' : 'Esta edición aún no tiene categorías.'}</p>
+          <p className={!categorias.length && edicionesAbiertas.length ? 'mb-2' : 'mb-0'}>{categorias.length ? 'No hay categorías con esos filtros.' : 'Esta edición aún no tiene categorías.'}</p>
+          {!categorias.length && edicionesAbiertas.length > 0 && <button className="btn btn-primary" onClick={nueva}>Crear la primera categoría</button>}
         </div>
       )}
 
@@ -185,7 +186,7 @@ export default function AdminCategorias() {
                 <span className="d-flex align-items-center gap-2">
                   <span className="icono-circulo icono-sm"><IconoEntidad icono={c.icono} imagen={c.iconoImagen} /></span>
                   <span>
-                    <strong>{c.nombre}</strong> <code className="small text-secondary-flv">/{c.slug}</code>
+                    <strong>{c.nombre}</strong>
                     <span className="small text-secondary-flv d-none d-md-block">{c.descripcion}</span>
                   </span>
                 </span>
@@ -287,6 +288,7 @@ export default function AdminCategorias() {
           <form id="form-categoria" noValidate onSubmit={guardar}>
             {mensajeFormulario && <div className="alert alert-danger py-2" role="alert">{mensajeFormulario}</div>}
             <div className="row g-3">
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">1</span>Datos de la categoría</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="cat-edicion">Edición</label>
                 <select id="cat-edicion" className={`form-select ${errores.edicionId ? 'is-invalid' : ''}`} value={form.edicionId} onChange={(e) => setForm({ ...form, edicionId: e.target.value })}>
@@ -312,6 +314,7 @@ export default function AdminCategorias() {
                 <textarea id="cat-desc" rows="2" className={`form-control ${errores.descripcion ? 'is-invalid' : ''}`} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })}></textarea>
                 {errores.descripcion && <div className="invalid-feedback">{errores.descripcion}</div>}
               </div>
+              <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">2</span>Cómo se ve para el público</h3></div>
               <div className="col-12">
                 <SelectorIcono
                   icono={form.icono}
@@ -324,7 +327,8 @@ export default function AdminCategorias() {
               </div>
               <div className="col-sm-4">
                 <label className="form-label" htmlFor="cat-orden">Orden</label>
-                <input id="cat-orden" type="number" min="1" className="form-control" value={form.orden} onChange={(e) => setForm({ ...form, orden: e.target.value })} />
+                <input id="cat-orden" type="number" min="1" className="form-control" value={form.orden} onChange={(e) => setForm({ ...form, orden: e.target.value })} aria-describedby="cat-orden-ayuda" />
+                <div id="cat-orden-ayuda" className="form-text">Las categorías se muestran de menor a mayor.</div>
               </div>
               <div className="col-sm-8 d-flex align-items-end">
                 <div className="form-check form-switch mb-2">
