@@ -3,7 +3,7 @@
 {# Mismo diseño que la pantalla «Comprobante de voto» de la web (app/web/src/pages/Comprobante.jsx) #}
 {% block encabezado %}{% endblock %}
 {% block contenido %}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border:2px dashed #8A6A2E;border-radius:12px;background:#FFFFFF;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border:2px dashed #222222;border-radius:12px;background:#FFFFFF;">
   <tr>
     <td align="center" class="relleno" style="padding:30px 28px 28px;">
       {# Sello de verificación #}
@@ -13,10 +13,10 @@
         </tr>
       </table>
       <h1 class="titulo" style="margin:22px 0 8px;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:24px;font-weight:800;line-height:1.25;color:#000000;">¡Tu voto fue registrado con éxito!</h1>
-      <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#555555;">Gracias por participar, {{ usuario.nombres }}. Guarda este código como constancia.</p>
+      <p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:#222222;">Gracias por participar, {{ usuario.nombres }}. Guarda este código como constancia.</p>
 
       {# Código #}
-      <p style="margin:0 0 6px;font-size:13px;color:#555555;">Código de comprobante</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#222222;">Código de comprobante</p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td style="padding:8px 16px;border-radius:7px;background:#FCE6CC;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;letter-spacing:2px;color:#000000;">{{ voto.codigo_comprobante }}</td>
@@ -27,19 +27,19 @@
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;text-align:left;">
         <tr>
           <td width="42%" valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Votación</td>
-          <td valign="top" style="padding:5px 12px;color:#555555;">{{ votacion.titulo }}</td>
+          <td valign="top" style="padding:5px 12px;color:#222222;">{{ votacion.titulo }}</td>
         </tr>
         <tr>
           <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Categoría</td>
-          <td valign="top" style="padding:5px 12px;color:#555555;">{{ categoria.nombre }} · {{ edicion.anio }}</td>
+          <td valign="top" style="padding:5px 12px;color:#222222;">{{ categoria.nombre }} · {{ edicion.anio }}</td>
         </tr>
         <tr>
           <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Fecha y hora</td>
-          <td valign="top" style="padding:5px 12px;color:#555555;">{{ fecha_hora|date:"j \d\e M \d\e Y, g:i a"|lower }}</td>
+          <td valign="top" style="padding:5px 12px;color:#222222;">{{ fecha_hora|date:"j \d\e M \d\e Y, g:i a"|lower }}</td>
         </tr>
         <tr>
           <td valign="top" style="padding:5px 12px;font-weight:700;color:#000000;">Votante</td>
-          <td valign="top" style="padding:5px 12px;color:#555555;word-break:break-all;">{{ usuario.email }}</td>
+          <td valign="top" style="padding:5px 12px;color:#222222;word-break:break-all;">{{ usuario.email }}</td>
         </tr>
       </table>
 
@@ -54,7 +54,7 @@
             </table>
           </td>
           <td valign="middle" style="padding:16px 16px 16px 14px;font-family:Poppins,Arial,Helvetica,sans-serif;">
-            <p style="margin:0;font-size:13px;color:#555555;">Tu elección</p>
+            <p style="margin:0;font-size:14px;color:#222222;">Tu elección</p>
             <p style="margin:2px 0 0;font-size:16px;font-weight:600;color:#000000;">{{ voto.opcion.nombre }}</p>
           </td>
         </tr>
@@ -77,5 +77,5 @@
     </td>
   </tr>
 </table>
-<p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#777777;text-align:center;">¿No reconoces este voto? Escríbenos a <a href="mailto:{{ correo_contacto }}" style="color:#B71C1C;text-decoration:underline;">{{ correo_contacto }}</a> indicando el código.</p>
+<p style="margin:20px 0 0;font-size:14px;line-height:1.55;color:#222222;text-align:center;">¿No reconoces este voto? Escríbenos a <a href="mailto:{{ correo_contacto }}" style="color:#B71C1C;text-decoration:underline;">{{ correo_contacto }}</a> indicando el código.</p>
 {% endblock %}

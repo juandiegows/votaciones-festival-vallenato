@@ -7,8 +7,6 @@ CORREO_ADAPTADOR y se resuelve en obtener_adaptador().
 import logging
 import re
 import threading
-from functools import lru_cache
-from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -18,7 +16,7 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 
 from ..sitio.models import ConfiguracionSitio
-from .adaptadores import AdaptadorCorreo, Destinatario, ErrorEnvioCorreo, ImagenEnLinea, Mensaje
+from .adaptadores import AdaptadorCorreo, Destinatario, ErrorEnvioCorreo, Mensaje
 
 logger = logging.getLogger("votaciones.correo")
 
@@ -46,18 +44,13 @@ def avatar(nombre):
     return {"iniciales": iniciales, "fondo": fondo, "texto": texto}
 
 
-# Logo incrustado en cada correo (cid): los clientes que bloquean imágenes externas igual lo muestran
-CID_LOGO = "logo-flv"
-RUTA_LOGO = Path(__file__).resolve().parent.parent / "static" / "correo" / "acordeon.png"
-
-
-@lru_cache(maxsize=1)
-def logo():
-    return ImagenEnLinea(CID_LOGO, RUTA_LOGO.read_bytes(), "image/png", "acordeon.png")
-
-
 def url_sitio():
     return settings.CORREO_URL_SITIO.rstrip("/")
+
+
+def url_logo():
+    """Logo publicado en el sitio: algunos clientes de correo no muestran las imágenes incrustadas (cid)."""
+    return f"{url_sitio()}/static/correo/acordeon.png"
 
 
 def obtener_adaptador() -> AdaptadorCorreo:
@@ -81,7 +74,7 @@ def contexto_base():
         "texto_pie": sitio.texto_pie,
         "url_sitio": url_sitio(),
         "url_sitio_corta": re.sub(r"^https?://", "", url_sitio()),
-        "logo_src": f"cid:{CID_LOGO}",
+        "logo_src": url_logo(),
         "anio_actual": timezone.localdate().year,
     }
 
@@ -114,7 +107,6 @@ def enviar_plantilla(plantilla, usuario, asunto, contexto=None, silencioso=True,
         remitente=Destinatario(settings.CORREO_REMITENTE, settings.CORREO_REMITENTE_NOMBRE),
         responder_a=settings.CORREO_RESPONDER_A,
         etiquetas={"plantilla": plantilla},
-        imagenes=[logo()],
     )
     adaptador = adaptador or obtener_adaptador()
     if asincrono and settings.CORREO_EN_SEGUNDO_PLANO:

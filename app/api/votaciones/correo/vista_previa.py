@@ -57,10 +57,8 @@ def vista_previa(request, plantilla=None):
     memoria = AdaptadorMemoria()
     disponibles[plantilla][1](adaptador=memoria, silencioso=False)
     mensaje = memoria.mensajes[0]
-    # El navegador no entiende cid: (imagen incrustada); en la vista previa el logo sale de los estáticos de la API
-    mensaje.html = mensaje.html.replace(
-        f"cid:{servicio.CID_LOGO}", request.build_absolute_uri(static("correo/acordeon.png"))
-    )
+    # En desarrollo el sitio configurado no publica los estáticos: el logo sale de la API
+    mensaje.html = mensaje.html.replace(servicio.url_logo(), request.build_absolute_uri(static("correo/acordeon.png")))
     if request.GET.get("formato") == "txt":
         return HttpResponse(f"<!doctype html><meta charset=utf-8><pre>Asunto: {escape(mensaje.asunto)}\n\n"
                             f"{escape(mensaje.texto)}</pre>")
