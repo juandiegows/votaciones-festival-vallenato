@@ -38,7 +38,7 @@ votaciones-festival-vallenato/
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | 1       | Análisis, requerimientos, casos de uso, modelo conceptual, prototipo navegable y panel de administración ([capturas](docs/entrega-1/capturas/))                                                 | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf)                    |
 | 2       | Desarrollo inicial: proyecto Django (MVT), MySQL con adaptador, modelos y migraciones, autenticación, panel propio y Django Admin, sitio con datos reales ([capturas](docs/entrega-2/capturas/)) | ✅ [Informe PDF](docs/entrega-2/Eje2_Entrega2_Votaciones_Festival_Vallenato.pdf) · video pendiente |
-| 3       | Módulo de votaciones: voto por POST con CSRF, un voto por usuario, categoría y edición (validado en Django y con restricción única en MySQL), «Mis votos», consulta administrativa y API `GET /api/categorias/` ([detalle](#entrega-3-módulo-de-votaciones-validaciones-y-api-get)) | ✅ [Informe PDF](docs/entrega-3/Eje3_Entrega3_Votaciones_Festival_Vallenato.pdf) · [video (7:48)](https://youtu.be/9aXqMduhrDU) |
+| 3       | Módulo de votaciones: voto por POST con CSRF, un voto por usuario, categoría y edición (validado en Django y con restricción única en MySQL), «Mis votos», consulta administrativa y API `GET /api/categorias/` ([detalle](#entrega-3-módulo-de-votaciones-validaciones-y-api-get)) | ✅ [Informe PDF](docs/entrega-3/Eje3_Entrega3_Votaciones_Festival_Vallenato.pdf) · [video (7:49)](https://www.youtube.com/watch?v=MXKYMSAz6u0) |
 | 4       | Consolidación, pruebas integrales, correcciones y presentación final                                                                                                                             | Pendiente                                                                                          |
 
 ## Instalación y ejecución (Django + MySQL)
@@ -98,7 +98,7 @@ categorías, pero no emitir un segundo voto en la misma categoría, aunque esta 
 | Pruebas funcionales CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](app/api/portal/tests/test_entrega3.py) |
 | Documentación interactiva de la API (Swagger) | https://votaciones.juandiegows.com/api/docs/ · ReDoc: https://votaciones.juandiegows.com/api/redoc/ · esquema versionado: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
 | Colección de Postman (CP-01 a CP-10 contra producción o local) | [`docs/api/postman/`](docs/api/postman/) |
-| Video demostrativo (7:48, YouTube no listado) | https://youtu.be/9aXqMduhrDU |
+| Video demostrativo (7:49, YouTube) | https://www.youtube.com/watch?v=MXKYMSAz6u0 |
 | Informe PDF, guion del video y capturas | [`docs/entrega-3/`](docs/entrega-3/) |
 
 Las migraciones funcionan igual en MySQL 8.4 (Docker local) y en MySQL 9.7.2 (producción).
