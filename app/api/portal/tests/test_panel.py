@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 from django.utils import timezone
@@ -188,9 +189,14 @@ class DetalleVotacionesTest(BasePortalTest):
         self.client.force_login(self.admin)
         respuesta = self.client.get(self.ruta)
         self.assertContains(respuesta, self.opcion_a.nombre)
-        self.assertNotContains(respuesta, self.voto.codigo_comprobante)
+        self.assertContains(respuesta, self.voto.codigo_comprobante)
         # Con menos de 10 votantes en una votación abierta, la lista de participantes sigue oculta
         self.assertNotContains(respuesta, self.votante.email)
+
+    def test_buscar_comprobante(self):
+        self.client.force_login(self.admin)
+        self.assertContains(self.client.get(self.ruta, {"codigo": self.voto.codigo_comprobante}), self.voto.codigo_comprobante)
+        self.assertNotContains(self.client.get(self.ruta, {"codigo": "NOEXISTE"}), self.voto.codigo_comprobante)
 
     def test_con_pocos_votos_no_muestra_participantes_aunque_este_cerrada(self):
         self.votacion.cerrada_manualmente = True
@@ -205,7 +211,13 @@ class DetalleVotacionesTest(BasePortalTest):
         self.client.force_login(self.admin)
         respuesta = self.client.get(self.ruta)
         self.assertContains(respuesta, self.votante.email)
-        self.assertNotContains(respuesta, self.voto.codigo_comprobante)
+        self.assertContains(respuesta, self.voto.codigo_comprobante)
+        # Voto secreto: ninguna fila junta al votante con el comprobante o la opción
+        html = respuesta.content.decode()
+        for fila in re.findall(r"<(?:tr|li)\b.*?</(?:tr|li)>", html, flags=re.S):
+            if self.votante.email in fila:
+                self.assertNotIn(self.voto.codigo_comprobante, fila)
+                self.assertNotIn(self.opcion_a.nombre, fila)
 
     def test_la_lista_de_participantes_se_puede_apagar(self):
         ConfiguracionSitio.objects.update_or_create(pk=1, defaults={"umbral_participacion": 1, "mostrar_participantes": False})

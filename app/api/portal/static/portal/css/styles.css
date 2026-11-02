@@ -315,6 +315,7 @@ a:hover { color: var(--flv-rojo-hover); }
 .hero-banners .carousel-control-prev, .hero-banners .carousel-control-next { width: 3rem; }
 .hero-banner-pausa { position: absolute; right: 1rem; bottom: 1rem; z-index: 3; }
 .hero-banners button:focus-visible { outline: 3px solid var(--flv-dorado); outline-offset: 2px; }
+.detalle-participantes { max-height: 22rem; overflow-y: auto; }
 .medidor-clave { --nivel-clave: #b42318; margin-top: -.5rem; }
 .medidor-clave[data-nivel="3"] { --nivel-clave: #b5690a; }
 .medidor-clave[data-nivel="4"] { --nivel-clave: #4d7c0f; }

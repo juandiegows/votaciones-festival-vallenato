@@ -1,12 +1,16 @@
 """Detalle de votaciones: conteos por opción y quién participó. El voto es secreto: nunca se cruzan votante y opción."""
 
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
-from votaciones.models import Categoria, Votacion
+from votaciones.models import Categoria, Votacion, Voto
 from votaciones.votacion import reportes
 
 from .base import edicion_panel, render_panel, solo_administrador
+
+
+COMPROBANTES_POR_PAGINA = 25
 
 
 def listar(edicion, categoria):
@@ -31,8 +35,19 @@ def votos(request):
 @solo_administrador
 def detalle(request, pk):
     votacion = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=pk)
+    resultados = reportes.calcular_resultados(votacion)
+    maximo = max((fila["votos"] for fila in resultados["resultados"]), default=0)
+    for fila in resultados["resultados"]:
+        fila["lider"] = maximo > 0 and fila["votos"] == maximo
+    # Voto secreto: el comprobante va con su opción, nunca con el votante, y en orden de código (no de llegada)
+    codigo = request.GET.get("codigo", "").strip()
+    comprobantes = Voto.objects.filter(votacion=votacion).select_related("opcion").order_by("codigo_comprobante")
+    if codigo:
+        comprobantes = comprobantes.filter(codigo_comprobante__icontains=codigo)
     return render_panel(request, "portal/panel/votos_detalle.html", "votos", edicion_panel(request), {
         "votacion": votacion,
-        "resultados": reportes.calcular_resultados(votacion),
+        "resultados": resultados,
         "participacion": reportes.participacion(votacion),
+        "codigo": codigo,
+        "comprobantes": Paginator(comprobantes, COMPROBANTES_POR_PAGINA).get_page(request.GET.get("pagina")),
     })
