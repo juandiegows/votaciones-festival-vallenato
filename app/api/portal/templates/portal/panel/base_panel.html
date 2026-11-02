@@ -30,6 +30,7 @@
           <li class="nav-item"><a href="{% url 'portal:panel-ediciones' %}" class="nav-link{% if seccion == 'ediciones' %} active{% endif %}"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Ediciones</a></li>
           <li class="nav-item"><a href="{% url 'portal:panel-categorias' %}" class="nav-link{% if seccion == 'categorias' %} active{% endif %}"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categorías</a></li>
           <li class="nav-item"><a href="{% url 'portal:panel-votaciones' %}" class="nav-link{% if seccion == 'votaciones' %} active{% endif %}"><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Votaciones</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-votos' %}" class="nav-link{% if seccion == 'votos' %} active{% endif %}"{% if seccion == 'votos' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Detalle de votaciones</a></li>
           {# Lo que aún no tiene pantalla propia (banner, revista, auditoría, usuarios…) se gestiona en Django Admin #}
           <li class="nav-item"><a href="/django-admin/" class="nav-link"><i class="bi bi-gear me-2" aria-hidden="true"></i>Django Admin <i class="bi bi-box-arrow-up-right small ms-1" aria-hidden="true"></i></a></li>
         </ul>

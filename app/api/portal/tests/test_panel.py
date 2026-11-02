@@ -4,6 +4,8 @@ from django.utils import timezone
 
 from votaciones.auditoria.models import RegistroAuditoria
 from votaciones.models import Categoria, Edicion, Opcion, Votacion, Voto
+from votaciones.sitio.models import ConfiguracionSitio
+from votaciones.votacion.servicios import emitir_voto
 
 from .base import BasePortalTest
 
@@ -168,6 +170,65 @@ class OpcionesPanelTest(BasePortalTest):
     def test_enlace_multimedia_invalido(self):
         respuesta = self.client.post(f"{self.base}/nueva", {"nombre": "Canción D", "orden": 4, "enlace_multimedia": "ftp://x"})
         self.assertIn("enlace_multimedia", respuesta.context["form"].errors)
+
+
+class DetalleVotacionesTest(BasePortalTest):
+    def setUp(self):
+        super().setUp()
+        self.voto = emitir_voto(self.votante, self.votacion.pk, self.opcion_a.pk)
+        self.ruta = f"/panel/votos/{self.votacion.pk}"
+
+    def test_lista_las_votaciones_con_sus_votos(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get("/panel/votos")
+        self.assertContains(respuesta, self.votacion.titulo)
+        self.assertContains(respuesta, self.ruta)
+
+    def test_muestra_conteos_y_no_el_voto_de_cada_persona(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(self.ruta)
+        self.assertContains(respuesta, self.opcion_a.nombre)
+        self.assertNotContains(respuesta, self.voto.codigo_comprobante)
+        # Con menos de 10 votantes en una votación abierta, la lista de participantes sigue oculta
+        self.assertNotContains(respuesta, self.votante.email)
+
+    def test_con_pocos_votos_no_muestra_participantes_aunque_este_cerrada(self):
+        self.votacion.cerrada_manualmente = True
+        self.votacion.save()
+        self.client.force_login(self.admin)
+        self.assertNotContains(self.client.get(self.ruta), self.votante.email)
+
+    def test_el_minimo_de_votantes_se_configura(self):
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={"umbral_participacion": 1})
+        self.votacion.cerrada_manualmente = True
+        self.votacion.save()
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(self.ruta)
+        self.assertContains(respuesta, self.votante.email)
+        self.assertNotContains(respuesta, self.voto.codigo_comprobante)
+
+    def test_la_lista_de_participantes_se_puede_apagar(self):
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={"umbral_participacion": 1, "mostrar_participantes": False})
+        self.votacion.cerrada_manualmente = True
+        self.votacion.save()
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(self.ruta)
+        self.assertNotContains(respuesta, self.votante.email)
+        self.assertContains(respuesta, "ocultó la lista")
+
+    def test_el_votante_no_entra(self):
+        self.client.force_login(self.votante)
+        self.assertEqual(self.client.get("/panel/votos").status_code, 403)
+        self.assertEqual(self.client.get(self.ruta).status_code, 403)
+
+    def test_django_admin_no_cruza_votante_y_opcion(self):
+        self.client.force_login(self.admin)
+        lista = self.client.get("/django-admin/votaciones/voto/")
+        ficha = self.client.get(f"/django-admin/votaciones/voto/{self.voto.pk}/change/")
+        for respuesta in (lista, ficha):
+            self.assertContains(respuesta, self.voto.codigo_comprobante)
+            self.assertNotContains(respuesta, self.votante.email)
+        self.assertNotContains(self.client.get("/django-admin/votaciones/voto/", {"q": self.votante.email}), self.voto.codigo_comprobante)
 
 
 class DjangoAdminTest(BasePortalTest):

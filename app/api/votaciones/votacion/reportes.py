@@ -3,6 +3,7 @@
 from django.db.models import Count, Min, Q
 from django.utils import timezone
 
+from ..sitio.models import ConfiguracionSitio
 from .models import Categoria, Votacion, Voto
 
 def calcular_resultados(votacion):
@@ -31,18 +32,19 @@ def calcular_resultados(votacion):
     }
 
 
-UMBRAL_PARTICIPACION = 10
 MOTIVO_PARTICIPACION_OCULTA = (
-    "La lista se muestra al cierre o al llegar a 10 votantes, para que no se pueda deducir el voto de las primeras personas."
+    "La lista se muestra al llegar a {umbral} votantes, para que no se pueda deducir el voto de las primeras personas."
 )
 
 
 def participacion(votacion):
     """
-    Quién votó, nunca por qué opción. Para que no se pueda deducir el voto de nadie comparando la lista con los
-    resultados en tiempo real, mientras la votación no cierra los votantes se revelan en bloques de 10 (según el
-    orden de su primer voto) y la lista se ordena alfabéticamente, con la fecha sin hora.
+    Quién votó, nunca por qué opción. Para que no se pueda deducir el voto de nadie: con pocos votantes (mínimo de la
+    configuración del sitio) la lista queda oculta aun con la votación cerrada; abierta, se revela en bloques de ese
+    tamaño (según el orden de su primer voto); y siempre va en orden alfabético, con la fecha sin hora.
     """
+    configuracion = ConfiguracionSitio.obtener()
+    umbral = configuracion.umbral_participacion
     primeros = list(
         Voto.objects.filter(votacion=votacion)
         .values("usuario_id", "usuario__nombres", "usuario__apellidos", "usuario__email")
@@ -51,14 +53,16 @@ def participacion(votacion):
     )
     total_votantes = len(primeros)
     estado = votacion.estado
-    if estado == Votacion.Estado.CERRADA:
+    if not configuracion.mostrar_participantes:
+        visibles, motivo = [], "La administración ocultó la lista de participantes."
+    elif total_votantes < umbral:
+        visibles, motivo = [], MOTIVO_PARTICIPACION_OCULTA.format(umbral=umbral)
+    elif estado == Votacion.Estado.CERRADA:
         visibles, motivo = primeros, ""
-    elif total_votantes < UMBRAL_PARTICIPACION:
-        visibles, motivo = [], MOTIVO_PARTICIPACION_OCULTA
     else:
-        visibles = primeros[: total_votantes // UMBRAL_PARTICIPACION * UMBRAL_PARTICIPACION]
+        visibles = primeros[: total_votantes // umbral * umbral]
         motivo = "" if len(visibles) == total_votantes else (
-            "Mientras la votación está abierta, los votantes se muestran en bloques de 10."
+            f"Mientras la votación está abierta, los votantes se muestran en bloques de {umbral}."
         )
     votantes = sorted(
         (
@@ -77,10 +81,10 @@ def participacion(votacion):
         "votacion_id": votacion.id,
         "votacion": votacion.titulo,
         "estado": estado,
-        "umbral": UMBRAL_PARTICIPACION,
+        "umbral": umbral,
         "total_votos": Voto.objects.filter(votacion=votacion).count(),
         "total_votantes": total_votantes,
-        "disponible": estado == Votacion.Estado.CERRADA or total_votantes >= UMBRAL_PARTICIPACION,
+        "disponible": configuracion.mostrar_participantes and total_votantes >= umbral,
         "motivo": motivo,
         "votantes": votantes,
         "ocultos": total_votantes - len(votantes),

@@ -13,10 +13,10 @@ class RevistaAdmin(TrazableAdmin):
 @admin.register(ConfiguracionSitio)
 class ConfiguracionSitioAdmin(TrazableAdmin):
     # Registro único: se edita, no se crea ni se borra
-    list_display = ["nombre_organizacion", "mostrar_swagger"]
-    list_editable = ["mostrar_swagger"]
+    list_display = ["nombre_organizacion", "mostrar_participantes", "umbral_participacion", "mostrar_swagger"]
+    list_editable = ["mostrar_participantes", "umbral_participacion", "mostrar_swagger"]
     list_display_links = ["nombre_organizacion"]
-    fields = ["mostrar_swagger"]
+    fields = ["mostrar_participantes", "umbral_participacion", "mostrar_swagger"]
 
     def has_add_permission(self, request):
         return False

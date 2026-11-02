@@ -1,0 +1,44 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4">
+  <h1 class="h2 mb-1">Detalle de votaciones</h1>
+  <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Votos por opción y quién participó. El voto es secreto: no se muestra quién votó por quién.</p>
+</header>
+
+<form method="get" class="card-flv p-3 mb-3" aria-label="Filtro de votaciones">
+  <label for="f-cat" class="form-label small mb-1">Categoría</label>
+  <select id="f-cat" name="categoria" class="form-select form-select-sm" data-enviar-al-cambiar>
+    <option value="">Todas</option>
+    {% for c in categorias %}<option value="{{ c.pk }}"{% if filtro_categoria == c.pk|stringformat:'s' %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+  </select>
+  <noscript><button class="btn btn-sm btn-outline-primary mt-2" type="submit">Filtrar</button></noscript>
+</form>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <caption class="visually-hidden">Votaciones publicadas de la edición</caption>
+    <thead><tr><th scope="col">Votación</th><th scope="col">Categoría</th><th scope="col">Estado</th><th scope="col">Opciones</th><th scope="col">Votos</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr></thead>
+    <tbody>
+      {% for v in lista %}
+        <tr>
+          <td><strong>{{ v.titulo }}</strong></td>
+          <td>{{ v.categoria.nombre }}</td>
+          <td>{% estado_badge v.estado %}</td>
+          <td>{{ v.num_opciones }}</td>
+          <td>{{ v.num_votos }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Ver detalle de {{ v.titulo }}">Ver detalle</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center">
+  <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
+  <p class="mb-0">No hay votaciones publicadas con este filtro.</p>
+</div>
+{% endif %}
+{% endblock %}

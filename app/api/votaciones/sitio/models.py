@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from ..comun.models import ModeloTrazable
@@ -67,6 +68,14 @@ class ConfiguracionSitio(ModeloTrazable):
     # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre)
     # Muestra en el inicio el total de votos de la edición activa
     mostrar_total_votos = models.BooleanField(default=False, help_text="Mostrar al público el total de votos en el inicio.")
+    mostrar_participantes = models.BooleanField(
+        "mostrar quién participó", default=True,
+        help_text="Mostrar a la administración la lista de participantes de cada votación (nunca por qué opción votaron).",
+    )
+    umbral_participacion = models.PositiveSmallIntegerField(
+        "mínimo de votantes para mostrar participantes", default=10, validators=[MinValueValidator(2)],
+        help_text="Con menos votantes la lista queda oculta, aun con la votación cerrada. Abierta, se muestra en bloques de este tamaño.",
+    )
     mostrar_swagger = models.BooleanField(
         "mostrar la documentación de la API", default=True,
         help_text="Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema (/api/esquema/). Apagado responden 404.",

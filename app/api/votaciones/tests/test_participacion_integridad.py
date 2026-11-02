@@ -8,6 +8,7 @@ from django.utils import timezone
 from PIL import Image
 
 from votaciones.models import Opcion, RegistroAuditoria, Usuario, Votacion, Voto
+from votaciones.sitio.models import ConfiguracionSitio
 
 from .base import BaseAPITest
 
@@ -100,6 +101,10 @@ class ParticipacionTests(ConVotantesMixin, BaseAPITest):
         cerrada = self.crear_votacion("Votación cerrada", ahora - timedelta(days=5), ahora - timedelta(days=1))
         opcion = Opcion.objects.create(votacion=cerrada, nombre="Opción", orden=1)
         self.votar(cerrada, self.crear_votantes(3), opcion)
+        # Con pocos votantes sigue oculta, aunque esté cerrada
+        self.assertFalse(self.consultar(cerrada)["disponible"])
+        self.assertEqual(self.consultar(cerrada)["votantes"], [])
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={"umbral_participacion": 3})
         datos = self.consultar(cerrada)
         self.assertTrue(datos["disponible"])
         self.assertEqual(len(datos["votantes"]), 3)

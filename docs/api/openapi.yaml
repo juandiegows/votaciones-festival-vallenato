@@ -2622,6 +2622,19 @@ components:
           title: Mostrar la documentación de la API
           description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
             (/api/esquema/). Apagado responden 404.
+        mostrar_participantes:
+          type: boolean
+          title: Mostrar quién participó
+          description: Mostrar a la administración la lista de participantes de cada
+            votación (nunca por qué opción votaron).
+        umbral_participacion:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 2
+          format: int64
+          title: Mínimo de votantes para mostrar participantes
+          description: Con menos votantes la lista queda oculta, aun con la votación
+            cerrada. Abierta, se muestra en bloques de este tamaño.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,
@@ -2668,6 +2681,19 @@ components:
           title: Mostrar la documentación de la API
           description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
             (/api/esquema/). Apagado responden 404.
+        mostrar_participantes:
+          type: boolean
+          title: Mostrar quién participó
+          description: Mostrar a la administración la lista de participantes de cada
+            votación (nunca por qué opción votaron).
+        umbral_participacion:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 2
+          format: int64
+          title: Mínimo de votantes para mostrar participantes
+          description: Con menos votantes la lista queda oculta, aun con la votación
+            cerrada. Abierta, se muestra en bloques de este tamaño.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,
@@ -3330,6 +3356,19 @@ components:
           title: Mostrar la documentación de la API
           description: Publicar Swagger (/api/docs/), ReDoc (/api/redoc/) y el esquema
             (/api/esquema/). Apagado responden 404.
+        mostrar_participantes:
+          type: boolean
+          title: Mostrar quién participó
+          description: Mostrar a la administración la lista de participantes de cada
+            votación (nunca por qué opción votaron).
+        umbral_participacion:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 2
+          format: int64
+          title: Mínimo de votantes para mostrar participantes
+          description: Con menos votantes la lista queda oculta, aun con la votación
+            cerrada. Abierta, se muestra en bloques de este tamaño.
         pedir_documento:
           type: boolean
           description: Pedir tipo y número de documento al registrarse (cada documento,

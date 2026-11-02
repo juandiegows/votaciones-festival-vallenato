@@ -10,6 +10,7 @@ from django.urls import path, register_converter
 
 from .vistas import cuentas, publico, votos
 from .vistas.panel import categorias, ediciones, inicio, opciones, votaciones
+from .vistas.panel import votos as votos_panel
 
 app_name = "portal"
 
@@ -39,6 +40,8 @@ panel = [
     path("panel/categorias/<int:pk>/editar", categorias.categorias, name="panel-categoria-editar"),
     path("panel/categorias/<int:pk>/alternar", categorias.alternar_categoria, name="panel-categoria-alternar"),
     path("panel/categorias/<int:pk>/eliminar", categorias.eliminar_categoria, name="panel-categoria-eliminar"),
+    path("panel/votos", votos_panel.votos, name="panel-votos"),
+    path("panel/votos/<int:pk>", votos_panel.detalle, name="panel-voto-detalle"),
     path("panel/votaciones", votaciones.votaciones, name="panel-votaciones"),
     path("panel/votaciones/nueva", votaciones.votaciones, name="panel-votacion-nueva"),
     path("panel/votaciones/<int:pk>/editar", votaciones.votaciones, name="panel-votacion-editar"),

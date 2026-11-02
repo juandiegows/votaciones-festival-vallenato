@@ -65,7 +65,7 @@
             </span>
           </td>
           <td><span class="{% if v.num_opciones < 2 %}text-danger fw-bold{% endif %}">{{ v.num_opciones }}</span></td>
-          <td>{{ v.num_votos }}</td>
+          <td>{% if v.publicada %}<a href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Detalle de {{ v.titulo }}: {{ v.num_votos }} votos">{{ v.num_votos }}</a>{% else %}{{ v.num_votos }}{% endif %}</td>
           <td class="text-end text-nowrap">
             <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-votacion-editar' v.pk %}" aria-label="Editar {{ v.titulo }}" title="Editar"><i class="bi bi-pencil" aria-hidden="true"></i></a>
             <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-opciones' v.pk %}" aria-label="Opciones de {{ v.titulo }}" title="Opciones"><i class="bi bi-list-ol" aria-hidden="true"></i></a>

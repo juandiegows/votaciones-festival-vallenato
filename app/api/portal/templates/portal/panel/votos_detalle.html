@@ -1,0 +1,45 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4">
+  <nav aria-label="Ruta de navegación">
+    <ol class="breadcrumb mb-2">
+      <li class="breadcrumb-item"><a href="{% url 'portal:panel-votos' %}">Detalle de votaciones</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ votacion.titulo }}</li>
+    </ol>
+  </nav>
+  <h1 class="h2 mb-1">{{ votacion.titulo }}</h1>
+  <p class="text-secondary-flv mb-2">{{ votacion.categoria.nombre }} · {{ votacion.categoria.edicion.nombre }}</p>
+  {% estado_badge votacion.estado %}
+</header>
+
+<div class="alert alert-info small" role="note"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>El voto es secreto: los votos por opción y los participantes se muestran por separado y no se pueden cruzar.</div>
+
+<section class="card-flv p-0 table-responsive mb-4" aria-labelledby="titulo-opciones">
+  <h2 id="titulo-opciones" class="h5 p-3 mb-0">Votos por opción <span class="text-secondary-flv fw-normal">· {{ resultados.total_votos }} en total</span></h2>
+  <table class="table align-middle mb-0">
+    <thead><tr><th scope="col">Opción</th><th scope="col" class="text-end">Votos</th><th scope="col" class="text-end">Porcentaje</th></tr></thead>
+    <tbody>
+      {% for fila in resultados.resultados %}
+        <tr><td>{{ fila.opcion }}</td><td class="text-end"><strong>{{ fila.votos }}</strong></td><td class="text-end">{{ fila.porcentaje }} %</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card-flv p-0 table-responsive" aria-labelledby="titulo-participantes">
+  <h2 id="titulo-participantes" class="h5 p-3 mb-0">Quién participó <span class="text-secondary-flv fw-normal">· {{ participacion.total_votantes }} votante{{ participacion.total_votantes|pluralize }}</span></h2>
+  {% if participacion.motivo %}<p class="small text-secondary-flv px-3">{{ participacion.motivo }}{% if participacion.ocultos %} Aún sin mostrar: {{ participacion.ocultos }}.{% endif %}</p>{% endif %}
+  {% if participacion.votantes %}
+  <table class="table align-middle mb-0">
+    <thead><tr><th scope="col">Votante</th><th scope="col">Correo</th><th scope="col">Fecha</th></tr></thead>
+    <tbody>
+      {% for persona in participacion.votantes %}
+        <tr><td>{{ persona.apellidos }}, {{ persona.nombres }}</td><td>{{ persona.email }}</td><td class="text-nowrap">{{ persona.fecha|fecha }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

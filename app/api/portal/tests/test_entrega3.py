@@ -119,11 +119,14 @@ class PruebasEntrega3(Entrega3Mixin, BasePortalTest):
         self.client.force_login(self.votante)
         self.votar(URL_CANCION, self.opcion_a)
         voto = Voto.objects.get()
+        self.client.logout()
         self.client.force_login(self.admin)
         respuesta = self.client.get("/django-admin/votaciones/voto/")
         self.assertEqual(respuesta.status_code, 200)
-        for texto in (voto.codigo_comprobante, "Música", "Canción A", self.votante.email):
+        for texto in (voto.codigo_comprobante, "Música", "Canción A"):
             self.assertContains(respuesta, texto)
+        # Voto secreto: la consulta no revela quién votó por qué opción
+        self.assertNotContains(respuesta, self.votante.email)
         # El votante no entra a la consulta administrativa
         self.client.force_login(self.votante)
         self.assertNotEqual(self.client.get("/django-admin/votaciones/voto/").status_code, 200)
