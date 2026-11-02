@@ -6,6 +6,7 @@ import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.
 import { formatearFecha } from '../../utils/helpers.js';
 import { PRESENTACIONES_CATEGORIAS, presentacionCategorias } from '../../data/presentaciones.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
+import VistaPreviaCategorias from '../../components/presentaciones/VistaPreviaCategorias.jsx';
 
 export default function AdminEdiciones() {
   const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
@@ -242,6 +243,7 @@ export default function AdminEdiciones() {
                   <i className={`bi bi-${presentacionCategorias(form.presentacionCategorias).icono} me-1`} aria-hidden="true"></i>
                   {presentacionCategorias(form.presentacionCategorias).descripcion}
                 </div>
+                <VistaPreviaCategorias edicion={form} presentacion={form.presentacionCategorias} />
               </div>
             </div>
           </form>

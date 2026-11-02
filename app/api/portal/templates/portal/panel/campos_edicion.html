@@ -13,9 +13,21 @@
   </div>
   <div class="col-12">
     <label class="form-label" for="id_presentacion_categorias">Presentación de categorías al público</label>
-    <select id="id_presentacion_categorias" name="presentacion_categorias" class="form-select" aria-describedby="e-presentacion-ayuda">
+    <select id="id_presentacion_categorias" name="presentacion_categorias" class="form-select" aria-describedby="e-presentacion-ayuda" data-cambiar-vista-previa>
       {% for p in presentaciones %}<option value="{{ p.valor }}"{% if form.presentacion_categorias.value == p.valor %} selected{% endif %}>{{ p.etiqueta }}</option>{% endfor %}
     </select>
     <div id="e-presentacion-ayuda" class="form-text">Tarjetas, lista, mosaico, compacta o destacada (la primera categoría en grande).</div>
+    {# Vista previa en vivo: se muestra la presentación elegida (portal.js) #}
+    <div class="mt-3" data-vista-previa-categorias>
+      <p class="small fw-semibold mb-2"><i class="bi bi-eye me-1" aria-hidden="true"></i>Vista previa: así verá el público
+        {% if muestra_reales %}las categorías de esta edición{% else %}las categorías (con categorías de ejemplo){% endif %}.</p>
+      <div class="vista-previa-marco" aria-label="Vista previa de la presentación">
+        {% for pres in presentaciones %}
+          <div data-presentacion="{{ pres.valor }}"{% if form.presentacion_categorias.value != pres.valor %} hidden{% endif %}>
+            {% include "portal/parciales/categorias_edicion.html" with p=pres.valor items=muestra_categorias vista_previa=True %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>

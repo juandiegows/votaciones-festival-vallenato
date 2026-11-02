@@ -66,6 +66,18 @@ OPCIONES_EJEMPLO = [
     ], start=1)
 ]
 
+# Categorías de ejemplo para la vista previa del panel cuando la edición aún no tiene dos categorías activas
+CATEGORIAS_EJEMPLO = [
+    {"categoria": SimpleNamespace(nombre=nombre, descripcion=descripcion, icono=icono, icono_imagen=None),
+     "total": total, "abiertas": abiertas}
+    for nombre, descripcion, icono, total, abiertas in [
+        ("Categoría de ejemplo 1", "Aquí va la descripción de la categoría.", "music-note-beamed", 3, 1),
+        ("Categoría de ejemplo 2", "Aquí va la descripción de la categoría.", "people-fill", 2, 0),
+        ("Categoría de ejemplo 3", "Aquí va la descripción de la categoría.", "trophy-fill", 1, 1),
+        ("Categoría de ejemplo 4", "Aquí va la descripción de la categoría.", "book-fill", 1, 0),
+    ]
+]
+
 # Íconos de Bootstrap Icons que el administrador puede elegir para categorías y votaciones
 ICONOS_DISPONIBLES = [
     ("music-note-beamed", "Notas musicales"), ("music-note", "Nota musical"), ("music-note-list", "Lista de canciones"),

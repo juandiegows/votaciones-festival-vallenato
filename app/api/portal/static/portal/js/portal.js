@@ -72,11 +72,11 @@
   }
   todos('[data-imprimir]').forEach((boton) => boton.addEventListener('click', () => window.print()));
 
-  // Panel: la vista previa muestra la presentación de opciones que esté marcada
-  todos('[data-vista-previa-opciones]').forEach((previa) => {
-    todos('[data-cambiar-vista-previa]').forEach((radio) => {
-      radio.addEventListener('change', () => {
-        todos('[data-presentacion]', previa).forEach((bloque) => { bloque.hidden = bloque.dataset.presentacion !== radio.value; });
+  // Panel: la vista previa muestra la presentación de opciones o de categorías que esté elegida
+  todos('[data-vista-previa-opciones], [data-vista-previa-categorias]').forEach((previa) => {
+    todos('[data-cambiar-vista-previa]').forEach((control) => {
+      control.addEventListener('change', () => {
+        todos('[data-presentacion]', previa).forEach((bloque) => { bloque.hidden = bloque.dataset.presentacion !== control.value; });
       });
     });
   });

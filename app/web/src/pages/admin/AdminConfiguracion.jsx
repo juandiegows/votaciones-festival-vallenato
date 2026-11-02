@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import VistaPreviaCategorias from '../../components/presentaciones/VistaPreviaCategorias.jsx';
 import { PRESENTACIONES_CATEGORIAS, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
 import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
@@ -346,6 +347,7 @@ export default function AdminConfiguracion() {
                   deshabilitado={procesando}
                   onCambio={(v) => guardarEdicion({ presentacionCategorias: v }, `Categorías: ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta}.`, `Cambió la presentación de categorías de "${edicion.nombre}"`)}
                 />
+                <VistaPreviaCategorias edicion={edicion} presentacion={edicion.presentacionCategorias || 'tarjetas'} />
               </Fila>
               <Fila titulo={`Opciones de las votaciones de ${edicion.anio}`} descripcion="Cómo ve el público las opciones al votar. Elige una para aplicarla a todas las votaciones de la edición, o cámbiala en cada una más abajo.">
                 {votaciones.length === 0 ? (

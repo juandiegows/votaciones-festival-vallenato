@@ -447,8 +447,9 @@ img.icono-lista { width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fi
 .opciones-duelo:has(> .opcion-duelo-item:nth-of-type(3)) { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
 .opciones-duelo:has(> .opcion-duelo-item:nth-of-type(3)) > .duelo-vs { display: none; }
 
-/* Vista previa de la presentación en el panel (formulario de votación) */
+/* Vista previa de la presentación en el panel (formularios de votación y de edición) */
 .vista-previa-marco { zoom: .85; max-height: 26rem; overflow: auto; padding: 1rem; border: 2px dashed var(--flv-gris-borde); border-radius: .75rem; background: var(--flv-fondo); }
+.vista-previa-marco a.categoria-chip { color: #fff; } /* dentro de un modal los enlaces son rojos y no se leerían */
 
 /* Presentación de categorías */
 .categoria-destacada { background: var(--flv-degradado-hero); color: #fff; border: 0; }

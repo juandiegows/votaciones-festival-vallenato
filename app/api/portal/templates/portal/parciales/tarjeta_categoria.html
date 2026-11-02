@@ -1,5 +1,5 @@
 {% load portal %}
-<a href="{% url 'portal:categoria' edicion.anio c.slug %}" class="text-reset text-decoration-none d-block h-100" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
+<a {% if not vista_previa %}href="{% url 'portal:categoria' edicion.anio c.slug %}" {% endif %}class="text-reset text-decoration-none d-block h-100" aria-label="{{ c.nombre }}: {{ it.total|plural:'votación,votaciones' }}, {{ it.abiertas }} abiertas">
   <article class="card-flv interactiva h-100 p-4{% if grande %} categoria-destacada{% endif %}">
     <div class="d-flex align-items-center gap-3 mb-3">
       <span class="icono-circulo{% if grande %} icono-lg{% endif %}" aria-hidden="true">{% icono_entidad c.icono c.icono_imagen %}</span>

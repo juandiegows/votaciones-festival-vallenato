@@ -28,6 +28,14 @@ export const OPCIONES_EJEMPLO = [
   { id: 'ejemplo4', nombre: 'Puya', descripcion: 'El más rápido: virtuosismo de caja y guacharaca.' },
 ];
 
+// Categorías de ejemplo para la vista previa del panel cuando la edición aún no tiene dos categorías activas
+export const CATEGORIAS_EJEMPLO = [
+  { id: 'ejemplo1', nombre: 'Categoría de ejemplo 1', descripcion: 'Aquí va la descripción de la categoría.', icono: 'music-note-beamed', total: 3, abiertas: 1 },
+  { id: 'ejemplo2', nombre: 'Categoría de ejemplo 2', descripcion: 'Aquí va la descripción de la categoría.', icono: 'people-fill', total: 2, abiertas: 0 },
+  { id: 'ejemplo3', nombre: 'Categoría de ejemplo 3', descripcion: 'Aquí va la descripción de la categoría.', icono: 'trophy-fill', total: 1, abiertas: 1 },
+  { id: 'ejemplo4', nombre: 'Categoría de ejemplo 4', descripcion: 'Aquí va la descripción de la categoría.', icono: 'book-fill', total: 1, abiertas: 0 },
+];
+
 const buscar = (lista, valor) => lista.find((p) => p.valor === valor) || lista[0];
 export const presentacionCategorias = (valor) => buscar(PRESENTACIONES_CATEGORIAS, valor);
 export const presentacionOpciones = (valor) => buscar(PRESENTACIONES_OPCIONES, valor);

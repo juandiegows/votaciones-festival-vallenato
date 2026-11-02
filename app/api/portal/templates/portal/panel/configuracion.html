@@ -2,109 +2,126 @@
 {% load portal %}
 
 {% block panel %}
-<header class="mb-4">
+<header class="mb-3">
   <h1 class="h2 mb-1">Configuración</h1>
-  <p class="text-secondary-flv mb-0">Todos los ajustes del sistema en un solo lugar.{% if edicion %} Lo marcado con «Edición» aplica a {{ edicion.nombre }}.{% endif %}</p>
+  <p class="text-secondary-flv mb-0">{{ seccion_config.descripcion }}</p>
 </header>
+
+<nav class="config-pestanas mb-4" aria-label="Secciones de la configuración">
+  {% for s in secciones %}
+    <a href="?seccion={{ s.clave }}" class="config-pestana{% if s.clave == clave %} activa{% endif %}"{% if s.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ s.icono }}" aria-hidden="true"></i>{{ s.titulo }}</a>
+  {% endfor %}
+</nav>
 
 {% if form.errors or form_edicion.errors %}<div class="alert alert-danger" role="alert">Revisa los campos marcados.</div>{% endif %}
 
-<form method="post" id="form-configuracion" novalidate>
+{% if clave == "votacion" %}
+  {% if form_edicion %}
+  <form method="post" action="?seccion=votacion" class="card-flv p-3 p-md-4 mb-4{% if edicion.votaciones_pausadas %} config-en-pausa{% endif %}">
+    {% csrf_token %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+      <h2 class="h5 mb-0">Recepción de votos</h2>
+      {% if edicion.votaciones_pausadas %}<span class="badge text-bg-warning"><i class="bi bi-pause-fill" aria-hidden="true"></i> En pausa</span>
+      {% else %}<span class="badge badge-estado estado-abierta"><i class="bi bi-check-lg" aria-hidden="true"></i> Recibiendo votos</span>{% endif %}
+    </div>
+    <p class="small text-secondary-flv">{{ edicion.nombre }}</p>
+    {% include "portal/parciales/interruptor_config.html" with campo=form_edicion.votaciones_pausadas titulo="Pausar todas las votaciones" ayuda="Interruptor de emergencia: mientras esté activo, nadie puede votar en esta edición." %}
+    <div class="text-end mt-3"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>
+  </form>
+
+  <section class="card-flv p-3 p-md-4" aria-labelledby="cfg-categorias">
+    <h2 id="cfg-categorias" class="h5 mb-1">Un voto por categoría</h2>
+    <p class="small text-secondary-flv mb-3"><strong>Encendido:</strong> un solo voto en toda la categoría, aunque tenga varias votaciones. <strong>Apagado:</strong> un voto en cada votación. Se guarda al instante y se bloquea cuando la categoría ya tiene votos.</p>
+    {% for c in categorias %}
+      <form method="post" action="{% url 'portal:panel-config-voto-unico' c.pk %}" class="fila-config">
+        {% csrf_token %}
+        <div>
+          <label class="fw-semibold d-block" for="voto-unico-{{ c.pk }}">{{ c.nombre }}</label>
+          <p class="small text-secondary-flv mb-0">{% if c.voto_unico %}Un solo voto en toda la categoría{% else %}Un voto en cada votación{% endif %}</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          {% if c.num_votos %}<span class="config-bloqueo"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ c.num_votos|miles }} voto{{ c.num_votos|pluralize }}</span>{% endif %}
+          <div class="form-check form-switch mb-0">
+            <input id="voto-unico-{{ c.pk }}" class="form-check-input" type="checkbox" role="switch"{% if c.voto_unico %} checked{% endif %}{% if c.num_votos %} disabled{% else %} data-enviar-al-cambiar{% endif %}>
+          </div>
+          <noscript>{% if not c.num_votos %}<button class="btn btn-sm btn-outline-primary" type="submit">Cambiar</button>{% endif %}</noscript>
+        </div>
+      </form>
+    {% empty %}
+      <p class="text-secondary-flv mb-0">Esta edición aún no tiene categorías. <a href="{% url 'portal:panel-categorias' %}">Crear categorías</a></p>
+    {% endfor %}
+  </section>
+  {% else %}
+  <div class="card-flv p-4 text-center"><p class="mb-2">Aún no hay una edición para configurar.</p><a class="btn btn-primary" href="{% url 'portal:panel-ediciones' %}">Crear edición</a></div>
+  {% endif %}
+{% else %}
+<form method="post" action="?seccion={{ clave }}" novalidate>
   {% csrf_token %}
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-cuentas">
-    <h2 id="cfg-cuentas" class="h5 mb-3"><i class="bi bi-person-badge me-1" aria-hidden="true"></i>Cuentas y registro</h2>
-    {% include "portal/parciales/interruptor_config.html" with campo=form.pedir_documento titulo="Pedir cédula o documento" ayuda="Pide tipo y número de documento al registrarse y permite una sola cuenta por documento. Quien ya tiene cuenta sin documento debe completarlo antes de votar." %}
-    <div class="fila-config">
-      <div>
-        <p class="fw-semibold mb-0">Confirmar el correo</p>
-        <p class="small text-secondary-flv mb-0">Siempre obligatorio: sin confirmar el correo no se puede iniciar sesión ni votar.</p>
+  {% if clave == "registro" %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-identidad">
+      <h2 id="cfg-identidad" class="h5 mb-3">Identidad del votante</h2>
+      {% include "portal/parciales/interruptor_config.html" with campo=form.pedir_documento titulo="Hacer obligatoria la cédula o documento" ayuda="Se pide al registrarse y solo se permite una cuenta por documento. Quien ya tiene cuenta sin documento debe completarlo antes de votar." %}
+      <div class="fila-config">
+        <div>
+          <p class="fw-semibold mb-0">Confirmar el correo</p>
+          <p class="small text-secondary-flv mb-0">Sin confirmar el correo no se puede iniciar sesión ni votar.</p>
+        </div>
+        <span class="badge text-bg-secondary"><i class="bi bi-lock-fill" aria-hidden="true"></i> Siempre activo</span>
       </div>
-      <span class="badge text-bg-secondary">Siempre activo</span>
-    </div>
-  </section>
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-voto">
-    <h2 id="cfg-voto" class="h5 mb-3"><i class="bi bi-check2-square me-1" aria-hidden="true"></i>Votación</h2>
-    {% if form_edicion %}
-      {% include "portal/parciales/interruptor_config.html" with campo=form_edicion.votaciones_pausadas titulo="Pausar todas las votaciones · Edición" ayuda="Interruptor de emergencia: mientras esté activo, nadie puede votar en esta edición." %}
-    {% endif %}
-    <p class="small text-secondary-flv mb-0 mt-3"><i class="bi bi-arrow-down me-1" aria-hidden="true"></i>Para decidir si se permite un solo voto por categoría, ve a <a href="#cfg-categorias">Un voto por categoría</a>.</p>
-  </section>
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-privacidad">
-    <h2 id="cfg-privacidad" class="h5 mb-3"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Privacidad del voto</h2>
-    {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_participantes titulo="Mostrar quién participó" ayuda="Muestra a la administración quién votó, nunca por qué opción." %}
-    <div class="row mt-3"><div class="col-md-6">
-      {% include "portal/parciales/campo.html" with campo=form.umbral_participacion tipo="number" ayuda="Con menos votantes la lista queda oculta, aunque la votación esté cerrada. Mientras está abierta, se muestra en bloques de este tamaño." extra='min=2' %}
-    </div></div>
-  </section>
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-resultados">
-    <h2 id="cfg-resultados" class="h5 mb-3"><i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Resultados</h2>
-    {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_total_votos titulo="Mostrar el total de votos en el inicio" ayuda="Muestra al público cuántos votos lleva la edición activa." %}
-    <div class="row mt-3">
+    </section>
+  {% elif clave == "privacidad" %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-participantes">
+      <h2 id="cfg-participantes" class="h5 mb-3">Quién participó</h2>
+      {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_participantes titulo="Mostrar la lista de participantes" ayuda="Se ve en «Detalle de votaciones». Nunca muestra por qué opción votó cada persona." %}
+      <div class="row mt-3"><div class="col-md-6 col-xl-4">
+        {% include "portal/parciales/campo.html" with campo=form.umbral_participacion tipo="number" ayuda="Con menos votantes la lista queda oculta, aunque la votación esté cerrada. Mientras está abierta, se muestra en bloques de este tamaño." extra='min=2' %}
+      </div></div>
+    </section>
+  {% elif clave == "resultados" %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-publico">
+      <h2 id="cfg-publico" class="h5 mb-3">Lo que ve el público</h2>
       {% if form_edicion %}
-      <div class="col-md-6 mb-3">
-        <label for="{{ form_edicion.visibilidad_resultados.id_for_label }}" class="form-label">Cuándo ve el público los resultados · Edición</label>
-        <select id="{{ form_edicion.visibilidad_resultados.id_for_label }}" name="visibilidad_resultados" class="form-select">
-          {% for valor, etiqueta in form_edicion.visibilidad_resultados.field.choices %}<option value="{{ valor }}"{% if form_edicion.visibilidad_resultados.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
-        </select>
-        <div class="form-text">Una votación puede tener su propio ajuste; ese tiene prioridad.</div>
+      <div class="row"><div class="col-md-6">
+        <div class="mb-3">
+          <label for="{{ form_edicion.visibilidad_resultados.id_for_label }}" class="form-label">Cuándo se publican los resultados</label>
+          <select id="{{ form_edicion.visibilidad_resultados.id_for_label }}" name="visibilidad_resultados" class="form-select">
+            {% for valor, etiqueta in form_edicion.visibilidad_resultados.field.choices %}<option value="{{ valor }}"{% if form_edicion.visibilidad_resultados.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+          </select>
+          <div class="form-text">Aplica a {{ edicion.nombre }}. Una votación con ajuste propio mantiene el suyo.</div>
+        </div>
       </div>
-      {% endif %}
       <div class="col-md-6">
-        {% include "portal/parciales/campo.html" with campo=form.dias_visible_cerradas tipo="number" ayuda="Días que una votación cerrada sigue visible al público. 0: se oculta al cerrar; vacío: siempre visible." extra='min=0' %}
-      </div>
-    </div>
-  </section>
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-sitio">
-    <h2 id="cfg-sitio" class="h5 mb-3"><i class="bi bi-window me-1" aria-hidden="true"></i>Sitio</h2>
-    {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_swagger titulo="Mostrar la documentación de la API" ayuda="Publica Swagger, ReDoc y el esquema. Apagada, esas direcciones responden 404." %}
-    <div class="row mt-3">
-      <div class="col-md-6 mb-3">
+        {% include "portal/parciales/campo.html" with campo=form.dias_visible_cerradas tipo="number" ayuda="0: se oculta al cerrar. Vacío: siempre visible." extra='min=0' %}
+      </div></div>
+      {% endif %}
+      {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_total_votos titulo="Mostrar el total de votos en el inicio" ayuda="El público ve cuántos votos lleva la edición activa." %}
+    </section>
+  {% else %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-banner">
+      <h2 id="cfg-banner" class="h5 mb-3">Inicio</h2>
+      <div class="row"><div class="col-md-6">
         <label for="{{ form.modo_banner.id_for_label }}" class="form-label">Banner del inicio</label>
         <select id="{{ form.modo_banner.id_for_label }}" name="modo_banner" class="form-select">
           {% for valor, etiqueta in form.modo_banner.field.choices %}<option value="{{ valor }}"{% if form.modo_banner.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
         </select>
+      </div></div>
+    </section>
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-contacto">
+      <h2 id="cfg-contacto" class="h5 mb-3">Contacto del pie de página</h2>
+      <div class="row">
+        <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.nombre_organizacion %}</div>
+        <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.correo tipo="email" %}</div>
+        <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.telefono %}</div>
+        <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.direccion %}</div>
+        <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.texto_pie %}</div>
       </div>
-    </div>
-  </section>
-
-  <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="cfg-contacto">
-    <h2 id="cfg-contacto" class="h5 mb-3"><i class="bi bi-telephone me-1" aria-hidden="true"></i>Contacto del pie de página</h2>
-    <div class="row">
-      <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.nombre_organizacion %}</div>
-      <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.telefono %}</div>
-      <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.direccion %}</div>
-      <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.correo tipo="email" %}</div>
-      <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.texto_pie %}</div>
-    </div>
-  </section>
-
-  <div class="config-guardar">
-    <button class="btn btn-primary btn-lg" type="submit" data-enviando="Guardando…"><i class="bi bi-check2 me-1" aria-hidden="true"></i>Guardar configuración</button>
-  </div>
+    </section>
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-api">
+      <h2 id="cfg-api" class="h5 mb-3">Documentación de la API</h2>
+      {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_swagger titulo="Publicar Swagger y ReDoc" ayuda="Apagada, /api/docs/, /api/redoc/ y /api/esquema/ responden 404." %}
+    </section>
+  {% endif %}
+  <div class="text-end"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>
 </form>
-
-<section class="card-flv p-3 p-md-4 mt-4" aria-labelledby="cfg-categorias">
-  <h2 id="cfg-categorias" class="h5 mb-1"><i class="bi bi-grid me-1" aria-hidden="true"></i>Un voto por categoría</h2>
-  <p class="small text-secondary-flv">Encendido: cada persona vota una sola vez en toda la categoría, aunque tenga varias votaciones. Apagado: vota una vez en cada votación. Con votos registrados ya no se puede cambiar. Este ajuste se guarda al instante.</p>
-  {% for c in categorias %}
-    <form method="post" action="{% url 'portal:panel-config-voto-unico' c.pk %}" class="fila-config">
-      {% csrf_token %}
-      <div>
-        <label class="fw-semibold d-block" for="voto-unico-{{ c.pk }}">{{ c.nombre }}</label>
-        <p class="small text-secondary-flv mb-0">{% if c.voto_unico %}Un solo voto en toda la categoría{% else %}Un voto en cada votación{% endif %}{% if c.num_votos %} · <i class="bi bi-lock-fill" aria-hidden="true"></i> {{ c.num_votos|miles }} voto{{ c.num_votos|pluralize }}: bloqueado{% endif %}</p>
-      </div>
-      <div class="form-check form-switch mb-0">
-        <input id="voto-unico-{{ c.pk }}" class="form-check-input" type="checkbox" role="switch"{% if c.voto_unico %} checked{% endif %}{% if c.num_votos %} disabled{% else %} data-enviar-al-cambiar{% endif %}>
-      </div>
-      <noscript>{% if not c.num_votos %}<button class="btn btn-sm btn-outline-primary" type="submit">Cambiar</button>{% endif %}</noscript>
-    </form>
-  {% empty %}
-    <p class="text-secondary-flv mb-0">Esta edición aún no tiene categorías.</p>
-  {% endfor %}
-</section>
+{% endif %}
 {% endblock %}

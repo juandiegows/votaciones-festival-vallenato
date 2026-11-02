@@ -169,7 +169,16 @@ class LoginForm(forms.Form):
 # Administración (/panel)
 
 
-class ConfiguracionForm(forms.ModelForm):
+class SoloCamposMixin:
+    """Deja en el formulario solo los campos pedidos: cada pestaña de la configuración guarda únicamente los suyos."""
+
+    def __init__(self, *args, campos=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre in set(self.fields) - set(campos):
+            del self.fields[nombre]
+
+
+class ConfiguracionForm(SoloCamposMixin, forms.ModelForm):
     """Ajustes generales del sitio (un único registro); la marca se edita en su propia pantalla."""
 
     class Meta:
@@ -179,14 +188,14 @@ class ConfiguracionForm(forms.ModelForm):
             "modo_banner", "dias_visible_cerradas", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
         ]
         labels = {
-            "umbral_participacion": "Mínimo de votantes para mostrar participantes",
+            "umbral_participacion": "Mínimo de votantes",
             "dias_visible_cerradas": "Días visibles después del cierre",
             "nombre_organizacion": "Nombre de la organización", "telefono": "Teléfono", "direccion": "Dirección",
             "correo": "Correo de contacto", "texto_pie": "Texto del pie de página",
         }
 
 
-class ConfiguracionEdicionForm(forms.ModelForm):
+class ConfiguracionEdicionForm(SoloCamposMixin, forms.ModelForm):
     """Ajustes que dependen de la edición elegida en el panel."""
 
     class Meta:

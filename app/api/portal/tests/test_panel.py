@@ -174,40 +174,44 @@ class OpcionesPanelTest(BasePortalTest):
 
 
 class ConfiguracionPanelTest(BasePortalTest):
-    def datos(self, **cambios):
-        sitio = ConfiguracionSitio.obtener()
-        base = {
-            "umbral_participacion": sitio.umbral_participacion, "modo_banner": sitio.modo_banner,
-            "dias_visible_cerradas": sitio.dias_visible_cerradas, "nombre_organizacion": sitio.nombre_organizacion,
-            "telefono": sitio.telefono, "direccion": sitio.direccion, "correo": sitio.correo, "texto_pie": sitio.texto_pie,
-            "visibilidad_resultados": self.edicion.visibilidad_resultados, "mostrar_participantes": "on", "mostrar_swagger": "on",
-        }
-        return {**base, **cambios}
+    RUTA = "/panel/configuracion"
 
     def test_solo_el_administrador_entra(self):
-        self.assertEqual(self.client.get("/panel/configuracion").status_code, 302)
+        self.assertEqual(self.client.get(self.RUTA).status_code, 302)
         self.client.force_login(self.votante)
-        self.assertEqual(self.client.get("/panel/configuracion").status_code, 403)
+        self.assertEqual(self.client.get(self.RUTA).status_code, 403)
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get("/panel/configuracion"), "Pedir cédula o documento")
+        for seccion, texto in (("votacion", "Pausar todas las votaciones"), ("registro", "cédula o documento"), ("privacidad", "Mínimo de votantes"),
+                               ("resultados", "Cuándo se publican"), ("sitio", "Publicar Swagger")):
+            self.assertContains(self.client.get(self.RUTA, {"seccion": seccion}), texto)
 
-    def test_guarda_los_ajustes_y_los_audita(self):
+    def test_seccion_desconocida_abre_votacion(self):
         self.client.force_login(self.admin)
-        respuesta = self.client.post("/panel/configuracion", self.datos(
-            pedir_documento="on", votaciones_pausadas="on", umbral_participacion=5, visibilidad_resultados="tiempo_real",
-        ))
-        self.assertRedirects(respuesta, "/panel/configuracion")
+        self.assertContains(self.client.get(self.RUTA, {"seccion": "otra"}), "Pausar todas las votaciones")
+
+    def test_cada_pestana_guarda_solo_sus_campos(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.post(f"{self.RUTA}?seccion=registro", {"pedir_documento": "on"})
+        self.assertRedirects(respuesta, f"{self.RUTA}?seccion=registro")
         sitio = ConfiguracionSitio.obtener()
         self.assertTrue(sitio.pedir_documento)
-        self.assertEqual(sitio.umbral_participacion, 5)
+        # Lo que no está en la pestaña no cambia, aunque el formulario no lo envíe
+        self.assertTrue(sitio.mostrar_participantes)
+        self.assertTrue(sitio.mostrar_swagger)
+        self.assertTrue(RegistroAuditoria.objects.filter(entidad="configuracion", usuario=self.admin).exists())
+
+    def test_pausar_y_resultados_aplican_a_la_edicion(self):
+        self.client.force_login(self.admin)
+        self.client.post(f"{self.RUTA}?seccion=votacion", {"votaciones_pausadas": "on"})
+        self.client.post(f"{self.RUTA}?seccion=resultados", {"visibilidad_resultados": "tiempo_real", "dias_visible_cerradas": "3"})
         self.edicion.refresh_from_db()
         self.assertTrue(self.edicion.votaciones_pausadas)
         self.assertEqual(self.edicion.visibilidad_resultados, "tiempo_real")
-        self.assertTrue(RegistroAuditoria.objects.filter(entidad="configuracion", usuario=self.admin).exists())
+        self.assertEqual(ConfiguracionSitio.obtener().dias_visible_cerradas, 3)
 
     def test_valida_el_minimo_de_votantes(self):
         self.client.force_login(self.admin)
-        respuesta = self.client.post("/panel/configuracion", self.datos(umbral_participacion=1))
+        respuesta = self.client.post(f"{self.RUTA}?seccion=privacidad", {"mostrar_participantes": "on", "umbral_participacion": 1})
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Revisa los campos marcados")
         self.assertEqual(ConfiguracionSitio.obtener().umbral_participacion, 10)
@@ -215,11 +219,11 @@ class ConfiguracionPanelTest(BasePortalTest):
     def test_voto_unico_se_cambia_sin_votos_y_se_bloquea_con_votos(self):
         self.client.force_login(self.admin)
         sin_votos = Categoria.objects.create(edicion=self.edicion, nombre="Sin votos")
-        self.client.post(f"/panel/configuracion/categorias/{sin_votos.pk}/voto-unico")
+        self.client.post(f"{self.RUTA}/categorias/{sin_votos.pk}/voto-unico")
         sin_votos.refresh_from_db()
         self.assertFalse(sin_votos.voto_unico)
         emitir_voto(self.votante, self.votacion.pk, self.opcion_a.pk)
-        self.client.post(f"/panel/configuracion/categorias/{self.categoria.pk}/voto-unico")
+        self.client.post(f"{self.RUTA}/categorias/{self.categoria.pk}/voto-unico")
         self.categoria.refresh_from_db()
         self.assertTrue(self.categoria.voto_unico)
 

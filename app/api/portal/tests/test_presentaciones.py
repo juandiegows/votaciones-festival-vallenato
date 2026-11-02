@@ -1,4 +1,4 @@
-from votaciones.models import Votacion
+from votaciones.models import Categoria, Edicion, Votacion
 
 from .base import BasePortalTest
 
@@ -30,6 +30,40 @@ class PresentacionesOpcionesTest(BasePortalTest):
         for valor in ("colores", "respuestas", "duelo"):
             with self.subTest(valor):
                 self.assertContains(self.con_presentacion(valor), 'form="form-voto"', count=2)
+
+
+class VistaPreviaCategoriasPanelTest(BasePortalTest):
+    def setUp(self):
+        super().setUp()
+        self.entrar_como_admin()
+
+    def test_nueva_edicion_usa_categorias_de_ejemplo_en_todas_las_presentaciones(self):
+        respuesta = self.client.get("/panel/ediciones/nueva")
+        self.assertContains(respuesta, "data-vista-previa-categorias")
+        self.assertContains(respuesta, "con categorías de ejemplo")
+        self.assertContains(respuesta, "Categoría de ejemplo 1")
+        for valor in ("tarjetas", "lista", "mosaico", "compacta", "destacada"):
+            self.assertContains(respuesta, f'data-presentacion="{valor}"')
+
+    def test_editar_muestra_las_categorias_reales_sin_enlaces(self):
+        Categoria.objects.create(edicion=self.edicion, nombre="Danza", slug="danza", orden=99, activa=True)
+        respuesta = self.client.get(f"/panel/ediciones/{self.edicion.pk}/editar")
+        self.assertContains(respuesta, "las categorías de esta edición")
+        self.assertContains(respuesta, "Danza")
+        # La vista previa no saca al administrador del formulario
+        self.assertNotContains(respuesta, 'href="/2027/categorias/danza"')
+
+    def test_solo_se_ve_la_presentacion_elegida(self):
+        Edicion.objects.filter(pk=self.edicion.pk).update(presentacion_categorias="mosaico")
+        respuesta = self.client.get(f"/panel/ediciones/{self.edicion.pk}/editar")
+        self.assertContains(respuesta, '<div data-presentacion="mosaico">')
+        self.assertContains(respuesta, '<div data-presentacion="lista" hidden>')
+
+    def test_la_pagina_publica_conserva_los_enlaces(self):
+        for valor in ("tarjetas", "lista", "mosaico", "compacta", "destacada"):
+            with self.subTest(valor):
+                Edicion.objects.filter(pk=self.edicion.pk).update(presentacion_categorias=valor)
+                self.assertContains(self.client.get("/2027"), 'href="/2027/categorias/musica"')
 
 
 class VistaPreviaPanelTest(BasePortalTest):
