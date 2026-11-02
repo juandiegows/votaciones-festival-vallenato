@@ -315,6 +315,16 @@ a:hover { color: var(--flv-rojo-hover); }
 .hero-banners .carousel-control-prev, .hero-banners .carousel-control-next { width: 3rem; }
 .hero-banner-pausa { position: absolute; right: 1rem; bottom: 1rem; z-index: 3; }
 .hero-banners button:focus-visible { outline: 3px solid var(--flv-dorado); outline-offset: 2px; }
+.medidor-clave { --nivel-clave: #b42318; margin-top: -.5rem; }
+.medidor-clave[data-nivel="3"] { --nivel-clave: #b5690a; }
+.medidor-clave[data-nivel="4"] { --nivel-clave: #4d7c0f; }
+.medidor-clave[data-nivel="5"], .medidor-clave[data-nivel="6"] { --nivel-clave: #17603f; }
+.medidor-clave-barras { display: grid; grid-template-columns: repeat(6, 1fr); gap: .25rem; position: relative; }
+.medidor-clave-barras span { height: .35rem; border-radius: 1rem; background: #dfe3e8; transition: background-color .15s; }
+.medidor-clave-barras span.activa { background: var(--nivel-clave); }
+.medidor-clave [data-nivel-clave] { color: var(--nivel-clave); }
+.medidor-clave[data-nivel="0"] [data-nivel-clave] { color: inherit; }
+.medidor-clave-falta { border: 1px solid #cfd5db; border-radius: 1rem; padding: 0 .55rem; font-size: .78rem; }
 .banner-miniatura { width: 8rem; height: 3rem; object-fit: cover; border-radius: .4rem; }
 .banner-vista-previa { width: 100%; max-height: 12rem; object-fit: cover; border-radius: .5rem; }
 

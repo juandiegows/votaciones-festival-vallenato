@@ -31,6 +31,7 @@
           {% endif %}
           {% include "portal/parciales/campo.html" with campo=form.email tipo="email" extra='autocomplete=email placeholder=nombre@correo.com' %}
           {% include "portal/parciales/campo.html" with campo=form.password tipo="password" ayuda="Mínimo 8 caracteres, con una mayúscula, un número y un símbolo." extra='autocomplete=new-password data-clave' %}
+          {% include "portal/parciales/medidor_clave.html" with campo=form.password.id_for_label confirmacion=form.confirmacion.id_for_label %}
           {% include "portal/parciales/campo.html" with campo=form.confirmacion tipo="password" extra='autocomplete=new-password data-clave' %}
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" id="verClave" data-mostrar-claves>

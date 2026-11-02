@@ -1,0 +1,23 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Confirma tu correo · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card-flv p-4 text-center">
+        <i class="bi bi-envelope-check fs-1 text-success" aria-hidden="true"></i>
+        <h1 class="h3 mt-2">Confirma tu correo</h1>
+        <p>Te enviamos un enlace a <strong>{{ correo }}</strong>. Ábrelo para activar tu cuenta; después podrás iniciar sesión y votar.</p>
+        <p class="small text-secondary-flv">Si no lo ves, revisa la carpeta de correo no deseado.</p>
+        <form method="post" action="{% url 'portal:reenviar-confirmacion' %}" class="mb-3">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary" data-enviando="Enviando…"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Reenviar enlace</button>
+        </form>
+        <a href="{% url 'portal:login' %}">Ya lo confirmé: iniciar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

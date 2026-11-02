@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.test import override_settings
 
 from votaciones.cuentas import servicios
@@ -12,13 +14,37 @@ DATOS_REGISTRO = {
 
 
 class RegistroTest(BasePortalTest):
-    def test_registro_crea_la_cuenta_e_inicia_sesion(self):
+    def test_registro_pide_confirmar_el_correo_sin_iniciar_sesion(self):
         respuesta = self.client.post("/registro", DATOS_REGISTRO)
-        self.assertRedirects(respuesta, "/categorias", target_status_code=302)
+        self.assertRedirects(respuesta, "/revisa-tu-correo")
         usuario = Usuario.objects.get(email="carlos@correo.test")
         self.assertEqual(usuario.rol, Usuario.Rol.VOTANTE)
         self.assertFalse(usuario.correo_verificado)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertContains(self.client.get("/revisa-tu-correo"), "carlos@correo.test")
+
+    def test_sin_confirmar_no_inicia_sesion_y_al_confirmar_si(self):
+        self.client.post("/registro", DATOS_REGISTRO)
+        credenciales = {"email": DATOS_REGISTRO["email"], "password": DATOS_REGISTRO["password"]}
+        self.assertRedirects(self.client.post("/login", credenciales), "/revisa-tu-correo")
+        self.assertNotIn("_auth_user_id", self.client.session)
+        usuario = Usuario.objects.get(email="carlos@correo.test")
+        self.client.get(f"/confirmar-correo?token={servicios.token_confirmacion(usuario)}")
+        self.client.post("/login", credenciales)
         self.assertEqual(int(self.client.session["_auth_user_id"]), usuario.pk)
+
+    def test_reenviar_confirmacion_sin_sesion_y_con_espera(self):
+        self.client.post("/registro", DATOS_REGISTRO)
+        with mock.patch("portal.vistas.cuentas.servicios.reenviar_confirmacion") as reenviar:
+            self.client.post("/reenviar-confirmacion")
+            self.client.post("/reenviar-confirmacion")
+        self.assertEqual(reenviar.call_count, 1)
+
+    def test_reenviar_confirmacion_sin_cuenta_pendiente_va_al_login(self):
+        self.assertRedirects(self.client.post("/reenviar-confirmacion"), "/login")
+
+    def test_registro_muestra_el_medidor_de_clave(self):
+        self.assertContains(self.client.get("/registro"), "data-medidor-clave")
 
     def test_registro_valida_contrasena_y_politica(self):
         datos = {**DATOS_REGISTRO, "password": "corta", "confirmacion": "otra"}

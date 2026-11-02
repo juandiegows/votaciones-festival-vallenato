@@ -1,0 +1,14 @@
+{# Nivel de seguridad de la clave y generador. Recibe: campo (id del campo), confirmacion (id del campo de confirmación) #}
+<div class="medidor-clave mb-3" data-medidor-clave="#{{ campo }}" data-confirmacion="#{{ confirmacion }}" hidden>
+  <div class="d-flex justify-content-end mb-2">
+    <button type="button" class="btn btn-link btn-sm p-0" data-generar-clave><i class="bi bi-stars me-1" aria-hidden="true"></i>Generar clave</button>
+  </div>
+  <div class="medidor-clave-barras" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="d-flex justify-content-between align-items-baseline mt-1 small">
+    <strong data-nivel-clave aria-live="polite">Sin escribir</strong>
+    <span class="text-secondary-flv">mín. Buena · <span data-puntos-clave>0</span>/6</span>
+  </div>
+  <ul class="list-unstyled d-flex flex-wrap gap-1 mt-2 mb-0" data-faltantes-clave aria-label="Lo que le falta a la clave"></ul>
+</div>

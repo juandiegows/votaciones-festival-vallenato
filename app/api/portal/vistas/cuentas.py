@@ -3,10 +3,11 @@ Registro, inicio y cierre de sesión, confirmación del correo y recuperación d
 autenticación de Django (sesión en cookie).
 """
 
+import time
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import PasswordResetConfirmView
 from django.shortcuts import redirect, render
@@ -24,6 +25,10 @@ from votaciones.sitio.models import ConfiguracionSitio
 from ..catalogos import CREDENCIALES_DEMO
 from ..formularios import LoginForm, NuevaClaveForm, RecuperarClaveForm, RegistroForm
 
+SESION_CORREO_PENDIENTE = "correo_pendiente"
+SESION_ULTIMO_REENVIO = "ultimo_reenvio_confirmacion"
+ESPERA_REENVIO_SEGUNDOS = 60
+
 
 def destino_seguro(request, por_defecto):
     """`next` solo si apunta a este mismo sitio (evita redirecciones abiertas)."""
@@ -40,10 +45,8 @@ def registro(request):
     form = RegistroForm(request.POST or None, pedir_documento=pedir_documento)
     if request.method == "POST" and form.is_valid():
         usuario = servicios.registrar_votante(**form.datos_cuenta())
-        login(request, usuario, backend="django.contrib.auth.backends.ModelBackend")
-        messages.success(request, f"¡Bienvenido, {usuario.nombres}! Tu cuenta fue creada. "
-                                  f"Te enviamos un enlace a {usuario.email} para confirmar tu correo.")
-        return redirect(destino_seguro(request, reverse("portal:categorias")))
+        request.session[SESION_CORREO_PENDIENTE] = usuario.pk
+        return redirect("portal:revisa-tu-correo")
     return render(request, "portal/registro.html", {
         "form": form, "pedir_documento": pedir_documento,
         "siguiente": request.POST.get("next") or request.GET.get("next", ""),
@@ -55,6 +58,10 @@ def iniciar_sesion(request):
         return redirect("portal:inicio")
     form = LoginForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
+        # Sin confirmar el correo no se entra (los administradores se crean ya verificados o por consola)
+        if not form.usuario.correo_verificado and not form.usuario.es_administrador:
+            request.session[SESION_CORREO_PENDIENTE] = form.usuario.pk
+            return redirect("portal:revisa-tu-correo")
         login(request, form.usuario)
         por_defecto = reverse("portal:panel") if form.usuario.es_administrador else reverse("portal:categorias")
         return redirect(destino_seguro(request, por_defecto))
@@ -114,12 +121,34 @@ def confirmar_correo(request):
     return render(request, "portal/confirmar_correo.html", contexto)
 
 
-@login_required
+def usuario_por_confirmar(request):
+    """Quien acaba de registrarse o intentó entrar sin confirmar; también sirve para sesiones ya iniciadas."""
+    if request.user.is_authenticated:
+        return request.user
+    return Usuario.objects.filter(pk=request.session.get(SESION_CORREO_PENDIENTE), is_active=True).first()
+
+
+def revisa_tu_correo(request):
+    """Aviso tras el registro: la cuenta no se usa hasta abrir el enlace enviado al correo."""
+    usuario = usuario_por_confirmar(request)
+    if usuario is None or usuario.correo_verificado:
+        return redirect("portal:login")
+    return render(request, "portal/revisa_tu_correo.html", {"correo": usuario.email})
+
+
 @require_POST
 def reenviar_confirmacion(request):
+    usuario = usuario_por_confirmar(request)
+    if usuario is None:
+        return redirect("portal:login")
+    ahora = time.time()
+    if ahora - request.session.get(SESION_ULTIMO_REENVIO, 0) < ESPERA_REENVIO_SEGUNDOS:
+        messages.info(request, "Ya te enviamos un enlace. Espera un minuto antes de pedir otro.")
+        return redirect(destino_seguro(request, reverse("portal:revisa-tu-correo")))
     try:
-        servicios.reenviar_confirmacion(request.user)
-        messages.success(request, f"Te enviamos un nuevo enlace a {request.user.email}.")
+        servicios.reenviar_confirmacion(usuario)
+        request.session[SESION_ULTIMO_REENVIO] = ahora
+        messages.success(request, f"Te enviamos un nuevo enlace a {usuario.email}.")
     except ReglaNegocioError as error:
         messages.info(request, error.mensaje)
-    return redirect(destino_seguro(request, reverse("portal:inicio")))
+    return redirect(destino_seguro(request, reverse("portal:revisa-tu-correo")))

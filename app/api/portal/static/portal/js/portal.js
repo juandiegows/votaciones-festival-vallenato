@@ -98,6 +98,65 @@
       todos('[data-clave]').forEach((campo) => { campo.type = casilla.checked ? 'text' : 'password'; });
     });
   });
+  // Registro y nueva clave: nivel de seguridad y generador. Sin JavaScript el medidor queda oculto y valida el servidor
+  const CRITERIOS_CLAVE = [
+    { etiqueta: '8 caracteres', cumple: (v) => v.length >= 8 },
+    { etiqueta: 'Mayúscula', cumple: (v) => /[A-ZÁÉÍÓÚÑ]/.test(v) },
+    { etiqueta: 'Número', cumple: (v) => /\d/.test(v) },
+    { etiqueta: 'Símbolo', cumple: (v) => /[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9\s]/.test(v) },
+    { etiqueta: '12 caracteres', cumple: (v) => v.length >= 12 },
+    { etiqueta: '16 caracteres', cumple: (v) => v.length >= 16 },
+  ];
+  const NIVELES_CLAVE = ['Sin escribir', 'Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte'];
+  const generarClave = () => {
+    const grupos = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789', '!@#$%*?-_+='];
+    const azar = (tope) => crypto.getRandomValues(new Uint32Array(1))[0] % tope;
+    const letras = grupos.map((g) => g[azar(g.length)]);
+    const todas = grupos.join('');
+    while (letras.length < 16) letras.push(todas[azar(todas.length)]);
+    for (let i = letras.length - 1; i > 0; i -= 1) {
+      const j = azar(i + 1);
+      [letras[i], letras[j]] = [letras[j], letras[i]];
+    }
+    return letras.join('');
+  };
+  todos('[data-medidor-clave]').forEach((medidor) => {
+    const campo = document.querySelector(medidor.dataset.medidorClave);
+    const confirmacion = document.querySelector(medidor.dataset.confirmacion);
+    if (!campo) return;
+    medidor.hidden = false;
+    const barras = [...medidor.querySelectorAll('.medidor-clave-barras span')];
+    const nivel = medidor.querySelector('[data-nivel-clave]');
+    const puntos = medidor.querySelector('[data-puntos-clave]');
+    const faltantes = medidor.querySelector('[data-faltantes-clave]');
+    const actualizar = () => {
+      const valor = campo.value;
+      const cumplidos = CRITERIOS_CLAVE.filter((c) => c.cumple(valor)).length;
+      // Por debajo del mínimo que acepta el servidor (los 4 primeros criterios) no puede pasar de «Regular»
+      const minimo = CRITERIOS_CLAVE.slice(0, 4).every((c) => c.cumple(valor));
+      const total = minimo ? cumplidos : Math.min(cumplidos, 3);
+      medidor.dataset.nivel = String(total);
+      barras.forEach((barra, i) => barra.classList.toggle('activa', i < total));
+      nivel.textContent = valor && total === 0 ? NIVELES_CLAVE[1] : NIVELES_CLAVE[total];
+      puntos.textContent = String(total);
+      faltantes.replaceChildren(...CRITERIOS_CLAVE.filter((c) => !c.cumple(valor)).map((c) => {
+        const item = document.createElement('li');
+        item.className = 'medidor-clave-falta';
+        item.textContent = `+ ${c.etiqueta}`;
+        return item;
+      }));
+    };
+    campo.addEventListener('input', actualizar);
+    medidor.querySelector('[data-generar-clave]')?.addEventListener('click', () => {
+      const clave = generarClave();
+      campo.value = clave;
+      if (confirmacion) confirmacion.value = clave;
+      todos('[data-clave]').forEach((c) => { c.type = 'text'; });
+      todos('[data-mostrar-claves]').forEach((c) => { c.checked = true; });
+      actualizar();
+    });
+    actualizar();
+  });
   todos('[data-aceptar]').forEach((boton) => {
     boton.addEventListener('click', () => {
       const casilla = document.querySelector(boton.dataset.aceptar);

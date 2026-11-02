@@ -63,6 +63,7 @@ urlpatterns = [
     path("logout", cuentas.cerrar_sesion, name="logout"),
     path("confirmar-correo", cuentas.confirmar_correo, name="confirmar-correo"),
     path("reenviar-confirmacion", cuentas.reenviar_confirmacion, name="reenviar-confirmacion"),
+    path("revisa-tu-correo", cuentas.revisa_tu_correo, name="revisa-tu-correo"),
     path("recuperar-clave", cuentas.recuperar_clave, name="recuperar-clave"),
     path("restablecer-clave/<uidb64>/<token>", cuentas.RestablecerClave.as_view(), name="restablecer-clave"),
     # Voto (mismas rutas que la web React y que los enlaces del correo del comprobante)
