@@ -17,6 +17,7 @@ from votaciones.comun.errores import ReglaNegocioError
 from votaciones.cuentas import selectores as selectores_cuentas
 from votaciones.cuentas.documentos import error_formato_documento, normalizar_documento
 from votaciones.models import Categoria, Edicion, Opcion, Usuario, Votacion
+from votaciones.sitio.models import ConfiguracionSitio
 from votaciones.votacion.servicios import validar_cambio_voto_unico
 
 from .catalogos import ICONOS_DISPONIBLES
@@ -166,6 +167,31 @@ class LoginForm(forms.Form):
 
 
 # Administración (/panel)
+
+
+class ConfiguracionForm(forms.ModelForm):
+    """Ajustes generales del sitio (un único registro); la marca se edita en su propia pantalla."""
+
+    class Meta:
+        model = ConfiguracionSitio
+        fields = [
+            "pedir_documento", "mostrar_total_votos", "mostrar_participantes", "umbral_participacion", "mostrar_swagger",
+            "modo_banner", "dias_visible_cerradas", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
+        ]
+        labels = {
+            "umbral_participacion": "Mínimo de votantes para mostrar participantes",
+            "dias_visible_cerradas": "Días visibles después del cierre",
+            "nombre_organizacion": "Nombre de la organización", "telefono": "Teléfono", "direccion": "Dirección",
+            "correo": "Correo de contacto", "texto_pie": "Texto del pie de página",
+        }
+
+
+class ConfiguracionEdicionForm(forms.ModelForm):
+    """Ajustes que dependen de la edición elegida en el panel."""
+
+    class Meta:
+        model = Edicion
+        fields = ["votaciones_pausadas", "visibilidad_resultados"]
 
 
 class FormularioPanel(forms.ModelForm):

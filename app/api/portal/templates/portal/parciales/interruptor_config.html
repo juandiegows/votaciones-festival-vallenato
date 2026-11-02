@@ -1,0 +1,10 @@
+{# Fila de ajuste con interruptor. Recibe: campo, titulo, ayuda #}
+<div class="fila-config">
+  <div>
+    <label class="fw-semibold d-block" for="{{ campo.id_for_label }}">{{ titulo }}</label>
+    <p class="small text-secondary-flv mb-0" id="{{ campo.id_for_label }}-ayuda">{{ ayuda }}</p>
+  </div>
+  <div class="form-check form-switch mb-0">
+    <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" class="form-check-input" type="checkbox" role="switch" aria-describedby="{{ campo.id_for_label }}-ayuda"{% if campo.value %} checked{% endif %}>
+  </div>
+</div>

@@ -9,7 +9,7 @@ El panel vive en /panel/… (no /admin: el WAF de producción bloquea esas rutas
 from django.urls import path, register_converter
 
 from .vistas import cuentas, publico, votos
-from .vistas.panel import categorias, ediciones, inicio, opciones, votaciones
+from .vistas.panel import categorias, configuracion, ediciones, inicio, opciones, votaciones
 from .vistas.panel import votos as votos_panel
 
 app_name = "portal"
@@ -40,6 +40,8 @@ panel = [
     path("panel/categorias/<int:pk>/editar", categorias.categorias, name="panel-categoria-editar"),
     path("panel/categorias/<int:pk>/alternar", categorias.alternar_categoria, name="panel-categoria-alternar"),
     path("panel/categorias/<int:pk>/eliminar", categorias.eliminar_categoria, name="panel-categoria-eliminar"),
+    path("panel/configuracion", configuracion.configuracion, name="panel-configuracion"),
+    path("panel/configuracion/categorias/<int:pk>/voto-unico", configuracion.alternar_voto_unico, name="panel-config-voto-unico"),
     path("panel/votos", votos_panel.votos, name="panel-votos"),
     path("panel/votos/<int:pk>", votos_panel.detalle, name="panel-voto-detalle"),
     path("panel/votaciones", votaciones.votaciones, name="panel-votaciones"),

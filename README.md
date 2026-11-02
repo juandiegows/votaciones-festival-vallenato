@@ -94,7 +94,7 @@ categorías, pero no emitir un segundo voto en la misma categoría, aunque esta 
 | Vista de voto (POST + CSRF, exige sesión) y «Mis votos» | [`app/api/portal/vistas/votos.py`](app/api/portal/vistas/votos.py) |
 | API `GET /api/categorias/` (categorías → votaciones → opciones en JSON) | [`app/api/votaciones/votacion/views.py`](app/api/votaciones/votacion/views.py) (`CategoriaPublicaViewSet`) · [`serializers.py`](app/api/votaciones/votacion/serializers.py) (`CategoriaConOpcionesSerializer`) |
 | Consulta administrativa de votos (voto secreto) | Panel `/panel/votos`: votos por opción y participantes por separado · Django Admin `/django-admin/votaciones/voto/`: comprobante y opción, sin votante · API `/api/gestion/votos/` |
-| Privacidad de la participación | Django Admin → *Configuración del sitio*: mostrar participantes y mínimo de votantes (10 por defecto; con menos, la lista queda oculta) |
+| Configuración del sistema | Panel `/panel/configuracion`: pedir documento, pausar votaciones, un voto por categoría, participantes y mínimo de votantes (10 por defecto; con menos, la lista queda oculta), resultados, Swagger y contacto |
 | Pruebas funcionales CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](app/api/portal/tests/test_entrega3.py) |
 | Documentación interactiva de la API (Swagger) | https://votaciones.juandiegows.com/api/docs/ · ReDoc: https://votaciones.juandiegows.com/api/redoc/ · esquema versionado: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
 | Colección de Postman (CP-01 a CP-10 contra producción o local) | [`docs/api/postman/`](docs/api/postman/) |
