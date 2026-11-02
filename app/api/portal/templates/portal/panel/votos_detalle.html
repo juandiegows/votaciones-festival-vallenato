@@ -5,7 +5,7 @@
 <header class="mb-4">
   <nav aria-label="Ruta de navegación">
     <ol class="breadcrumb mb-2">
-      <li class="breadcrumb-item"><a href="{% url 'portal:panel-votos' %}">Detalle de votaciones</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'portal:panel-votos' %}">Votos y resultados</a></li>
       <li class="breadcrumb-item active" aria-current="page">{{ votacion.titulo }}</li>
     </ol>
   </nav>
@@ -14,6 +14,7 @@
     {% estado_badge votacion.estado %}
   </div>
   <p class="text-secondary-flv mb-0">{{ votacion.categoria.nombre }} · {{ votacion.categoria.edicion.nombre }} · {{ votacion.fecha_apertura|fecha_hora }} a {{ votacion.fecha_cierre|fecha_hora }}</p>
+  <p class="small mb-0 mt-1"><i class="bi bi-eye me-1" aria-hidden="true"></i>Resultados al público: <strong>{{ votacion.visibilidad_efectiva|visibilidad }}</strong>{% if votacion.personalizar_resultados %} (ajuste propio de esta votación){% else %} (ajuste de la edición){% endif %}.</p>
 </header>
 
 <section aria-label="Indicadores de la votación" class="row g-3 mb-4">
@@ -82,7 +83,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
     <div>
       <h2 id="titulo-comprobantes" class="h5 mb-1"><i class="bi bi-receipt me-1" aria-hidden="true"></i>Comprobantes</h2>
-      <p class="small text-secondary-flv mb-0">Código y opción de cada voto, sin datos del votante. {{ comprobantes.paginator.count|miles }} resultado{{ comprobantes.paginator.count|pluralize }}.</p>
+      <p class="small text-secondary-flv mb-0">Cada votante recibe un código al votar. Búscalo aquí para confirmar que su voto quedó registrado; no incluye datos del votante. {{ comprobantes.paginator.count|miles }} resultado{{ comprobantes.paginator.count|pluralize }}.</p>
     </div>
     <form method="get" action="#comprobantes" class="d-flex gap-2" role="search" aria-label="Buscar comprobante">
       <input name="codigo" type="search" class="form-control form-control-sm" placeholder="FLV27-…" aria-label="Código de comprobante" value="{{ codigo }}">

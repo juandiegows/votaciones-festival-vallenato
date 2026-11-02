@@ -1,4 +1,4 @@
-"""Detalle de votaciones: conteos por opción y quién participó. El voto es secreto: nunca se cruzan votante y opción."""
+"""Votos y resultados: conteos por opción y quién participó. El voto es secreto: nunca se cruzan votante y opción."""
 
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
@@ -26,8 +26,9 @@ def listar(edicion, categoria):
 def votos(request):
     edicion = edicion_panel(request)
     categoria = request.GET.get("categoria", "")
+    lista = list(listar(edicion, categoria)) if edicion else []
     return render_panel(request, "portal/panel/votos.html", "votos", edicion, {
-        "lista": listar(edicion, categoria) if edicion else [], "filtro_categoria": categoria,
+        "lista": lista, "total_votos": sum(v.num_votos for v in lista), "filtro_categoria": categoria,
         "categorias": Categoria.objects.filter(edicion=edicion).order_by("orden", "nombre") if edicion else [],
     })
 

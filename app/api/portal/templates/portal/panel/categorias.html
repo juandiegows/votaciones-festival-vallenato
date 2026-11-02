@@ -5,7 +5,7 @@
 <header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
   <div>
     <h1 class="h2 mb-1">Gestión de categorías</h1>
-    <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Crear, editar, activar o desactivar categorías.</p>
+    <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Las categorías agrupan las votaciones. Una categoría inactiva no se muestra al público.</p>
   </div>
   {% if hay_ediciones_abiertas %}
     <a class="btn btn-primary" href="{% url 'portal:panel-categoria-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</a>
@@ -42,23 +42,24 @@
 
 {% if lista %}
 <div class="card-flv p-0 table-responsive">
-  <table class="table table-hover align-middle mb-0">
+  <table class="table table-hover align-middle mb-0 tabla-apilada">
     <caption class="visually-hidden">Listado de categorías</caption>
     <thead><tr><th scope="col">Orden</th><th scope="col">Categoría</th><th scope="col">Votaciones</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
     <tbody>
       {% for c in lista %}
         <tr{% if not c.activa %} class="opacity-75"{% endif %}>
-          <td>{{ c.orden }}</td>
+          <td data-etiqueta="Orden">{{ c.orden }}</td>
           <td style="min-width: 12rem">
             <span class="d-flex align-items-center gap-2">
               <span class="icono-circulo icono-sm">{% icono_entidad c.icono c.icono_imagen %}</span>
-              <span><strong>{{ c.nombre }}</strong> <code class="small text-secondary-flv">/{{ c.slug }}</code>
+              <span><strong>{{ c.nombre }}</strong>
                 <span class="small text-secondary-flv d-none d-md-block">{{ c.descripcion }}</span></span>
             </span>
           </td>
           <td class="small">
-            <a href="{% url 'portal:panel-votaciones' %}?categoria={{ c.pk }}" class="text-reset">{{ c.num_votaciones|plural:"votación,votaciones" }}</a>
+            <a href="{% url 'portal:panel-votaciones' %}?categoria={{ c.pk }}" aria-label="Ver votaciones de {{ c.nombre }}: {{ c.num_votaciones }}">{{ c.num_votaciones|plural:"votación,votaciones" }}</a>
             {% if c.num_abiertas %}<span class="badge badge-estado estado-abierta ms-1">{{ c.num_abiertas }} abierta{{ c.num_abiertas|pluralize }}</span>{% endif %}
+            {% if not c.num_votaciones %}<a class="d-block" href="{% url 'portal:panel-votacion-nueva' %}?categoria={{ c.pk }}" aria-label="Crear votación en {{ c.nombre }}">Crear votación</a>{% endif %}
           </td>
           <td>
             <form method="post" action="{% url 'portal:panel-categoria-alternar' c.pk %}" class="form-check form-switch mb-0">{% csrf_token %}
@@ -67,7 +68,7 @@
             </form>
           </td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-categoria-editar' c.pk %}" aria-label="Editar {{ c.nombre }}" title="Editar"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-categoria-editar' c.pk %}" aria-label="Editar {{ c.nombre }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>
             <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-categoria-eliminar' c.pk %}" data-eliminar-nombre="{{ c.nombre }}" aria-label="Eliminar {{ c.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
           </td>
         </tr>
@@ -78,7 +79,8 @@
 {% else %}
 <div class="card-flv p-4 text-center">
   <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-  <p class="mb-0">{% if hay_categorias %}No hay categorías con esos filtros.{% else %}Esta edición aún no tiene categorías.{% endif %}</p>
+  {% if hay_categorias %}<p class="mb-0">No hay categorías con esos filtros.</p>
+  {% else %}<p class="mb-2">Esta edición aún no tiene categorías.</p>{% if hay_ediciones_abiertas %}<a class="btn btn-primary" href="{% url 'portal:panel-categoria-nueva' %}">Crear la primera categoría</a>{% endif %}{% endif %}
 </div>
 {% endif %}
 

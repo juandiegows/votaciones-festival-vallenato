@@ -103,14 +103,14 @@
 **En pantalla:**
 
 - Ventana 1: menú «Mis votos». Señalar Parrandas y Acordeoneros.
-- Ventana 3 (admin): «Detalle de votaciones» → «Mejor parranda vallenata» → «Ver detalle». Señalar los votos por opción y la lista de participantes.
+- Ventana 3 (admin): «Votos y resultados» → «Mejor parranda vallenata» → «Ver detalle». Señalar los votos por opción y la lista de participantes.
 - Ventana 3: Django Admin → Votos. Buscar tu código FLV27-… → «Buscar». Señalar la opción y que no aparece el votante.
 
 **Decir:**
 
 > En Mis votos consulto mi participación: las categorías donde voté, la opción y el comprobante. Esta es la prueba CP-07.
 >
-> Como administrador, en Detalle de votaciones veo cuántos votos tiene cada opción y quién participó, por separado. El voto es secreto: nadie puede ver quién votó por quién, y con pocos votantes la lista se oculta. Ese mínimo se configura en el administrador.
+> Como administrador, en Votos y resultados veo cuántos votos tiene cada opción y quién participó, por separado. El voto es secreto: nadie puede ver quién votó por quién, y con pocos votantes la lista se oculta. Ese mínimo se configura en el administrador.
 >
 > En Django Admin busco mi comprobante y aparece con su opción, sin datos del votante. Es de solo lectura. Esta es la prueba CP-08; enseguida la comparo con MySQL.
 

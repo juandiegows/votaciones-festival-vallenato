@@ -1,5 +1,6 @@
 {% load portal %}
 <div class="row g-3">
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">1</span>Datos de la votación</h3></div>
   <div class="col-md-6">
     <label class="form-label" for="id_categoria">Categoría</label>
     <select id="id_categoria" name="categoria" class="form-select{{ form.categoria|campo_invalido }}">
@@ -10,13 +11,15 @@
     {% if form.categoria.errors %}<div class="invalid-feedback">{{ form.categoria.errors|join:" " }}</div>{% endif %}
   </div>
   <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.titulo %}</div>
-  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública. Déjalo vacío para generarlo desde el título." extra='placeholder="se genera desde el título"' %}</div>
   <div class="col-12">
     <label class="form-label" for="id_descripcion">Descripción</label>
     <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
     {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
   </div>
+  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública. Déjalo vacío para generarlo desde el título." extra='placeholder="se genera desde el título"' %}</div>
   <div class="col-12">{% include "portal/panel/selector_icono.html" with leyenda="Ícono de la votación" %}</div>
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">2</span>Cuándo se puede votar</h3></div>
   {% for campo in form %}{% if campo.name == "fecha_apertura" or campo.name == "fecha_cierre" %}
     <div class="col-md-6">
       <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
@@ -24,10 +27,12 @@
       {% if campo.errors %}<div class="invalid-feedback">{{ campo.errors|join:" " }}</div>{% endif %}
     </div>
   {% endif %}{% endfor %}
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">3</span>Reglas y resultados</h3></div>
   <div class="col-md-6">
     <span class="form-label d-block">Votos por usuario</span>
     <p class="form-control-plaintext py-1 mb-0">1 por categoría en la edición</p>
-    <div class="form-text">Regla RN-04: cada persona elige una sola opción por categoría, aunque la categoría tenga varias votaciones.</div>
+    <div class="form-text">Cada persona elige una sola opción por categoría, aunque la categoría tenga varias votaciones.</div>
   </div>
   <div class="col-md-6" data-personalizable>
     <label class="form-label" for="id_visibilidad_resultados">Mostrar resultados</label>
@@ -42,6 +47,8 @@
     </select>
     <div class="form-text">Sin personalizar se usa la de la edición («{{ edicion_formulario.visibilidad_resultados|visibilidad }}»).</div>
   </div>
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">4</span>Cómo se ve para el público</h3></div>
   <div class="col-12">
     <fieldset>
       <legend class="form-label mb-1">Cómo ve el público las opciones</legend>
@@ -72,6 +79,8 @@
       </div>
     </div>
   </div>
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">5</span>Publicación</h3></div>
   <div class="col-12">
     <div class="form-check form-switch">
       <input id="id_publicada" name="publicada" class="form-check-input{{ form.publicada|campo_invalido }}" type="checkbox" role="switch"{% if form.publicada.value %} checked{% endif %} aria-describedby="v-pub-ayuda">

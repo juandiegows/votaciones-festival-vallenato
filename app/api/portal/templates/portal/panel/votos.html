@@ -3,8 +3,8 @@
 
 {% block panel %}
 <header class="mb-4">
-  <h1 class="h2 mb-1">Detalle de votaciones</h1>
-  <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Votos por opción y quién participó. El voto es secreto: no se muestra quién votó por quién.</p>
+  <h1 class="h2 mb-1">Votos y resultados</h1>
+  <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Elige una votación publicada para ver sus votos por opción y quién participó. El voto es secreto: no se muestra quién votó por quién.</p>
 </header>
 
 <form method="get" class="card-flv p-3 mb-3" aria-label="Filtro de votaciones">
@@ -17,18 +17,18 @@
 </form>
 
 {% if lista %}
+<p class="small mb-2"><strong>{{ total_votos|miles }}</strong> voto{{ total_votos|pluralize }} en {{ lista|length|plural:"votación,votaciones" }}.</p>
 <div class="card-flv p-0 table-responsive">
-  <table class="table table-hover align-middle mb-0">
+  <table class="table table-hover align-middle mb-0 tabla-apilada">
     <caption class="visually-hidden">Votaciones publicadas de la edición</caption>
-    <thead><tr><th scope="col">Votación</th><th scope="col">Categoría</th><th scope="col">Estado</th><th scope="col">Opciones</th><th scope="col">Votos</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr></thead>
+    <thead><tr><th scope="col">Votación</th><th scope="col">Estado</th><th scope="col">Votos</th><th scope="col">Resultados al público</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr></thead>
     <tbody>
       {% for v in lista %}
         <tr>
-          <td><strong>{{ v.titulo }}</strong></td>
-          <td>{{ v.categoria.nombre }}</td>
+          <td><strong>{{ v.titulo }}</strong><span class="small text-secondary-flv d-block">{{ v.categoria.nombre }} · {{ v.num_opciones|plural:"opción,opciones" }}</span></td>
           <td>{% estado_badge v.estado %}</td>
-          <td>{{ v.num_opciones }}</td>
-          <td>{{ v.num_votos }}</td>
+          <td class="fw-semibold" data-etiqueta="Votos">{{ v.num_votos|miles }}</td>
+          <td class="small" data-etiqueta="Resultados al público">{{ v.visibilidad_efectiva|visibilidad|capfirst }}</td>
           <td class="text-end"><a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Ver detalle de {{ v.titulo }}">Ver detalle</a></td>
         </tr>
       {% endfor %}
@@ -38,7 +38,8 @@
 {% else %}
 <div class="card-flv p-4 text-center">
   <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-  <p class="mb-0">No hay votaciones publicadas con este filtro.</p>
+  <p class="mb-2">No hay votaciones publicadas con este filtro.</p>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'portal:panel-votaciones' %}?estado=borrador">Ver borradores por publicar</a>
 </div>
 {% endif %}
 {% endblock %}

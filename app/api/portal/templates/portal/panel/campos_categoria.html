@@ -1,5 +1,6 @@
 {% load portal %}
 <div class="row g-3">
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">1</span>Datos de la categoría</h3></div>
   <div class="col-md-6">
     <label class="form-label" for="id_edicion">Edición</label>
     <select id="id_edicion" name="edicion" class="form-select{{ form.edicion|campo_invalido }}">
@@ -11,27 +12,31 @@
   </div>
   <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.nombre %}</div>
   <div class="col-12">
-    {% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública, p. ej. /2027/categorias/musica. Déjalo vacío para generarlo automáticamente." extra='placeholder="se genera desde el nombre"' %}
-  </div>
-  <div class="col-12">
     <label class="form-label" for="id_descripcion">Descripción</label>
     <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
     {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
   </div>
+  <div class="col-12">
+    {% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública, p. ej. /2027/categorias/musica. Déjalo vacío para generarlo automáticamente." extra='placeholder="se genera desde el nombre"' %}
+  </div>
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">2</span>Cómo se ve para el público</h3></div>
   <div class="col-12">{% include "portal/panel/selector_icono.html" %}</div>
-  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.orden tipo="number" extra='min=1' %}</div>
-  <div class="col-sm-8 d-flex align-items-end">
-    <div class="form-check form-switch mb-3">
+  <div class="col-sm-4">{% include "portal/parciales/campo.html" with campo=form.orden tipo="number" extra='min=1' ayuda="Las categorías se muestran de menor a mayor." %}</div>
+  <div class="col-sm-8 d-flex align-items-center">
+    <div class="form-check form-switch mb-0">
       <input id="id_activa" name="activa" class="form-check-input" type="checkbox" role="switch"{% if form.activa.value %} checked{% endif %}>
       <label class="form-check-label" for="id_activa">Categoría activa (visible al público)</label>
     </div>
   </div>
+
+  <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">3</span>Regla de votación</h3></div>
   <div class="col-12">
     <div class="form-check form-switch">
       <input id="id_voto_unico" name="voto_unico" class="form-check-input{{ form.voto_unico|campo_invalido }}" type="checkbox" role="switch" aria-describedby="ayuda-voto-unico"{% if form.voto_unico.value %} checked{% endif %}>
       <label class="form-check-label" for="id_voto_unico">Un solo voto en toda la categoría</label>
       {% if form.voto_unico.errors %}<div class="invalid-feedback">{{ form.voto_unico.errors|join:" " }}</div>{% endif %}
     </div>
-    <div id="ayuda-voto-unico" class="form-text">Marcado (regla RN-04): cada persona vota una sola vez en la categoría, aunque tenga varias votaciones. Desmarcado: puede votar una vez en cada votación. No se puede cambiar cuando la categoría ya tiene votos.</div>
+    <div id="ayuda-voto-unico" class="form-text">Encendido: cada persona vota una sola vez en la categoría, aunque tenga varias votaciones. Apagado: puede votar una vez en cada votación. No se puede cambiar cuando la categoría ya tiene votos.</div>
   </div>
 </div>

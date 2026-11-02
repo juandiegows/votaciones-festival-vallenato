@@ -4,14 +4,14 @@
 {% block mensajes %}{% endblock %}
 
 {% block contenido %}
-{# Diseño del panel de la web React (pages/admin/AdminLayout.jsx): menú lateral + contenido #}
+{# Diseño del panel de la web React (pages/admin/AdminLayout.jsx): menú lateral por grupos + contenido #}
 <div class="container-fluid panel-ancho py-4">
   <div class="panel-admin">
     <aside class="panel-admin-menu">
       <nav aria-label="Menú de administración" class="card-flv p-2 admin-nav">
         {% if ediciones %}
         <form method="get" class="px-2 pb-2 mb-1 border-bottom selector-edicion-admin">
-          <label for="admin-edicion" class="small fw-semibold text-secondary-flv mb-1 d-block">Edición</label>
+          <label for="admin-edicion" class="small fw-semibold text-secondary-flv mb-1 d-block">Edición que estás viendo</label>
           <select id="admin-edicion" name="edicion" class="form-select form-select-sm" data-enviar-al-cambiar aria-describedby="admin-edicion-ayuda">
             {% for ed in ediciones %}
               <option value="{{ ed.pk }}"{% if ed.pk == edicion.pk %} selected{% endif %}>{{ ed.anio }}{% if ed.estado == "activa" %} · activa{% endif %}</option>
@@ -24,13 +24,15 @@
           </p>
         </form>
         {% endif %}
-        <p class="small fw-semibold text-secondary-flv px-2 pt-1 mb-1 d-none d-lg-block">Administración</p>
         <ul class="nav nav-pills flex-row flex-lg-column flex-nowrap overflow-auto gap-1 admin-nav-lista">
-          <li class="nav-item"><a href="{% url 'portal:panel' %}" class="nav-link{% if seccion == 'inicio' %} active{% endif %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel</a></li>
-          <li class="nav-item"><a href="{% url 'portal:panel-ediciones' %}" class="nav-link{% if seccion == 'ediciones' %} active{% endif %}"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Ediciones</a></li>
-          <li class="nav-item"><a href="{% url 'portal:panel-categorias' %}" class="nav-link{% if seccion == 'categorias' %} active{% endif %}"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categorías</a></li>
-          <li class="nav-item"><a href="{% url 'portal:panel-votaciones' %}" class="nav-link{% if seccion == 'votaciones' %} active{% endif %}"><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Votaciones</a></li>
-          <li class="nav-item"><a href="{% url 'portal:panel-votos' %}" class="nav-link{% if seccion == 'votos' %} active{% endif %}"{% if seccion == 'votos' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Detalle de votaciones</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel' %}" class="nav-link{% if seccion == 'inicio' %} active{% endif %}"{% if seccion == 'inicio' %} aria-current="page"{% endif %}><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel</a></li>
+          <li class="admin-nav-grupo d-none d-lg-block">Organizar</li>
+          <li class="nav-item"><a href="{% url 'portal:panel-ediciones' %}" class="nav-link{% if seccion == 'ediciones' %} active{% endif %}"{% if seccion == 'ediciones' %} aria-current="page"{% endif %}><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Ediciones</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-categorias' %}" class="nav-link{% if seccion == 'categorias' %} active{% endif %}"{% if seccion == 'categorias' %} aria-current="page"{% endif %}><i class="bi bi-grid me-2" aria-hidden="true"></i>Categorías</a></li>
+          <li class="nav-item"><a href="{% url 'portal:panel-votaciones' %}" class="nav-link{% if seccion == 'votaciones' %} active{% endif %}"{% if seccion == 'votaciones' %} aria-current="page"{% endif %}><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Votaciones</a></li>
+          <li class="admin-nav-grupo d-none d-lg-block">Seguimiento</li>
+          <li class="nav-item"><a href="{% url 'portal:panel-votos' %}" class="nav-link{% if seccion == 'votos' %} active{% endif %}"{% if seccion == 'votos' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Votos y resultados</a></li>
+          <li class="admin-nav-grupo d-none d-lg-block">Ajustes</li>
           <li class="nav-item"><a href="{% url 'portal:panel-configuracion' %}" class="nav-link{% if seccion == 'configuracion' %} active{% endif %}"{% if seccion == 'configuracion' %} aria-current="page"{% endif %}><i class="bi bi-sliders me-2" aria-hidden="true"></i>Configuración</a></li>
           {# Lo que aún no tiene pantalla propia (banner, revista, auditoría, usuarios…) se gestiona en Django Admin #}
           <li class="nav-item"><a href="/django-admin/" class="nav-link"><i class="bi bi-gear me-2" aria-hidden="true"></i>Django Admin <i class="bi bi-box-arrow-up-right small ms-1" aria-hidden="true"></i></a></li>
@@ -38,6 +40,9 @@
       </nav>
     </aside>
     <div class="panel-admin-contenido">
+      {% if edicion and edicion.estado != "activa" %}
+        <div class="alert alert-secondary small py-2" role="note"><i class="bi bi-archive me-1" aria-hidden="true"></i>Estás viendo <strong>{{ edicion.nombre }}</strong>, que no es la edición activa. El público no la ve. Cámbiala en el menú.</div>
+      {% endif %}
       {% include "portal/parciales/mensajes.html" %}
       {% block panel %}{% endblock %}
     </div>

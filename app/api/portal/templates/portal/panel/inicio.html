@@ -5,9 +5,9 @@
 <header class="mb-4">
   <h1 class="h2 mb-1">Panel de administración</h1>
   <p class="text-secondary-flv mb-0">Hola, {{ user.nombres }}.
-    {% if not edicion %}No hay una edición activa: configura una en «Ediciones».
+    {% if not edicion %}No hay ediciones todavía.
     {% elif es_activa %}{{ edicion.nombre }}.
-    {% else %}Consultando {{ edicion.nombre }} (edición anterior{% if edicion_activa_real %}; la activa es {{ edicion_activa_real.anio }}{% endif %}).{% endif %}
+    {% else %}Consultando {{ edicion.nombre }}{% if edicion_activa_real %}; la activa es {{ edicion_activa_real.anio }}{% endif %}.{% endif %}
   </p>
 </header>
 
@@ -20,13 +20,62 @@
           <i class="bi bi-{{ k.icono }} fs-4 text-rojo" aria-hidden="true"></i>
         </div>
         <p class="kpi-valor mb-0">{{ k.valor|miles }}</p>
+        {% if k.url %}<a href="{{ k.url }}" class="small d-inline-block mt-2" aria-label="Ver {{ k.etiqueta|lower }}">Ver</a>{% endif %}
       </div>
     </div>
   {% endfor %}
 </section>
 
+<section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-ruta">
+  <h2 id="titulo-ruta" class="h5 mb-1">Cómo se prepara una edición</h2>
+  <p class="small text-secondary-flv">Cada paso depende del anterior. Una votación se puede publicar cuando tiene al menos 2 opciones.</p>
+  <ol class="ruta-trabajo">
+    {% for paso in pasos %}
+      <li>
+        <a href="{{ paso.url }}" class="ruta-paso{% if paso.lista %} lista{% endif %}">
+          <span class="ruta-paso-marca" aria-hidden="true">{% if paso.lista %}<i class="bi bi-check-lg"></i>{% else %}{{ forloop.counter }}{% endif %}</span>
+          <span><span class="d-block fw-semibold">{{ paso.titulo }}</span><span class="d-block small text-secondary-flv">{{ paso.detalle }}{% if paso.lista %}<span class="visually-hidden"> (listo)</span>{% else %}<span class="visually-hidden"> (pendiente)</span>{% endif %}</span></span>
+        </a>
+      </li>
+    {% endfor %}
+  </ol>
+</section>
+
 <div class="row g-4">
   <div class="col-xl-7">
+    <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-pendientes">
+      <h2 id="titulo-pendientes" class="h5"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Qué requiere tu atención</h2>
+      {% if pendientes %}
+      <ul class="list-unstyled mb-0">
+        {% for p in pendientes %}
+          <li class="fila-pendiente">
+            <span class="d-flex gap-2"><i class="bi bi-{{ p.icono }} text-rojo" aria-hidden="true"></i><span class="small">{{ p.texto }}</span></span>
+            <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ p.url }}">{{ p.accion }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="small text-secondary-flv mb-0"><i class="bi bi-check-circle-fill me-1 text-success" aria-hidden="true"></i>Todo al día: no hay nada pendiente en esta edición.</p>
+      {% endif %}
+    </section>
+    <section class="card-flv p-3 p-md-4" aria-labelledby="titulo-abiertas">
+      <h2 id="titulo-abiertas" class="h5">Votaciones abiertas ahora</h2>
+      {% if not abiertas %}<p class="small text-secondary-flv mb-0">No hay votaciones abiertas en esta edición.</p>{% endif %}
+      <ul class="list-unstyled mb-0">
+        {% for v in abiertas %}
+          <li class="fila-pendiente">
+            <span class="small fw-semibold">{{ v.titulo }}</span>
+            <span class="d-flex align-items-center gap-2">
+              <span class="small text-nowrap">{{ v.num_votos|plural:"voto,votos" }}</span>
+              {% estado_badge v.estado %}
+              <a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Ver votos de {{ v.titulo }}">Ver votos</a>
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+  <div class="col-xl-5">
     <section class="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-auditoria">
       <h2 id="titulo-auditoria" class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span class="small fw-normal text-secondary-flv">(auditoría)</span></h2>
       <ul class="list-group list-group-flush">
@@ -37,28 +86,6 @@
           </li>
         {% empty %}
           <li class="list-group-item px-0 small text-secondary-flv">Aún no hay acciones registradas.</li>
-        {% endfor %}
-      </ul>
-    </section>
-  </div>
-  <div class="col-xl-5">
-    <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-accesos">
-      <h2 id="titulo-accesos" class="h5">Accesos rápidos</h2>
-      <div class="d-grid gap-2">
-        <a class="btn btn-primary text-start" href="{% url 'portal:panel-votaciones' %}"><i class="bi bi-plus-circle me-2" aria-hidden="true"></i>Crear o gestionar votaciones</a>
-        <a class="btn btn-outline-primary text-start" href="{% url 'portal:panel-categorias' %}"><i class="bi bi-grid me-2" aria-hidden="true"></i>Gestionar categorías</a>
-        <a class="btn btn-outline-primary text-start" href="{% url 'portal:panel-ediciones' %}"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i>Gestionar ediciones</a>
-      </div>
-    </section>
-    <section class="card-flv p-3 p-md-4" aria-labelledby="titulo-abiertas">
-      <h2 id="titulo-abiertas" class="h5">Votaciones abiertas ahora</h2>
-      {% if not abiertas %}<p class="small text-secondary-flv mb-0">No hay votaciones abiertas en esta edición.</p>{% endif %}
-      <ul class="list-unstyled mb-0">
-        {% for v in abiertas %}
-          <li class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
-            <span class="small fw-semibold">{{ v.titulo }}</span>
-            <span class="d-flex align-items-center gap-2"><span class="small text-nowrap">{{ v.num_votos }} votos</span>{% estado_badge v.estado %}</span>
-          </li>
         {% endfor %}
       </ul>
     </section>
