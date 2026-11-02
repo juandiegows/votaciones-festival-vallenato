@@ -4,6 +4,7 @@
 |---|---|
 | Informe (PDF) | [`Eje3_Entrega3_Votaciones_Festival_Vallenato.pdf`](Eje3_Entrega3_Votaciones_Festival_Vallenato.pdf) |
 | Capturas del flujo de voto, la administración, la API y MySQL | [`capturas/`](capturas/) |
+| Video demostrativo (7:48) | https://youtu.be/9aXqMduhrDU |
 | Guion del video demostrativo | [`guion-video.md`](guion-video.md) |
 | Pruebas CP-01 a CP-10 | [`app/api/portal/tests/test_entrega3.py`](../../app/api/portal/tests/test_entrega3.py) |
 
