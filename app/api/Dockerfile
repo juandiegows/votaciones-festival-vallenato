@@ -3,6 +3,13 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# Parches de seguridad de Debian (apt, zlib...) sobre la base publicada; reintenta si el mirror falla
+RUN for i in 1 2 3; do \
+      apt-get update && apt-get upgrade -y && ok=1 && break; \
+      echo "apt-get fallo (intento $i), reintentando..."; sleep 5; \
+    done; \
+    [ "$ok" = 1 ] && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY requirements.txt .
