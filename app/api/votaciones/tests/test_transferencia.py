@@ -124,6 +124,21 @@ class ImportarEdicionTests(BaseAPITest):
         mensajes = " ".join(e["mensaje"] for e in respuesta.data["errores"])
         self.assertIn("Presentación de opciones", mensajes)
 
+    def test_icono_y_votacion_se_eligen_de_listas(self):
+        libro = self.plantilla()
+        reglas = {str(r.sqref): r.formula1 for r in libro["Categorías"].data_validations.dataValidation}
+        self.assertTrue(any(rango.startswith("D2") for rango in reglas))
+        reglas_op = {str(r.sqref): r.formula1 for r in libro["Opciones"].data_validations.dataValidation}
+        self.assertIn("=Votaciones!$B$2:$B$3001", reglas_op.values())
+        self.assertEqual(libro["Categorías"]["D2"].value, "Notas musicales")
+        respuesta = self.client.post("/api/gestion/ediciones/importar/", {"archivo": subir(self.guardar(libro))}, format="multipart")
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertEqual(Categoria.objects.get(edicion__anio=2028).icono, "music-note-beamed")
+        libro["Edición"]["B2"] = 2030
+        libro["Categorías"]["D2"] = "Ícono inventado"
+        respuesta = self.client.post("/api/gestion/ediciones/importar/", {"archivo": subir(self.guardar(libro))}, format="multipart")
+        self.assertIn("lista desplegable", respuesta.data["errores"][0]["mensaje"])
+
     def test_rechaza_archivos_que_no_son_excel(self):
         archivo = SimpleUploadedFile("edicion.xlsx", b"no soy un excel", content_type=XLSX)
         respuesta = self.client.post("/api/gestion/ediciones/importar/", {"archivo": archivo}, format="multipart")

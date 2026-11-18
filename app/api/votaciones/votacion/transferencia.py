@@ -7,12 +7,14 @@ error no se crea nada y se informa la hoja, la fila y el problema.
 """
 
 import io
+import re
 from datetime import date, datetime, time
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from ..comun.iconos import ICONOS_DISPONIBLES
 from .models import Categoria, Edicion, Opcion, Votacion
 
 TAMANO_MAXIMO = 5 * 1024 * 1024
@@ -23,6 +25,7 @@ PRESENTACIONES_CATEGORIAS = dict(Edicion.PresentacionCategorias.choices)
 PRESENTACIONES_OPCIONES = dict(Votacion.PresentacionOpciones.choices)
 VISIBILIDADES = dict(Votacion.Visibilidad.choices)
 SI_NO = ("Sí", "No")
+ICONOS = dict(ICONOS_DISPONIBLES)  # nombre técnico → etiqueta («music-note-beamed» → «Notas musicales»)
 
 # Columnas de cada hoja: (encabezado, obligatoria, ancho)
 COLUMNAS = {
@@ -47,6 +50,7 @@ INSTRUCCIONES = [
     "",
     "Columnas con * son obligatorias. Fechas: AAAA-MM-DD; fecha y hora: AAAA-MM-DD HH:MM (hora de Colombia).",
     "Identificador URL: déjalo vacío y se genera desde el nombre (minúsculas, sin tildes, con guiones).",
+    "Ícono, Presentación, Visibilidad, Activa, Un solo voto, Categoría y Votación: elige de la lista desplegable de la celda.",
     "Activa y Un solo voto: Sí o No (vacío = Sí).",
     "Visibilidad propia: vacía = la de la edición.",
     "Las votaciones se crean como borrador (sin publicar) para que las revises antes de abrirlas.",
@@ -85,7 +89,7 @@ def plantilla_excel(edicion=None):
     listas = libro.create_sheet("Listas")
     valores_listas = {
         "A": list(PRESENTACIONES_CATEGORIAS.values()), "B": list(PRESENTACIONES_OPCIONES.values()),
-        "C": list(VISIBILIDADES.values()), "D": list(SI_NO),
+        "C": list(VISIBILIDADES.values()), "D": list(SI_NO), "E": list(ICONOS.values()),
     }
     for columna, valores in valores_listas.items():
         for fila, valor in enumerate(valores, start=1):
@@ -141,7 +145,7 @@ def plantilla_excel(edicion=None):
 
     if edicion:
         categorias = list(edicion.categorias.order_by("orden", "nombre"))
-        filas_cat = [[c.nombre, c.slug, c.descripcion, c.icono, c.orden, "Sí" if c.activa else "No",
+        filas_cat = [[c.nombre, c.slug, c.descripcion, ICONOS.get(c.icono, c.icono), c.orden, "Sí" if c.activa else "No",
                       "Sí" if c.voto_unico else "No"] for c in categorias]
         votaciones = list(Votacion.objects.filter(categoria__edicion=edicion).select_related("categoria")
                           .order_by("categoria__orden", "fecha_apertura", "id"))
@@ -153,7 +157,7 @@ def plantilla_excel(edicion=None):
         filas_op = [[o.votacion.categoria.nombre, o.votacion.titulo, o.nombre, o.descripcion, o.enlace_multimedia,
                      o.texto_audio, o.orden, "Sí" if o.activa else "No"] for o in opciones]
     else:
-        filas_cat = [["Canción inédita", "", "Composiciones nuevas del Festival.", "music-note-beamed", 1, "Sí", "Sí"]]
+        filas_cat = [["Canción inédita", "", "Composiciones nuevas del Festival.", ICONOS["music-note-beamed"], 1, "Sí", "Sí"]]
         filas_vot = [["Canción inédita", "Canción favorita del público", "", "Vota por tu canción inédita favorita.",
                       datetime(2028, 4, 26, 8, 0), datetime(2028, 4, 30, 18, 0), "Tarjetas", None]]
         filas_op = [["Canción inédita", "Canción favorita del público", "Canción de ejemplo", "Aire de paseo.", "", "", 1, "Sí"]]
@@ -168,10 +172,12 @@ def plantilla_excel(edicion=None):
 
     fin = FILAS_MAXIMAS + 1
     validar(hojas["Categorías"], lista("D"), f"F2:G{fin}")
+    validar(hojas["Categorías"], lista("E"), f"D2:D{fin}")
     validar(hojas["Votaciones"], f"='Categorías'!$A$2:$A${fin}", f"A2:A{fin}")
     validar(hojas["Votaciones"], lista("B"), f"G2:G{fin}")
     validar(hojas["Votaciones"], lista("C"), f"H2:H{fin}")
     validar(hojas["Opciones"], f"='Categorías'!$A$2:$A${fin}", f"A2:A{fin}")
+    validar(hojas["Opciones"], f"=Votaciones!$B$2:$B${fin}", f"B2:B{fin}")
     validar(hojas["Opciones"], lista("D"), f"H2:H{fin}")
     libro.active = 0
 
@@ -199,7 +205,17 @@ def _elegir(valor, opciones, campo):
     for clave, etiqueta in opciones.items():
         if texto in (clave.lower(), etiqueta.lower()):
             return clave
+    if len(opciones) > 12:
+        raise ValueError(f"{campo}: «{_texto(valor)}» no está en la lista; elígelo de la lista desplegable de la celda.")
     raise ValueError(f"{campo}: «{_texto(valor)}» no es válido. Usa: {', '.join(opciones.values())}.")
+
+
+def _icono(valor):
+    """Ícono por su nombre en la lista («Notas musicales») o por su nombre técnico de Bootstrap Icons."""
+    texto = _texto(valor)
+    if re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", texto):
+        return texto
+    return _elegir(valor, ICONOS, "Ícono") or ""
 
 
 def _si_no(valor, campo):
@@ -344,7 +360,8 @@ def importar_excel(archivo, activar=False):
                     raise ValueError(f"La categoría «{nombre}» está repetida.")
                 categoria = Categoria(
                     edicion=edicion, nombre=nombre, slug=_texto(d["Identificador URL"]).lower(),
-                    descripcion=_texto(d["Descripción"]), icono=_texto(d["Ícono"]), orden=_entero(d["Orden"], "Orden"),
+                    descripcion=_texto(d["Descripción"]), icono=_icono(d["Ícono"]),
+                    orden=_entero(d["Orden"], "Orden"),
                     activa=_si_no(d["Activa"], "Activa"), voto_unico=_si_no(d["Un solo voto"], "Un solo voto"),
                 )
                 categorias[nombre.lower()] = categoria
