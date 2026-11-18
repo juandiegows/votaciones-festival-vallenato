@@ -3,7 +3,10 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Navbar() {
-  const { usuario, cerrarSesion, edicionActiva } = useApp();
+  const { usuario, cerrarSesion, edicionActiva, configuracion } = useApp();
+  // Editables en /panel/sitio: vacío = no se muestra
+  const subtituloLogo = configuracion?.subtituloLogo ?? 'Prototipo académico';
+  const mostrarEquipo = configuracion?.mostrarEquipo ?? true;
   const [saliendo, setSaliendo] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [menuUsuario, setMenuUsuario] = useState(false);
@@ -42,7 +45,7 @@ export default function Navbar() {
           </svg>
           <span>
             Votaciones FLV{edicionActiva ? ` ${edicionActiva.anio}` : ''}
-            <small>Prototipo académico</small>
+            {subtituloLogo && <small>{subtituloLogo}</small>}
           </span>
         </Link>
         <button
@@ -59,7 +62,7 @@ export default function Navbar() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 mt-2 mt-lg-0">
             <li className="nav-item"><NavLink className="nav-link" to="/" end>Inicio</NavLink></li>
             <li className="nav-item"><NavLink className="nav-link" to="/categorias">Categorías y votaciones</NavLink></li>
-            <li className="nav-item"><NavLink className="nav-link" to="/equipo">Equipo</NavLink></li>
+            {mostrarEquipo && <li className="nav-item"><NavLink className="nav-link" to="/equipo">Equipo</NavLink></li>}
             {usuario && <li className="nav-item"><NavLink className="nav-link" to="/mis-votos">Mis votos</NavLink></li>}
           </ul>
           {!usuario ? (

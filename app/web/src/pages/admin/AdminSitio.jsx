@@ -30,7 +30,7 @@ export default function AdminSitio() {
   const guardarContacto = (e) => {
     e.preventDefault();
     // Se parte de la configuración vigente para no pisar el modo del banner ni los días de visibilidad
-    ejecutar(() => guardarConfiguracion({ ...configuracion, ...contacto, modoBanner: configuracion.modoBanner, diasVisibleCerradas: configuracion.diasVisibleCerradas }), 'Datos de contacto guardados.');
+    ejecutar(() => guardarConfiguracion({ ...configuracion, ...contacto, modoBanner: configuracion.modoBanner, diasVisibleCerradas: configuracion.diasVisibleCerradas }), 'Datos del sitio guardados.');
   };
 
   const guardarRed = async (e) => {
@@ -54,9 +54,9 @@ export default function AdminSitio() {
     <div className="mb-3">
       <label className="form-label" htmlFor={`s-${nombre}`}>{etiqueta}</label>
       {tipo === 'textarea' ? (
-        <textarea id={`s-${nombre}`} rows="2" className="form-control" value={contacto[nombre]} onChange={(e) => setContacto({ ...contacto, [nombre]: e.target.value })}></textarea>
+        <textarea id={`s-${nombre}`} rows="2" className="form-control" value={contacto[nombre] ?? ''} onChange={(e) => setContacto({ ...contacto, [nombre]: e.target.value })}></textarea>
       ) : (
-        <input id={`s-${nombre}`} type={tipo} className={`form-control ${errores[nombre] ? 'is-invalid' : ''}`} value={contacto[nombre]} onChange={(e) => setContacto({ ...contacto, [nombre]: e.target.value })} />
+        <input id={`s-${nombre}`} type={tipo} className={`form-control ${errores[nombre] ? 'is-invalid' : ''}`} value={contacto[nombre] ?? ''} onChange={(e) => setContacto({ ...contacto, [nombre]: e.target.value })} />
       )}
       {errores[nombre] && <div className="invalid-feedback">{errores[nombre]}</div>}
     </div>
@@ -74,13 +74,23 @@ export default function AdminSitio() {
       <div className="row g-4">
         <div className="col-lg-5">
           <form className="card-flv p-3 p-md-4 h-100" noValidate onSubmit={guardarContacto} aria-labelledby="titulo-contacto">
-            <h2 id="titulo-contacto" className="h5">Datos de contacto</h2>
+            <h2 id="titulo-contacto" className="h5">Contacto y textos del sitio</h2>
             {campo('nombreOrganizacion', 'Organización')}
             {campo('telefono', 'Teléfono', 'tel')}
             {campo('direccion', 'Dirección')}
             {campo('correo', 'Correo electrónico', 'email')}
             {campo('textoPie', 'Texto del pie de página', 'textarea')}
-            <button type="submit" className="btn btn-primary" disabled={procesando}>Guardar contacto</button>
+            <h3 className="h6 mt-4 mb-1">Textos del proyecto</h3>
+            <p className="small text-secondary-flv">Deja un texto vacío para ocultarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico).</p>
+            {campo('avisoSuperior', 'Aviso del pie de página (franja destacada)', 'textarea')}
+            {campo('subtituloLogo', 'Subtítulo del logo (bajo «Votaciones FLV»)')}
+            {campo('textoAcerca', 'Texto «Acerca de» (última línea del pie)')}
+            <div className="form-check form-switch mb-3">
+              <input className="form-check-input" type="checkbox" role="switch" id="s-mostrarEquipo" checked={contacto.mostrarEquipo ?? true} onChange={(e) => setContacto({ ...contacto, mostrarEquipo: e.target.checked })} aria-describedby="s-equipo-ayuda" />
+              <label className="form-check-label" htmlFor="s-mostrarEquipo">Mostrar la página del equipo</label>
+              <div id="s-equipo-ayuda" className="form-text">Apagada, se quitan los enlaces del menú y del pie, y /equipo no se muestra.</div>
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={procesando}>Guardar</button>
           </form>
         </div>
         <div className="col-lg-7">

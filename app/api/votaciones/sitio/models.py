@@ -63,6 +63,25 @@ class ConfiguracionSitio(ModeloTrazable):
         blank=True,
         default="Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.",
     )
+    # Textos de identificación del proyecto: vacíos, no se muestran (p. ej. cuando el sitio deje de ser un prototipo)
+    aviso_superior = models.CharField(
+        "aviso del pie de página", max_length=250, blank=True,
+        default="Prototipo académico – Areandina · Desarrollo Web 2026 · Datos ilustrativos de demostración",
+        help_text="Franja destacada encima del pie de página. Vacío = no se muestra.",
+    )
+    subtitulo_logo = models.CharField(
+        "subtítulo del logo", max_length=60, blank=True, default="Prototipo académico",
+        help_text="Texto pequeño bajo el nombre del sitio en el menú. Vacío = no se muestra.",
+    )
+    texto_acerca = models.CharField(
+        "texto «Acerca de»", max_length=250, blank=True,
+        default="Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina",
+        help_text="Línea final del pie de página. Vacío = no se muestra.",
+    )
+    mostrar_equipo = models.BooleanField(
+        "mostrar la página del equipo", default=True,
+        help_text="Publica /equipo y sus enlaces en el menú y el pie. Apagada, la página responde 404.",
+    )
     # Fijo: solo el primer banner activo; carrusel: todos los activos rotando
     modo_banner = models.CharField(max_length=10, choices=ModoBanner.choices, default=ModoBanner.CARRUSEL)
     # Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre)

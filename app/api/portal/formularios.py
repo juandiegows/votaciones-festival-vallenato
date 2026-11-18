@@ -186,12 +186,14 @@ class ConfiguracionForm(SoloCamposMixin, forms.ModelForm):
         fields = [
             "pedir_documento", "mostrar_total_votos", "mostrar_participantes", "umbral_participacion", "mostrar_swagger",
             "modo_banner", "dias_visible_cerradas", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
+            "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo",
         ]
         labels = {
             "umbral_participacion": "Mínimo de votantes",
             "dias_visible_cerradas": "Días visibles después del cierre",
             "nombre_organizacion": "Nombre de la organización", "telefono": "Teléfono", "direccion": "Dirección",
             "correo": "Correo de contacto", "texto_pie": "Texto del pie de página",
+            "aviso_superior": "Aviso del pie de página", "subtitulo_logo": "Subtítulo del logo", "texto_acerca": "Texto «Acerca de»",
         }
 
 

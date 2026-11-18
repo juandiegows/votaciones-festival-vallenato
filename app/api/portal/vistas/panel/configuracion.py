@@ -24,8 +24,9 @@ SECCIONES = {
                    "sitio": ["mostrar_participantes", "umbral_participacion"], "edicion": []},
     "resultados": {"titulo": "Resultados", "icono": "bar-chart", "descripcion": "Qué ve el público sobre los resultados y por cuánto tiempo.",
                    "sitio": ["mostrar_total_votos", "dias_visible_cerradas"], "edicion": ["visibilidad_resultados"]},
-    "sitio": {"titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, datos de contacto y documentación de la API.",
-              "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "mostrar_swagger"], "edicion": []},
+    "sitio": {"titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
+              "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "aviso_superior",
+                        "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
 }
 
 

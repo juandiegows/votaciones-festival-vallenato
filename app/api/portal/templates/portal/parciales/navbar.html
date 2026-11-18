@@ -7,7 +7,7 @@
         <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000"/>
         <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" stroke-width="3" fill="none" stroke-linejoin="round"/>
       </svg>
-      <span>Votaciones FLV{% if edicion_activa %} {{ edicion_activa.anio }}{% endif %}<small>Prototipo académico</small></span>
+      <span>Votaciones FLV{% if edicion_activa %} {{ edicion_activa.anio }}{% endif %}{% if configuracion.subtitulo_logo %}<small>{{ configuracion.subtitulo_logo }}</small>{% endif %}</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal"
             aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir menú">
@@ -17,7 +17,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1 mt-2 mt-lg-0">
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'inicio' %} active{% endif %}" href="{% url 'portal:inicio' %}"{% if menu_activo == 'inicio' %} aria-current="page"{% endif %}>Inicio</a></li>
         <li class="nav-item"><a class="nav-link{% if menu_activo == 'categorias' %} active{% endif %}" href="{% url 'portal:categorias' %}">Categorías y votaciones</a></li>
-        <li class="nav-item"><a class="nav-link{% if menu_activo == 'equipo' %} active{% endif %}" href="{% url 'portal:equipo' %}"{% if menu_activo == 'equipo' %} aria-current="page"{% endif %}>Equipo</a></li>
+        {% if configuracion.mostrar_equipo %}<li class="nav-item"><a class="nav-link{% if menu_activo == 'equipo' %} active{% endif %}" href="{% url 'portal:equipo' %}"{% if menu_activo == 'equipo' %} aria-current="page"{% endif %}>Equipo</a></li>{% endif %}
         {% if user.is_authenticated %}<li class="nav-item"><a class="nav-link{% if menu_activo == 'mis-votos' %} active{% endif %}" href="{% url 'portal:mis-votos' %}"{% if menu_activo == 'mis-votos' %} aria-current="page"{% endif %}>Mis votos</a></li>{% endif %}
       </ul>
       {% if not user.is_authenticated %}

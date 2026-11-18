@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from votaciones.models import Categoria, Votacion
 from votaciones.sitio import selectores as selectores_sitio
+from votaciones.sitio.models import ConfiguracionSitio
 from votaciones.votacion import reportes, selectores
 
 from .. import consultas
@@ -48,6 +49,8 @@ def inicio(request):
 
 
 def equipo(request):
+    if not ConfiguracionSitio.obtener().mostrar_equipo:
+        return pagina_error(request, 404, "Esta página no está disponible.")
     return render(request, "portal/equipo.html", {"integrantes": EQUIPO})
 
 

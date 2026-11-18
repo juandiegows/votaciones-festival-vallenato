@@ -376,3 +376,39 @@ class TransferenciaPanelTest(BasePortalTest):
             for formato in ("pdf", "excel", "csv", "json", "sql"):
                 self.assertEqual(self.client.get(f"/panel/exportar/{tipo}/{pk}/{formato}").status_code, 200)
         self.assertEqual(self.client.get(f"/panel/ediciones/{self.edicion.pk}/estructura").status_code, 200)
+
+
+class TextosDelProyectoTest(BasePortalTest):
+    def test_aviso_subtitulo_acerca_y_equipo_se_editan_u_ocultan(self):
+        from votaciones.sitio.models import ConfiguracionSitio
+
+        inicio = self.client.get("/").content.decode()
+        self.assertIn("Prototipo académico – Areandina", inicio)
+        self.assertIn('href="/equipo"', inicio)
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={
+            "aviso_superior": "", "subtitulo_logo": "Votaciones oficiales", "texto_acerca": "", "mostrar_equipo": False,
+        })
+        inicio = self.client.get("/").content.decode()
+        self.assertNotIn("aviso-prototipo", inicio)
+        self.assertNotIn("Prototipo académico", inicio)
+        self.assertIn("Votaciones oficiales", inicio)
+        self.assertNotIn('href="/equipo"', inicio)
+        self.assertNotIn("Acerca de:", inicio)
+        self.assertEqual(self.client.get("/equipo").status_code, 404)
+
+    def test_se_guardan_desde_el_panel(self):
+        from votaciones.sitio.models import ConfiguracionSitio
+
+        self.entrar_como_admin()
+        respuesta = self.client.get("/panel/configuracion?seccion=sitio")
+        self.assertContains(respuesta, 'name="aviso_superior"')
+        configuracion = ConfiguracionSitio.obtener()
+        datos = {"modo_banner": configuracion.modo_banner, "nombre_organizacion": configuracion.nombre_organizacion,
+                 "telefono": configuracion.telefono, "direccion": configuracion.direccion, "correo": configuracion.correo,
+                 "texto_pie": "", "aviso_superior": "Sitio oficial de votaciones", "subtitulo_logo": "", "texto_acerca": "",
+                 "mostrar_swagger": "on"}
+        self.client.post("/panel/configuracion?seccion=sitio", datos)
+        configuracion.refresh_from_db()
+        self.assertEqual(configuracion.aviso_superior, "Sitio oficial de votaciones")
+        self.assertEqual(configuracion.subtitulo_logo, "")
+        self.assertFalse(configuracion.mostrar_equipo)

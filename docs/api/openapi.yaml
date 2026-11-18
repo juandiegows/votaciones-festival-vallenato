@@ -2873,6 +2873,27 @@ components:
             una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
+        aviso_superior:
+          type: string
+          title: Aviso del pie de página
+          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        subtitulo_logo:
+          type: string
+          title: Subtítulo del logo
+          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
+            no se muestra.
+          maxLength: 60
+        texto_acerca:
+          type: string
+          title: Texto «Acerca de»
+          description: Línea final del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        mostrar_equipo:
+          type: boolean
+          title: Mostrar la página del equipo
+          description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
+            la página responde 404.
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -2932,6 +2953,27 @@ components:
             una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
+        aviso_superior:
+          type: string
+          title: Aviso del pie de página
+          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        subtitulo_logo:
+          type: string
+          title: Subtítulo del logo
+          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
+            no se muestra.
+          maxLength: 60
+        texto_acerca:
+          type: string
+          title: Texto «Acerca de»
+          description: Línea final del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        mostrar_equipo:
+          type: boolean
+          title: Mostrar la página del equipo
+          description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
+            la página responde 404.
     ConfirmarCorreoRequest:
       type: object
       properties:
@@ -3627,6 +3669,27 @@ components:
             una sola cuenta).
         marca:
           description: Colores y estilos de botón personalizados del sitio.
+        aviso_superior:
+          type: string
+          title: Aviso del pie de página
+          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        subtitulo_logo:
+          type: string
+          title: Subtítulo del logo
+          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
+            no se muestra.
+          maxLength: 60
+        texto_acerca:
+          type: string
+          title: Texto «Acerca de»
+          description: Línea final del pie de página. Vacío = no se muestra.
+          maxLength: 250
+        mostrar_equipo:
+          type: boolean
+          title: Mostrar la página del equipo
+          description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
+            la página responde 404.
     PatchedEdicionRequest:
       type: object
       properties:

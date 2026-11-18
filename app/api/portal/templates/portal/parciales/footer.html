@@ -1,8 +1,10 @@
 <footer class="footer-flv mt-5 d-print-none">
+  {% if configuracion.aviso_superior %}
   <div class="aviso-prototipo text-center py-2 px-3">
     <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
-    Prototipo académico – Areandina · Desarrollo Web 2026 · Datos ilustrativos de demostración
+    {{ configuracion.aviso_superior }}
   </div>
+  {% endif %}
   <div class="container py-4">
     <div class="row g-4">
       <div class="col-lg-4">
@@ -13,7 +15,7 @@
         <p class="fw-semibold text-white mb-2">Navegación</p>
         <ul class="list-unstyled small mb-0">
           <li><a href="{% url 'portal:categorias' %}">Categorías</a></li>
-          <li><a href="{% url 'portal:equipo' %}">Equipo</a></li>
+          {% if configuracion.mostrar_equipo %}<li><a href="{% url 'portal:equipo' %}">Equipo</a></li>{% endif %}
           {% if not user.is_authenticated %}<li><a href="{% url 'portal:registro' %}">Registro</a></li>{% endif %}
           {# El acceso al panel solo aparece aquí, y solo para administradores con sesión #}
           {% if es_admin %}<li><a href="{% url 'portal:panel' %}">Panel admin</a></li>{% endif %}
@@ -38,10 +40,12 @@
       </div>
       {% endif %}
     </div>
+    {% if configuracion.texto_acerca or configuracion.mostrar_equipo %}
     <hr class="border-secondary">
     <p class="small mb-0">
-      <strong>Acerca de:</strong> Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina ·
-      <a href="{% url 'portal:equipo' %}">Conoce al equipo</a>.
+      {% if configuracion.texto_acerca %}<strong>Acerca de:</strong> {{ configuracion.texto_acerca }}{% if configuracion.mostrar_equipo %} ·{% endif %}{% endif %}
+      {% if configuracion.mostrar_equipo %}<a href="{% url 'portal:equipo' %}">Conoce al equipo</a>.{% endif %}
     </p>
+    {% endif %}
   </div>
 </footer>

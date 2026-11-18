@@ -1,4 +1,6 @@
 import PageHeader from '../components/PageHeader.jsx';
+import NoEncontrado from './NoEncontrado.jsx';
+import { useApp } from '../context/AppContext.jsx';
 import { useSeo } from '../hooks/useSeo.js';
 
 const INTEGRANTES = [
@@ -8,7 +10,10 @@ const INTEGRANTES = [
 ];
 
 export default function Equipo() {
+  const { configuracion } = useApp();
   useSeo({ titulo: 'Equipo' });
+  // La página se puede ocultar desde /panel/sitio
+  if (configuracion && configuracion.mostrarEquipo === false) return <NoEncontrado />;
 
   return (
     <div className="container py-4 py-md-5">

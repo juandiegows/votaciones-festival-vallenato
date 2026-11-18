@@ -4,7 +4,11 @@ import { useApp } from '../context/AppContext.jsx';
 import Modal from './Modal.jsx';
 
 export default function Footer() {
-  const { usuario, esAdmin, restablecer, edicionActiva, modo, configuracion: contacto, redes } = useApp();
+  const { usuario, esAdmin, restablecer, edicionActiva, configuracion: contacto, redes } = useApp();
+  // Textos del proyecto editables en /panel/sitio; un texto vacío no se muestra (datos guardados antes: valores de siempre)
+  const aviso = contacto?.avisoSuperior ?? 'Prototipo académico – Areandina · Desarrollo Web 2026';
+  const acerca = contacto?.textoAcerca ?? 'Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina';
+  const mostrarEquipo = contacto?.mostrarEquipo ?? true;
   // Contacto y redes editables en /panel/sitio
   const redesActivas = [...redes].filter((r) => r.activa).sort((a, b) => a.orden - b.orden);
   const [confirmar, setConfirmar] = useState(false);
@@ -21,11 +25,11 @@ export default function Footer() {
 
   return (
     <footer className="footer-flv mt-5 d-print-none">
-      <div className="aviso-prototipo text-center py-2 px-3">
-        <i className="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
-        Prototipo académico – Areandina · Desarrollo Web 2026 ·{' '}
-        {modo === 'api' ? 'Datos ilustrativos de demostración' : 'Datos simulados'}
-      </div>
+      {aviso && (
+        <div className="aviso-prototipo text-center py-2 px-3">
+          <i className="bi bi-info-circle-fill me-1" aria-hidden="true"></i>{aviso}
+        </div>
+      )}
       <div className="container py-4">
         <div className="row g-4">
           <div className="col-lg-4">
@@ -38,7 +42,7 @@ export default function Footer() {
             <p className="fw-semibold text-white mb-2">Navegación</p>
             <ul className="list-unstyled small mb-0">
               <li><Link to="/categorias">Categorías</Link></li>
-              <li><Link to="/equipo">Equipo</Link></li>
+              {mostrarEquipo && <li><Link to="/equipo">Equipo</Link></li>}
               {usuario && <li><Link to="/mis-votos">Mis votos</Link></li>}
               <li><Link to="/registro">Registro</Link></li>
               {/* El acceso al panel solo aparece aquí, y solo para administradores con sesión */}
@@ -78,11 +82,15 @@ export default function Footer() {
             </div>
           )}
         </div>
-        <hr className="border-secondary" />
-        <p className="small mb-0">
-          <strong>Acerca de:</strong> Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina ·{' '}
-          <Link to="/equipo">Conoce al equipo</Link>.
-        </p>
+        {(acerca || mostrarEquipo) && (
+          <>
+            <hr className="border-secondary" />
+            <p className="small mb-0">
+              {acerca && <><strong>Acerca de:</strong> {acerca}{mostrarEquipo ? ' · ' : ''}</>}
+              {mostrarEquipo && <><Link to="/equipo">Conoce al equipo</Link>.</>}
+            </p>
+          </>
+        )}
       </div>
 
       <Modal
