@@ -19,7 +19,7 @@ respaldan. Producción: https://votaciones.juandiegows.com (desplegado el 17 de 
 
 > **Pendiente de validación:** qué imágenes puede publicar la Fundación (derechos de imagen de artistas y
 > participantes). El prototipo no incluye fotos del Festival; las que se suban son responsabilidad del administrador.
-> Debe registrarse como pregunta P-xx en el informe de la entrega.
+> Registrada como pregunta **P-18** (ver «Requerimientos nuevos» al final).
 
 ### 2. Exportar resultados de votaciones, categorías y ediciones (RF-14)
 
@@ -66,6 +66,22 @@ etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_re
 | Plantilla de Excel | Ícono y votación (hoja «Opciones») se eligen de listas desplegables. |
 | Pruebas | `test_demo.py` (5), `TextosDelProyectoTest` (2), `test_icono_y_votacion_se_eligen_de_listas`. |
 
+### 6. Registros técnicos (logs) con interceptor (RF-19, RNF-12)
+
+| | |
+|---|---|
+| Qué hace | Cuando algo falla en el código queda registrado **qué** falló (excepción y traza), **dónde** (archivo, línea y función de nuestro código), **en qué petición** (método, ruta, estado) y **a quién** le pasó (usuario, IP, navegador). Distinto de la auditoría (RF-16), que guarda lo que hace la administración. |
+| Interceptor | `votaciones/registros/interceptor.py` (middleware): da a cada petición una **referencia** (`X-Request-ID`), escribe la línea de acceso y atrapa toda excepción no controlada. Responde 500 con la referencia: JSON `{"detail", "codigo": "error_interno", "referencia"}` en `/api/…` y página de error con la marca en el sitio. Los 400/403/404 no se registran (no son fallos del código). |
+| Web React | El cliente HTTP muestra «Ocurrió un error inesperado. Referencia: …» en los 5xx. Los errores de JavaScript (`window.onerror`, promesas rechazadas y el `ErrorBoundary`) se envían a `POST /api/registros/web/` (máximo 10 por carga, sin repetir el mismo en un minuto, 20/min por IP en el servidor). |
+| Dónde se ven | `/panel/registros` (web y panel MVT): resumen de 24 h y 7 días, filtros (nivel, servidor o web, periodo, búsqueda por referencia), traza desplegable, descarga TXT/JSON y botón «Provocar un error de prueba». API: `GET /api/gestion/registros/`, `…/resumen/`, `POST …/probar/`. Permiso `registros.ver` (solo administrador por defecto). |
+| Consola y archivos | `LOGGING` en `settings.py`: consola en JSON (`docker logs`) con referencia, usuario e IP en cada línea; con `LOG_DIR`, `app.log` y `errores.log` que rotan cada medianoche. Variables `LOG_*` en `app/api/README.md`. |
+| Datos | Tabla `registro_sistema` (migración `0017`); se borran los de más de `LOG_DIAS_RETENCION` días (30). No guarda contraseñas ni el cuerpo de las peticiones. |
+| Pruebas | `votaciones/tests/test_registros.py` (11) y `portal/tests/test_registros_panel.py` (4). |
+
+> **Pendiente de validación (P-19):** días de conservación, quién más puede ver los registros y si se debe avisar
+> por correo cuando ocurre un error. Los valores actuales (30 días, solo administrador, sin aviso) son decisiones
+> técnicas del equipo.
+
 ## Correcciones
 
 | Problema | Solución |
@@ -86,10 +102,30 @@ etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_re
 ## Cómo verificar
 
 ```bash
-cd app/api && python manage.py test                      # 331 pruebas (votaciones y portal)
+cd app/api && python manage.py test                      # 441 pruebas (votaciones y portal)
 cd app/web && npm run build
 curl -I https://votaciones.juandiegows.com/sitemap.xml    # 301 → /api/sitemap.xml
 ```
+
+## Requerimientos nuevos y trazabilidad
+
+Se agregan a los del informe de la Entrega 1 (RF-01…RF-18, RNF-01…RNF-11, CU-01…CU-13, P-01…P-17, R-01…R-09).
+
+| ID | Tipo | Descripción | Estado |
+|---|---|---|---|
+| RF-19 | Funcional | El sistema deberá permitir al administrador consultar, filtrar y descargar los registros técnicos (errores del servidor y de la web) y buscar un error por su referencia. Actor: Administrador. Prioridad: Media. | Preliminar |
+| RNF-12 | Observabilidad | Los errores no controlados del servidor y de la web quedarán registrados con fecha y hora, traza, archivo y línea, petición, usuario e IP; cada error tendrá una referencia que se muestra al usuario para reportarlo. | Preliminar |
+| CU-14 | Caso de uso | **Consultar registros del sistema.** Actor: Administrador. Precondición: sesión con el permiso `registros.ver`. Flujo: 1) entra a `/panel/registros`; 2) filtra por nivel, origen (servidor o web) y periodo, o escribe la referencia que reportó un usuario; 3) abre el registro y revisa la traza y dónde falló; 4) opcional: descarga TXT o JSON. Alterno: sin el permiso, página 403 y la sección no aparece en el menú. | — |
+| P-18 | Pregunta | Imágenes de las opciones: ¿qué imágenes puede publicar la Fundación (derechos de imagen de artistas y participantes)? | Pendiente |
+| P-19 | Pregunta | Registros técnicos: ¿cuántos días se conservan? ¿quién además del administrador puede verlos? ¿se debe avisar por correo cuando ocurre un error? | Pendiente |
+| R-10 | Riesgo | Los registros técnicos guardan datos personales (correo, IP, navegador) y podrían exponerse (Ley 1581, RNF-08). Probabilidad: Baja. Impacto: Medio. Mitigación: acceso solo con `registros.ver`, borrado automático por antigüedad, sin contraseñas ni cuerpo de las peticiones. | — |
+
+Matriz actualizada (solo lo que cambió):
+
+| RF | Caso de uso | Reglas / RNF | Pantalla / ruta | Estado |
+|---|---|---|---|---|
+| RF-17 | — (complementario) | — | `/panel/usuarios`, `/panel/roles` | Pendiente de validación |
+| RF-19 | CU-14 | RNF-08, RNF-12 | `/panel/registros` | Preliminar (P-19) |
 
 ## Pendiente para cerrar la entrega
 

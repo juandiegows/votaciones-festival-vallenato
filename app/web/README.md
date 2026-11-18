@@ -55,6 +55,12 @@ VITE_BASE=/ VITE_API_URL=/api npm run build            # modo API servido en la 
   servidor (`detail`).
 - `src/api/cliente.js`: `fetch` con el token en `localStorage` (`Authorization: Token …`); `src/api/adaptadores.js`:
   única traducción entre los campos de la API (snake_case) y los de la web (camelCase).
+- Errores: ante un 5xx la API ya registró el error y devuelve `referencia`; `cliente.js` lo muestra como
+  «Ocurrió un error inesperado. Referencia: …» (y `obtener()` lanza el `Error` con `.referencia`). Los errores de
+  JavaScript (`window.onerror`, promesas rechazadas y el ErrorBoundary `LimiteErrores`, global en `main.jsx` y por
+  pantalla en `Layout`) los envía `src/api/registroErrores.js` a `POST /api/registros/web/` (solo en el modo API; en
+  la demostración van a la consola), sin repetir el mismo mensaje+archivo+línea en un minuto y con máximo 10 por
+  carga de página. Se consultan en `/panel/registros`.
 - En el modo API la sesión se restaura al cargar (`/auth/yo/`), el cierre de sesión invalida el token
   (`/auth/logout/`), los resultados públicos respetan la visibilidad del servidor y el CSV se descarga desde la API.
 - Si la web se sirve en otro origen que la API, ese origen debe estar en `CORS_ALLOWED_ORIGINS` de la API.
@@ -146,13 +152,14 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/panel/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
 | `/panel/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
 | `/panel/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
-| `/panel/usuarios` | Usuarios registrados: filtro por rol y asignación de cualquier rol (`usuarios.cambiar_rol`) | Pendiente de validación (RF de roles) |
-| `/panel/roles` | Roles y permisos: lista de roles, crear, editar con casillas por grupo del catálogo y eliminar | Pendiente de validación (RF de roles) |
+| `/panel/usuarios` | Usuarios registrados: filtro por rol y asignación de cualquier rol (`usuarios.cambiar_rol`) | RF-17 (pendiente de validación) |
+| `/panel/roles` | Roles y permisos: lista de roles, crear, editar con casillas por grupo del catálogo y eliminar | RF-17 (pendiente de validación) |
 | `/panel/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
 | `/panel/revista` | Revista institucional (PDF que el inicio muestra como libro) y cómo se hojea: duración del paso, sombra, tapa dura, botones, efecto «arrancar la página» y sonido | — |
 | `/panel/sitio` | Contacto y redes sociales del pie de página | — |
 | `/panel/configuracion` | Configuración del sitio público: visibilidad de resultados de la edición (cada votación puede personalizarla), días que siguen visibles las votaciones cerradas, presentación de categorías y modo del banner | RF-15, RN-07 |
 | `/panel/marca` | Guía de identidad visual (`/marca` redirige aquí) | — |
+| `/panel/registros` | Registros del sistema: errores del servidor y de la web (resumen, filtros, traza, referencia, descarga TXT/JSON y error de prueba). Solo con `registros.ver` (administrador por defecto); en el modo demostración, ejemplos ilustrativos | RF-19, CU-14, RNF-12 (preliminar, P-19) |
 
 Cada ruta del panel exige su permiso `.ver` (tabla en `src/data/permisos.js`, `PERMISO_SECCION`); sin él se muestra
 una página 403 dentro del panel y el menú no ofrece la sección.
