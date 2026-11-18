@@ -52,6 +52,22 @@ function leerPreferencia(clave, porDefecto) {
     return porDefecto;
   }
 }
+// Lista de ids guardada como JSON (categorías contraídas)
+function leerLista(clave) {
+  try {
+    const lista = JSON.parse(localStorage.getItem(clave) || '[]');
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return [];
+  }
+}
+function guardarLista(clave, lista) {
+  try {
+    localStorage.setItem(clave, JSON.stringify(lista));
+  } catch {
+    /* almacenamiento no disponible */
+  }
+}
 function guardarPreferencia(clave, valor) {
   try {
     localStorage.setItem(clave, valor ? '1' : '0');
@@ -68,6 +84,8 @@ export default function AdminVotaciones() {
     texto: '', categoria: location.state?.categoriaId ? String(location.state.categoriaId) : '', estado: '', resultados: '', votos: '', orden: 'apertura',
   });
   const [agrupar, setAgrupar] = useState(() => leerPreferencia('flv_votaciones_agrupar', true));
+  // Categorías contraídas al agrupar (se recuerdan en este navegador)
+  const [contraidas, setContraidas] = useState(() => new Set(leerLista('flv_votaciones_contraidas')));
   // Por defecto solo las votaciones: las opciones se despliegan a pedido para que la lista se pueda recorrer
   const [verOpciones, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', false));
   const [masFiltros, setMasFiltros] = useState(false);
@@ -101,6 +119,19 @@ export default function AdminVotaciones() {
     .filter((v) => !filtros.votos || (filtros.votos === 'con' ? numVotos(v.id) > 0 : numVotos(v.id) === 0))
     .sort(comparar);
   const hayFiltros = filtros.texto || filtros.categoria || filtros.estado || filtros.resultados || filtros.votos;
+
+  const fijarContraidas = (ids) => {
+    setContraidas(ids);
+    guardarLista('flv_votaciones_contraidas', [...ids]);
+  };
+  const alternarGrupo = (id) => {
+    const ids = new Set(contraidas);
+    if (ids.has(id)) ids.delete(id);
+    else ids.add(id);
+    fijarContraidas(ids);
+  };
+  // Mientras se busca por texto todo se muestra abierto, para no esconder coincidencias
+  const estaContraida = (id) => contraidas.has(id) && !filtros.texto.trim();
 
   const grupos = agrupar
     ? [...categorias].sort((a, b) => a.orden - b.orden).map((c) => ({ categoria: c, votaciones: lista.filter((v) => v.categoriaId === c.id) })).filter((g) => g.votaciones.length)
@@ -525,6 +556,16 @@ export default function AdminVotaciones() {
             <input id="f-ver-opciones" className="form-check-input" type="checkbox" role="switch" checked={verOpciones} onChange={(e) => { setVerOpciones(e.target.checked); guardarPreferencia('flv_votaciones_opciones', e.target.checked); }} />
             <label className="form-check-label small" htmlFor="f-ver-opciones">Mostrar opciones</label>
           </div>
+          {agrupar && grupos.length > 1 && (
+            <span className="d-inline-flex gap-2">
+              <button type="button" className="btn btn-sm btn-link p-0" onClick={() => fijarContraidas(new Set())} disabled={!contraidas.size}>
+                <i className="bi bi-arrows-expand me-1" aria-hidden="true"></i>Expandir todas
+              </button>
+              <button type="button" className="btn btn-sm btn-link p-0" onClick={() => fijarContraidas(new Set(grupos.map((g) => g.categoria.id)))}>
+                <i className="bi bi-arrows-collapse me-1" aria-hidden="true"></i>Contraer todas
+              </button>
+            </span>
+          )}
           {hayFiltros && (
             <button type="button" className="btn btn-sm btn-link p-0" onClick={() => setFiltros((f) => ({ ...f, texto: '', categoria: '', estado: '', resultados: '', votos: '' }))}>
               <i className="bi bi-x-circle me-1" aria-hidden="true"></i>Limpiar filtros
@@ -547,8 +588,18 @@ export default function AdminVotaciones() {
         <section key={g.categoria?.id || 'todas'} className={agrupar ? 'grupo-categoria mb-4' : ''} aria-labelledby={g.categoria ? `grupo-${g.categoria.id}` : undefined}>
           {g.categoria && (
             <div className="grupo-categoria-cabecera d-flex flex-wrap align-items-center gap-2 mb-2">
-              <span className="icono-circulo icono-sm"><IconoEntidad icono={g.categoria.icono} imagen={g.categoria.iconoImagen} /></span>
-              <h2 id={`grupo-${g.categoria.id}`} className="h5 mb-0">{g.categoria.nombre}</h2>
+              <button
+                type="button"
+                className="btn grupo-categoria-toggle d-inline-flex align-items-center gap-2 p-0 border-0 text-start"
+                aria-expanded={!estaContraida(g.categoria.id)}
+                aria-controls={`grupo-contenido-${g.categoria.id}`}
+                onClick={() => alternarGrupo(g.categoria.id)}
+                title={estaContraida(g.categoria.id) ? 'Expandir' : 'Contraer'}
+              >
+                <i className={`bi bi-chevron-${estaContraida(g.categoria.id) ? 'right' : 'down'} grupo-chevron`} aria-hidden="true"></i>
+                <span className="icono-circulo icono-sm"><IconoEntidad icono={g.categoria.icono} imagen={g.categoria.iconoImagen} /></span>
+                <h2 id={`grupo-${g.categoria.id}`} className="h5 mb-0">{g.categoria.nombre}</h2>
+              </button>
               <span className="badge text-bg-light border">{g.votaciones.length} {g.votaciones.length === 1 ? 'votación' : 'votaciones'}</span>
               {!g.categoria.activa && <span className="badge text-bg-secondary">Categoría inactiva</span>}
               <button type="button" className="btn btn-sm btn-outline-primary ms-auto" onClick={() => nueva(g.categoria.id)} aria-label={`Nueva votación en ${g.categoria.nombre}`}>
@@ -556,7 +607,9 @@ export default function AdminVotaciones() {
               </button>
             </div>
           )}
-          {render(g.votaciones)}
+          {g.categoria ? (
+            <div id={`grupo-contenido-${g.categoria.id}`} hidden={estaContraida(g.categoria.id)}>{render(g.votaciones)}</div>
+          ) : render(g.votaciones)}
         </section>
       ))}
 
