@@ -107,7 +107,9 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | POST | `/api/gestion/votaciones/{id}/publicar-resultados/` | `{ "publicar": true\|false }` (RF-15) |
 | GET | `/api/gestion/votaciones/{id}/resultados/` | Resultados completos, siempre visibles para el administrador (RF-14) |
 | GET | `/api/gestion/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
-| CRUD | `/api/gestion/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart) y `texto_audio` (letra o transcripción) |
+| GET | `/api/gestion/votaciones/{id}/resultados/excel/` | Exporta los resultados en Excel `.xlsx` (RF-14) |
+| GET | `/api/gestion/votaciones/{id}/resultados/pdf/` | Exporta los resultados en PDF (RF-14) |
+| CRUD | `/api/gestion/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart), `texto_audio` (letra o transcripción) y `foto` (imagen, multipart) |
 | GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
 | GET | `/api/gestion/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
 | CRUD | `/api/gestion/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
@@ -159,12 +161,14 @@ sitio que empiece por `/` (por ejemplo, `/audio/muestras/brisas-del-guatapuri.mp
 Además del enlace, cada opción puede tener un **archivo de audio subido** (`audio`: MP3, OGG, WAV, M4A o WebM,
 máximo 10 MB) y su **texto** (`texto_audio`, letra o transcripción para quien no pueda escuchar). Se envían como
 `multipart/form-data`; la respuesta devuelve la ruta del sitio (`/media/audios/…`). Enviar `audio` vacío o `null`
-quita el archivo. Lo mismo aplica a `icono_imagen` de categorías y votaciones (JPG, PNG o WebP, máximo 1 MB).
+quita el archivo. Lo mismo aplica a `icono_imagen` de categorías y votaciones (JPG, PNG o WebP, máximo 1 MB) y a
+`foto` de la opción (JPG, PNG o WebP, máximo 3 MB; `/media/opciones/…`), que usa la presentación «Imágenes con texto».
 
 ### Presentación al público
 
 `Edicion.presentacion_categorias` (`tarjetas`, `lista`, `mosaico`, `compacta`, `destacada`) define cómo se ven las
-categorías, y `Votacion.presentacion_opciones` (`tarjetas`, `lista`, `mosaico`, `compacta`, `reproductor`) cómo se
+categorías, y `Votacion.presentacion_opciones` (`tarjetas`, `lista`, `mosaico`, `compacta`, `reproductor`, `colores`,
+`respuestas`, `duelo`, `imagenes`) cómo se
 ven las opciones. Ambos campos se exponen también en los endpoints públicos.
 
 ### Participación (quién votó, sin revelar por qué)
