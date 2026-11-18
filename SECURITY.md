@@ -43,6 +43,8 @@ imágenes Docker se reconstruyen con los parches del sistema operativo.
 | Navegador | CSP estricta, HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` y COOP (`nginx-seguridad.conf` y `.htaccess`). |
 | Servidor | Archivos ocultos, respaldos y volcados (`.env`, `.git`, `.sql`, `.bak`…) responden 404; páginas privadas con `X-Robots-Tag: noindex`. El panel vive en `/panel` y la API de gestión en `/api/gestion` (el WAF bloquea `/admin`). |
 | Secretos | Fuera del repositorio: variables de entorno del servidor y `.env` locales ignorados por git. |
+| Borde (Cloudflare) | SSL Full (strict), TLS ≥ 1.2, HSTS con preload, WAF con reglas propias contra rutas sensibles, secretos y escáneres, y bloqueo automático de IP abusivas. Detalle: [`docs/seguridad/cloudflare.md`](docs/seguridad/cloudflare.md). |
+| Importación | La plantilla de ediciones se verifica por su firma `.xlsx`, con tamaño y filas máximas; todo se valida antes de guardar y en una sola transacción. |
 
 ## Reglas para la investigación
 

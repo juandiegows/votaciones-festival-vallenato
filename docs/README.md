@@ -7,10 +7,11 @@
 | [`BRANDING.md`](BRANDING.md) | Identidad visual: paleta, tipografías, contraste WCAG 2.1 AA y reglas de uso |
 | [`diagramas/`](diagramas/) | Casos de uso, modelo de datos, comportamiento y arquitectura, con su fuente editable |
 | [`api/`](api/) | Guía de la API REST, esquema OpenAPI (`openapi.yaml`) y colección de Postman |
+| [`seguridad/cloudflare.md`](seguridad/cloudflare.md) | Ajustes y reglas del WAF de Cloudflare, y cómo condicionan las rutas del proyecto |
 | [`entrega-1/`](entrega-1/) | Análisis, requerimientos, casos de uso, prototipo navegable y benchmarking |
 | [`entrega-2/`](entrega-2/) | Desarrollo inicial con Django (MVT) y MySQL, Django Admin, capturas y guion del video |
 | [`entrega-3/`](entrega-3/) | Módulo de votaciones, validaciones, API GET, pruebas CP-01 a CP-10 y video |
-| [`entrega-4/`](entrega-4/) | Consolidación: imágenes en las opciones, exportación Excel/PDF, URL amigables sugeridas, SEO (en curso) |
+| [`entrega-4/`](entrega-4/) | Consolidación: imágenes en las opciones, exportación en 5 formatos, importar/exportar ediciones, URL amigables, SEO e informe final |
 
 Otros documentos en la raíz y en el código:
 
