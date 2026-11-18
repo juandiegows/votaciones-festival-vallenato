@@ -37,7 +37,9 @@ def sitio(request):
         "configuracion": configuracion,
         "redes": RedSocial.objects.filter(activa=True),
         "colores_marca": colores_marca(configuracion),
-        "es_admin": usuario.is_authenticated and usuario.es_administrador,
+        # Acceso al panel (cualquier rol con panel.ver) y permisos del rol para mostrar u ocultar acciones
+        "es_admin": usuario.is_authenticated and usuario.accede_panel,
+        "permisos": usuario.permisos if usuario.is_authenticated else frozenset(),
         "mostrar_credenciales_demo": settings.MOSTRAR_CREDENCIALES_DEMO and configuracion.permitir_cuentas_demo,
         "menu_activo": menu_activo(request),
     }

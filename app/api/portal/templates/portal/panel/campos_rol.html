@@ -1,0 +1,41 @@
+{# Campos del formulario de un rol: datos y casillas de permisos agrupadas como el catálogo (cuentas/permisos.py) #}
+<div class="row g-3">
+  <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.nombre extra='maxlength=60' %}</div>
+  <div class="col-md-6">
+    {% if instancia %}
+      <p class="form-label mb-2">Código</p>
+      <p class="mb-0"><code>{{ instancia.codigo }}</code></p>
+      <div class="form-text">El código de un rol no se cambia.</div>
+    {% else %}
+      {% include "portal/parciales/campo.html" with campo=form.codigo ayuda=form.codigo.help_text extra='maxlength=30' %}
+    {% endif %}
+  </div>
+  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.descripcion extra='maxlength=200' %}</div>
+
+  <div class="col-12">
+    <fieldset aria-describedby="permisos-ayuda"{% if instancia.es_fijo %} disabled{% endif %}>
+      <legend class="h6 mb-1">Permisos</legend>
+      {% if instancia.es_fijo %}
+        <div id="permisos-ayuda" class="alert alert-secondary small py-2 mb-2" role="note"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i>Los permisos del rol «{{ instancia.nombre }}» son fijos: solo puedes cambiar su nombre y descripción.</div>
+      {% else %}
+        <p id="permisos-ayuda" class="small text-secondary-flv mb-2">Marca lo que puede hacer quien tenga este rol. Sin «Entrar al panel» no verá la administración.</p>
+      {% endif %}
+      {% if form.permisos.errors %}<div class="text-danger small mb-2">{{ form.permisos.errors|join:" " }}</div>{% endif %}
+      <div class="row g-3">
+        {% for g in grupos_form %}
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3 h-100">
+              <p class="fw-semibold small mb-2">{{ g.grupo }}</p>
+              {% for p in g.permisos %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="permisos" value="{{ p.codigo }}" id="permiso-{{ p.codigo|slugify }}"{% if p.activo %} checked{% endif %}>
+                  <label class="form-check-label small" for="permiso-{{ p.codigo|slugify }}">{{ p.descripcion }} <code class="text-secondary-flv">{{ p.codigo }}</code></label>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
+</div>

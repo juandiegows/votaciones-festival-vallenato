@@ -195,3 +195,12 @@ def url_canonica(context):
     request = context.get("request")
     ruta = request.path if request else "/"
     return url_sitio() + (ruta if ruta == "/" else ruta.rstrip("/"))
+
+
+@register.simple_tag(takes_context=True)
+def url_pagina(context, numero, ancla=""):
+    """Enlace a otra página de un listado conservando los filtros de la URL (?q=…&rol=…&pagina=N#ancla)."""
+    request = context.get("request")
+    parametros = request.GET.copy() if request else {}
+    parametros["pagina"] = numero
+    return f"?{parametros.urlencode()}" + (f"#{ancla}" if ancla else "")

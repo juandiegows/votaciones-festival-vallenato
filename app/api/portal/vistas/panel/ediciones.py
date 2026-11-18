@@ -15,7 +15,7 @@ from ...catalogos import CATEGORIAS_EJEMPLO, PRESENTACIONES_CATEGORIAS
 from ...formularios import EdicionForm
 from .base import (
     avisar_guardado, bloqueo_por_hijos, edicion_panel, eliminar, es_formulario_nuevo, guardar, render_panel,
-    solo_administrador,
+    requiere_permiso,
 )
 
 
@@ -32,7 +32,7 @@ def categorias_vista_previa(instancia):
     return (reales, True) if len(reales) >= 2 else (CATEGORIAS_EJEMPLO, False)
 
 
-@solo_administrador
+@requiere_permiso("ediciones.ver", crear="ediciones.crear", editar="ediciones.editar")
 def ediciones(request, pk=None):
     instancia = get_object_or_404(Edicion, pk=pk) if pk else None
     form = None
@@ -55,7 +55,7 @@ def ediciones(request, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("ediciones.ver", editar="ediciones.eliminar")
 @require_POST
 def eliminar_edicion(request, pk):
     objeto = get_object_or_404(Edicion, pk=pk)

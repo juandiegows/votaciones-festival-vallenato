@@ -93,6 +93,7 @@
     </form>
   </div>
   {% if comprobantes.object_list %}
+  {% include "portal/panel/paginacion.html" with pagina=comprobantes etiqueta="Páginas de comprobantes" ancla="comprobantes" posicion="arriba" %}
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
       <caption class="visually-hidden">Comprobantes de la votación</caption>
@@ -104,13 +105,7 @@
       </tbody>
     </table>
   </div>
-  {% if comprobantes.has_other_pages %}
-  <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Páginas de comprobantes">
-    {% if comprobantes.has_previous %}<a class="btn btn-sm btn-outline-primary" href="?{% if codigo %}codigo={{ codigo|urlencode }}&amp;{% endif %}pagina={{ comprobantes.previous_page_number }}#comprobantes">Anterior</a>{% else %}<span></span>{% endif %}
-    <span class="small">Página {{ comprobantes.number }} de {{ comprobantes.paginator.num_pages }}</span>
-    {% if comprobantes.has_next %}<a class="btn btn-sm btn-outline-primary" href="?{% if codigo %}codigo={{ codigo|urlencode }}&amp;{% endif %}pagina={{ comprobantes.next_page_number }}#comprobantes">Siguiente</a>{% else %}<span></span>{% endif %}
-  </nav>
-  {% endif %}
+  {% include "portal/panel/paginacion.html" with pagina=comprobantes etiqueta="Páginas de comprobantes" ancla="comprobantes" posicion="abajo" %}
   {% else %}
   <p class="text-secondary-flv mb-0">No hay comprobantes{% if codigo %} con ese código{% endif %}.</p>
   {% endif %}

@@ -8,9 +8,9 @@
     <p class="text-secondary-flv mb-0">Una edición es un año del Festival y agrupa sus categorías y votaciones. El público solo ve la edición activa.</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Plantilla de Excel</a>
-    <a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-importar' %}"><i class="bi bi-upload me-1" aria-hidden="true"></i>Importar edición</a>
-    <a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición</a>
+    {% if 'ediciones.exportar' in permisos %}<a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Plantilla de Excel</a>{% endif %}
+    {% if 'ediciones.importar' in permisos %}<a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-importar' %}"><i class="bi bi-upload me-1" aria-hidden="true"></i>Importar edición</a>{% endif %}
+    {% if 'ediciones.crear' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición</a>{% endif %}
   </div>
 </header>
 <p class="small text-secondary-flv mb-2">{{ lista|length|plural:"edición,ediciones" }}</p>
@@ -32,8 +32,8 @@
           <td><span class="badge badge-estado {% if ed.estado == 'activa' %}estado-abierta{% else %}estado-cerrada{% endif %}">{{ ed.get_estado_display }}</span></td>
           <td class="text-end text-nowrap">
             {% include "portal/parciales/menu_exportar.html" with tipo="edicion" pk=ed.pk nombre=ed.nombre estructura=True clase="btn-outline-secondary" %}
-            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-edicion-editar' ed.pk %}" aria-label="Editar {{ ed.nombre }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>
-            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-edicion-eliminar' ed.pk %}" data-eliminar-nombre="{{ ed.nombre }}" aria-label="Eliminar {{ ed.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            {% if 'ediciones.editar' in permisos %}<a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-edicion-editar' ed.pk %}" aria-label="Editar {{ ed.nombre }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>{% endif %}
+            {% if 'ediciones.eliminar' in permisos %}<button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-edicion-eliminar' ed.pk %}" data-eliminar-nombre="{{ ed.nombre }}" aria-label="Eliminar {{ ed.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>{% endif %}
           </td>
         </tr>
         {% endwith %}
@@ -42,7 +42,7 @@
   </table>
 </div>
 {% else %}
-<div class="card-flv p-4 text-center"><i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i><p class="mb-2">Aún no hay ediciones registradas.</p><a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}">Crear la primera edición</a></div>
+<div class="card-flv p-4 text-center"><i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i><p class="mb-2">Aún no hay ediciones registradas.</p>{% if 'ediciones.crear' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}">Crear la primera edición</a>{% endif %}</div>
 {% endif %}
 
 {% if form %}

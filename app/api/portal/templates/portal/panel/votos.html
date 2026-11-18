@@ -39,7 +39,7 @@
 <div class="card-flv p-4 text-center">
   <i class="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
   <p class="mb-2">No hay votaciones publicadas con este filtro.</p>
-  <a class="btn btn-outline-primary btn-sm" href="{% url 'portal:panel-votaciones' %}?estado=borrador">Ver borradores por publicar</a>
+  {% if 'votaciones.ver' in permisos %}<a class="btn btn-outline-primary btn-sm" href="{% url 'portal:panel-votaciones' %}?estado=borrador">Ver borradores por publicar</a>{% endif %}
 </div>
 {% endif %}
 {% endblock %}

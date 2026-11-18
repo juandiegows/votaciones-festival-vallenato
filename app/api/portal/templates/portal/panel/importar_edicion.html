@@ -37,7 +37,7 @@
         <li>Borra la fila de ejemplo de cada hoja.</li>
         <li>Súbela aquí. Si alguna fila tiene un error no se crea nada y verás la hoja y la fila que debes corregir.</li>
       </ol>
-      <a class="btn btn-outline-primary mb-4" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Descargar plantilla (.xlsx)</a>
+      {% if 'ediciones.exportar' in permisos %}<a class="btn btn-outline-primary mb-4" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Descargar plantilla (.xlsx)</a>{% endif %}
 
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
@@ -46,10 +46,12 @@
           <input id="id_archivo" name="archivo" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control" required aria-describedby="archivo-ayuda">
           <div id="archivo-ayuda" class="form-text">Excel (.xlsx) de hasta 5 MB.</div>
         </div>
+        {% if 'ediciones.editar' in permisos %}
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" role="switch" id="id_activar" name="activar">
           <label class="form-check-label" for="id_activar">Activarla al importar <span class="text-secondary-flv">(cierra la edición activa actual)</span></label>
         </div>
+        {% endif %}
         <button class="btn btn-primary" type="submit"><i class="bi bi-upload me-1" aria-hidden="true"></i>Importar edición</button>
       </form>
     </section>

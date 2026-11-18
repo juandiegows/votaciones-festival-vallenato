@@ -1,0 +1,67 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Roles y permisos</h1>
+    <p class="text-secondary-flv mb-0">Cada funcionalidad del panel es un permiso y un rol reúne varios. A cada usuario se le asigna un rol en {% if 'usuarios.ver' in permisos %}<a href="{% url 'portal:panel-usuarios' %}">Usuarios</a>{% else %}Usuarios{% endif %}.</p>
+  </div>
+  {% if 'roles.gestionar' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-rol-nuevo' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo rol</a>{% endif %}
+</header>
+
+<p class="small text-secondary-flv mb-2">{{ lista|length|plural:"rol,roles" }}</p>
+<div class="card-flv p-0 table-responsive">
+  <table class="table align-middle mb-0 tabla-apilada">
+    <caption class="visually-hidden">Roles del sistema y sus permisos</caption>
+    <thead><tr><th scope="col">Rol</th><th scope="col">Descripción</th><th scope="col">Usuarios</th><th scope="col">Permisos</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for r in lista %}
+        <tr>
+          <td style="min-width: 11rem">
+            <span class="fw-semibold d-block">{{ r.nombre }}</span>
+            <span class="small text-secondary-flv"><code>{{ r.codigo }}</code>
+              {% if r.es_fijo %}<span class="badge text-bg-dark ms-1" title="Sus permisos no se cambian"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i>Fijo</span>
+              {% elif r.sistema %}<span class="badge text-bg-light border ms-1">Del sistema</span>{% endif %}
+              {% if r.codigo == user.rol %}<span class="badge badge-estado estado-abierta ms-1">Tu rol</span>{% endif %}
+            </span>
+          </td>
+          <td class="small" data-etiqueta="Descripción" style="min-width: 12rem">{{ r.descripcion|default:"—" }}</td>
+          <td class="text-nowrap" data-etiqueta="Usuarios">
+            {% if 'usuarios.ver' in permisos %}<a href="{% url 'portal:panel-usuarios' %}?rol={{ r.codigo }}" aria-label="Ver los usuarios con el rol {{ r.nombre }}: {{ r.num_usuarios }}">{{ r.num_usuarios|plural:"usuario,usuarios" }}</a>
+            {% else %}{{ r.num_usuarios|plural:"usuario,usuarios" }}{% endif %}
+          </td>
+          <td data-etiqueta="Permisos" style="min-width: 12rem">
+            {% if r.num_permisos %}
+            <details>
+              <summary class="small">{{ r.num_permisos|plural:"permiso,permisos" }}</summary>
+              <ul class="small mb-0 mt-2 ps-3">
+                {% for g in r.grupos %}
+                  <li class="mb-1"><strong>{{ g.grupo }}</strong>{% for p in g.permisos %}{% if p.activo %}<span class="d-block">{{ p.descripcion }}</span>{% endif %}{% endfor %}</li>
+                {% endfor %}
+              </ul>
+            </details>
+            {% else %}<span class="small text-secondary-flv">Sin permisos de administración</span>{% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            {% if 'roles.gestionar' in permisos %}
+              {% if r.codigo == user.rol %}
+                <span class="small text-secondary-flv">No editas tu propio rol</span>
+              {% else %}
+                <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-rol-editar' r.pk %}" aria-label="Editar el rol {{ r.nombre }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>
+                {% if not r.sistema %}<button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-rol-eliminar' r.pk %}" data-eliminar-nombre="{{ r.nombre }}" aria-label="Eliminar el rol {{ r.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>{% endif %}
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="small text-secondary-flv mt-3 mb-0"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Los permisos de «Votante» y «Administrador» son fijos. Los roles del sistema no se eliminan y un rol con usuarios tampoco: primero asígnales otro. Nadie edita su propio rol ni da permisos que su rol no tiene.</p>
+
+{% if form %}
+  {% url 'portal:panel-roles' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar rol,Nuevo rol" plantilla_campos="portal/panel/campos_rol.html" tamano="modal-lg" %}
+{% endif %}
+{% endblock %}

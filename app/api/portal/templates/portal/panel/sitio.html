@@ -7,6 +7,7 @@
   <h1 class="h2 mb-1">Contacto y redes</h1>
   <p class="text-secondary-flv mb-0">Información que aparece en el pie de página del sitio.</p>
 </header>
+{% if 'sitio.editar' not in permisos %}<div class="alert alert-secondary small py-2" role="note"><i class="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta esta sección: no puede cambiarla.</div>{% endif %}
 
 <div class="row g-4">
   <div class="col-lg-5">
@@ -14,6 +15,7 @@
       {% csrf_token %}
       <input type="hidden" name="formulario" value="contacto">
       <h2 id="titulo-contacto" class="h5">Contacto y textos del sitio</h2>
+      <fieldset{% if 'sitio.editar' not in permisos %} disabled{% endif %}>
       {% if form.errors %}<div class="alert alert-danger py-2" role="alert">Revisa los campos marcados.</div>{% endif %}
       {% include "portal/parciales/campo.html" with campo=form.nombre_organizacion %}
       {% include "portal/parciales/campo.html" with campo=form.telefono tipo="tel" %}
@@ -33,7 +35,8 @@
         <label class="form-check-label" for="id_mostrar_equipo">Mostrar la página del equipo</label>
         <div id="equipo-ayuda" class="form-text">Apagada, se quitan los enlaces del menú y del pie, y /equipo responde 404.</div>
       </div>
-      <button type="submit" class="btn btn-primary" data-enviando="Guardando…">Guardar</button>
+      </fieldset>
+      {% if 'sitio.editar' in permisos %}<button type="submit" class="btn btn-primary" data-enviando="Guardando…">Guardar</button>{% endif %}
     </form>
   </div>
 
@@ -49,11 +52,13 @@
               <strong>{{ x.nombre }}</strong>{% if not x.activa %}<span class="badge text-bg-secondary ms-2">Oculta</span>{% endif %}
               <span class="d-block small text-secondary-flv text-break">{{ x.url }}</span>
             </span>
+            {% if 'sitio.editar' in permisos %}
             <span class="flex-shrink-0 text-nowrap">
               {% include "portal/panel/botones_mover.html" with url_mover="portal:panel-red-mover" pk=x.pk nombre=x.nombre primero=forloop.first ultimo=forloop.last %}
               <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-red-editar' x.pk %}#form-red" aria-label="Editar {{ x.nombre }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
               <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-red-eliminar' x.pk %}" data-eliminar-nombre="{{ x.nombre }}" aria-label="Quitar {{ x.nombre }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
             </span>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>
@@ -61,6 +66,7 @@
         <p class="text-secondary-flv">Aún no hay redes sociales: el pie de página no muestra íconos de redes.</p>
       {% endif %}
 
+      {% if 'sitio.editar' in permisos %}
       <form method="post" id="form-red" action="{% if red_editada %}{% url 'portal:panel-red-editar' red_editada.pk %}{% else %}{% url 'portal:panel-sitio' %}{% endif %}" novalidate aria-labelledby="titulo-form-red">
         {% csrf_token %}
         <input type="hidden" name="formulario" value="red">
@@ -92,6 +98,7 @@
           </div>
         </div>
       </form>
+      {% endif %}
     </section>
   </div>
 </div>

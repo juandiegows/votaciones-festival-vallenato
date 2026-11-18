@@ -60,11 +60,11 @@ def iniciar_sesion(request):
     form = LoginForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         # Sin confirmar el correo no se entra (los administradores se crean ya verificados o por consola)
-        if not form.usuario.correo_verificado and not form.usuario.es_administrador:
+        if not form.usuario.correo_verificado and not form.usuario.accede_panel:
             request.session[SESION_CORREO_PENDIENTE] = form.usuario.pk
             return redirect("portal:revisa-tu-correo")
         login(request, form.usuario)
-        por_defecto = reverse("portal:panel") if form.usuario.es_administrador else reverse("portal:categorias")
+        por_defecto = reverse("portal:panel") if form.usuario.accede_panel else reverse("portal:categorias")
         return redirect(destino_seguro(request, por_defecto))
     return render(request, "portal/login.html", {
         "form": form,

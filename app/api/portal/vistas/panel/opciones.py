@@ -9,7 +9,7 @@ from votaciones.models import Opcion, Votacion
 from votaciones.votacion import servicios
 
 from ...formularios import OpcionForm
-from .base import alternar_activa, avisar_guardado, eliminar, es_formulario_nuevo, guardar, render_panel, solo_administrador
+from .base import alternar_activa, avisar_guardado, eliminar, es_formulario_nuevo, guardar, render_panel, requiere_permiso
 
 # RN-19: desde que la votación abre, nadie puede cambiar a qué opción cuentan los votos
 MENSAJE_BLOQUEO = "Las opciones no se pueden cambiar: la votación está abierta, cerrada o ya tiene votos."
@@ -20,7 +20,7 @@ def regla_eliminacion(opcion):
     servicios.validar_eliminacion(opcion)
 
 
-@solo_administrador
+@requiere_permiso("opciones.ver", crear="opciones.crear", editar="opciones.editar")
 def opciones(request, votacion_pk, pk=None):
     votacion = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=votacion_pk)
     instancia = get_object_or_404(Opcion, pk=pk, votacion=votacion) if pk else None
@@ -43,7 +43,7 @@ def opciones(request, votacion_pk, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("opciones.ver", editar="opciones.editar")
 @require_POST
 def alternar_opcion(request, votacion_pk, pk):
     opcion = get_object_or_404(Opcion.objects.select_related("votacion"), pk=pk, votacion_id=votacion_pk)
@@ -55,7 +55,7 @@ def alternar_opcion(request, votacion_pk, pk):
     return redirect("portal:panel-opciones", votacion_pk=votacion_pk)
 
 
-@solo_administrador
+@requiere_permiso("opciones.ver", editar="opciones.eliminar")
 @require_POST
 def eliminar_opcion(request, votacion_pk, pk):
     eliminar(request, get_object_or_404(Opcion.objects.select_related("votacion"), pk=pk, votacion_id=votacion_pk), "opcion",

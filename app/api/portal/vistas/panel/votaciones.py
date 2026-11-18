@@ -19,7 +19,7 @@ from votaciones.votacion import servicios
 
 from ...catalogos import DESCRIPCION_VISIBILIDAD, ICONOS_DISPONIBLES, OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES
 from ...formularios import VotacionForm
-from .base import edicion_panel, eliminar, es_formulario_nuevo, guardar, render_panel, solo_administrador
+from .base import edicion_panel, eliminar, es_formulario_nuevo, guardar, render_panel, requiere_permiso
 
 ESTADOS_FILTRO = [
     ("abierta", "Abierta"), ("programada", "Programada"), ("cerrada", "Cerrada"), ("borrador", "Borrador (sin publicar)"),
@@ -71,7 +71,7 @@ def opciones_vista_previa(instancia):
     return (reales, True) if len(reales) >= 2 else (OPCIONES_EJEMPLO, False)
 
 
-@solo_administrador
+@requiere_permiso("votaciones.ver", crear="votaciones.crear", editar="votaciones.editar")
 def votaciones(request, pk=None):
     edicion = edicion_panel(request)
     instancia = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=pk) if pk else None
@@ -111,25 +111,25 @@ def ejecutar(request, pk, servicio, accion, resultado):
     return redirect("portal:panel-votaciones")
 
 
-@solo_administrador
+@requiere_permiso("votaciones.ver", editar="votaciones.publicar")
 @require_POST
 def publicar_votacion(request, pk):
     return ejecutar(request, pk, servicios.publicar_votacion, "publicar", "publicada: ya es visible al público")
 
 
-@solo_administrador
+@requiere_permiso("votaciones.ver", editar="votaciones.publicar")
 @require_POST
 def despublicar_votacion(request, pk):
     return ejecutar(request, pk, servicios.despublicar_votacion, "despublicar", "retirada del sitio público")
 
 
-@solo_administrador
+@requiere_permiso("votaciones.ver", editar="votaciones.publicar")
 @require_POST
 def cerrar_votacion(request, pk):
     return ejecutar(request, pk, servicios.cerrar_votacion, "cerrar", "cerrada: ya no recibe votos")
 
 
-@solo_administrador
+@requiere_permiso("votaciones.ver", editar="votaciones.eliminar")
 @require_POST
 def eliminar_votacion(request, pk):
     eliminar(request, get_object_or_404(Votacion, pk=pk), "votacion", servicios.validar_eliminacion)

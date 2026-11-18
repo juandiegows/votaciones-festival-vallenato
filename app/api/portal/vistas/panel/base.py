@@ -9,6 +9,7 @@ from django.shortcuts import render
 
 from votaciones.auditoria.mixins import auditar
 from votaciones.comun.errores import ReglaNegocioError
+from votaciones.cuentas.models import Rol
 from votaciones.models import Edicion
 from votaciones.votacion import selectores
 
@@ -18,22 +19,47 @@ CLAVE_EDICION = "panel_edicion_id"
 
 ENTIDADES = {
     "edicion": ("la edición", "Edición"), "categoria": ("la categoría", "Categoría"),
-    "votacion": ("la votación", "Votación"), "opcion": ("la opción", "Opción"),
+    "votacion": ("la votación", "Votación"), "opcion": ("la opción", "Opción"), "rol": ("el rol", "Rol"),
 }
 
 
-def solo_administrador(vista):
-    """Decorador: sin sesión → al login (y de vuelta aquí); con sesión de votante → 403."""
+def _sin_acceso(request, mensaje):
+    if not request.user.is_authenticated:
+        return redirect_to_login(request.get_full_path())
+    return pagina_error(request, 403, mensaje)
 
-    @wraps(vista)
-    def envoltura(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect_to_login(request.get_full_path())
-        if not request.user.es_administrador:
-            return pagina_error(request, 403, "Solo un administrador puede entrar al panel.")
-        return vista(request, *args, **kwargs)
 
-    return envoltura
+def requiere_permiso(ver, crear=None, editar=None):
+    """
+    Decorador del panel: exige `ver` siempre y, según la petición, el permiso de escritura:
+      - con `pk` en la ruta (formulario de edición o acción sobre un registro) → `editar`;
+      - en la ruta «…-nueva»/«…-nuevo» → `crear`;
+      - cualquier otro POST → `editar` (o `crear` si no se indicó `editar`).
+    Sin sesión → al login (y de vuelta aquí); sin el permiso → 403.
+    """
+
+    def decorador(vista):
+        @wraps(vista)
+        def envoltura(request, *args, **kwargs):
+            usuario = request.user
+            if not usuario.is_authenticated or not usuario.accede_panel:
+                return _sin_acceso(request, "Tu cuenta no tiene acceso al panel.")
+            nombre = getattr(request.resolver_match, "url_name", "") or ""
+            if kwargs.get("pk") is not None:
+                escritura = editar
+            elif nombre.endswith(("-nueva", "-nuevo")):
+                escritura = crear
+            elif request.method == "POST":
+                escritura = editar or crear
+            else:
+                escritura = None
+            if not usuario.tiene_permiso(ver) or (escritura and not usuario.tiene_permiso(escritura)):
+                return pagina_error(request, 403, "Tu rol no tiene permiso para esta sección o acción.")
+            return vista(request, *args, **kwargs)
+
+        return envoltura
+
+    return decorador
 
 
 def edicion_panel(request):
@@ -51,7 +77,8 @@ def es_formulario_nuevo(request, nombre_ruta):
 
 def render_panel(request, plantilla, seccion, edicion, contexto):
     return render(request, plantilla, {
-        "seccion": seccion, "edicion": edicion, "ediciones": Edicion.objects.order_by("-anio"), **contexto,
+        "seccion": seccion, "edicion": edicion, "ediciones": Edicion.objects.order_by("-anio"),
+        "rol_actual": Rol.objects.filter(codigo=request.user.rol).first(), **contexto,
     })
 
 

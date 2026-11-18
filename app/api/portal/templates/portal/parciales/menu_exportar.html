@@ -1,19 +1,24 @@
 {# Menú para descargar resultados. Recibe: tipo (votacion|categoria|edicion), pk, nombre, clase (opcional) y estructura (edición) #}
+{# Resultados con `resultados.exportar`; la edición completa con `ediciones.exportar`. Sin ninguno no se muestra. #}
+{% if 'resultados.exportar' in permisos or estructura and 'ediciones.exportar' in permisos %}
 <div class="dropdown d-inline-block">
   <button class="btn btn-sm {{ clase|default:'btn-outline-primary' }} dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Exportar resultados de {{ nombre }}">
     <i class="bi bi-download me-1" aria-hidden="true"></i>Exportar
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
+    {% if 'resultados.exportar' in permisos %}
     <li><h3 class="dropdown-header">Resultados</h3></li>
     <li><a class="dropdown-item" href="{% url 'portal:panel-exportar' tipo pk 'pdf' %}"><i class="bi bi-file-earmark-pdf me-2" aria-hidden="true"></i>PDF</a></li>
     <li><a class="dropdown-item" href="{% url 'portal:panel-exportar' tipo pk 'excel' %}"><i class="bi bi-file-earmark-excel me-2" aria-hidden="true"></i>Excel (.xlsx)</a></li>
     <li><a class="dropdown-item" href="{% url 'portal:panel-exportar' tipo pk 'csv' %}"><i class="bi bi-filetype-csv me-2" aria-hidden="true"></i>CSV</a></li>
     <li><a class="dropdown-item" href="{% url 'portal:panel-exportar' tipo pk 'json' %}"><i class="bi bi-filetype-json me-2" aria-hidden="true"></i>JSON</a></li>
     <li><a class="dropdown-item" href="{% url 'portal:panel-exportar' tipo pk 'sql' %}"><i class="bi bi-filetype-sql me-2" aria-hidden="true"></i>SQL (MySQL)</a></li>
-    {% if estructura %}
-      <li><hr class="dropdown-divider"></li>
+    {% endif %}
+    {% if estructura and 'ediciones.exportar' in permisos %}
+      {% if 'resultados.exportar' in permisos %}<li><hr class="dropdown-divider"></li>{% endif %}
       <li><h3 class="dropdown-header">Edición completa</h3></li>
       <li><a class="dropdown-item" href="{% url 'portal:panel-edicion-estructura' pk %}"><i class="bi bi-file-earmark-spreadsheet me-2" aria-hidden="true"></i>Plantilla de Excel con los datos</a></li>
     {% endif %}
   </ul>
 </div>
+{% endif %}

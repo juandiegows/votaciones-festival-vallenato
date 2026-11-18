@@ -112,7 +112,7 @@ def votacion_por_ruta(request, edicion, categoria, slug):
     votacion = Votacion.objects.select_related("categoria__edicion").filter(
         categoria__edicion=edicion, categoria__slug=categoria, categoria__activa=True, slug=slug,
     ).first()
-    es_admin = request.user.is_authenticated and request.user.es_administrador
+    es_admin = request.user.is_authenticated and request.user.tiene_permiso("votaciones.ver")
     return votacion if votacion and (votacion.publicada or es_admin) else None
 
 

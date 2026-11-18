@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from votaciones.auditoria import selectores
 from votaciones.votacion import reportes
 
-from .base import edicion_panel, render_panel, solo_administrador
+from .base import edicion_panel, render_panel, requiere_permiso
 
 PESTANAS = {
     "integridad": {"titulo": "Integridad de votos", "icono": "shield-check"},
@@ -18,6 +18,7 @@ PESTANAS = {
 TIPOS_REGISTRO = {
     "edicion": "Edición", "categoria": "Categoría", "votacion": "Votación", "opcion": "Opción", "banner": "Banner",
     "revista": "Revista", "red_social": "Red social", "configuracion": "Configuración", "voto": "Voto", "usuario": "Usuario",
+    "rol": "Rol",
 }
 VERBOS = {
     "crear": "Creó", "actualizar": "Actualizó", "eliminar": "Eliminó", "publicar": "Publicó", "despublicar": "Despublicó",
@@ -29,6 +30,7 @@ VERBOS = {
 ARTICULOS = {
     "edicion": "la edición", "categoria": "la categoría", "votacion": "la votación", "opcion": "la opción",
     "banner": "el banner", "revista": "la revista", "red_social": "la red social", "configuracion": "la configuración", "usuario": "la cuenta",
+    "rol": "el rol",
 }
 POR_PAGINA = 50
 
@@ -63,7 +65,7 @@ def autoria(request, edicion):
     return {"filas": visibles, "filtro_tipo": tipo, "busqueda": texto}
 
 
-@solo_administrador
+@requiere_permiso("auditoria.ver")
 def auditoria(request):
     edicion = edicion_panel(request)
     clave = request.GET.get("pestana")

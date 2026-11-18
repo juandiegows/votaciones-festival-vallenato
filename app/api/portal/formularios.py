@@ -14,8 +14,10 @@ from rest_framework.exceptions import ValidationError as ErrorDRF
 
 from votaciones.comun import campos
 from votaciones.comun.errores import ReglaNegocioError
+from votaciones.cuentas import permisos as catalogo_permisos
 from votaciones.cuentas import selectores as selectores_cuentas
 from votaciones.cuentas.documentos import error_formato_documento, normalizar_documento
+from votaciones.cuentas.models import Rol
 from votaciones.models import Categoria, Edicion, Opcion, Usuario, Votacion
 from votaciones.sitio.models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 from votaciones.votacion.servicios import validar_cambio_voto_unico
@@ -550,3 +552,45 @@ class MarcaForm(forms.Form):
             },
             "alertas": {"estilo": datos["alerta_estilo"], "forma": datos["alerta_forma"]},
         }
+
+
+class RolForm(forms.Form):
+    """Nombre, descripción y permisos de un rol; el código solo se escribe al crearlo. Las reglas están en cuentas.servicios."""
+
+    nombre = forms.CharField(label="Nombre", max_length=60)
+    codigo = forms.SlugField(
+        label="Código", max_length=30, required=False,
+        help_text="Identificador estable en minúsculas, sin espacios ni tildes (p. ej. «jurado»). No se cambia después.",
+        error_messages={"invalid": "Usa solo letras minúsculas sin tildes, números, guiones o guiones bajos."},
+    )
+    descripcion = forms.CharField(label="Descripción", max_length=200, required=False)
+    permisos = forms.MultipleChoiceField(label="Permisos", required=False, choices=list(catalogo_permisos.PERMISOS.items()))
+
+    def __init__(self, *args, rol=None, **kwargs):
+        self.rol = rol
+        inicial = {"nombre": rol.nombre, "descripcion": rol.descripcion, "permisos": sorted(rol.permisos_efectivos)} if rol else None
+        super().__init__(*args, initial=inicial, **kwargs)
+        if rol is None:
+            self.fields["codigo"].required = True
+
+    def clean_nombre(self):
+        valor = self.cleaned_data["nombre"].strip()
+        if not valor:
+            raise forms.ValidationError("Escribe el nombre del rol.")
+        if Rol.objects.filter(nombre__iexact=valor).exclude(pk=getattr(self.rol, "pk", None)).exists():
+            raise forms.ValidationError("Ya existe un rol con ese nombre.")
+        return valor
+
+    def clean_codigo(self):
+        if self.rol is not None:
+            return self.rol.codigo  # el código de un rol existente no se cambia
+        valor = self.cleaned_data["codigo"].strip().lower()
+        if Rol.objects.filter(codigo=valor).exists():
+            raise forms.ValidationError("Ya existe un rol con ese código.")
+        return valor
+
+    def datos(self):
+        """Lo que recibe cuentas.servicios.guardar_rol. Un rol fijo conserva sus permisos (no se pueden cambiar)."""
+        datos = {k: self.cleaned_data[k] for k in ("codigo", "nombre", "descripcion")}
+        datos["permisos"] = sorted(self.rol.permisos_efectivos) if self.rol and self.rol.es_fijo else self.cleaned_data["permisos"]
+        return datos

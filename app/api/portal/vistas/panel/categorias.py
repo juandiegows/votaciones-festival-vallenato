@@ -12,7 +12,7 @@ from ...catalogos import ICONOS_DISPONIBLES
 from ...formularios import CategoriaForm
 from .base import (
     alternar_activa, avisar_guardado, bloqueo_por_hijos, edicion_panel, eliminar, es_formulario_nuevo, guardar,
-    render_panel, solo_administrador,
+    render_panel, requiere_permiso,
 )
 
 
@@ -44,7 +44,7 @@ def listar(edicion, busqueda, estado):
     return lista
 
 
-@solo_administrador
+@requiere_permiso("categorias.ver", crear="categorias.crear", editar="categorias.editar")
 def categorias(request, pk=None):
     edicion = edicion_panel(request)
     instancia = get_object_or_404(Categoria, pk=pk) if pk else None
@@ -64,7 +64,7 @@ def categorias(request, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("categorias.ver", editar="categorias.editar")
 @require_POST
 def alternar_categoria(request, pk):
     categoria = get_object_or_404(Categoria, pk=pk)
@@ -74,7 +74,7 @@ def alternar_categoria(request, pk):
     return redirect("portal:panel-categorias")
 
 
-@solo_administrador
+@requiere_permiso("categorias.ver", editar="categorias.eliminar")
 @require_POST
 def eliminar_categoria(request, pk):
     objeto = get_object_or_404(Categoria, pk=pk)

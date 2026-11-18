@@ -15,7 +15,7 @@ from ...marca import (
     ESTILOS_ALERTA, ESTILOS_BOTON, FORMAS, PESOS_BOTON, ROLES_BOTON, campo_color, compactar_marca, es_hex,
     fichas, normalizar_marca,
 )
-from .base import edicion_panel, es_formulario_nuevo, render_panel, solo_administrador
+from .base import edicion_panel, es_formulario_nuevo, render_panel, requiere_permiso
 
 CAMPOS_CONTACTO = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
                    "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo"]
@@ -67,7 +67,7 @@ def banners_de(edicion):
     return BannerInicio.objects.filter(edicion=edicion).order_by("orden", "id")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 def banners(request, pk=None):
     edicion = edicion_panel(request)
     instancia = get_object_or_404(BannerInicio, pk=pk) if pk else None
@@ -91,7 +91,7 @@ def banners(request, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def modo_banner(request):
     configuracion = ConfiguracionSitio.obtener()
@@ -104,7 +104,7 @@ def modo_banner(request):
     return redirect("portal:panel-banner")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def alternar_banner(request, pk):
     banner = get_object_or_404(BannerInicio, pk=pk)
@@ -115,7 +115,7 @@ def alternar_banner(request, pk):
     return redirect("portal:panel-banner")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def mover_banner(request, pk):
     banner = get_object_or_404(BannerInicio, pk=pk)
@@ -125,7 +125,7 @@ def mover_banner(request, pk):
     return redirect("portal:panel-banner")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def eliminar_banner(request, pk):
     banner = get_object_or_404(BannerInicio, pk=pk)
@@ -142,7 +142,7 @@ def revistas_ordenadas():
     return Revista.objects.order_by("orden", "-id")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 def revistas(request, pk=None):
     edicion = edicion_panel(request)
     instancia = get_object_or_404(Revista, pk=pk) if pk else None
@@ -163,7 +163,7 @@ def revistas(request, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def alternar_revista(request, pk):
     revista = get_object_or_404(Revista, pk=pk)
@@ -174,7 +174,7 @@ def alternar_revista(request, pk):
     return redirect("portal:panel-revista")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def mover_revista(request, pk):
     revista = get_object_or_404(Revista, pk=pk)
@@ -184,7 +184,7 @@ def mover_revista(request, pk):
     return redirect("portal:panel-revista")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def eliminar_revista(request, pk):
     revista = get_object_or_404(Revista, pk=pk)
@@ -201,7 +201,7 @@ def redes_ordenadas():
     return RedSocial.objects.order_by("orden", "id")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 def sitio(request, pk=None):
     """Contacto y textos del pie (formulario `contacto`) y redes sociales (formulario `red`, nueva o en edición)."""
     edicion = edicion_panel(request)
@@ -229,7 +229,7 @@ def sitio(request, pk=None):
     })
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def mover_red(request, pk):
     red = get_object_or_404(RedSocial, pk=pk)
@@ -239,7 +239,7 @@ def mover_red(request, pk):
     return redirect("portal:panel-sitio")
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def eliminar_red(request, pk):
     red = get_object_or_404(RedSocial, pk=pk)
@@ -253,7 +253,7 @@ def eliminar_red(request, pk):
 # Identidad visual
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 def marca(request):
     edicion = edicion_panel(request)
     configuracion = ConfiguracionSitio.obtener()
@@ -288,7 +288,7 @@ def marca(request):
     })
 
 
-@solo_administrador
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
 @require_POST
 def restablecer_marca(request):
     configuracion = ConfiguracionSitio.obtener()

@@ -8,15 +8,16 @@
     <h1 class="h2 mb-1">Banner de inicio</h1>
     <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Imágenes de la cabecera de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.</p>
   </div>
-  {% if edicion %}<a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</a>{% endif %}
+  {% if edicion and 'sitio.editar' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</a>{% endif %}
 </header>
+{% if 'sitio.editar' not in permisos %}<div class="alert alert-secondary small py-2" role="note"><i class="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta esta sección: no puede cambiarla.</div>{% endif %}
 
 {% if not edicion %}
-  <div class="alert alert-warning" role="alert">No hay ediciones registradas. <a href="{% url 'portal:panel-ediciones' %}" class="alert-link">Crea una edición</a> para agregar banners.</div>
+  <div class="alert alert-warning" role="alert">No hay ediciones registradas.{% if 'ediciones.crear' in permisos %} <a href="{% url 'portal:panel-edicion-nueva' %}" class="alert-link">Crea una edición</a> para agregar banners.{% endif %}</div>
 {% else %}
 <form method="post" action="{% url 'portal:panel-banner-modo' %}" class="card-flv p-3 mb-3">
   {% csrf_token %}
-  <fieldset>
+  <fieldset{% if 'sitio.editar' not in permisos %} disabled{% endif %}>
     <legend class="h6 mb-2">¿Cómo se muestra el banner en el inicio?</legend>
     <div class="d-flex flex-wrap gap-4">
       {% for valor, etiqueta in modos %}
@@ -47,15 +48,19 @@
             {% if b.enlace_boton %}<div class="small"><code>{{ b.enlace_boton }}</code></div>{% endif %}
           </td>
           <td>
+            {% if 'sitio.editar' in permisos %}
             <form method="post" action="{% url 'portal:panel-banner-alternar' b.pk %}" class="form-check form-switch mb-0">{% csrf_token %}
               <input class="form-check-input" type="checkbox" role="switch" id="banner-{{ b.pk }}"{% if b.activo %} checked{% endif %} data-enviar-al-cambiar>
               <label class="form-check-label small" for="banner-{{ b.pk }}">{{ b.activo|yesno:"Activo,Inactivo" }}</label>
             </form>
+            {% else %}<span class="small">{{ b.activo|yesno:"Activo,Inactivo" }}</span>{% endif %}
           </td>
           <td class="text-end text-nowrap">
+            {% if 'sitio.editar' in permisos %}
             {% include "portal/panel/botones_mover.html" with url_mover="portal:panel-banner-mover" pk=b.pk nombre=b.titulo|default:b.texto_alternativo primero=forloop.first ultimo=forloop.last %}
             <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-banner-editar' b.pk %}" aria-label="Editar {{ b.titulo|default:b.texto_alternativo }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
             <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-banner-eliminar' b.pk %}" data-eliminar-nombre="{{ b.titulo|default:b.texto_alternativo }}" aria-label="Eliminar {{ b.titulo|default:b.texto_alternativo }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}
@@ -66,7 +71,7 @@
 <div class="card-flv p-4 text-center">
   <i class="bi bi-images fs-1 text-secondary" aria-hidden="true"></i>
   <p class="mb-2">No hay banners: el inicio muestra la ilustración predeterminada.</p>
-  <a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}">Crear el primer banner</a>
+  {% if 'sitio.editar' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}">Crear el primer banner</a>{% endif %}
 </div>
 {% endif %}
 {% endif %}

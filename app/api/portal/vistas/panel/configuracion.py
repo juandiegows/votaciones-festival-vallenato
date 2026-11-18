@@ -15,7 +15,7 @@ from votaciones.sitio.models import ConfiguracionSitio
 from votaciones.votacion import servicios
 
 from ...formularios import ConfiguracionEdicionForm, ConfiguracionForm
-from .base import edicion_panel, render_panel, solo_administrador
+from .base import edicion_panel, render_panel, requiere_permiso
 
 # Secciones agrupadas por tema; cada una tiene su URL: /panel/configuracion/{clave}
 SECCIONES = {
@@ -42,7 +42,7 @@ def url_seccion(clave):
     return reverse("portal:panel-configuracion-seccion", args=[clave])
 
 
-@solo_administrador
+@requiere_permiso("configuracion.ver", editar="configuracion.editar")
 def configuracion(request, clave=None):
     edicion = edicion_panel(request)
     # /panel/configuracion y el formato anterior ?seccion=… llevan a /panel/configuracion/{sección}
@@ -99,20 +99,20 @@ def accion_demo(request, palabra, funcion, exito):
     return redirect(url_seccion("demo"))
 
 
-@solo_administrador
+@requiere_permiso("configuracion.ver", editar="configuracion.demo")
 @require_POST
 def eliminar_demo(request):
     return accion_demo(request, "ELIMINAR", demo.eliminar, lambda r: (
         f"Datos de demostración eliminados: {r['ediciones']} edición(es), {r['usuarios']} cuenta(s) y {r['votos']} voto(s)."))
 
 
-@solo_administrador
+@requiere_permiso("configuracion.ver", editar="configuracion.demo")
 @require_POST
 def cargar_demo(request):
     return accion_demo(request, "CARGAR", demo.cargar, lambda r: r or "Datos de demostración cargados.")
 
 
-@solo_administrador
+@requiere_permiso("configuracion.ver", editar="configuracion.editar")
 @require_POST
 def alternar_voto_unico(request, pk):
     categoria = get_object_or_404(Categoria, pk=pk)

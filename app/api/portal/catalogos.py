@@ -104,4 +104,6 @@ FILTROS_ESTADO = [("todas", "Todas"), ("abierta", "Abiertas"), ("programada", "P
 CREDENCIALES_DEMO = [
     {"rol": "Votante", "correo": "votante@festival.test", "contrasena": "Voto2027*"},
     {"rol": "Administrador", "correo": "admin@festival.test", "contrasena": "Admin2027*"},
+    {"rol": "Solo lectura", "correo": "lectura@demo.festival.test", "contrasena": "Admin2027*"},
+    {"rol": "Lectura y escritura", "correo": "editor@demo.festival.test", "contrasena": "Admin2027*"},
 ]

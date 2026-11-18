@@ -15,6 +15,7 @@
 </nav>
 
 {% if form.errors or form_edicion.errors %}<div class="alert alert-danger" role="alert">Revisa los campos marcados.</div>{% endif %}
+{% if 'configuracion.editar' not in permisos %}<div class="alert alert-secondary small py-2" role="note"><i class="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta la configuración: no puede cambiarla.</div>{% endif %}
 
 {% if clave == "votacion" %}
   {% if form_edicion %}
@@ -26,8 +27,10 @@
       {% else %}<span class="badge badge-estado estado-abierta"><i class="bi bi-check-lg" aria-hidden="true"></i> Recibiendo votos</span>{% endif %}
     </div>
     <p class="small text-secondary-flv">{{ edicion.nombre }}</p>
+    <fieldset class="border-0 p-0 m-0"{% if 'configuracion.editar' not in permisos %} disabled{% endif %}>
     {% include "portal/parciales/interruptor_config.html" with campo=form_edicion.votaciones_pausadas titulo="Pausar todas las votaciones" ayuda="Interruptor de emergencia: mientras esté activo, nadie puede votar en esta edición." %}
-    <div class="text-end mt-3"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>
+    </fieldset>
+    {% if 'configuracion.editar' in permisos %}<div class="text-end mt-3"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>{% endif %}
   </form>
 
   <section class="card-flv p-3 p-md-4" aria-labelledby="cfg-categorias">
@@ -43,21 +46,22 @@
         <div class="d-flex align-items-center gap-3">
           {% if c.num_votos %}<span class="config-bloqueo"><i class="bi bi-lock-fill" aria-hidden="true"></i> {{ c.num_votos|miles }} voto{{ c.num_votos|pluralize }}</span>{% endif %}
           <div class="form-check form-switch mb-0">
-            <input id="voto-unico-{{ c.pk }}" class="form-check-input" type="checkbox" role="switch"{% if c.voto_unico %} checked{% endif %}{% if c.num_votos %} disabled{% else %} data-enviar-al-cambiar{% endif %}>
+            <input id="voto-unico-{{ c.pk }}" class="form-check-input" type="checkbox" role="switch"{% if c.voto_unico %} checked{% endif %}{% if c.num_votos or 'configuracion.editar' not in permisos %} disabled{% else %} data-enviar-al-cambiar{% endif %}>
           </div>
-          <noscript>{% if not c.num_votos %}<button class="btn btn-sm btn-outline-primary" type="submit">Cambiar</button>{% endif %}</noscript>
+          <noscript>{% if not c.num_votos and 'configuracion.editar' in permisos %}<button class="btn btn-sm btn-outline-primary" type="submit">Cambiar</button>{% endif %}</noscript>
         </div>
       </form>
     {% empty %}
-      <p class="text-secondary-flv mb-0">Esta edición aún no tiene categorías. <a href="{% url 'portal:panel-categorias' %}">Crear categorías</a></p>
+      <p class="text-secondary-flv mb-0">Esta edición aún no tiene categorías.{% if 'categorias.crear' in permisos %} <a href="{% url 'portal:panel-categoria-nueva' %}">Crear categorías</a>{% endif %}</p>
     {% endfor %}
   </section>
   {% else %}
-  <div class="card-flv p-4 text-center"><p class="mb-2">Aún no hay una edición para configurar.</p><a class="btn btn-primary" href="{% url 'portal:panel-ediciones' %}">Crear edición</a></div>
+  <div class="card-flv p-4 text-center"><p class="mb-2">Aún no hay una edición para configurar.</p>{% if 'ediciones.crear' in permisos %}<a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}">Crear edición</a>{% endif %}</div>
   {% endif %}
 {% else %}
 <form method="post" action="{% url 'portal:panel-configuracion-seccion' clave %}" novalidate>
   {% csrf_token %}
+  <fieldset class="border-0 p-0 m-0"{% if 'configuracion.editar' not in permisos %} disabled{% endif %}>
   {% if clave == "demo" %}
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-cuentas-demo">
       <h2 id="cfg-cuentas-demo" class="h5 mb-3">Cuentas de demostración</h2>
@@ -196,9 +200,10 @@
       {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_swagger titulo="Publicar Swagger y ReDoc" ayuda="Apagada, /api/docs/, /api/redoc/ y /api/esquema/ responden 404." %}
     </section>
   {% endif %}
-  <div class="text-end"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>
+  </fieldset>
+  {% if 'configuracion.editar' in permisos %}<div class="text-end"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>{% endif %}
 </form>
-{% if clave == "demo" %}
+{% if clave == "demo" and 'configuracion.demo' in permisos %}
 <section class="card-flv p-3 p-md-4 mt-3" aria-labelledby="cfg-datos-demo">
   <h2 id="cfg-datos-demo" class="h5 mb-1">Datos de demostración</h2>
   <p class="small text-secondary-flv">Ahora hay {{ demo.ediciones }} edición(es) de demostración ({{ demo_anios }}), {{ demo.usuarios }} cuenta(s) y {{ demo.votos }} voto(s).

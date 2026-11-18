@@ -8,7 +8,7 @@ from votaciones.auditoria.mixins import auditar
 from votaciones.models import Categoria, Edicion, Votacion
 from votaciones.votacion import exportacion, transferencia
 
-from .base import edicion_panel, render_panel, solo_administrador
+from .base import edicion_panel, render_panel, requiere_permiso
 
 # tipo de la URL → (consulta, función del reporte, entidad de auditoría)
 EXPORTABLES = {
@@ -25,7 +25,7 @@ def descarga(contenido, tipo, nombre):
     return respuesta
 
 
-@solo_administrador
+@requiere_permiso("resultados.exportar")
 def exportar(request, tipo, pk, formato):
     """Resultados de una votación, una categoría o una edición en el formato pedido (solo conteos, voto secreto)."""
     if tipo not in EXPORTABLES or formato not in exportacion.FORMATOS:
@@ -37,19 +37,19 @@ def exportar(request, tipo, pk, formato):
     return descarga(contenido, mime, nombre)
 
 
-@solo_administrador
+@requiere_permiso("ediciones.exportar")
 def plantilla(request):
     return descarga(transferencia.plantilla_excel(), TIPO_EXCEL, "plantilla-edicion.xlsx")
 
 
-@solo_administrador
+@requiere_permiso("ediciones.exportar")
 def estructura(request, pk):
     edicion = get_object_or_404(Edicion, pk=pk)
     auditar(request, "exportar_edicion", "edicion", edicion.pk)
     return descarga(transferencia.plantilla_excel(edicion), TIPO_EXCEL, f"edicion-{edicion.anio}.xlsx")
 
 
-@solo_administrador
+@requiere_permiso("ediciones.importar")
 def importar(request):
     errores = []
     if request.method == "POST":
@@ -58,7 +58,9 @@ def importar(request):
             errores = [{"hoja": "", "fila": None, "mensaje": "Elige la plantilla de Excel que vas a subir."}]
         else:
             try:
-                edicion = transferencia.importar_excel(archivo, activar=request.POST.get("activar") == "on")
+                # Activar la edición importada (cierra la activa) es editar ediciones: solo con ese permiso
+                activar = request.POST.get("activar") == "on" and request.user.tiene_permiso("ediciones.editar")
+                edicion = transferencia.importar_excel(archivo, activar=activar)
             except transferencia.ErrorImportacion as e:
                 errores = e.errores
             else:

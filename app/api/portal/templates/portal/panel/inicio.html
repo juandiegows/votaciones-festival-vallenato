@@ -4,7 +4,7 @@
 {% block panel %}
 <header class="mb-4">
   <h1 class="h2 mb-1">Panel de administración</h1>
-  <p class="text-secondary-flv mb-0">Hola, {{ user.nombres }}.
+  <p class="text-secondary-flv mb-0">Hola, {{ user.nombres }} <span class="badge text-bg-light border">{{ rol_actual.nombre|default:user.rol }}</span>.
     {% if not edicion %}No hay ediciones todavía.
     {% elif es_activa %}{{ edicion.nombre }}.
     {% else %}Consultando {{ edicion.nombre }}{% if edicion_activa_real %}; la activa es {{ edicion_activa_real.anio }}{% endif %}.{% endif %}
@@ -32,17 +32,17 @@
   <ol class="ruta-trabajo">
     {% for paso in pasos %}
       <li>
-        <a href="{{ paso.url }}" class="ruta-paso{% if paso.lista %} lista{% endif %}">
+        <{% if paso.url %}a href="{{ paso.url }}"{% else %}div{% endif %} class="ruta-paso{% if paso.lista %} lista{% endif %}">
           <span class="ruta-paso-marca" aria-hidden="true">{% if paso.lista %}<i class="bi bi-check-lg"></i>{% else %}{{ forloop.counter }}{% endif %}</span>
           <span><span class="d-block fw-semibold">{{ paso.titulo }}</span><span class="d-block small text-secondary-flv">{{ paso.detalle }}{% if paso.lista %}<span class="visually-hidden"> (listo)</span>{% else %}<span class="visually-hidden"> (pendiente)</span>{% endif %}</span></span>
-        </a>
+        </{% if paso.url %}a{% else %}div{% endif %}>
       </li>
     {% endfor %}
   </ol>
 </section>
 
 <div class="row g-4">
-  <div class="col-xl-7">
+  <div class="{% if actividad is not None %}col-xl-7{% else %}col-12{% endif %}">
     <section class="card-flv p-3 p-md-4 mb-4" aria-labelledby="titulo-pendientes">
       <h2 id="titulo-pendientes" class="h5"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Qué requiere tu atención</h2>
       {% if pendientes %}
@@ -50,7 +50,7 @@
         {% for p in pendientes %}
           <li class="fila-pendiente">
             <span class="d-flex gap-2"><i class="bi bi-{{ p.icono }} text-rojo" aria-hidden="true"></i><span class="small">{{ p.texto }}</span></span>
-            <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ p.url }}">{{ p.accion }}</a>
+            {% if p.url %}<a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ p.url }}">{{ p.accion }}</a>{% endif %}
           </li>
         {% endfor %}
       </ul>
@@ -66,15 +66,16 @@
           <li class="fila-pendiente">
             <span class="small fw-semibold">{{ v.titulo }}</span>
             <span class="d-flex align-items-center gap-2">
-              <span class="small text-nowrap">{{ v.num_votos|plural:"voto,votos" }}</span>
+              {% if 'resultados.ver' in permisos %}<span class="small text-nowrap">{{ v.num_votos|plural:"voto,votos" }}</span>{% endif %}
               {% estado_badge v.estado %}
-              <a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Ver votos de {{ v.titulo }}">Ver votos</a>
+              {% if 'resultados.ver' in permisos %}<a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'portal:panel-voto-detalle' v.pk %}" aria-label="Ver votos de {{ v.titulo }}">Ver votos</a>{% endif %}
             </span>
           </li>
         {% endfor %}
       </ul>
     </section>
   </div>
+  {% if actividad is not None %}
   <div class="col-xl-5">
     <section class="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-auditoria">
       <h2 id="titulo-auditoria" class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Actividad reciente <span class="small fw-normal text-secondary-flv">(auditoría)</span></h2>
@@ -90,5 +91,6 @@
       </ul>
     </section>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

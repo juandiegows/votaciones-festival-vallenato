@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from votaciones.models import Categoria, Votacion, Voto
 from votaciones.votacion import reportes
 
-from .base import edicion_panel, render_panel, solo_administrador
+from .base import edicion_panel, render_panel, requiere_permiso
 
 
 COMPROBANTES_POR_PAGINA = 25
@@ -22,7 +22,7 @@ def listar(edicion, categoria):
     return consulta.filter(categoria_id=categoria) if categoria.isdigit() else consulta
 
 
-@solo_administrador
+@requiere_permiso("resultados.ver")
 def votos(request):
     edicion = edicion_panel(request)
     categoria = request.GET.get("categoria", "")
@@ -33,7 +33,7 @@ def votos(request):
     })
 
 
-@solo_administrador
+@requiere_permiso("resultados.ver")
 def detalle(request, pk):
     votacion = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=pk)
     resultados = reportes.calcular_resultados(votacion)

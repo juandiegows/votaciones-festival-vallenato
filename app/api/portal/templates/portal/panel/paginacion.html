@@ -1,0 +1,16 @@
+{# Paginador de una tabla del panel: va encima y debajo de la tabla. Conserva los filtros de la URL. #}
+{# Recibe: pagina (Page de Django), etiqueta (para lectores de pantalla), unidad («registro,registros»), ancla y posicion (arriba|abajo) #}
+{% load portal %}
+{% if pagina.has_other_pages or unidad %}
+<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 {% if posicion == 'arriba' %}mb-2{% else %}mt-3{% endif %}" aria-label="{{ etiqueta|default:'Páginas' }} ({{ posicion|default:'abajo' }})" data-paginacion="{{ posicion|default:'abajo' }}">
+  <span class="small text-secondary-flv">{% if unidad %}{{ pagina.paginator.count|plural:unidad }} · {% endif %}Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_other_pages %}
+  <div class="btn-group">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-primary" href="{% url_pagina pagina.previous_page_number ancla %}"><i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Anterior</a>
+    {% else %}<span class="btn btn-sm btn-outline-primary disabled" aria-disabled="true"><i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Anterior</span>{% endif %}
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-primary" href="{% url_pagina pagina.next_page_number ancla %}">Siguiente<i class="bi bi-chevron-right ms-1" aria-hidden="true"></i></a>
+    {% else %}<span class="btn btn-sm btn-outline-primary disabled" aria-disabled="true">Siguiente<i class="bi bi-chevron-right ms-1" aria-hidden="true"></i></span>{% endif %}
+  </div>
+  {% endif %}
+</nav>
+{% endif %}
