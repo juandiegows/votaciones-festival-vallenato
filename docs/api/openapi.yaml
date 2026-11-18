@@ -267,6 +267,7 @@ paths:
                           nombre: '''Corazón Sabanero'' (ficticia)'
                           descripcion: Aire de paseo.
                           imagen: ''
+                          foto: null
                           enlace_multimedia: ''
                           audio: null
                           texto_audio: ''
@@ -1931,6 +1932,56 @@ paths:
                 type: string
                 format: binary
           description: Archivo CSV
+  /api/gestion/votaciones/{id}/resultados/excel/:
+    get:
+      operationId: gestion_votaciones_resultados_excel_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Exportar resultados en Excel (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: Archivo de Excel (.xlsx)
+  /api/gestion/votaciones/{id}/resultados/pdf/:
+    get:
+      operationId: gestion_votaciones_resultados_pdf_retrieve
+      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
+        que se borran al reemplazarlos o eliminarlos.'
+      summary: Exportar resultados en PDF (RF-14)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: Archivo PDF
   /api/gestion/votos/:
     get:
       operationId: gestion_votos_list
@@ -3018,6 +3069,10 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        foto:
+          type: string
+          format: uri
+          nullable: true
         enlace_multimedia:
           type: string
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
@@ -3061,6 +3116,11 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        foto:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
         enlace_multimedia:
           type: string
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
@@ -3081,6 +3141,7 @@ components:
           format: int64
       required:
       - audio
+      - foto
       - id
       - nombre
       - votacion
@@ -3102,6 +3163,11 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        foto:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
         enlace_multimedia:
           type: string
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
@@ -3122,6 +3188,7 @@ components:
           format: int64
       required:
       - audio
+      - foto
       - id
       - nombre
     OpcionRequest:
@@ -3142,6 +3209,10 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        foto:
+          type: string
+          format: binary
+          nullable: true
         enlace_multimedia:
           type: string
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
@@ -3437,6 +3508,10 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
+        foto:
+          type: string
+          format: binary
+          nullable: true
         enlace_multimedia:
           type: string
           description: URL absoluta http(s) o ruta del sitio que empieza por «/» (p.
@@ -3544,6 +3619,7 @@ components:
             * `colores` - Colores
             * `respuestas` - Respuestas
             * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
         fecha_apertura:
           type: string
           format: date-time
@@ -3580,6 +3656,7 @@ components:
       - colores
       - respuestas
       - duelo
+      - imagenes
       type: string
       description: |-
         * `tarjetas` - Tarjetas
@@ -3590,6 +3667,7 @@ components:
         * `colores` - Colores
         * `respuestas` - Respuestas
         * `duelo` - Duelo
+        * `imagenes` - Imágenes con texto
     PublicarResultadosRequest:
       type: object
       properties:
@@ -4069,6 +4147,7 @@ components:
             * `colores` - Colores
             * `respuestas` - Respuestas
             * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
         fecha_apertura:
           type: string
           format: date-time
@@ -4228,6 +4307,7 @@ components:
             * `colores` - Colores
             * `respuestas` - Respuestas
             * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
         fecha_apertura:
           type: string
           format: date-time
@@ -4328,6 +4408,7 @@ components:
             * `colores` - Colores
             * `respuestas` - Respuestas
             * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
         fecha_apertura:
           type: string
           format: date-time
@@ -4408,6 +4489,7 @@ components:
             * `colores` - Colores
             * `respuestas` - Respuestas
             * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
         fecha_apertura:
           type: string
           format: date-time

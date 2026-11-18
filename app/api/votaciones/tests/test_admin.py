@@ -145,6 +145,37 @@ class GestionAdminTests(BaseAPITest):
         contenido = respuesta.content.decode("utf-8-sig")
         self.assertIn("Canción A,1,100.0", contenido)
 
+    def test_exportar_excel_y_pdf(self):
+        from io import BytesIO
+
+        from openpyxl import load_workbook
+
+        Voto.objects.create(usuario=self.votante, votacion=self.abierta, opcion=self.opcion_a, codigo_comprobante="FLV27-GGGGGG")
+        excel = self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/excel/")
+        self.assertEqual(excel.status_code, 200)
+        self.assertIn("spreadsheetml", excel["Content-Type"])
+        self.assertIn(".xlsx", excel["Content-Disposition"])
+        celdas = [c for fila in load_workbook(BytesIO(excel.content)).active.iter_rows(values_only=True) for c in fila]
+        self.assertIn("Canción A", celdas)
+        pdf = self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/pdf/")
+        self.assertEqual(pdf.status_code, 200)
+        self.assertEqual(pdf["Content-Type"], "application/pdf")
+        self.assertTrue(pdf.content.startswith(b"%PDF-"))
+        self.salir()
+        self.assertIn(self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/pdf/").status_code, (401, 403))
+
+    def test_excel_no_ejecuta_formulas(self):
+        from io import BytesIO
+
+        from openpyxl import load_workbook
+
+        self.opcion_a.nombre = "=HYPERLINK(\"http://x\")"
+        self.opcion_a.save()
+        excel = self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/excel/")
+        hoja = load_workbook(BytesIO(excel.content)).active
+        tipos = {c.value: c.data_type for fila in hoja.iter_rows() for c in fila if c.value}
+        self.assertEqual(tipos[self.opcion_a.nombre], "s")
+
     def test_publicar_resultados(self):
         respuesta = self.client.post(f"/api/admin/votaciones/{self.abierta.pk}/publicar-resultados/", {"publicar": True}, format="json")
         self.assertTrue(respuesta.data["resultados_publicados"])

@@ -283,8 +283,19 @@ class DetalleVotacionesTest(BasePortalTest):
         self.assertNotContains(respuesta, self.votante.email)
         self.assertContains(respuesta, "ocultó la lista")
 
+    def test_exportar_resultados_en_excel_y_pdf(self):
+        self.client.force_login(self.admin)
+        self.assertContains(self.client.get(self.ruta), f"{self.ruta}/exportar/pdf")
+        excel = self.client.get(f"{self.ruta}/exportar/excel")
+        self.assertEqual(excel.status_code, 200)
+        self.assertIn("spreadsheetml", excel["Content-Type"])
+        pdf = self.client.get(f"{self.ruta}/exportar/pdf")
+        self.assertTrue(pdf.content.startswith(b"%PDF-"))
+        self.assertEqual(self.client.get(f"{self.ruta}/exportar/doc").status_code, 404)
+
     def test_el_votante_no_entra(self):
         self.client.force_login(self.votante)
+        self.assertEqual(self.client.get(f"{self.ruta}/exportar/pdf").status_code, 403)
         self.assertEqual(self.client.get("/panel/votos").status_code, 403)
         self.assertEqual(self.client.get(self.ruta).status_code, 403)
 

@@ -44,6 +44,7 @@ panel = [
     path("panel/configuracion/categorias/<int:pk>/voto-unico", configuracion.alternar_voto_unico, name="panel-config-voto-unico"),
     path("panel/votos", votos_panel.votos, name="panel-votos"),
     path("panel/votos/<int:pk>", votos_panel.detalle, name="panel-voto-detalle"),
+    path("panel/votos/<int:pk>/exportar/<str:formato>", votos_panel.exportar, name="panel-voto-exportar"),
     path("panel/votaciones", votaciones.votaciones, name="panel-votaciones"),
     path("panel/votaciones/nueva", votaciones.votaciones, name="panel-votacion-nueva"),
     path("panel/votaciones/<int:pk>/editar", votaciones.votaciones, name="panel-votacion-editar"),

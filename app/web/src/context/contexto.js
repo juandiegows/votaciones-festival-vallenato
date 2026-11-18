@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
  *  - Sesión: usuario, esAdmin, misVotos, edicionActiva (o null si no hay una activa).
  *  - Acciones ASÍNCRONAS que devuelven { ok: true, ... } o { ok: false, error, errores? }:
  *    iniciarSesion, cerrarSesion, registrarUsuario, emitirVoto, guardarEntidad, eliminarEntidad,
- *    reemplazarColeccion, obtenerResultados, exportarResultadosCSV, cargarAuditoria, restablecer (solo demostración).
+ *    reemplazarColeccion, obtenerResultados, exportarResultados (csv, excel o pdf), cargarAuditoria, restablecer (solo demostración).
  *  - `version` cambia con cada escritura (para refrescar consultas como los resultados).
  */
 export const AppContext = createContext(null);

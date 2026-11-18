@@ -15,7 +15,7 @@ from .. import correo
 from ..auditoria.mixins import AuditadoMixin, auditar
 from ..comun.api import ErrorReglaSerializer, ip_cliente
 from ..comun.permisos import EsAdministrador
-from . import reportes, selectores, servicios
+from . import exportacion, reportes, selectores, servicios
 from .models import Edicion
 from .serializers import (
     CategoriaConOpcionesSerializer,
@@ -355,6 +355,33 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         escritor.writerow(["Total", datos["total_votos"], 100 if datos["total_votos"] else 0])
         auditar(request, "exportar_resultados", self.entidad, votacion.pk)
         return respuesta
+
+    def _exportar(self, request, formato):
+        votacion = self.get_object()
+        datos = reportes.calcular_resultados(votacion)
+        if formato == "xlsx":
+            contenido = exportacion.resultados_excel(votacion, datos)
+            tipo = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        else:
+            contenido = exportacion.resultados_pdf(votacion, datos)
+            tipo = "application/pdf"
+        respuesta = HttpResponse(contenido, content_type=tipo)
+        respuesta["Content-Disposition"] = f'attachment; filename="{exportacion.nombre_archivo(votacion, formato)}"'
+        auditar(request, "exportar_resultados", self.entidad, votacion.pk, {"formato": formato})
+        return respuesta
+
+    @extend_schema(summary="Exportar resultados en Excel (RF-14)",
+                   responses={(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"):
+                              OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo de Excel (.xlsx)")})
+    @action(detail=True, url_path="resultados/excel")
+    def resultados_excel(self, request, pk=None):
+        return self._exportar(request, "xlsx")
+
+    @extend_schema(summary="Exportar resultados en PDF (RF-14)",
+                   responses={(200, "application/pdf"): OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo PDF")})
+    @action(detail=True, url_path="resultados/pdf")
+    def resultados_pdf(self, request, pk=None):
+        return self._exportar(request, "pdf")
 
 
 @extend_schema_view(

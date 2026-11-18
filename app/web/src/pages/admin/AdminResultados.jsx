@@ -10,11 +10,12 @@ import ResumenResultados from '../../components/admin/ResumenResultados.jsx';
 import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { formatearFechaHora, resultadosVisibles, visibilidadResultados } from '../../utils/helpers.js';
+import { MODO_API } from '../../config.js';
 import { useResultados } from '../../hooks/useResultados.js';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 
 export default function AdminResultados() {
-  const { guardarEntidad, exportarResultadosCSV, obtenerResumen } = useApp();
+  const { guardarEntidad, exportarResultados, obtenerResumen } = useApp();
   const { edicion, categorias, votaciones } = useEdicionAdmin();
   const { state } = useLocation();
   // Desde «Ver votos» de otra pantalla se llega con la votación ya elegida
@@ -38,11 +39,13 @@ export default function AdminResultados() {
     setMensaje(null);
   };
 
-  const exportar = async () => {
+  const exportar = async (formato) => {
     setProcesando(true);
-    const r = await exportarResultadosCSV(votacion.id);
+    const r = await exportarResultados(votacion.id, formato);
     setProcesando(false);
-    setMensaje(r.ok ? { tipo: 'success', texto: `Archivo ${r.nombre} descargado.` } : { tipo: 'danger', texto: r.error });
+    if (!r.ok) return setMensaje({ tipo: 'danger', texto: r.error });
+    const pdfDemo = formato === 'pdf' && !MODO_API;
+    setMensaje({ tipo: 'success', texto: pdfDemo ? 'Reporte abierto: en el diálogo de impresión elige «Guardar como PDF».' : `Archivo ${r.nombre} descargado.` });
   };
 
   const alternarPublicacion = async () => {
@@ -147,9 +150,18 @@ export default function AdminResultados() {
             </section>
             <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-acciones">
               <h2 id="titulo-acciones" className="h6">Acciones</h2>
-              <button className="btn btn-primary w-100 mb-3" onClick={exportar} disabled={procesando}>
-                <i className="bi bi-filetype-csv me-1" aria-hidden="true"></i>Exportar CSV
-              </button>
+              <p className="small fw-semibold mb-2" id="exportar-titulo">Exportar resultados</p>
+              <div className="d-grid gap-2 mb-3" role="group" aria-labelledby="exportar-titulo">
+                <button type="button" className="btn btn-primary" onClick={() => exportar('excel')} disabled={procesando}>
+                  <i className="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel
+                </button>
+                <button type="button" className="btn btn-outline-primary" onClick={() => exportar('pdf')} disabled={procesando}>
+                  <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF
+                </button>
+                <button type="button" className="btn btn-outline-secondary" onClick={() => exportar('csv')} disabled={procesando}>
+                  <i className="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+                </button>
+              </div>
               <div className="form-check form-switch">
                 <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando || !votacion.publicada} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
                 <label className="form-check-label fw-semibold" htmlFor="publicar-res">Publicar resultados</label>

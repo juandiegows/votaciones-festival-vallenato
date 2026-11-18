@@ -15,6 +15,7 @@ import {
 } from '../utils/helpers.js';
 import { calcularParticipacion, calcularResumen, verificarIntegridad } from '../utils/analisis.js';
 import { AppContext, buscarEdicionActiva } from './contexto.js';
+import { descargarExcel, imprimirPdf } from '../utils/exportar.js';
 import { normalizarDocumento } from '../utils/documento.js';
 
 // Archivos que el modo demostración guarda como data URL en este navegador
@@ -311,7 +312,7 @@ export function MockProvider({ children }) {
     [votaciones, datos.opciones, datos.votos]
   );
 
-  const exportarResultadosCSV = async (votacionId) => {
+  const exportarResultados = async (votacionId, formato = 'csv') => {
     const votacion = votaciones.find((v) => v.id === votacionId);
     const r = await obtenerResultados(votacionId, { admin: true });
     if (!votacion || !r.ok) return { ok: false, error: r.error || 'La votación no existe.' };
@@ -329,8 +330,27 @@ export function MockProvider({ children }) {
       [],
       ['Total', '', r.total, '100 %'],
     ];
-    const nombre = `resultados-${votacion.slug || votacion.id}.csv`;
-    descargarCSV(nombre, filasCsv);
+    const base = `resultados-${votacion.slug || votacion.id}`;
+    const reporte = {
+      encabezado: [
+        ['Edición', edicion?.nombre || ''], ['Categoría', categoria?.nombre || ''], ['Votación', votacion.titulo],
+        ['Estado', votacion.estado.charAt(0).toUpperCase() + votacion.estado.slice(1)], ['Total de votos', r.total], ['Generado', formatearFechaHora(new Date().toISOString())],
+      ],
+      filas: r.filas,
+      total: r.total,
+    };
+    let nombre = `${base}.csv`;
+    if (formato === 'excel') {
+      nombre = `${base}.xlsx`;
+      descargarExcel(nombre, reporte);
+    } else if (formato === 'pdf') {
+      nombre = `${base}.pdf`;
+      if (!imprimirPdf(`Resultados · ${votacion.titulo}`, reporte)) {
+        return { ok: false, error: 'El navegador bloqueó la ventana del reporte: permite las ventanas emergentes e inténtalo de nuevo.' };
+      }
+    } else {
+      descargarCSV(nombre, filasCsv);
+    }
     actualizar((d) => d, `Exportó los resultados de "${votacion.titulo}"`);
     return { ok: true, nombre };
   };
@@ -428,7 +448,7 @@ export function MockProvider({ children }) {
     reemplazarColeccion,
     guardarConfiguracion,
     obtenerResultados,
-    exportarResultadosCSV,
+    exportarResultados,
     cargarAuditoria,
     obtenerParticipacion,
     obtenerResumen,

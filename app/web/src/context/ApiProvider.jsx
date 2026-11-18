@@ -377,8 +377,10 @@ export function ApiProvider({ children }) {
     return { ok: true, ...resultadosDesdeApi(r.datos) };
   }, []);
 
-  const exportarResultadosCSV = async (votacionId) => {
-    const r = await descargarArchivo(`/admin/votaciones/${votacionId}/resultados/csv/`, `resultados-votacion-${votacionId}.csv`);
+  // formato: csv | excel | pdf (los archivos los genera la API)
+  const exportarResultados = async (votacionId, formato = 'csv') => {
+    const extension = { csv: 'csv', excel: 'xlsx', pdf: 'pdf' }[formato];
+    const r = await descargarArchivo(`/admin/votaciones/${votacionId}/resultados/${formato}/`, `resultados-votacion-${votacionId}.${extension}`);
     if (r.ok) recargar();
     return r;
   };
@@ -453,7 +455,7 @@ export function ApiProvider({ children }) {
     reemplazarColeccion,
     guardarConfiguracion,
     obtenerResultados,
-    exportarResultadosCSV,
+    exportarResultados,
     cargarAuditoria,
     obtenerParticipacion,
     obtenerResumen,
