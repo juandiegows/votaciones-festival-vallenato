@@ -1,11 +1,13 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from ..auditoria.mixins import auditar
 from ..comun.api import ErrorReglaSerializer
 from ..comun.permisos import EsAdministrador
 from . import selectores, servicios
@@ -123,3 +125,12 @@ class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return selectores.usuarios(self.request.query_params.get("rol"))
+
+    @extend_schema(summary="Cambiar el rol (votante o administrador)",
+                   request={"application/json": {"type": "object", "properties": {"rol": {"type": "string", "enum": ["votante", "administrador"]}}}},
+                   responses={200: UsuarioAdminSerializer})
+    @action(detail=True, methods=["post"])
+    def rol(self, request, pk=None):
+        usuario = servicios.cambiar_rol(request.user, self.get_object(), request.data.get("rol", ""))
+        auditar(request, "cambiar_rol", "usuario", usuario.pk, {"email": usuario.email, "rol": usuario.rol})
+        return Response(UsuarioAdminSerializer(usuario).data)

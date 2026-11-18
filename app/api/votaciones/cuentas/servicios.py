@@ -92,3 +92,26 @@ def confirmar_correo(token):
     usuario.save(update_fields=["correo_verificado"])
     correo.enviar_al_confirmar(correo.enviar_bienvenida, usuario)
     return usuario, True
+
+
+def cambiar_rol(actor, usuario, rol):
+    """
+    Hace administrador a un usuario o lo devuelve a votante. Nadie se quita su propio rol (evita quedar fuera del panel)
+    y siempre queda al menos un administrador activo.
+    """
+    if rol not in Usuario.Rol.values:
+        raise ReglaNegocioError("Rol no válido: usa «votante» o «administrador».")
+    if usuario.rol == rol:
+        return usuario
+    if rol == Usuario.Rol.VOTANTE:
+        if usuario.pk == actor.pk:
+            raise ReglaNegocioError("No puedes quitarte tu propio rol de administrador: pídeselo a otro administrador.")
+        otros = Usuario.objects.filter(rol=Usuario.Rol.ADMINISTRADOR, is_active=True).exclude(pk=usuario.pk)
+        if not otros.exists():
+            raise ReglaNegocioError("Debe quedar al menos un administrador activo.")
+    elif not usuario.is_active:
+        raise ReglaNegocioError("La cuenta está desactivada: actívala antes de hacerla administradora.")
+    usuario.rol = rol
+    usuario.save(update_fields=["rol"])
+    return usuario
+

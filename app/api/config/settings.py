@@ -141,6 +141,8 @@ STORAGES = {
 }
 
 # Detrás de Cloudflare + edge_nginx (TLS termina antes de Django)
+# Página 403 del sitio (con la marca) cuando un formulario llega sin token válido
+CSRF_FAILURE_VIEW = "portal.vistas.errores.csrf_fallido"
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

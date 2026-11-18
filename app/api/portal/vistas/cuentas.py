@@ -14,7 +14,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_encode
-from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods, require_POST
 
 from votaciones import correo
 from votaciones.comun.errores import ReglaNegocioError
@@ -72,10 +73,14 @@ def iniciar_sesion(request):
     })
 
 
-@require_POST
+# Cerrar sesión no necesita CSRF: lo peor que puede hacer un tercero es cerrar la sesión. Así nunca falla por un
+# token vencido (otra pestaña, botón «Atrás») y escribir /logout en la barra también funciona.
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
 def cerrar_sesion(request):
-    logout(request)
-    messages.info(request, "Cerraste tu sesión.")
+    if request.user.is_authenticated:
+        logout(request)
+        messages.info(request, "Cerraste tu sesión.")
     return redirect("portal:inicio")
 
 

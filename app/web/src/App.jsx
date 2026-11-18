@@ -23,6 +23,7 @@ import AdminOpciones from './pages/admin/AdminOpciones.jsx';
 import AdminResultados from './pages/admin/AdminResultados.jsx';
 import AdminEdiciones from './pages/admin/AdminEdiciones.jsx';
 import AdminAuditoria from './pages/admin/AdminAuditoria.jsx';
+import AdminUsuarios from './pages/admin/AdminUsuarios.jsx';
 import AdminBanner from './pages/admin/AdminBanner.jsx';
 import AdminSitio from './pages/admin/AdminSitio.jsx';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion.jsx';
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="votaciones/:id/opciones" element={<AdminOpciones />} />
           <Route path="resultados" element={<AdminResultados />} />
           <Route path="auditoria" element={<AdminAuditoria />} />
+          <Route path="usuarios" element={<AdminUsuarios />} />
           <Route path="banner" element={<AdminBanner />} />
           <Route path="revista" element={<AdminRevista />} />
           <Route path="sitio" element={<AdminSitio />} />

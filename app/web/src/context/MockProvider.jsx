@@ -311,6 +311,18 @@ export function MockProvider({ children }) {
     [votaciones, datos.opciones, datos.votos]
   );
 
+  // Hacer administrador a un usuario o devolverlo a votante (mismas reglas que la API)
+  const cambiarRol = async (id, rol) => {
+    const objetivo = datos.usuarios.find((u) => u.id === id);
+    if (!objetivo) return { ok: false, error: 'El usuario no existe.' };
+    if (rol === 'votante') {
+      if (id === usuarioId) return { ok: false, error: 'No puedes quitarte tu propio rol de administrador: pídeselo a otro administrador.' };
+      if (!datos.usuarios.some((u) => u.id !== id && u.rol === 'administrador')) return { ok: false, error: 'Debe quedar al menos un administrador activo.' };
+    }
+    actualizar((d) => ({ ...d, usuarios: d.usuarios.map((u) => (u.id === id ? { ...u, rol } : u)) }), `Cambió el rol de "${objetivo.correo}" a ${rol}`);
+    return { ok: true };
+  };
+
   // Resultados de una votación, una categoría o una edición en pdf | excel | csv | json | sql (generados en el navegador)
   const exportar = async (coleccion, id, formato = 'pdf') => {
     const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -458,6 +470,7 @@ export function MockProvider({ children }) {
     obtenerResultados,
     exportarResultados,
     exportar,
+    cambiarRol,
     descargarPlantillaEdicion: sinApi,
     exportarEstructuraEdicion: sinApi,
     importarEdicion: sinApi,

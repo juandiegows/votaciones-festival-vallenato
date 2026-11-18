@@ -386,6 +386,14 @@ export function ApiProvider({ children }) {
   };
   const exportarResultados = (votacionId, formato) => exportar('votaciones', votacionId, formato);
 
+  // Hacer administrador a un usuario o devolverlo a votante (la API impide quitarse el propio rol)
+  const cambiarRol = async (id, rol) => {
+    const r = await api.post(`/admin/usuarios/${id}/rol/`, { rol });
+    if (!r.ok) return { ok: false, error: r.error };
+    await recargar();
+    return { ok: true };
+  };
+
   // Datos de demostración (cargar_demo): resumen, eliminar y volver a cargar
   const obtenerDemo = useCallback(async () => {
     const r = await api.get('/admin/demo/');
@@ -488,6 +496,7 @@ export function ApiProvider({ children }) {
     exportarResultados,
     exportar,
     obtenerDemo,
+    cambiarRol,
     eliminarDemo,
     cargarDemo,
     descargarPlantillaEdicion,

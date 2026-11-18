@@ -81,8 +81,9 @@ class SesionTest(BasePortalTest):
         datos = {"email": "votante@festival.test", "password": CLAVE_VOTANTE, "next": "https://otro-sitio.test/"}
         self.assertRedirects(self.client.post("/login", datos), "/categorias", target_status_code=302)
 
-    def test_logout_solo_por_post(self):
-        self.assertEqual(self.client.get("/logout").status_code, 405)
+    def test_logout_por_get_lleva_al_inicio(self):
+        # /logout escrito en la barra también cierra la sesión y vuelve al inicio (ver test_usuarios.CerrarSesionTest)
+        self.assertRedirects(self.client.get("/logout"), "/", fetch_redirect_response=False)
 
     def test_confirmar_correo(self):
         self.votante.correo_verificado = False

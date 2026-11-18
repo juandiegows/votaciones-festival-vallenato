@@ -34,7 +34,9 @@
           <li class="nav-item"><a href="{% url 'portal:panel-votos' %}" class="nav-link{% if seccion == 'votos' %} active{% endif %}"{% if seccion == 'votos' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Votos y resultados</a></li>
           <li class="admin-nav-grupo d-none d-lg-block">Ajustes</li>
           <li class="nav-item"><a href="{% url 'portal:panel-configuracion' %}" class="nav-link{% if seccion == 'configuracion' %} active{% endif %}"{% if seccion == 'configuracion' %} aria-current="page"{% endif %}><i class="bi bi-sliders me-2" aria-hidden="true"></i>Configuración</a></li>
-          {# Lo que aún no tiene pantalla propia (banner, revista, auditoría, usuarios…) se gestiona en Django Admin #}
+          <li class="admin-nav-grupo d-none d-lg-block">Control</li>
+          <li class="nav-item"><a href="{% url 'portal:panel-usuarios' %}" class="nav-link{% if seccion == 'usuarios' %} active{% endif %}"{% if seccion == 'usuarios' %} aria-current="page"{% endif %}><i class="bi bi-people me-2" aria-hidden="true"></i>Usuarios</a></li>
+          {# Lo que aún no tiene pantalla propia (banner, revista, auditoría…) se gestiona en Django Admin #}
           <li class="nav-item"><a href="/django-admin/" class="nav-link"><i class="bi bi-gear me-2" aria-hidden="true"></i>Django Admin <i class="bi bi-box-arrow-up-right small ms-1" aria-hidden="true"></i></a></li>
         </ul>
       </nav>

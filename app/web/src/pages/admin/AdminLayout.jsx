@@ -29,7 +29,13 @@ const GRUPOS = [
       { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
     ],
   },
-  { titulo: 'Control', enlaces: [{ to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true }] },
+  {
+    titulo: 'Control',
+    enlaces: [
+      { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
+      { to: '/panel/usuarios', label: 'Usuarios', icono: 'people' },
+    ],
+  },
   { titulo: 'Ajustes', enlaces: [{ to: '/panel/configuracion', label: 'Configuración', icono: 'gear', porEdicion: true }] },
 ];
 
