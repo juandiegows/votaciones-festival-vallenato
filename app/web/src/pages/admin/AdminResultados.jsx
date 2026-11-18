@@ -16,7 +16,9 @@ import { useResultados } from '../../hooks/useResultados.js';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 
 export default function AdminResultados() {
-  const { guardarEntidad, exportarResultados, obtenerResumen } = useApp();
+  const { guardarEntidad, exportarResultados, obtenerResumen, puede } = useApp();
+  const puedeExportar = puede('resultados.exportar');
+  const puedePublicar = puede('resultados.publicar');
   const { edicion, categorias, votaciones } = useEdicionAdmin();
   const { state } = useLocation();
   // Desde «Ver votos» de otra pantalla se llega con la votación ya elegida
@@ -102,7 +104,7 @@ export default function AdminResultados() {
           <>
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <p className="small mb-0">
-                <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién participó.
+                <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico{puedeExportar ? ', exportar' : ''} o consultar quién participó.
               </p>
               <span className="d-flex gap-2 align-items-center">
                 <MenuExportar coleccion="ediciones" id={edicion.id} nombre={edicion.nombre} clase="btn-outline-primary" onResultado={setMensaje} />
@@ -155,21 +157,26 @@ export default function AdminResultados() {
             </section>
             <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-acciones">
               <h2 id="titulo-acciones" className="h6">Acciones</h2>
-              <p className="small fw-semibold mb-2" id="exportar-titulo">Exportar resultados</p>
-              <div className="d-grid gap-2 mb-3" role="group" aria-labelledby="exportar-titulo">
-                {FORMATOS_EXPORTACION.map((f, i) => (
-                  <button key={f.valor} type="button" className={`btn ${i === 0 ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => exportar(f.valor)} disabled={procesando}>
-                    <i className={`bi bi-${f.icono} me-1`} aria-hidden="true"></i>{f.etiqueta}
-                  </button>
-                ))}
-              </div>
+              {puedeExportar && (
+                <>
+                  <p className="small fw-semibold mb-2" id="exportar-titulo">Exportar resultados</p>
+                  <div className="d-grid gap-2 mb-3" role="group" aria-labelledby="exportar-titulo">
+                    {FORMATOS_EXPORTACION.map((f, i) => (
+                      <button key={f.valor} type="button" className={`btn ${i === 0 ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => exportar(f.valor)} disabled={procesando}>
+                        <i className={`bi bi-${f.icono} me-1`} aria-hidden="true"></i>{f.etiqueta}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <div className="form-check form-switch">
-                <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando || !votacion.publicada} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
+                <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando || !votacion.publicada || !puedePublicar} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />
                 <label className="form-check-label fw-semibold" htmlFor="publicar-res">Publicar resultados</label>
               </div>
               <p id="publicar-ayuda" className="small mt-2 mb-1">
                 <strong>¿El público los ve ahora? {votacion.publicada && resultadosVisibles(votacion) ? 'Sí' : 'No'}.</strong>{' '}
                 <span className="text-secondary-flv">Ajuste: «{visibilidadResultados(votacion)}» ({votacion.personalizarResultados ? 'propio de esta votación' : 'de la edición'}).</span>
+                {!puedePublicar && <span className="d-block text-secondary-flv mt-1"><i className="bi bi-lock me-1" aria-hidden="true"></i>Tu rol no puede publicar ni ocultar resultados.</span>}
               </p>
               {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2 mt-2 mb-0`} role="status">{mensaje.texto}</div>}
             </section>

@@ -12,7 +12,7 @@ El prototipo respeta los **colores de marca del Festival** (tomados de festivalv
 
 - Paleta completa, contrastes y reglas de uso: [`docs/BRANDING.md`](../../docs/BRANDING.md)
 - Tokens CSS: [`src/styles/brand.css`](src/styles/brand.css)
-- Guía interactiva en el prototipo: ruta `/panel/marca` (solo para el administrador)
+- Guía interactiva en el prototipo: ruta `/panel/marca` (roles con el permiso `sitio.ver`; se guarda con `sitio.editar`)
 
 ## Equipo
 
@@ -25,7 +25,12 @@ El prototipo respeta los **colores de marca del Festival** (tomados de festivalv
 | Rol | Correo | Contraseña |
 |---|---|---|
 | Administrador | `admin@festival.test` | `Admin2027*` |
+| Solo lectura | `lectura@demo.festival.test` | `Admin2027*` |
+| Lectura y escritura | `editor@demo.festival.test` | `Admin2027*` |
 | Votante | `votante@festival.test` | `Voto2027*` |
+
+Cuentas ficticias. «Solo lectura» consulta todo el panel sin cambiar nada; «Lectura y escritura» solo administra
+ediciones, categorías, votaciones y opciones (ver [Roles y permisos](#roles-y-permisos)).
 
 También puedes crear una cuenta nueva en **Registro**. En el modo de demostración, el botón **«Restablecer datos de demostración»** (pie de página) vuelve a cargar los datos semilla; en el modo API los datos se restauran en el servidor con `python manage.py cargar_demo --reiniciar`.
 
@@ -141,10 +146,32 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/panel/votaciones/:id/opciones` | Gestión de opciones | RF-13 |
 | `/panel/resultados` | Resultados, exportar CSV, publicar | RF-14, RF-15 |
 | `/panel/auditoria` | Registro de auditoría (50 por página) | RF-16, RN-12 |
+| `/panel/usuarios` | Usuarios registrados: filtro por rol y asignación de cualquier rol (`usuarios.cambiar_rol`) | Pendiente de validación (RF de roles) |
+| `/panel/roles` | Roles y permisos: lista de roles, crear, editar con casillas por grupo del catálogo y eliminar | Pendiente de validación (RF de roles) |
 | `/panel/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
+| `/panel/revista` | Revista institucional (PDF que el inicio muestra como libro) | — |
 | `/panel/sitio` | Contacto y redes sociales del pie de página | — |
 | `/panel/configuracion` | Configuración del sitio público: visibilidad de resultados de la edición (cada votación puede personalizarla), días que siguen visibles las votaciones cerradas, presentación de categorías y modo del banner | RF-15, RN-07 |
-| `/panel/marca` | Guía de identidad visual (solo administrador; `/marca` redirige aquí) | — |
+| `/panel/marca` | Guía de identidad visual (`/marca` redirige aquí) | — |
+
+Cada ruta del panel exige su permiso `.ver` (tabla en `src/data/permisos.js`, `PERMISO_SECCION`); sin él se muestra
+una página 403 dentro del panel y el menú no ofrece la sección.
+
+## Roles y permisos
+
+Cada funcionalidad del panel es un permiso (`modulo.accion`) y un rol es un conjunto de permisos. El catálogo es una
+copia de `app/api/votaciones/cuentas/permisos.py` en `src/data/permisos.js` (el modo API usa el de
+`/api/gestion/roles/catalogo/`).
+
+- Los proveedores exponen `permisos`, `puede(codigo)` y `esAdmin` (= «accede al panel», `panel.ver`).
+- El modo API solo pide las colecciones de administración cuyo `.ver` tiene el rol; las demás se toman de la API
+  pública o quedan vacías (sin 403).
+- Cada pantalla oculta o deshabilita crear, editar, eliminar, activar, publicar, importar, exportar, mover y guardar
+  según el permiso; con solo lectura no se ofrecen formularios de edición.
+- Reglas (iguales en la API y en el modo demostración): nadie cambia su propio rol ni edita el rol que tiene; solo se
+  asignan o reparten permisos que uno tiene; votante y administrador tienen permisos fijos; los roles del sistema no se
+  eliminan y un rol con usuarios tampoco; siempre queda al menos un administrador activo.
+- Toda tabla paginada (auditoría, usuarios) muestra el paginador encima y debajo de la tabla (`src/components/Paginador.jsx`).
 
 Las rutas anteriores con ID (`/categorias/:id`, `/votaciones/:id`, `/votaciones/:id/comprobante`) redirigen a la URL
 amigable. En GitHub Pages todas las rutas llevan el prefijo `/votaciones-festival-vallenato/`.

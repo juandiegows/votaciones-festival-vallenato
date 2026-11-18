@@ -14,7 +14,7 @@ import MenuExportar from '../../components/admin/MenuExportar.jsx';
 import ImportarEdicion from '../../components/admin/ImportarEdicion.jsx';
 
 export default function AdminEdiciones() {
-  const { ediciones, categorias, configuracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { ediciones, categorias, configuracion, guardarEntidad, eliminarEntidad, reemplazarColeccion, puede } = useApp();
   const defecto = valoresPorDefecto(configuracion);
   const { setEdicionId } = useEdicionAdmin();
   const [form, setForm] = useState(null);
@@ -79,6 +79,7 @@ export default function AdminEdiciones() {
   // Lleva a las categorías dejando elegida esta edición en el selector del menú
   const enlaceCategorias = (ed) => {
     const n = numCategorias(ed.id);
+    if (!puede('categorias.ver')) return <>{n} {n === 1 ? 'categoría' : 'categorías'}</>;
     return <Link to="/panel/categorias" onClick={() => setEdicionId(ed.id)} aria-label={`Ver categorías de ${ed.nombre}: ${n}`}>{n} {n === 1 ? 'categoría' : 'categorías'}</Link>;
   };
   const fechas = (ed) => `${formatearFecha(ed.fechaInicio)} – ${formatearFecha(ed.fechaFin)}`;
@@ -91,20 +92,22 @@ export default function AdminEdiciones() {
   const acciones = (ed) => (
     <span className="text-nowrap">
       <MenuExportar coleccion="ediciones" id={ed.id} nombre={ed.nombre} estructura onResultado={setMensaje} />
-      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar</button>
-      <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`} title="Eliminar"><i className="bi bi-trash" aria-hidden="true"></i></button>
+      {puede('ediciones.editar') && <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar</button>}
+      {puede('ediciones.eliminar') && <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`} title="Eliminar"><i className="bi bi-trash" aria-hidden="true"></i></button>}
     </span>
   );
 
   return (
     <>
       <PageHeader titulo="Gestión de ediciones" subtitulo="Una edición es un año del Festival y agrupa sus categorías y votaciones. El público solo ve la edición activa.">
-        <button className="btn btn-outline-primary me-2" onClick={() => setImportando(true)}>
-          <i className="bi bi-upload me-1" aria-hidden="true"></i>Importar desde Excel
-        </button>
-        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: defecto.defectoPresentacionCategorias, mostrarResultados: defecto.defectoResultados })}>
+        {puede('ediciones.importar') && (
+          <button className="btn btn-outline-primary me-2" onClick={() => setImportando(true)}>
+            <i className="bi bi-upload me-1" aria-hidden="true"></i>Importar desde Excel
+          </button>
+        )}
+        {puede('ediciones.crear') && <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: defecto.defectoPresentacionCategorias, mostrarResultados: defecto.defectoResultados })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
-        </button>
+        </button>}
       </PageHeader>
       <ImportarEdicion abierto={importando} onCerrar={() => setImportando(false)} onImportada={(texto) => setMensaje({ tipo: 'success', texto })} />
       {mensaje && (
@@ -121,7 +124,7 @@ export default function AdminEdiciones() {
       {ediciones.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-          <p className="mb-0">Aún no hay ediciones registradas. Usa «Nueva edición» para crear la primera.</p>
+          <p className="mb-0">Aún no hay ediciones registradas.{puede('ediciones.crear') && ' Usa «Nueva edición» para crear la primera.'}</p>
         </div>
       )}
 

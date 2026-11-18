@@ -77,7 +77,14 @@ function guardarPreferencia(clave, valor) {
 }
 
 export default function AdminVotaciones() {
-  const { configuracion, guardarEntidad, eliminarEntidad } = useApp();
+  const { configuracion, guardarEntidad, eliminarEntidad, puede } = useApp();
+  // Lo que se ofrece depende del rol: sin el permiso, el botón o el control no se muestra
+  const puedeCrear = puede('votaciones.crear');
+  const puedeEditar = puede('votaciones.editar');
+  const puedePublicar = puede('votaciones.publicar');
+  const verOpcionesPermitido = puede('opciones.ver');
+  const crearOpciones = puede('opciones.crear');
+  const verVotos = puede('resultados.ver');
   const { edicion, categorias, votaciones, opciones, votos } = useEdicionAdmin();
   const location = useLocation();
   const [filtros, setFiltros] = useState({
@@ -87,7 +94,8 @@ export default function AdminVotaciones() {
   // Categorías contraídas al agrupar (se recuerdan en este navegador)
   const [contraidas, setContraidas] = useState(() => new Set(leerLista('flv_votaciones_contraidas')));
   // Por defecto solo las votaciones: las opciones se despliegan a pedido para que la lista se pueda recorrer
-  const [verOpciones, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', false));
+  const [verOpcionesGuardado, setVerOpciones] = useState(() => leerPreferencia('flv_votaciones_opciones', false));
+  const verOpciones = verOpcionesGuardado && verOpcionesPermitido;
   const [masFiltros, setMasFiltros] = useState(false);
   const [vista, setVista] = useVistaGuardada('votaciones', 'lista');
   const [form, setForm] = useState(null);
@@ -110,7 +118,7 @@ export default function AdminVotaciones() {
     cierre: (a, b) => new Date(a.fechaCierre) - new Date(b.fechaCierre),
     titulo: (a, b) => a.titulo.localeCompare(b.titulo, 'es'),
     votos: (a, b) => numVotos(b.id) - numVotos(a.id),
-  }[filtros.orden];
+  }[verVotos || filtros.orden !== 'votos' ? filtros.orden : 'apertura'];
   const lista = votaciones
     .filter((v) => !q || normalizar(`${v.titulo} ${v.descripcion} ${v.slug} ${opciones.filter((o) => o.votacionId === v.id).map((o) => o.nombre).join(' ')}`).includes(q))
     .filter((v) => !filtros.categoria || v.categoriaId === Number(filtros.categoria))
@@ -276,37 +284,41 @@ export default function AdminVotaciones() {
     return (
       <span className="acciones-fila">
         {/* Primero, el siguiente paso según el estado de la votación */}
-        {!v.publicada && faltanOpciones && (
+        {!v.publicada && faltanOpciones && verOpcionesPermitido && crearOpciones && (
           <Link className="btn btn-sm btn-dorado" to={rutaOpciones} aria-label={`Agregar opciones a ${v.titulo}`}>
             <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opciones
           </Link>
         )}
-        {!v.publicada && !faltanOpciones && (
+        {!v.publicada && !faltanOpciones && puedePublicar && (
           <button className="btn btn-sm btn-dorado" disabled={procesando} onClick={() => alternarPublicada(v)} aria-label={`Publicar ${v.titulo}`}>
             <i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar
           </button>
         )}
-        {v.publicada && (
+        {v.publicada && verVotos && (
           <Link className="btn btn-sm btn-outline-primary" to="/panel/resultados" state={{ votacionId: v.id }} aria-label={`Ver votos de ${v.titulo}`}>
             <i className="bi bi-bar-chart me-1" aria-hidden="true"></i>Ver votos
           </Link>
         )}
-        <button className="btn btn-sm btn-outline-primary" onClick={() => editar(v)} aria-label={`Editar ${v.titulo}`}>
-          <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
-        </button>
-        {(v.publicada || !faltanOpciones) && (
+        {puedeEditar && (
+          <button className="btn btn-sm btn-outline-primary" onClick={() => editar(v)} aria-label={`Editar ${v.titulo}`}>
+            <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+          </button>
+        )}
+        {verOpcionesPermitido && (v.publicada || !faltanOpciones || !crearOpciones) && (
           <Link className="btn btn-sm btn-outline-primary" to={rutaOpciones} aria-label={`Página de opciones de ${v.titulo}`}>
             <i className="bi bi-list-ol me-1" aria-hidden="true"></i>Opciones
           </Link>
         )}
-        {v.publicada && !abierta && (
+        {v.publicada && !abierta && puedePublicar && (
           <button className="btn btn-sm btn-outline-secondary" disabled={procesando} onClick={() => alternarPublicada(v)} aria-label={`Despublicar ${v.titulo}`}>
             <i className="bi bi-eye-slash me-1" aria-hidden="true"></i>Despublicar
           </button>
         )}
-        <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(v)} aria-label={`Eliminar ${v.titulo}`} title="Eliminar">
-          <i className="bi bi-trash" aria-hidden="true"></i>
-        </button>
+        {puede('votaciones.eliminar') && (
+          <button className="btn btn-sm btn-outline-danger" onClick={() => setAEliminar(v)} aria-label={`Eliminar ${v.titulo}`} title="Eliminar">
+            <i className="bi bi-trash" aria-hidden="true"></i>
+          </button>
+        )}
       </span>
     );
   };
@@ -316,7 +328,7 @@ export default function AdminVotaciones() {
       <span className="small fw-semibold">
         Opciones <span className={numOpciones(v.id) < 2 ? 'text-danger' : 'text-secondary-flv'}>({numOpciones(v.id)})</span>
       </span>
-      {opcionesBloqueadas(v, votos) ? (
+      {!crearOpciones ? null : opcionesBloqueadas(v, votos) ? (
         <span className="small text-secondary-flv" title={AVISO_OPCIONES_BLOQUEADAS}><i className="bi bi-lock me-1" aria-hidden="true"></i>Opciones bloqueadas</span>
       ) : (
         <button type="button" className="btn btn-sm btn-primary py-0 px-2" onClick={() => agregarOpcion(v)} aria-label={`Agregar opción a ${v.titulo}`}>
@@ -377,7 +389,7 @@ export default function AdminVotaciones() {
             return <>{n}{n < 2 && <span className="small text-danger fw-semibold d-block">{n === 0 ? 'Faltan 2' : 'Falta 1'}</span>}</>;
           },
         },
-        { id: 'votos', titulo: 'Votos', celda: (v) => numVotos(v.id), prioridad: 3 },
+        ...(verVotos ? [{ id: 'votos', titulo: 'Votos', celda: (v) => numVotos(v.id), prioridad: 3 }] : []),
         { id: 'acciones', titulo: 'Acciones', celda: acciones, claseTh: 'text-end', claseTd: 'text-end', prioridad: 1 },
       ]}
     />
@@ -398,7 +410,7 @@ export default function AdminVotaciones() {
             </div>
             <p className="small mb-2">{v.descripcion}</p>
             <div className="mb-2">{fechas(v)}</div>
-            <p className="small mb-2">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos · Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</p>
+            <p className="small mb-2">{numOpciones(v.id)} opciones{verVotos && ` · ${numVotos(v.id)} votos`} · Resultados: {visibilidadResultados(v)}{v.personalizarResultados ? ' (propia)' : ''}</p>
             {verOpciones && <div className="border-top pt-2 mb-2">{bloqueOpciones(v)}</div>}
             <div className="mt-auto border-top pt-2 text-end">{acciones(v)}</div>
           </article>
@@ -418,7 +430,7 @@ export default function AdminVotaciones() {
               {fechas(v)}
             </div>
             {insignias(v)}
-            <span className="small text-nowrap">{numVotos(v.id)} votos</span>
+            {verVotos && <span className="small text-nowrap">{numVotos(v.id)} votos</span>}
             {acciones(v)}
           </div>
           {verOpciones && <div className="mt-2 ps-md-5">{bloqueOpciones(v)}</div>}
@@ -437,7 +449,7 @@ export default function AdminVotaciones() {
               <h3 className="h6 mb-0 flex-grow-1">{v.titulo}</h3>
             </div>
             <div>{insignias(v)}</div>
-            <p className="small text-secondary-flv mb-1">{numOpciones(v.id)} opciones · {numVotos(v.id)} votos</p>
+            <p className="small text-secondary-flv mb-1">{numOpciones(v.id)} opciones{verVotos && ` · ${numVotos(v.id)} votos`}</p>
             {verOpciones && <div className="border-top pt-2 mb-1">{bloqueOpciones(v)}</div>}
             <div className="mt-auto border-top pt-2 text-end">{acciones(v)}</div>
           </article>
@@ -455,7 +467,7 @@ export default function AdminVotaciones() {
             <span className="flex-grow-1 text-truncate fw-semibold">{v.titulo}</span>
             <span className="d-none d-md-inline small text-secondary-flv text-nowrap">{formatearFechaHora(v.fechaCierre)}</span>
             {insignias(v)}
-            <span className="small text-nowrap">{numVotos(v.id)} votos</span>
+            {verVotos && <span className="small text-nowrap">{numVotos(v.id)} votos</span>}
             {acciones(v)}
           </li>
           {verOpciones && <li className="d-block">{bloqueOpciones(v)}</li>}
@@ -471,24 +483,24 @@ export default function AdminVotaciones() {
   return (
     <>
       <PageHeader titulo="Gestión de votaciones" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Crea la votación como borrador, agrégale al menos 2 opciones y publícala.`}>
-        <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)} disabled={!categorias.length}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</button>
+        {puedeCrear && <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)} disabled={!categorias.length}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación</button>}
       </PageHeader>
 
       {!edicion && (
         <div className="alert alert-warning" role="alert">
-          No hay ediciones registradas. <Link to="/panel/ediciones" className="alert-link">Crea una edición</Link> y luego sus categorías.
+          No hay ediciones registradas.{puede('ediciones.crear') && <> <Link to="/panel/ediciones" className="alert-link">Crea una edición</Link> y luego sus categorías.</>}
         </div>
       )}
       {edicion && !categorias.length && (
         <div className="alert alert-warning" role="alert">
-          Esta edición no tiene categorías. <Link to="/panel/categorias" className="alert-link">Crea una categoría</Link> para agregar votaciones.
+          Esta edición no tiene categorías.{puede('categorias.crear') && <> <Link to="/panel/categorias" className="alert-link">Crea una categoría</Link> para agregar votaciones.</>}
         </div>
       )}
 
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
           {mensaje.texto}{' '}
-          {mensaje.agregarOpcionA && (
+          {mensaje.agregarOpcionA && crearOpciones && (
             <button type="button" className="btn btn-link alert-link p-0 align-baseline" onClick={() => agregarOpcion(mensaje.agregarOpcionA)}>Agregar opciones ahora</button>
           )}
           <button type="button" className="btn-close" aria-label="Cerrar mensaje" onClick={() => setMensaje(null)}></button>
@@ -527,18 +539,18 @@ export default function AdminVotaciones() {
                   {OPCIONES_MOSTRAR_RESULTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
-              <div className="col-6 col-md-4">
+              {verVotos && <div className="col-6 col-md-4">
                 <label htmlFor="f-votos" className="form-label small mb-1">Votos</label>
                 <select id="f-votos" className="form-select form-select-sm" value={filtros.votos} onChange={(e) => cambiarFiltro('votos', e.target.value)}>
                   <option value="">Todos</option>
                   <option value="con">Con votos</option>
                   <option value="sin">Sin votos</option>
                 </select>
-              </div>
+              </div>}
               <div className="col-12 col-md-4">
                 <label htmlFor="f-orden" className="form-label small mb-1">Ordenar</label>
                 <select id="f-orden" className="form-select form-select-sm" value={filtros.orden} onChange={(e) => cambiarFiltro('orden', e.target.value)}>
-                  {ORDENES.map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
+                  {ORDENES.filter(([valor]) => verVotos || valor !== 'votos').map(([valor, etiqueta]) => <option key={valor} value={valor}>{etiqueta}</option>)}
                 </select>
               </div>
             </div>
@@ -552,10 +564,10 @@ export default function AdminVotaciones() {
             <input id="f-agrupar" className="form-check-input" type="checkbox" role="switch" checked={agrupar} onChange={(e) => { setAgrupar(e.target.checked); guardarPreferencia('flv_votaciones_agrupar', e.target.checked); }} />
             <label className="form-check-label small" htmlFor="f-agrupar">Agrupar por categoría</label>
           </div>
-          <div className="form-check form-switch mb-0">
+          {verOpcionesPermitido && <div className="form-check form-switch mb-0">
             <input id="f-ver-opciones" className="form-check-input" type="checkbox" role="switch" checked={verOpciones} onChange={(e) => { setVerOpciones(e.target.checked); guardarPreferencia('flv_votaciones_opciones', e.target.checked); }} />
             <label className="form-check-label small" htmlFor="f-ver-opciones">Mostrar opciones</label>
-          </div>
+          </div>}
           {agrupar && grupos.length > 1 && (
             <span className="d-inline-flex gap-2">
               <button type="button" className="btn btn-sm btn-link p-0" onClick={() => fijarContraidas(new Set())} disabled={!contraidas.size}>
@@ -580,7 +592,7 @@ export default function AdminVotaciones() {
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
           <p className={!votaciones.length && categorias.length ? 'mb-2' : 'mb-0'}>{votaciones.length ? 'No hay votaciones con esos filtros.' : 'Esta edición aún no tiene votaciones.'}</p>
-          {!votaciones.length && categorias.length > 0 && <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)}>Crear la primera votación</button>}
+          {!votaciones.length && categorias.length > 0 && puedeCrear && <button className="btn btn-primary" onClick={() => nueva(filtros.categoria)}>Crear la primera votación</button>}
         </div>
       )}
 
@@ -602,9 +614,11 @@ export default function AdminVotaciones() {
               </button>
               <span className="badge text-bg-light border">{g.votaciones.length} {g.votaciones.length === 1 ? 'votación' : 'votaciones'}</span>
               {!g.categoria.activa && <span className="badge text-bg-secondary">Categoría inactiva</span>}
-              <button type="button" className="btn btn-sm btn-outline-primary ms-auto" onClick={() => nueva(g.categoria.id)} aria-label={`Nueva votación en ${g.categoria.nombre}`}>
-                <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación
-              </button>
+              {puedeCrear && (
+                <button type="button" className="btn btn-sm btn-outline-primary ms-auto" onClick={() => nueva(g.categoria.id)} aria-label={`Nueva votación en ${g.categoria.nombre}`}>
+                  <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva votación
+                </button>
+              )}
             </div>
           )}
           {g.categoria ? (
@@ -689,7 +703,7 @@ export default function AdminVotaciones() {
                 <div id="v-vpu-ayuda" className="form-text">
                   {form.personalizarVotos
                     ? 'Límite propio de esta votación (pendiente de validación con la Fundación).'
-                    : <>Hereda el límite de la edición. <Link to="/panel/configuracion">Cambiarlo en Configuración</Link>.</>}
+                    : <>Hereda el límite de la edición. {puede('configuracion.ver') && <><Link to="/panel/configuracion/votacion">Cambiarlo en Configuración</Link>.</>}</>}
                 </div>
               </div>
               <div className="col-md-6">
@@ -707,7 +721,7 @@ export default function AdminVotaciones() {
                 <div id="v-mr-ayuda" className="form-text">
                   {form.personalizarResultados
                     ? DESCRIPCION_RESULTADOS[form.mostrarResultados]
-                    : <>Hereda la configuración de la edición. <Link to="/panel/configuracion">Cambiarla en Configuración</Link>.</>}
+                    : <>Hereda la configuración de la edición. {puede('configuracion.ver') && <><Link to="/panel/configuracion/resultados">Cambiarla en Configuración</Link>.</>}</>}
                 </div>
               </div>
               <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">4</span>Cómo se ve para el público</h3></div>
@@ -738,11 +752,13 @@ export default function AdminVotaciones() {
               <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">5</span>Publicación</h3></div>
               <div className="col-12">
                 <div className="form-check form-switch">
-                  <input id="v-pub" className={`form-check-input ${errores.publicada ? 'is-invalid' : ''}`} type="checkbox" role="switch" checked={form.publicada} disabled={publicacionBloqueada} onChange={(e) => setForm({ ...form, publicada: e.target.checked })} aria-describedby="v-pub-ayuda" />
+                  <input id="v-pub" className={`form-check-input ${errores.publicada ? 'is-invalid' : ''}`} type="checkbox" role="switch" checked={form.publicada} disabled={publicacionBloqueada || !puedePublicar} onChange={(e) => setForm({ ...form, publicada: e.target.checked })} aria-describedby="v-pub-ayuda" />
                   <label className="form-check-label" htmlFor="v-pub">Publicar votación (visible al público)</label>
                   {errores.publicada && <div className="invalid-feedback d-block" role="alert">{errores.publicada}</div>}
                   <div id="v-pub-ayuda" className="form-text">
-                    {publicacionBloqueada
+                    {!puedePublicar
+                      ? 'Tu rol no puede publicar ni despublicar votaciones (permiso «Publicar, despublicar y cerrar votaciones»).'
+                      : publicacionBloqueada
                       ? AVISO_ABIERTA
                       : `${form.id ? `Opciones registradas: ${numOpciones(form.id)}.` : 'Las votaciones nuevas se crean como borrador.'} Se requieren al menos 2 opciones para publicar.`}
                   </div>
@@ -768,7 +784,7 @@ export default function AdminVotaciones() {
           votosAEliminar > 0 ? (
             <>
               <button className="btn btn-outline-secondary" onClick={() => setAEliminar(null)}>Entendido</button>
-              {aEliminar?.estado !== 'cerrada' && (
+              {aEliminar?.estado !== 'cerrada' && puedePublicar && (
                 <button className="btn btn-peligro" disabled={procesando} onClick={() => cerrar(aEliminar)}>
                   <i className="bi bi-lock me-1" aria-hidden="true"></i>Cerrar votación
                 </button>

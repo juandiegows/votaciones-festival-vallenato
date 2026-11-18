@@ -181,7 +181,9 @@ function EditorBoton({ rol, boton, colores, onCambio }) {
 }
 
 export default function Marca() {
-  const { configuracion, guardarConfiguracion } = useApp();
+  const { configuracion, guardarConfiguracion, puede } = useApp();
+  // La marca se guarda con sitio.editar o configuracion.editar (como la API); sin ellos los cambios son solo una vista previa
+  const puedeGuardar = puede('sitio.editar') || puede('configuracion.editar');
   // null = sin cambios (sigue a lo guardado); objeto = borrador que se previsualiza en todo el sitio
   const [borrador, setBorrador] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -223,20 +225,29 @@ export default function Marca() {
 
       <div className="barra-marca card-flv p-2 px-3 mb-4 d-flex flex-wrap align-items-center gap-2" role="region" aria-label="Guardar identidad visual">
         <span className="small me-auto" role="status">
-          {sucio ? (
+          {!puedeGuardar ? (
+            <><i className="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta la identidad visual: lo que cambies aquí es una vista previa y no se guarda.</>
+          ) : sucio ? (
             <><i className="bi bi-circle-fill text-rojo me-1" style={{ fontSize: '.55rem' }} aria-hidden="true"></i>Cambios sin guardar: estás viendo una vista previa.</>
           ) : (
             <><i className="bi bi-check-circle me-1" aria-hidden="true"></i>{esBase ? 'Usando la marca base del Festival.' : 'Identidad visual personalizada guardada.'}</>
           )}
         </span>
-        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={esBase || procesando}
-          onClick={() => setBorrador(normalizarMarca({}))}>
-          <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Marca base
-        </button>
-        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!sucio || procesando} onClick={() => setBorrador(null)}>Descartar</button>
-        <button type="button" className="btn btn-sm btn-primary" disabled={!sucio || procesando} onClick={guardar}>
-          {procesando ? 'Guardando…' : 'Guardar cambios'}
-        </button>
+        {puedeGuardar && (
+          <>
+            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={esBase || procesando}
+              onClick={() => setBorrador(normalizarMarca({}))}>
+              <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Marca base
+            </button>
+            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!sucio || procesando} onClick={() => setBorrador(null)}>Descartar</button>
+            <button type="button" className="btn btn-sm btn-primary" disabled={!sucio || procesando} onClick={guardar}>
+              {procesando ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </>
+        )}
+        {!puedeGuardar && sucio && (
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setBorrador(null)}>Quitar la vista previa</button>
+        )}
       </div>
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">

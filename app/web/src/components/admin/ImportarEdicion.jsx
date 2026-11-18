@@ -5,7 +5,7 @@ import Modal from '../Modal.jsx';
 
 /** Modal para descargar la plantilla de Excel y crear una edición completa subiéndola llena. */
 export default function ImportarEdicion({ abierto, onCerrar, onImportada }) {
-  const { descargarPlantillaEdicion, importarEdicion } = useApp();
+  const { descargarPlantillaEdicion, importarEdicion, puede } = useApp();
   const [archivo, setArchivo] = useState(null);
   const [activar, setActivar] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -68,9 +68,13 @@ export default function ImportarEdicion({ abierto, onCerrar, onImportada }) {
           <li>Borra la fila de ejemplo de cada hoja.</li>
           <li>Súbela aquí. Si alguna fila tiene un error no se crea nada y verás la hoja y la fila que debes corregir.</li>
         </ol>
-        <button type="button" className="btn btn-outline-primary btn-sm mb-3" onClick={plantilla} disabled={!MODO_API}>
-          <i className="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Descargar plantilla (.xlsx)
-        </button>
+        {puede('ediciones.exportar') ? (
+          <button type="button" className="btn btn-outline-primary btn-sm mb-3" onClick={plantilla} disabled={!MODO_API}>
+            <i className="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Descargar plantilla (.xlsx)
+          </button>
+        ) : (
+          <p className="small text-secondary-flv">Para descargar la plantilla tu rol necesita el permiso «Descargar la plantilla y la estructura de una edición».</p>
+        )}
         <div className="mb-3">
           <label className="form-label" htmlFor="imp-archivo">Plantilla llena</label>
           <input id="imp-archivo" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="form-control"

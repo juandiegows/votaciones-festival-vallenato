@@ -10,12 +10,14 @@ import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFechaHora } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
+import Paginador from '../../components/Paginador.jsx';
 
 const PESTANAS = [
-  { id: 'participacion', label: 'Quién votó', icono: 'people' },
-  { id: 'integridad', label: 'Integridad de votos', icono: 'shield-check' },
-  { id: 'autoria', label: 'Autoría de registros', icono: 'person-badge' },
-  { id: 'acciones', label: 'Acciones de administración', icono: 'clock-history' },
+  // «Quién votó» usa la participación de cada votación: exige además ver votos y resultados
+  { id: 'participacion', label: 'Quién votó', icono: 'people', permiso: 'resultados.ver' },
+  { id: 'integridad', label: 'Integridad de votos', icono: 'shield-check', permiso: 'auditoria.ver' },
+  { id: 'autoria', label: 'Autoría de registros', icono: 'person-badge', permiso: 'auditoria.ver' },
+  { id: 'acciones', label: 'Acciones de administración', icono: 'clock-history', permiso: 'auditoria.ver' },
 ];
 
 // Filtros de la API (en el modo demostración se busca por texto)
@@ -197,6 +199,17 @@ function Acciones() {
   }, [pagina, version, buscar, entidad]);
 
   const { cargando, registros, total, hayMas, error } = estado;
+  const paginador = (posicion) => (
+    <Paginador
+      posicion={posicion}
+      pagina={pagina}
+      hayMas={hayMas}
+      cargando={cargando}
+      onCambio={setPagina}
+      etiqueta="la auditoría"
+      resumen={`${total.toLocaleString('es-CO')} registros`}
+    />
+  );
   return (
     <>
       <div className="card-flv p-3 mb-3">
@@ -219,6 +232,7 @@ function Acciones() {
         </div>
       </div>
       {error && <div className="alert alert-danger" role="alert">{error}</div>}
+      {paginador('arriba')}
       {!cargando && registros.length === 0 && vista !== 'tabla' && (
         <div className="card-flv p-4 text-center">No hay acciones registradas con ese filtro.</div>
       )}
@@ -289,26 +303,17 @@ function Acciones() {
           ]}
         />
       )}
-      <nav className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Paginación de la auditoría">
-        <span className="small text-secondary-flv" aria-live="polite">
-          {cargando ? 'Cargando…' : `${total.toLocaleString('es-CO')} registros · página ${pagina}`}
-        </span>
-        <div className="btn-group">
-          <button type="button" className="btn btn-sm btn-outline-primary" disabled={pagina === 1 || cargando} onClick={() => setPagina((p) => p - 1)}>
-            <i className="bi bi-chevron-left me-1" aria-hidden="true"></i>Anterior
-          </button>
-          <button type="button" className="btn btn-sm btn-outline-primary" disabled={!hayMas || cargando} onClick={() => setPagina((p) => p + 1)}>
-            Siguiente<i className="bi bi-chevron-right ms-1" aria-hidden="true"></i>
-          </button>
-        </div>
-      </nav>
+      {paginador('abajo')}
     </>
   );
 }
 
 export default function AdminAuditoria() {
   const { edicion } = useEdicionAdmin();
-  const [pestana, setPestana] = useState('participacion');
+  const { puede } = useApp();
+  const pestanas = PESTANAS.filter((p) => puede(p.permiso));
+  const [elegida, setPestana] = useState('participacion');
+  const pestana = pestanas.some((p) => p.id === elegida) ? elegida : pestanas[0]?.id;
   const [enVivo, setEnVivo] = useState(false);
   const intervalo = enVivo ? INTERVALO_EN_VIVO : 0;
 
@@ -321,7 +326,7 @@ export default function AdminAuditoria() {
         {(pestana === 'participacion' || pestana === 'integridad') && <IndicadorEnVivo id="aud-en-vivo" activo={enVivo} onCambio={setEnVivo} />}
       </PageHeader>
       <ul className="nav nav-tabs mb-3" role="tablist">
-        {PESTANAS.map((p) => (
+        {pestanas.map((p) => (
           <li className="nav-item" role="presentation" key={p.id}>
             <button type="button" role="tab" id={`tab-${p.id}`} aria-selected={pestana === p.id} aria-controls={`panel-${p.id}`} className={`nav-link ${pestana === p.id ? 'active' : ''}`} onClick={() => setPestana(p.id)}>
               <i className={`bi bi-${p.icono} me-1`} aria-hidden="true"></i>{p.label}

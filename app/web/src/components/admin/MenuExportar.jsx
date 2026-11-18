@@ -15,7 +15,10 @@ export const FORMATOS_EXPORTACION = [
  * Con `estructura`, agrega la edición completa en la plantilla de Excel. `onResultado({ tipo, texto })` informa el resultado.
  */
 export default function MenuExportar({ coleccion, id, nombre, estructura = false, clase = 'btn-outline-secondary', onResultado }) {
-  const { exportar, exportarEstructuraEdicion } = useApp();
+  const { exportar, exportarEstructuraEdicion, puede } = useApp();
+  // Resultados: resultados.exportar; edición completa en Excel: ediciones.exportar
+  const resultados = puede('resultados.exportar');
+  const conEstructura = estructura && puede('ediciones.exportar');
   const [abierto, setAbierto] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const ref = useRef(null);
@@ -44,6 +47,8 @@ export default function MenuExportar({ coleccion, id, nombre, estructura = false
     else onResultado({ tipo: 'success', texto: `Archivo ${r.nombre} descargado.` });
   };
 
+  if (!resultados && !conEstructura) return null;
+
   return (
     <div className="dropdown d-inline-block me-1" ref={ref}>
       <button
@@ -51,24 +56,24 @@ export default function MenuExportar({ coleccion, id, nombre, estructura = false
         className={`btn btn-sm ${clase} dropdown-toggle`}
         aria-expanded={abierto}
         aria-controls={idMenu}
-        aria-label={`Exportar resultados de ${nombre}`}
+        aria-label={`Exportar ${resultados ? 'resultados' : 'la estructura'} de ${nombre}`}
         disabled={procesando}
         onClick={() => setAbierto((a) => !a)}
       >
         <i className="bi bi-download me-1" aria-hidden="true"></i>{procesando ? 'Generando…' : 'Exportar'}
       </button>
       <ul id={idMenu} className={`dropdown-menu dropdown-menu-end ${abierto ? 'show' : ''}`}>
-        <li><h3 className="dropdown-header">Resultados</h3></li>
-        {FORMATOS_EXPORTACION.map((f) => (
+        {resultados && <li><h3 className="dropdown-header">Resultados</h3></li>}
+        {resultados && FORMATOS_EXPORTACION.map((f) => (
           <li key={f.valor}>
             <button type="button" className="dropdown-item" onClick={() => ejecutar(() => exportar(coleccion, id, f.valor), f.valor)}>
               <i className={`bi bi-${f.icono} me-2`} aria-hidden="true"></i>{f.etiqueta}
             </button>
           </li>
         ))}
-        {estructura && (
+        {conEstructura && (
           <>
-            <li><hr className="dropdown-divider" /></li>
+            {resultados && <li><hr className="dropdown-divider" /></li>}
             <li><h3 className="dropdown-header">Edición completa</h3></li>
             <li>
               <button type="button" className="dropdown-item" onClick={() => ejecutar(() => exportarEstructuraEdicion(id), 'excel')}>

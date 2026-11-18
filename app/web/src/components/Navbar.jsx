@@ -89,7 +89,7 @@ export default function Navbar() {
                 <li className="px-3 py-2 small text-secondary-flv">
                   {usuario.correo}
                   <br />
-                  Rol: <strong>{usuario.rol}</strong>
+                  Rol: <strong>{usuario.rolNombre || usuario.rol}</strong>
                 </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li><Link className="dropdown-item" to="/mis-votos"><i className="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</Link></li>

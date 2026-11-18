@@ -59,12 +59,16 @@ const CAMPOS = {
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',
     fechaRegistro: 'fecha_registro', tipoDocumento: 'tipo_documento', numeroDocumento: 'numero_documento',
-    correoVerificado: 'correo_verificado',
+    correoVerificado: 'correo_verificado', rolNombre: 'rol_nombre', permisos: 'permisos',
+  },
+  roles: {
+    id: 'id', codigo: 'codigo', nombre: 'nombre', descripcion: 'descripcion', permisos: 'permisos', sistema: 'sistema',
+    fijo: 'fijo', orden: 'orden', usuarios: 'usuarios',
   },
 };
 
 // Campos que la API calcula o que solo cambian con acciones específicas (publicar, cerrar…)
-const SOLO_LECTURA = new Set(['id', 'resultadosEfectivos', 'votosEfectivos', 'pausada', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
+const SOLO_LECTURA = new Set(['id', 'sistema', 'fijo', 'usuarios', 'rolNombre', 'resultadosEfectivos', 'votosEfectivos', 'pausada', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
 
 // Archivos subidos (uno o varios por colección): solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {

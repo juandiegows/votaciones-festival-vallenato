@@ -10,7 +10,10 @@ import { opcionesBloqueadas } from '../../utils/helpers.js';
  * `compacta` muestra una fila corta (para la vista agrupada de «Votaciones»); si no, incluye el reproductor.
  */
 export default function OpcionesAdmin({ votacion, onEditar, onMensaje, compacta = false }) {
-  const { opciones, votos, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { opciones, votos, eliminarEntidad, reemplazarColeccion, puede } = useApp();
+  const puedeEditar = puede('opciones.editar');
+  const puedeEliminar = puede('opciones.eliminar');
+  const verVotos = puede('resultados.ver');
   const [aEliminar, setAEliminar] = useState(null);
   const [procesando, setProcesando] = useState(false);
   const lista = opciones.filter((o) => o.votacionId === votacion.id).sort((a, b) => a.orden - b.orden);
@@ -79,23 +82,29 @@ export default function OpcionesAdmin({ votacion, onEditar, onMensaje, compacta 
                   <ReproductorMultimedia audio={o.audio} enlace={o.enlaceMultimedia} textoAudio={o.textoAudio} titulo={o.nombre} className="mt-2" />
                 )}
               </div>
-              <span className="small text-nowrap">{votosDe(o.id)} votos</span>
-              {bloqueada ? (
+              {verVotos && <span className="small text-nowrap">{votosDe(o.id)} votos</span>}
+              {!puedeEditar && !puedeEliminar ? null : bloqueada ? (
                 <span className="small text-secondary-flv text-nowrap"><i className="bi bi-lock-fill me-1" aria-hidden="true"></i>Bloqueada</span>
               ) : (
               <div className="btn-group btn-group-sm" role="group" aria-label={`Acciones para ${o.nombre}`}>
-                <button className="btn btn-outline-secondary" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${o.nombre}`} title="Subir">
-                  <i className="bi bi-arrow-up" aria-hidden="true"></i>
-                </button>
-                <button className="btn btn-outline-secondary" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${o.nombre}`} title="Bajar">
-                  <i className="bi bi-arrow-down" aria-hidden="true"></i>
-                </button>
-                <button className="btn btn-outline-primary" onClick={() => onEditar(o)} aria-label={`Editar ${o.nombre}`} title="Editar">
-                  <i className="bi bi-pencil" aria-hidden="true"></i>
-                </button>
-                <button className="btn btn-outline-danger" onClick={() => pedirEliminar(o)} aria-label={`Eliminar ${o.nombre}`} title="Eliminar">
-                  <i className="bi bi-trash" aria-hidden="true"></i>
-                </button>
+                {puedeEditar && (
+                  <>
+                    <button className="btn btn-outline-secondary" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${o.nombre}`} title="Subir">
+                      <i className="bi bi-arrow-up" aria-hidden="true"></i>
+                    </button>
+                    <button className="btn btn-outline-secondary" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${o.nombre}`} title="Bajar">
+                      <i className="bi bi-arrow-down" aria-hidden="true"></i>
+                    </button>
+                    <button className="btn btn-outline-primary" onClick={() => onEditar(o)} aria-label={`Editar ${o.nombre}`} title="Editar">
+                      <i className="bi bi-pencil" aria-hidden="true"></i>
+                    </button>
+                  </>
+                )}
+                {puedeEliminar && (
+                  <button className="btn btn-outline-danger" onClick={() => pedirEliminar(o)} aria-label={`Eliminar ${o.nombre}`} title="Eliminar">
+                    <i className="bi bi-trash" aria-hidden="true"></i>
+                  </button>
+                )}
               </div>
               )}
             </li>

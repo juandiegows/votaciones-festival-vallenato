@@ -29,7 +29,8 @@ export default function Login() {
     const r = await iniciarSesion(correo, contrasena);
     setEnviando(false);
     if (!r.ok) return setError(r.error);
-    const destino = location.state?.desde || (r.usuario.rol === 'administrador' ? '/panel' : '/categorias');
+    // Cualquier rol con acceso al panel (panel.ver) entra al panel; los votantes, a las categorías
+    const destino = location.state?.desde || (r.usuario.permisos?.includes('panel.ver') ? '/panel' : '/categorias');
     navigate(destino, { replace: true });
   };
 

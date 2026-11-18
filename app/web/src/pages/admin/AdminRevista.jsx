@@ -11,7 +11,9 @@ const tamano = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 // Revista institucional en PDF: el inicio muestra la primera revista activa de la lista como un libro que se hojea
 export default function AdminRevista() {
-  const { revistas = [], guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { revistas = [], guardarEntidad, eliminarEntidad, reemplazarColeccion, puede } = useApp();
+  // Con solo sitio.ver se consultan las revistas sin controles de edición
+  const puedeEditar = puede('sitio.editar');
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState(null);
@@ -65,9 +67,11 @@ export default function AdminRevista() {
   return (
     <>
       <PageHeader titulo="Revista institucional" subtitulo="PDF que el inicio muestra como un libro que se hojea. Se publica la primera revista activa de la lista; sin revistas activas la sección no aparece.">
-        <button className="btn btn-primary" onClick={() => abrir({ orden: lista.length + 1 })}>
-          <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva revista
-        </button>
+        {puedeEditar && (
+          <button className="btn btn-primary" onClick={() => abrir({ orden: lista.length + 1 })}>
+            <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva revista
+          </button>
+        )}
       </PageHeader>
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
@@ -98,15 +102,17 @@ export default function AdminRevista() {
           { id: 'publicada', titulo: 'Publicada', claseTd: 'small text-nowrap', prioridad: 3, celda: (r) => (r.publicadaEn ? formatearFecha(r.publicadaEn) : '—') },
           {
             id: 'estado', titulo: 'Estado', prioridad: 2,
-            celda: (r) => (
+            celda: (r) => (!puedeEditar ? (
+              <span className={`badge ${r.activa ? 'badge-estado estado-abierta' : 'text-bg-secondary'}`}>{r.activa ? 'Activa' : 'Inactiva'}</span>
+            ) : (
               <div className="form-check form-switch mb-0">
                 <input className="form-check-input" type="checkbox" role="switch" id={`revista-${r.id}`} checked={r.activa} disabled={procesando}
                   onChange={() => ejecutar(() => guardarEntidad('revistas', { id: r.id, activa: !r.activa }, `${r.activa ? 'Desactivó' : 'Activó'} la revista "${r.titulo}"`), `Revista «${r.titulo}» ${r.activa ? 'desactivada' : 'activada'}.`)} />
                 <label className="form-check-label small" htmlFor={`revista-${r.id}`}>{r.activa ? 'Activa' : 'Inactiva'}</label>
               </div>
-            ),
+            )),
           },
-          {
+          puedeEditar && {
             id: 'acciones', titulo: 'Acciones', claseTh: 'text-end', claseTd: 'text-end text-nowrap', prioridad: 1,
             celda: (r, i) => (
               <>
@@ -117,7 +123,7 @@ export default function AdminRevista() {
               </>
             ),
           },
-        ]}
+        ].filter(Boolean)}
       />
 
       <Modal

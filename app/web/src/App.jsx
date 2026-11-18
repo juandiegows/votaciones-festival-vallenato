@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
-import { RequiereAdmin, RequiereSesion } from './components/Guards.jsx';
+import { RequiereAdmin, RequierePermiso, RequiereSesion } from './components/Guards.jsx';
 import { IrAEdicionActiva, RedireccionCategoria, RedireccionRutaAnterior, RedireccionVotacion } from './components/Redirecciones.jsx';
 import Inicio from './pages/Inicio.jsx';
 import Equipo from './pages/Equipo.jsx';
@@ -28,6 +28,10 @@ import AdminBanner from './pages/admin/AdminBanner.jsx';
 import AdminSitio from './pages/admin/AdminSitio.jsx';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion.jsx';
 import AdminRevista from './pages/admin/AdminRevista.jsx';
+import AdminRoles from './pages/admin/AdminRoles.jsx';
+
+// Cada sección del panel exige su permiso `.ver` (catálogo en src/data/permisos.js); sin él, página 403
+const con = (permiso, pantalla) => <RequierePermiso permiso={permiso}>{pantalla}</RequierePermiso>;
 
 // Las rutas fijas (registro, login, admin…) tienen prioridad sobre /:anio. La web nunca usa
 // /api, /django-admin ni /static: en producción esas rutas las atiende Django.
@@ -52,21 +56,22 @@ export default function App() {
         {/* Administración */}
         <Route path="panel" element={<RequiereAdmin><AdminLayout /></RequiereAdmin>}>
           <Route index element={<AdminPanel />} />
-          <Route path="ediciones" element={<AdminEdiciones />} />
-          <Route path="categorias" element={<AdminCategorias />} />
-          <Route path="votaciones" element={<AdminVotaciones />} />
-          <Route path="votaciones/:id/opciones" element={<AdminOpciones />} />
-          <Route path="resultados" element={<AdminResultados />} />
-          <Route path="auditoria" element={<AdminAuditoria />} />
-          <Route path="usuarios" element={<AdminUsuarios />} />
-          <Route path="banner" element={<AdminBanner />} />
-          <Route path="revista" element={<AdminRevista />} />
-          <Route path="sitio" element={<AdminSitio />} />
-          <Route path="configuracion" element={<AdminConfiguracion />} />
-          <Route path="configuracion/:seccion" element={<AdminConfiguracion />} />
+          <Route path="ediciones" element={con('ediciones.ver', <AdminEdiciones />)} />
+          <Route path="categorias" element={con('categorias.ver', <AdminCategorias />)} />
+          <Route path="votaciones" element={con('votaciones.ver', <AdminVotaciones />)} />
+          <Route path="votaciones/:id/opciones" element={con('opciones.ver', <AdminOpciones />)} />
+          <Route path="resultados" element={con('resultados.ver', <AdminResultados />)} />
+          <Route path="auditoria" element={con('auditoria.ver', <AdminAuditoria />)} />
+          <Route path="usuarios" element={con('usuarios.ver', <AdminUsuarios />)} />
+          <Route path="roles" element={con('roles.ver', <AdminRoles />)} />
+          <Route path="banner" element={con('sitio.ver', <AdminBanner />)} />
+          <Route path="revista" element={con('sitio.ver', <AdminRevista />)} />
+          <Route path="sitio" element={con('sitio.ver', <AdminSitio />)} />
+          <Route path="configuracion" element={con('configuracion.ver', <AdminConfiguracion />)} />
+          <Route path="configuracion/:seccion" element={con('configuracion.ver', <AdminConfiguracion />)} />
           {/* /panel/{sección}/configuracion u otra ruta desconocida del panel → la pantalla correcta */}
           <Route path=":seccion/configuracion" element={<Navigate to="/panel/configuracion" replace />} />
-          <Route path="marca" element={<Marca />} />
+          <Route path="marca" element={con('sitio.ver', <Marca />)} />
         </Route>
         {/* URL amigables por edición: /{año}/categorias/{categoría}/{votación} */}
         <Route path=":anio" element={<Categorias />} />

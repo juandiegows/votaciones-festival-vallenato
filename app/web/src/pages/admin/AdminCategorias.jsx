@@ -15,7 +15,9 @@ import MenuExportar from '../../components/admin/MenuExportar.jsx';
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export default function AdminCategorias() {
-  const { configuracion, guardarEntidad, eliminarEntidad } = useApp();
+  const { configuracion, guardarEntidad, eliminarEntidad, puede } = useApp();
+  const puedeCrear = puede('categorias.crear');
+  const puedeEditar = puede('categorias.editar');
   const { edicion, ediciones, categorias, votaciones } = useEdicionAdmin();
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
@@ -105,22 +107,28 @@ export default function AdminCategorias() {
 
   const editar = (c) => abrirFormulario({ ...c, slug: c.slug || '', slugAuto: !c.slug, iconoImagen: c.iconoImagen || '', archivoIcono: null, quitarIcono: false });
 
-  const interruptor = (c) => (
+  const interruptor = (c) => (!puedeEditar ? (
+    <span className={`badge ${c.activa ? 'badge-estado estado-abierta' : 'text-bg-secondary'}`}>{c.activa ? 'Activa' : 'Inactiva'}</span>
+  ) : (
     <div className="form-check form-switch mb-0">
       <input className="form-check-input" type="checkbox" role="switch" id={`activa-${vista}-${c.id}`} checked={c.activa} disabled={procesando} onChange={() => alternar(c)} />
       <label className="form-check-label small" htmlFor={`activa-${vista}-${c.id}`}>{c.activa ? 'Activa' : 'Inactiva'}</label>
     </div>
-  );
+  ));
 
   const acciones = (c) => (
     <span className="text-nowrap">
       <MenuExportar coleccion="categorias" id={c.id} nombre={c.nombre} onResultado={setMensaje} />
-      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => editar(c)} aria-label={`Editar ${c.nombre}`}>
-        <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
-      </button>
-      <button className="btn btn-sm btn-outline-danger" onClick={() => pedirEliminar(c)} aria-label={`Eliminar ${c.nombre}`} title="Eliminar">
-        <i className="bi bi-trash" aria-hidden="true"></i>
-      </button>
+      {puedeEditar && (
+        <button className="btn btn-sm btn-outline-primary me-1" onClick={() => editar(c)} aria-label={`Editar ${c.nombre}`}>
+          <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+        </button>
+      )}
+      {puede('categorias.eliminar') && (
+        <button className="btn btn-sm btn-outline-danger" onClick={() => pedirEliminar(c)} aria-label={`Eliminar ${c.nombre}`} title="Eliminar">
+          <i className="bi bi-trash" aria-hidden="true"></i>
+        </button>
+      )}
     </span>
   );
 
@@ -129,7 +137,9 @@ export default function AdminCategorias() {
     const a = numAbiertas(c.id);
     return (
       <span className="small">
-        <Link to="/panel/votaciones" state={{ categoriaId: c.id }} aria-label={`Ver votaciones de ${c.nombre}: ${n}`}>{n} {n === 1 ? 'votación' : 'votaciones'}</Link>
+        {puede('votaciones.ver')
+          ? <Link to="/panel/votaciones" state={{ categoriaId: c.id }} aria-label={`Ver votaciones de ${c.nombre}: ${n}`}>{n} {n === 1 ? 'votación' : 'votaciones'}</Link>
+          : <>{n} {n === 1 ? 'votación' : 'votaciones'}</>}
         {a > 0 && <span className="badge badge-estado estado-abierta ms-1">{a} abierta{a > 1 ? 's' : ''}</span>}
       </span>
     );
@@ -138,11 +148,11 @@ export default function AdminCategorias() {
   return (
     <>
       <PageHeader titulo="Gestión de categorías" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Las categorías agrupan las votaciones. Una categoría inactiva no se muestra al público.`}>
-        <button className="btn btn-primary" onClick={nueva} disabled={!edicionesAbiertas.length} title={edicionesAbiertas.length ? undefined : 'Todas las ediciones están cerradas'}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>
+        {puedeCrear && <button className="btn btn-primary" onClick={nueva} disabled={!edicionesAbiertas.length} title={edicionesAbiertas.length ? undefined : 'Todas las ediciones están cerradas'}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva categoría</button>}
       </PageHeader>
       {!edicion && (
         <div className="alert alert-warning" role="alert">
-          No hay ediciones registradas. <Link to="/panel/ediciones" className="alert-link">Crea una edición</Link> para agregar categorías.
+          No hay ediciones registradas.{puede('ediciones.crear') && <> <Link to="/panel/ediciones" className="alert-link">Crea una edición</Link> para agregar categorías.</>}
         </div>
       )}
       <p className="badge badge-ilustrativo rounded-pill px-3 py-2">Categorías ilustrativas – pendientes de validación con la Fundación</p>
@@ -177,8 +187,8 @@ export default function AdminCategorias() {
       {lista.length === 0 && (
         <div className="card-flv p-4 text-center">
           <i className="bi bi-inbox fs-1 text-secondary" aria-hidden="true"></i>
-          <p className={!categorias.length && edicionesAbiertas.length ? 'mb-2' : 'mb-0'}>{categorias.length ? 'No hay categorías con esos filtros.' : 'Esta edición aún no tiene categorías.'}</p>
-          {!categorias.length && edicionesAbiertas.length > 0 && <button className="btn btn-primary" onClick={nueva}>Crear la primera categoría</button>}
+          <p className={!categorias.length && edicionesAbiertas.length && puedeCrear ? 'mb-2' : 'mb-0'}>{categorias.length ? 'No hay categorías con esos filtros.' : 'Esta edición aún no tiene categorías.'}</p>
+          {!categorias.length && edicionesAbiertas.length > 0 && puedeCrear && <button className="btn btn-primary" onClick={nueva}>Crear la primera categoría</button>}
         </div>
       )}
 

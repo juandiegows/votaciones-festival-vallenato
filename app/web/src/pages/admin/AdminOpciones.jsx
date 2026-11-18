@@ -13,7 +13,7 @@ import { opcionesActivas } from '../../utils/guiaPanel.js';
 
 export default function AdminOpciones() {
   const { id } = useParams();
-  const { votaciones, opciones, votos, categorias, guardarEntidad } = useApp();
+  const { votaciones, opciones, votos, categorias, guardarEntidad, puede } = useApp();
   const [form, setForm] = useState(null);
   const [mensaje, setMensaje] = useState(null);
   const [publicando, setPublicando] = useState(false);
@@ -40,16 +40,18 @@ export default function AdminOpciones() {
         subtitulo={`${votacion.titulo} · ${categoria?.nombre}`}
         migas={[{ label: 'Votaciones', to: '/panel/votaciones' }, { label: votacion.titulo }, { label: 'Opciones' }]}
       >
-        <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))} disabled={bloqueada}
-          title={bloqueada ? 'Opciones bloqueadas' : undefined}>
-          <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
-        </button>
+        {puede('opciones.crear') && (
+          <button className="btn btn-primary" onClick={() => setForm(opcionNueva(votacion, lista.length + 1))} disabled={bloqueada}
+            title={bloqueada ? 'Opciones bloqueadas' : undefined}>
+            <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Agregar opción
+          </button>
+        )}
       </PageHeader>
 
       <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
         <span className="icono-circulo icono-sm"><IconoEntidad icono={votacion.imagen || categoria?.icono} imagen={votacion.iconoImagen} /></span>
         {votacion.publicada ? <EstadoBadge estado={votacion.estado} /> : <span className="badge text-bg-secondary">Borrador</span>}
-        <span className="small">{lista.length} opciones · {votos.filter((v) => v.votacionId === votacion.id).length} votos</span>
+        <span className="small">{lista.length} opciones{puede('resultados.ver') && ` · ${votos.filter((v) => v.votacionId === votacion.id).length} votos`}</span>
         <span className="small text-secondary-flv">
           · El público las ve como <strong><i className={`bi bi-${presentacion.icono} me-1`} aria-hidden="true"></i>{presentacion.etiqueta}</strong>
         </span>
@@ -70,7 +72,7 @@ export default function AdminOpciones() {
       {!votacion.publicada && activas >= 2 && (
         <div className="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
           <span><i className="bi bi-check-circle-fill me-1" aria-hidden="true"></i><strong>Lista para publicar.</strong> Tiene {activas} opciones activas y el público aún no la ve.</span>
-          <button type="button" className="btn btn-sm btn-dorado" disabled={publicando} onClick={publicar}><i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar votación</button>
+          {puede('votaciones.publicar') && <button type="button" className="btn btn-sm btn-dorado" disabled={publicando} onClick={publicar}><i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar votación</button>}
         </div>
       )}
       {mensaje && (

@@ -17,7 +17,10 @@ const MODOS = [
 
 // Banners del inicio: imagen (JPG, PNG o WebP, máx. 3 MB), textos, botón, orden y estado
 export default function AdminBanner() {
-  const { banners, configuracion, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { banners, configuracion, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion, puede } = useApp();
+  // Con solo sitio.ver se consultan los banners sin controles de edición
+  const puedeEditar = puede('sitio.editar');
+  const puedeModo = puedeEditar || puede('configuracion.editar');
   const modo = configuracion?.modoBanner || 'carrusel';
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
@@ -87,7 +90,7 @@ export default function AdminBanner() {
   return (
     <>
       <PageHeader titulo="Banner de inicio" subtitulo={`${edicion ? `${edicion.nombre} · ` : ''}Imágenes de la cabecera de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.`}>
-        <button className="btn btn-primary" onClick={() => abrir({})}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</button>
+        {puedeEditar && <button className="btn btn-primary" onClick={() => abrir({})}><i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</button>}
       </PageHeader>
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
@@ -95,7 +98,7 @@ export default function AdminBanner() {
           <button type="button" className="btn-close" aria-label="Cerrar mensaje" onClick={() => setMensaje(null)}></button>
         </div>
       )}
-      <fieldset className="card-flv p-3 mb-3" disabled={procesando}>
+      <fieldset className="card-flv p-3 mb-3" disabled={procesando || !puedeModo}>
         <legend className="h6 float-none w-auto mb-2">¿Cómo se muestra el banner en el inicio?</legend>
         <div className="d-flex flex-wrap gap-4">
           {MODOS.map(([valor, etiqueta, ayuda]) => (
@@ -128,15 +131,17 @@ export default function AdminBanner() {
           },
           {
             id: 'estado', titulo: 'Estado', prioridad: 2,
-            celda: (b) => (
+            celda: (b) => (!puedeEditar ? (
+              <span className={`badge ${b.activo ? 'badge-estado estado-abierta' : 'text-bg-secondary'}`}>{b.activo ? 'Activo' : 'Inactivo'}</span>
+            ) : (
               <div className="form-check form-switch mb-0">
                 <input className="form-check-input" type="checkbox" role="switch" id={`banner-${b.id}`} checked={b.activo} disabled={procesando}
                   onChange={() => ejecutar(() => guardarEntidad('banners', { id: b.id, activo: !b.activo }, `${b.activo ? 'Desactivó' : 'Activó'} el banner "${nombreBanner(b)}"`), `Banner «${nombreBanner(b)}» ${b.activo ? 'desactivado' : 'activado'}.`)} />
                 <label className="form-check-label small" htmlFor={`banner-${b.id}`}>{b.activo ? 'Activo' : 'Inactivo'}</label>
               </div>
-            ),
+            )),
           },
-          {
+          puedeEditar && {
             id: 'acciones', titulo: 'Acciones', claseTh: 'text-end', claseTd: 'text-end text-nowrap', prioridad: 1,
             celda: (b, i) => (
               <>
@@ -147,7 +152,7 @@ export default function AdminBanner() {
               </>
             ),
           },
-        ]}
+        ].filter(Boolean)}
       />
 
       <Modal

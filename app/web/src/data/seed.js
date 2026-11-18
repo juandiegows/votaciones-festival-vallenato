@@ -11,6 +11,7 @@
  */
 import { generarCodigoComprobante, slugificar } from '../utils/helpers.js';
 import { PREDETERMINADOS_BASE } from '../utils/predeterminados.js';
+import { ROLES_INICIALES } from './permisos.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -27,6 +28,20 @@ function crearRandom(semilla) {
     s = (s * 1664525 + 1013904223) % 4294967296;
     return s / 4294967296;
   };
+}
+
+/** Roles del sistema (votante, solo lectura, lectura y escritura, administrador). */
+export function rolesIniciales() {
+  return ROLES_INICIALES.map((r, i) => ({ id: i + 1, ...r, permisos: [...r.permisos], sistema: true }));
+}
+
+/** Cuentas ficticias de demostración de los roles delegados (las mismas que crea cargar_demo en la API). */
+export function cuentasDemoRoles(fechaRegistro = new Date().toISOString()) {
+  const base = { contrasena: 'Admin2027*', aceptaTratamientoDatos: true, tipoDocumento: 'CC', correoVerificado: true, fechaRegistro };
+  return [
+    { ...base, id: 3, nombres: 'Lucía', apellidos: 'Consulta Demo', correo: 'lectura@demo.festival.test', rol: 'lectura', numeroDocumento: '1000000003' },
+    { ...base, id: 4, nombres: 'Esteban', apellidos: 'Editor Demo', correo: 'editor@demo.festival.test', rol: 'editor', numeroDocumento: '1000000004' },
+  ];
 }
 
 export function crearDatosSemilla() {
@@ -246,6 +261,7 @@ export function crearDatosSemilla() {
   const usuarios = [
     { id: 1, nombres: 'Administrador', apellidos: 'Festival', correo: 'admin@festival.test', contrasena: 'Admin2027*', rol: 'administrador', aceptaTratamientoDatos: true, tipoDocumento: 'CC', numeroDocumento: '1000000001', correoVerificado: true, fechaRegistro: relativa(-60) },
     { id: 2, nombres: 'Valentina', apellidos: 'Ospino Carrillo', correo: 'votante@festival.test', contrasena: 'Voto2027*', rol: 'votante', aceptaTratamientoDatos: true, tipoDocumento: 'CC', numeroDocumento: '1000000002', correoVerificado: true, fechaRegistro: relativa(-20) },
+    ...cuentasDemoRoles(relativa(-30)),
   ];
 
   // Votantes ficticios para que los resultados tengan datos
@@ -346,5 +362,5 @@ export function crearDatosSemilla() {
     { id: 4, nombre: 'YouTube', url: 'https://www.youtube.com/channel/UCEB34mUTorkyVnDxgNDCreA', icono: 'youtube', orden: 4, activa: true },
   ];
 
-  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria, configuracion, redes, banners: [], revistas: [] };
+  return { ediciones, categorias, votaciones, opciones, usuarios, votos, auditoria, configuracion, redes, banners: [], revistas: [], roles: rolesIniciales() };
 }

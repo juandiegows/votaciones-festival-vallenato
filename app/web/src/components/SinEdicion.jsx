@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext.jsx';
 
 // Estado vacío cuando no hay una edición activa configurada
 export default function SinEdicion() {
-  const { esAdmin } = useApp();
+  const { puede } = useApp();
   return (
     <div className="container py-5">
       <div className="card-flv p-4 p-md-5 text-center mx-auto" style={{ maxWidth: '36rem' }}>
@@ -12,7 +12,7 @@ export default function SinEdicion() {
         <p className="mb-4">
           Las votaciones del público se publicarán cuando la organización active la próxima edición del Festival.
         </p>
-        {esAdmin ? (
+        {puede('ediciones.ver') ? (
           <Link to="/panel/ediciones" className="btn btn-primary">Configurar una edición</Link>
         ) : (
           <Link to="/registro" className="btn btn-outline-primary">Crear una cuenta</Link>

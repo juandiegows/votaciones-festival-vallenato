@@ -114,7 +114,17 @@ function Fila({ titulo, descripcion, children, id }) {
 
 // Configuración del sitio público: visibilidad de resultados (por edición), votaciones cerradas y presentación
 export default function AdminConfiguracion() {
-  const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, publicarResultadosEdicion, votaciones: todasLasVotaciones } = useApp();
+  const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, publicarResultadosEdicion, votaciones: todasLasVotaciones, puede } = useApp();
+  // Cada ajuste se guarda en una entidad distinta; se exige el mismo permiso que la API para cambiarlo
+  const editaConfig = puede('configuracion.editar');
+  const editaSitio = editaConfig || puede('sitio.editar'); // modo del banner (contenido del sitio público)
+  const editaEdicion = puede('ediciones.editar'); // votos por usuario, pausa, resultados y presentación de la edición
+  const editaVotaciones = puede('votaciones.editar'); // presentación de las opciones de cada votación
+  const publicaResultados = puede('resultados.publicar');
+  const PERMISOS_RESTABLECER = {
+    votacion: editaEdicion, resultados: editaEdicion, visibilidad: editaConfig, predeterminados: editaConfig,
+    registro: editaConfig, presentacion: editaEdicion && editaVotaciones && editaConfig,
+  };
   const { edicion, votaciones, categorias } = useEdicionAdmin();
   const { seccion: seccionUrl } = useParams();
   const seccion = SECCIONES.some((s) => s.id === seccionUrl) ? seccionUrl : null;
@@ -268,7 +278,7 @@ export default function AdminConfiguracion() {
                       </NavLink>
                     </li>
                   ))}
-                  {g.enlaces?.map((e) => (
+                  {g.enlaces?.filter(() => puede('sitio.ver')).map((e) => (
                     <li className="nav-item d-none d-md-block" key={e.to}>
                       <Link to={e.to} className="nav-link config-enlace-externo">
                         <i className={`bi bi-${e.icono} me-2`} aria-hidden="true"></i>{e.label}<i className="bi bi-arrow-right-short ms-1" aria-hidden="true"></i>
@@ -288,12 +298,15 @@ export default function AdminConfiguracion() {
               <h2 id="titulo-seccion" className="h5 mb-0"><i className={`bi bi-${actual.icono} me-2 text-rojo`} aria-hidden="true"></i>{actual.label}</h2>
               <p className="small text-secondary-flv mb-0">{actual.descripcion}</p>
             </div>
-            {seccion !== 'demo' && (
+            {seccion !== 'demo' && PERMISOS_RESTABLECER[seccion] && (
               <button type="button" className="btn btn-sm btn-link text-reset" onClick={restablecer} disabled={procesando}>
                 <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer sección
               </button>
             )}
           </div>
+          {seccion !== 'demo' && !PERMISOS_RESTABLECER[seccion] && (
+            <p className="small text-secondary-flv mb-2"><i className="bi bi-eye me-1" aria-hidden="true"></i>Tu rol puede consultar esta sección; los ajustes que no puede cambiar aparecen deshabilitados.</p>
+          )}
           <p className="small mb-0 estado-config" role="status" aria-live="polite">
             {estado && <span className={`text-${estado.tipo === 'info' ? 'secondary' : estado.tipo}`}>{estado.texto}</span>}
           </p>
@@ -309,14 +322,14 @@ export default function AdminConfiguracion() {
                     { valor: 'pausada', etiqueta: 'En pausa', icono: 'pause-circle', descripcion: 'Nadie puede votar hasta reanudar.' },
                   ]}
                   valor={edicion.votacionesPausadas ? 'pausada' : 'activa'}
-                  deshabilitado={procesando}
+                  deshabilitado={procesando || !editaEdicion}
                   onCambio={(v) => pausar(v === 'pausada')}
                 />
               </Fila>
               <Fila titulo="Votos por usuario" descripcion="Cuántas veces puede votar cada persona en cada votación de la edición, salvo las que personalizan su propio límite (pendiente de validación con la Fundación, P-03).">
                 <div className="input-group mb-2" style={{ width: '12rem' }}>
                   <input id="cfg-votos" type="number" min="1" max="5" className="form-control" value={votos} onChange={(e) => setVotos(e.target.value)} onBlur={guardarVotos}
-                    onKeyDown={(e) => e.key === 'Enter' && guardarVotos()} aria-label="Votos por usuario de la edición" disabled={procesando} />
+                    onKeyDown={(e) => e.key === 'Enter' && guardarVotos()} aria-label="Votos por usuario de la edición" disabled={procesando || !editaEdicion} />
                   <span className="input-group-text">{Number(votos) === 1 ? 'voto' : 'votos'}</span>
                 </div>
                 {votosPropios.length === 0 ? (
@@ -342,20 +355,20 @@ export default function AdminConfiguracion() {
                   nombre="cfg-resultados"
                   opciones={OPCIONES_RESULTADOS.map((o) => ({ ...o, descripcion: DESCRIPCION_RESULTADOS[o.valor] }))}
                   valor={edicion.mostrarResultados || 'al cerrar'}
-                  deshabilitado={procesando}
+                  deshabilitado={procesando || !editaEdicion}
                   onCambio={(v) => guardarEdicion({ mostrarResultados: v }, `Resultados de la edición: ${v}.`, `Cambió la visibilidad de resultados de "${edicion.nombre}" a "${v}"`)}
                 />
               </Fila>
               <Fila titulo="Publicar resultados de toda la edición" descripcion="Publicación manual: muestra al público los resultados de todas las votaciones publicadas de la edición sin importar la configuración anterior (por ejemplo, al terminar el Festival).">
                 <p className="small mb-2">{publicadas} de {votaciones.length} votaciones tienen la publicación manual activa.</p>
-                <div className="d-flex flex-wrap gap-2">
+                {publicaResultados ? <div className="d-flex flex-wrap gap-2">
                   <button type="button" className="btn btn-primary btn-sm" disabled={procesando || !votaciones.length || publicadas === votaciones.length} onClick={() => publicarTodas(true)}>
                     <i className="bi bi-megaphone me-1" aria-hidden="true"></i>Publicar todas
                   </button>
                   <button type="button" className="btn btn-outline-secondary btn-sm" disabled={procesando || publicadas === 0} onClick={() => publicarTodas(false)}>
                     <i className="bi bi-eye-slash me-1" aria-hidden="true"></i>Retirar publicación
                   </button>
-                </div>
+                </div> : <p className="small text-secondary-flv mb-0"><i className="bi bi-lock me-1" aria-hidden="true"></i>Tu rol no puede publicar ni ocultar resultados.</p>}
               </Fila>
               <Fila titulo="Votaciones con configuración propia" descripcion="Estas no toman la de la edición. Se cambia en el formulario de cada votación (casilla «Personalizar»).">
                 {personalizadas.length === 0 ? (
@@ -370,7 +383,7 @@ export default function AdminConfiguracion() {
                     ))}
                   </ul>
                 )}
-                <Link to="/panel/votaciones" className="small d-inline-block mt-2">Ir a votaciones</Link>
+                {puede('votaciones.ver') && <Link to="/panel/votaciones" className="small d-inline-block mt-2">Ir a votaciones</Link>}
               </Fila>
             </>
           )}
@@ -386,7 +399,7 @@ export default function AdminConfiguracion() {
                     { valor: 'siempre', etiqueta: 'Siempre visibles', icono: 'infinity', descripcion: 'Nunca se ocultan del sitio por haber cerrado.' },
                   ]}
                   valor={siempre ? 'siempre' : 'dias'}
-                  deshabilitado={procesando}
+                  deshabilitado={procesando || !editaConfig}
                   onCambio={(v) => v === 'siempre'
                     ? guardarSitio({ diasVisibleCerradas: null }, 'Las votaciones cerradas se verán siempre.')
                     : guardarSitio({ diasVisibleCerradas: Number(dias) || DIAS_VISIBLE_CERRADAS }, `Las votaciones cerradas se verán ${Number(dias) || DIAS_VISIBLE_CERRADAS} días después del cierre.`)}
@@ -395,10 +408,10 @@ export default function AdminConfiguracion() {
               {!siempre && (
               <div className="d-flex flex-wrap align-items-center gap-3">
                 <input type="range" className="form-range flex-grow-1" style={{ maxWidth: '28rem' }} min="0" max="60" value={Math.min(Number(dias) || 0, 60)}
-                  onChange={(e) => setDias(e.target.value)} onMouseUp={guardarDias} onTouchEnd={guardarDias} onKeyUp={guardarDias} aria-label="Días visibles después del cierre" disabled={procesando} />
+                  onChange={(e) => setDias(e.target.value)} onMouseUp={guardarDias} onTouchEnd={guardarDias} onKeyUp={guardarDias} aria-label="Días visibles después del cierre" disabled={procesando || !editaConfig} />
                 <div className="input-group" style={{ width: '9rem' }}>
                   <input id="cfg-dias" type="number" min="0" max="365" className="form-control" value={dias} onChange={(e) => setDias(e.target.value)} onBlur={guardarDias}
-                    onKeyDown={(e) => e.key === 'Enter' && guardarDias()} aria-label="Días (número)" disabled={procesando} />
+                    onKeyDown={(e) => e.key === 'Enter' && guardarDias()} aria-label="Días (número)" disabled={procesando || !editaConfig} />
                   <span className="input-group-text">días</span>
                 </div>
               </div>
@@ -421,7 +434,7 @@ export default function AdminConfiguracion() {
                   role="switch"
                   id="cfg-pedir-documento"
                   checked={!!configuracion?.pedirDocumento}
-                  disabled={procesando}
+                  disabled={procesando || !editaConfig}
                   aria-describedby="cfg-documento-titulo"
                   onChange={(e) => guardarSitio(
                     { pedirDocumento: e.target.checked },
@@ -445,7 +458,7 @@ export default function AdminConfiguracion() {
                     columnas="col-sm-6 col-xl-4"
                     opciones={PRESENTACIONES_CATEGORIAS}
                     valor={defecto.defectoPresentacionCategorias}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ defectoPresentacionCategorias: v }, `Ediciones nuevas: categorías en ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta.toLowerCase()}.`)}
                   />
                 </Fila>
@@ -456,7 +469,7 @@ export default function AdminConfiguracion() {
                     nombre="cfg-def-resultados"
                     opciones={OPCIONES_RESULTADOS.map((o) => ({ ...o, descripcion: DESCRIPCION_RESULTADOS[o.valor] }))}
                     valor={defecto.defectoResultados}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ defectoResultados: v }, `Ediciones nuevas: resultados ${v}.`)}
                   />
                 </Fila>
@@ -471,7 +484,7 @@ export default function AdminConfiguracion() {
                       { valor: 'cada', etiqueta: 'Un voto por votación', icono: 'list-check', descripcion: 'Se vota en cada votación por separado.' },
                     ]}
                     valor={defecto.defectoVotoUnico ? 'unico' : 'cada'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ defectoVotoUnico: v === 'unico' }, v === 'unico' ? 'Categorías nuevas: un voto por categoría.' : 'Categorías nuevas: un voto por votación.')}
                   />
                 </Fila>
@@ -486,7 +499,7 @@ export default function AdminConfiguracion() {
                       { valor: 'oculta', etiqueta: 'Oculta', icono: 'eye-slash', descripcion: 'Se activa cuando esté lista.' },
                     ]}
                     valor={defecto.defectoCategoriaActiva ? 'visible' : 'oculta'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ defectoCategoriaActiva: v === 'visible' }, v === 'visible' ? 'Categorías nuevas: visibles al crearlas.' : 'Categorías nuevas: ocultas al crearlas.')}
                   />
                 </Fila>
@@ -498,7 +511,7 @@ export default function AdminConfiguracion() {
                     columnas="col-sm-6 col-xl-4"
                     opciones={PRESENTACIONES_OPCIONES}
                     valor={defecto.defectoPresentacionOpciones}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ defectoPresentacionOpciones: v }, `Votaciones nuevas: opciones en ${presentacionOpciones(v).etiqueta.toLowerCase()}.`)}
                   />
                 </Fila>
@@ -507,7 +520,7 @@ export default function AdminConfiguracion() {
                 <Fila titulo="Votación nueva · duración" descripcion="Días entre la apertura y el cierre que se proponen al crearla. La votación nueva se crea como borrador.">
                   <div className="input-group" style={{ width: '12rem' }}>
                     <input id="cfg-def-dias" type="number" min="1" max="365" className="form-control" value={diasVotacion} onChange={(e) => setDiasVotacion(e.target.value)} onBlur={guardarDiasVotacion}
-                      onKeyDown={(e) => e.key === 'Enter' && guardarDiasVotacion()} aria-label="Días que dura una votación nueva" disabled={procesando} />
+                      onKeyDown={(e) => e.key === 'Enter' && guardarDiasVotacion()} aria-label="Días que dura una votación nueva" disabled={procesando || !editaConfig} />
                     <span className="input-group-text">{Number(diasVotacion) === 1 ? 'día' : 'días'}</span>
                   </div>
                 </Fila>
@@ -525,7 +538,7 @@ export default function AdminConfiguracion() {
                     columnas="col-sm-6 col-xl-4"
                     opciones={PRESENTACIONES_CATEGORIAS}
                     valor={edicion.presentacionCategorias || 'tarjetas'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaEdicion}
                     onCambio={(v) => guardarEdicion({ presentacionCategorias: v }, `Categorías: ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta}.`, `Cambió la presentación de categorías de "${edicion.nombre}"`)}
                   />
                   <VistaPreviaCategorias edicion={edicion} presentacion={edicion.presentacionCategorias || 'tarjetas'} />
@@ -542,7 +555,7 @@ export default function AdminConfiguracion() {
                         columnas="col-sm-6 col-xl-4"
                         opciones={PRESENTACIONES_OPCIONES}
                         valor={presentacionComun}
-                        deshabilitado={procesando}
+                        deshabilitado={procesando || !editaVotaciones}
                         onCambio={aplicarATodas}
                       />
                       {!presentacionComun && (
@@ -554,7 +567,7 @@ export default function AdminConfiguracion() {
                             <span className="flex-grow-1 text-truncate"><strong>{v.titulo}</strong> <span className="text-secondary-flv">· {categoriaDe(v.categoriaId)}</span></span>
                             <label className="visually-hidden" htmlFor={`cfg-op-${v.id}`}>Presentación de opciones de {v.titulo}</label>
                             <select id={`cfg-op-${v.id}`} className="form-select form-select-sm" style={{ width: 'auto' }} value={v.presentacionOpciones || 'tarjetas'}
-                              disabled={procesando} onChange={(e) => cambiarPresentacionVotacion(v, e.target.value)}>
+                              disabled={procesando || !editaVotaciones} onChange={(e) => cambiarPresentacionVotacion(v, e.target.value)}>
                               {PRESENTACIONES_OPCIONES.map((o) => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
                             </select>
                           </li>
@@ -574,7 +587,7 @@ export default function AdminConfiguracion() {
                       { valor: 'mostrar', etiqueta: 'Mostrar', icono: '123', descripcion: 'El inicio muestra los votos registrados.' },
                     ]}
                     valor={configuracion?.mostrarTotalVotos ? 'mostrar' : 'ocultar'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ mostrarTotalVotos: v === 'mostrar' }, v === 'mostrar' ? 'El inicio muestra el total de votos.' : 'El total de votos se oculta en el inicio.')}
                   />
                 </Fila>
@@ -589,7 +602,7 @@ export default function AdminConfiguracion() {
                       { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'La documentación deja de estar disponible.' },
                     ]}
                     valor={configuracion?.mostrarSwagger === false ? 'ocultar' : 'mostrar'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaConfig}
                     onCambio={(v) => guardarSitio({ mostrarSwagger: v === 'mostrar' }, v === 'mostrar' ? 'La documentación de la API está visible.' : 'La documentación de la API se ocultó.')}
                   />
                 </Fila>
@@ -601,7 +614,7 @@ export default function AdminConfiguracion() {
                     columnas="col-sm-6"
                     opciones={MODOS_BANNER}
                     valor={configuracion?.modoBanner || 'carrusel'}
-                    deshabilitado={procesando}
+                    deshabilitado={procesando || !editaSitio}
                     onCambio={(v) => guardarSitio({ modoBanner: v }, `Banner del inicio: ${v}.`)}
                   />
                 </Fila>

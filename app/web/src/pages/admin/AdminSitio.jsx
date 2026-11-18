@@ -10,7 +10,10 @@ const NUEVA_RED = { nombre: '', url: '', icono: 'facebook', activa: true };
 
 // Datos de contacto y redes sociales del pie de página
 export default function AdminSitio() {
-  const { configuracion, redes, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { configuracion, redes, guardarConfiguracion, guardarEntidad, eliminarEntidad, reemplazarColeccion, puede } = useApp();
+  // Contacto y textos: sitio.editar o configuracion.editar (como la API); redes: sitio.editar
+  const puedeTextos = puede('sitio.editar') || puede('configuracion.editar');
+  const puedeRedes = puede('sitio.editar');
   const [contacto, setContacto] = useState(configuracion);
   const [red, setRed] = useState(NUEVA_RED);
   const [errores, setErrores] = useState({});
@@ -82,6 +85,11 @@ export default function AdminSitio() {
   return (
     <>
       <PageHeader titulo="Contacto y redes" subtitulo="Lo que el público ve en el encabezado y el pie de página: datos de contacto, textos del proyecto y redes sociales." />
+      {!puedeTextos && (
+        <div className="alert alert-secondary small" role="note">
+          <i className="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta esta sección: los campos se muestran sin edición.
+        </div>
+      )}
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
           {mensaje.texto}
@@ -91,6 +99,8 @@ export default function AdminSitio() {
       <div className="row g-4">
         <div className="col-xl-7">
           <form className="card-flv p-3 p-md-4" noValidate onSubmit={guardarContacto} aria-label="Contacto y textos del sitio">
+            <fieldset disabled={!puedeTextos}>
+            <legend className="visually-hidden">Contacto y textos del sitio</legend>
             <section aria-labelledby="sec-contacto">
               {seccion(1, 'sec-contacto', 'Datos de contacto', 'Aparecen en la columna «Contacto» del pie de página.')}
               <div className="row gx-3">
@@ -123,7 +133,8 @@ export default function AdminSitio() {
               </div>
             </section>
 
-            <div className="d-flex flex-wrap align-items-center gap-2 border-top pt-3">
+            </fieldset>
+            {puedeTextos && <div className="d-flex flex-wrap align-items-center gap-2 border-top pt-3">
               <button type="submit" className="btn btn-primary" disabled={procesando || !hayCambios}>
                 <i className="bi bi-check-lg me-1" aria-hidden="true"></i>{procesando ? 'Guardando…' : 'Guardar cambios'}
               </button>
@@ -135,13 +146,13 @@ export default function AdminSitio() {
               ) : (
                 <span className="small text-secondary-flv">Sin cambios pendientes.</span>
               )}
-            </div>
+            </div>}
           </form>
         </div>
         <div className="col-xl-5">
           <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-redes">
             <h2 id="titulo-redes" className="h5 mb-1">Redes sociales</h2>
-            <p className="small text-secondary-flv">Íconos del pie de página. Usa las flechas para ordenarlas; cada cambio se guarda al instante.</p>
+            <p className="small text-secondary-flv">Íconos del pie de página.{puedeRedes && ' Usa las flechas para ordenarlas; cada cambio se guarda al instante.'}</p>
             <ul className="list-group list-group-flush mb-3">
               {lista.map((x, i) => (
                 <li key={x.id} className="list-group-item px-0 d-flex align-items-center gap-2">
@@ -150,7 +161,7 @@ export default function AdminSitio() {
                     <strong>{x.nombre}</strong>{!x.activa && <span className="badge text-bg-secondary ms-2">Oculta</span>}
                     <span className="d-block small text-secondary-flv text-break">{x.url}</span>
                   </span>
-                  <span className="btn-group flex-shrink-0" role="group" aria-label={`Acciones para ${x.nombre}`}>
+                  {puedeRedes && <span className="btn-group flex-shrink-0" role="group" aria-label={`Acciones para ${x.nombre}`}>
                     <button className="btn btn-sm btn-outline-secondary" disabled={i === 0 || procesando} onClick={() => mover(i, -1)} aria-label={`Subir ${x.nombre}`}><i className="bi bi-arrow-up" aria-hidden="true"></i></button>
                     <button className="btn btn-sm btn-outline-secondary" disabled={i === lista.length - 1 || procesando} onClick={() => mover(i, 1)} aria-label={`Bajar ${x.nombre}`}><i className="bi bi-arrow-down" aria-hidden="true"></i></button>
                     <button className="btn btn-sm btn-outline-primary" onClick={() => setRed(x)} aria-label={`Editar ${x.nombre}`}><i className="bi bi-pencil" aria-hidden="true"></i></button>
@@ -158,11 +169,11 @@ export default function AdminSitio() {
                       onClick={() => ejecutar(() => eliminarEntidad('redes', x.id, `Quitó la red "${x.nombre}"`), `Red «${x.nombre}» quitada.`)}>
                       <i className="bi bi-trash" aria-hidden="true"></i>
                     </button>
-                  </span>
+                  </span>}
                 </li>
               ))}
             </ul>
-            <form noValidate onSubmit={guardarRed} aria-label={red.id ? `Editar ${red.nombre}` : 'Agregar red social'}>
+            {puedeRedes && <form noValidate onSubmit={guardarRed} aria-label={red.id ? `Editar ${red.nombre}` : 'Agregar red social'}>
               <div className="row g-2 align-items-end">
                 <div className="col-sm-4">
                   <label className="form-label small" htmlFor="r-icono">Red</label>
@@ -189,7 +200,7 @@ export default function AdminSitio() {
                   {red.id && <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setRed(NUEVA_RED)}>Cancelar</button>}
                 </div>
               </div>
-            </form>
+            </form>}
           </section>
         </div>
       </div>

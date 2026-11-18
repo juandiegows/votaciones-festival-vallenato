@@ -7,7 +7,10 @@ import { MODO_API } from '../../config.js';
  * datos que crea cargar_demo. Con la API, eliminar y recargar exigen una cuenta de administrador propia.
  */
 export default function SeccionDemo() {
-  const { configuracion, guardarConfiguracion, obtenerDemo, eliminarDemo, cargarDemo, restablecer } = useApp();
+  const { configuracion, guardarConfiguracion, obtenerDemo, eliminarDemo, cargarDemo, restablecer, puede } = useApp();
+  // Permitir las cuentas: configuracion.editar; eliminar, cargar o restablecer los datos: configuracion.demo
+  const puedeEditar = puede('configuracion.editar');
+  const puedeDemo = puede('configuracion.demo');
   const [demo, setDemo] = useState(null);
   const [estado, setEstado] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -41,14 +44,14 @@ export default function SeccionDemo() {
     valor ? 'Las cuentas de demostración pueden volver a iniciar sesión.' : 'Las cuentas de demostración ya no pueden iniciar sesión.',
   );
 
-  const bloqueado = procesando || demo?.esCuentaDemo;
+  const bloqueado = procesando || demo?.esCuentaDemo || !puedeDemo;
 
   return (
     <>
       <section className="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-cuentas-demo">
         <h2 id="cfg-cuentas-demo" className="h5 mb-3">Cuentas de demostración</h2>
         <div className="form-check form-switch">
-          <input className="form-check-input" type="checkbox" role="switch" id="cfg-permitir-demo" checked={permitidas} disabled={procesando}
+          <input className="form-check-input" type="checkbox" role="switch" id="cfg-permitir-demo" checked={permitidas} disabled={procesando || !puedeEditar}
             onChange={(e) => alternar(e.target.checked)} aria-describedby="cfg-permitir-demo-ayuda" />
           <label className="form-check-label fw-semibold" htmlFor="cfg-permitir-demo">Permitir el ingreso con las cuentas de demostración</label>
         </div>
@@ -66,7 +69,12 @@ export default function SeccionDemo() {
               {demo ? `Ahora hay ${demo.ediciones} edición(es) de demostración (${demo.anios.join(', ')}), ${demo.usuarios} cuenta(s) y ${demo.votos} voto(s). ` : ''}
               El contacto, las redes, la marca y esta configuración se conservan. Las ediciones y cuentas creadas por la administración no se tocan.
             </p>
-            {demo?.esCuentaDemo && (
+            {!puedeDemo && (
+              <div className="alert alert-secondary small" role="note">
+                <i className="bi bi-lock me-1" aria-hidden="true"></i>Tu rol no tiene el permiso «Eliminar o volver a cargar los datos de demostración».
+              </div>
+            )}
+            {puedeDemo && demo?.esCuentaDemo && (
               <div className="alert alert-warning small" role="note">
                 <i className="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Estás usando una cuenta de demostración: para eliminar o recargar los datos inicia sesión con una cuenta de administrador propia.
               </div>
@@ -103,7 +111,7 @@ export default function SeccionDemo() {
         ) : (
           <>
             <p className="small text-secondary-flv">En el modo demostración los datos viven en este navegador. Puedes volver a los datos iniciales en cualquier momento.</p>
-            <button type="button" className="btn btn-primary btn-sm" disabled={procesando}
+            <button type="button" className="btn btn-primary btn-sm" disabled={procesando || !puedeDemo}
               onClick={() => window.confirm('¿Volver a los datos de demostración iniciales? Se perderán los cambios guardados en este navegador.') && ejecutar(restablecer, 'Datos de demostración restablecidos.')}>
               <i className="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Restablecer datos de demostración
             </button>

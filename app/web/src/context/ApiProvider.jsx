@@ -14,7 +14,8 @@ import {
   usuarioDesdeApi,
 } from '../api/adaptadores.js';
 import { calcularEstado } from '../utils/helpers.js';
-import { AppContext, buscarEdicionActiva } from './contexto.js';
+import { AppContext, buscarEdicionActiva, crearPuede } from './contexto.js';
+import { ADMINISTRADOR, GRUPOS_PERMISOS, ROLES_INICIALES, TODOS_LOS_PERMISOS } from '../data/permisos.js';
 import PantallaCarga from '../components/PantallaCarga.jsx';
 
 const RUTAS_ADMIN = {
@@ -29,8 +30,28 @@ const RUTAS_ADMIN = {
 
 const VACIO = {
   ediciones: [], categorias: [], votaciones: [], opciones: [], votos: [], usuarios: [], auditoria: [], totalAuditoria: 0,
-  banners: [], revistas: [], redes: [], configuracion: null,
+  banners: [], revistas: [], redes: [], configuracion: null, roles: [], catalogoPermisos: GRUPOS_PERMISOS,
 };
+
+/** Permisos del usuario según la API; una API anterior a los roles solo distinguía al administrador. */
+function permisosDe(u) {
+  if (!u) return [];
+  if (Array.isArray(u.permisos)) return u.permisos;
+  return u.rol === ADMINISTRADOR ? TODOS_LOS_PERMISOS : [];
+}
+
+/**
+ * Roles para elegir al asignar uno (AdminUsuarios). Sin roles.ver no llega la lista: se arma con los roles del sistema
+ * y los que tienen los usuarios cargados; sus permisos no se conocen (null) y la API decide si se pueden asignar.
+ */
+function rolesDisponibles(roles, usuarios) {
+  if (roles.length) return [...roles].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es'));
+  const lista = ROLES_INICIALES.map((r) => ({ ...r, id: r.codigo, permisos: r.codigo === ADMINISTRADOR ? TODOS_LOS_PERMISOS : null }));
+  usuarios.forEach((u) => {
+    if (!lista.some((r) => r.codigo === u.rol)) lista.push({ id: u.rol, codigo: u.rol, nombre: u.rolNombre || u.rol, descripcion: '', permisos: null, orden: 99 });
+  });
+  return lista;
+}
 
 const ACTIVOS_POR_DEFECTO = { banners: { activo: true }, revistas: { activa: true }, categorias: { activa: true }, opciones: { activa: true } };
 
@@ -55,28 +76,44 @@ export function ApiProvider({ children }) {
     return () => clearInterval(t);
   }, []);
 
-  /** Carga las colecciones que corresponden al usuario (público, votante o administrador). */
+  /**
+   * Carga las colecciones que corresponden al usuario. Con acceso al panel, cada colección de administración se pide
+   * solo si el rol tiene su permiso `.ver`; si no, se usa la versión pública (o queda vacía) para no recibir un 403.
+   */
   const cargarColecciones = useCallback(async (u) => {
-    const esAdmin = u?.rol === 'administrador';
-    // Contacto, redes, revistas y banners activos (público); el administrador recibe además los inactivos
+    const permisos = new Set(permisosDe(u));
+    const tiene = (codigo) => permisos.has(codigo);
+    // Contacto, redes, revistas y banners activos (público); con sitio.ver llegan además los inactivos
     const sitio = await obtener('/sitio/');
     let nuevas;
-    if (esAdmin) {
-      const [ediciones, categorias, votaciones, opciones, votos, usuarios, auditoria, banners, redes, revistas] = await Promise.all([
-        obtener('/admin/ediciones/'),
-        obtener('/admin/categorias/'),
-        obtener('/admin/votaciones/'),
-        obtener('/admin/opciones/'),
-        obtener('/admin/votos/'),
-        obtener('/admin/usuarios/'),
-        obtener('/admin/auditoria/'),
-        obtener('/admin/banners/'),
-        obtener('/admin/redes/'),
-        obtener('/admin/revistas/'),
+    if (tiene('panel.ver')) {
+      // Si el rol cambió mientras la sesión estaba abierta, un 403 deja la colección vacía en lugar de romper la carga
+      let rechazos = 0;
+      const pedir = (codigo, ruta, vacio) => (tiene(codigo)
+        ? obtener(ruta).catch((e) => {
+          if (e.status !== 403) throw e;
+          rechazos += 1;
+          return vacio;
+        })
+        : Promise.resolve(vacio));
+      const ediciones = (await pedir('ediciones.ver', '/admin/ediciones/', null)) || (await obtener('/ediciones/'));
+      const categoriasPublicas = () => Promise.all(ediciones.map((e) => obtener(`/categorias/?edicion=${e.id}`))).then((l) => l.flat());
+      const [categorias, votaciones, opciones, votos, usuarios, auditoria, banners, redes, revistas, roles, catalogo] = await Promise.all([
+        pedir('categorias.ver', '/admin/categorias/', null).then((l) => l || categoriasPublicas()),
+        pedir('votaciones.ver', '/admin/votaciones/', null).then((l) => l || obtener('/votaciones/')),
+        pedir('opciones.ver', '/admin/opciones/', null).then((l) => l || obtener('/opciones/')),
+        pedir('resultados.ver', '/admin/votos/', []),
+        pedir('usuarios.ver', '/admin/usuarios/', []),
+        pedir('auditoria.ver', '/admin/auditoria/', { results: [], count: 0 }),
+        pedir('sitio.ver', '/admin/banners/', null),
+        pedir('sitio.ver', '/admin/redes/', null),
+        pedir('sitio.ver', '/admin/revistas/', null),
+        pedir('roles.ver', '/admin/roles/', []),
+        pedir('roles.ver', '/admin/roles/catalogo/', []),
       ]);
-      sitio.banners = banners;
-      sitio.revistas = revistas;
-      sitio.redes = redes;
+      if (banners) sitio.banners = banners;
+      if (redes) sitio.redes = redes;
+      if (revistas) sitio.revistas = revistas;
       const cats = mapear('categorias', categorias);
       const vots = mapear('votaciones', votaciones);
       const ops = mapear('opciones', opciones);
@@ -87,6 +124,7 @@ export function ApiProvider({ children }) {
         return x?.titulo || x?.nombre || '';
       };
       nuevas = {
+        ...VACIO,
         ediciones: eds,
         categorias: cats,
         votaciones: vots,
@@ -95,7 +133,14 @@ export function ApiProvider({ children }) {
         usuarios: mapear('usuarios', usuarios),
         auditoria: auditoria.results.map((r) => auditoriaDesdeApi(r, nombrePor)),
         totalAuditoria: auditoria.count,
+        roles: mapear('roles', roles),
+        catalogoPermisos: catalogo.length ? catalogo : GRUPOS_PERMISOS,
       };
+      // Permisos desactualizados: se vuelve a leer el perfil para que el menú y los botones se ajusten
+      if (rechazos > 0) {
+        const r = await api.get('/auth/yo/');
+        if (r.ok) setUsuario(usuarioDesdeApi(r.datos));
+      }
     } else {
       const ediciones = await obtener('/ediciones/');
       // Categorías activas de cada edición (para las URL /{año}/… de ediciones anteriores)
@@ -386,10 +431,27 @@ export function ApiProvider({ children }) {
   };
   const exportarResultados = (votacionId, formato) => exportar('votaciones', votacionId, formato);
 
-  // Hacer administrador a un usuario o devolverlo a votante (la API impide quitarse el propio rol)
+  // Asignar un rol a un usuario (la API impide cambiar el propio rol y asignar roles con permisos que no se tienen)
   const cambiarRol = async (id, rol) => {
     const r = await api.post(`/admin/usuarios/${id}/rol/`, { rol });
     if (!r.ok) return { ok: false, error: r.error };
+    await recargar();
+    return { ok: true, usuario: usuarioDesdeApi(r.datos) };
+  };
+
+  // Roles: crear o cambiar nombre, descripción y permisos (el código solo se envía al crear)
+  const guardarRol = async (rol) => {
+    const cuerpo = haciaApi('roles', rol);
+    if (rol.id) delete cuerpo.codigo;
+    const r = rol.id ? await api.patch(`/admin/roles/${rol.id}/`, cuerpo) : await api.post('/admin/roles/', cuerpo);
+    if (!r.ok) return { ok: false, error: r.error, errores: erroresDesdeApi('roles', r.errores) };
+    await recargar();
+    return { ok: true, rol: desdeApi('roles', r.datos) };
+  };
+
+  const eliminarRol = async (id) => {
+    const r = await api.delete(`/admin/roles/${id}/`);
+    if (!r.ok) return { ok: false, error: r.error, codigo: r.codigo };
     await recargar();
     return { ok: true };
   };
@@ -465,8 +527,10 @@ export function ApiProvider({ children }) {
     return <PantallaCarga error={cargaInicial.error} onReintentar={iniciar} />;
   }
 
-  const { totalAuditoria, totalVotosSitio, ...datos } = colecciones;
-  const esAdmin = usuario?.rol === 'administrador';
+  // eslint-disable-next-line no-unused-vars
+  const { totalAuditoria, totalVotosSitio, roles, ...datos } = colecciones;
+  const permisos = permisosDe(usuario);
+  const puede = crearPuede(permisos);
   const valor = {
     modo: 'api',
     ...datos,
@@ -477,7 +541,11 @@ export function ApiProvider({ children }) {
     totalVotos: colecciones.totalVotosSitio ?? null,
     publicarResultadosEdicion,
     usuario,
-    esAdmin,
+    permisos,
+    puede,
+    // «Accede al panel»: cualquier rol con panel.ver (no solo el administrador)
+    esAdmin: puede('panel.ver'),
+    roles: rolesDisponibles(roles, colecciones.usuarios),
     edicionActiva: buscarEdicionActiva(colecciones.ediciones),
     version,
     iniciarSesion,
@@ -497,6 +565,8 @@ export function ApiProvider({ children }) {
     exportar,
     obtenerDemo,
     cambiarRol,
+    guardarRol,
+    eliminarRol,
     eliminarDemo,
     cargarDemo,
     descargarPlantillaEdicion,

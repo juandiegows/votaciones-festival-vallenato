@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CLAVE_DATOS, cargarDatos, cargarSesion, guardarDatos, guardarSesion, restablecerDatos } from '../data/storage.js';
+import { CLAVE_DATOS, cargarDatos, cargarSesion, completarDatos, guardarDatos, guardarSesion, restablecerDatos } from '../data/storage.js';
 import {
   calcularEstado,
   calcularResultados,
@@ -11,9 +11,11 @@ import {
   votosPermitidos,
   siguienteId,
   slugUnico,
+  slugificar,
 } from '../utils/helpers.js';
 import { calcularParticipacion, calcularResumen, verificarIntegridad } from '../utils/analisis.js';
-import { AppContext, buscarEdicionActiva } from './contexto.js';
+import { AppContext, buscarEdicionActiva, crearPuede } from './contexto.js';
+import { ADMINISTRADOR, DESCRIPCION_PERMISO, GRUPOS_PERMISOS, ROLES_FIJOS, permisosEfectivos } from '../data/permisos.js';
 import { descargarReporte } from '../utils/exportar.js';
 import { normalizarDocumento } from '../utils/documento.js';
 
@@ -38,6 +40,8 @@ const leerComoDataUrl = (archivo) =>
   });
 
 const POR_PAGINA_AUDITORIA = 50;
+const iguales = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+const PATRON_CODIGO_ROL = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
 const MAX_ARCHIVO_DEMO = 2 * 1024 * 1024;
 
 /**
@@ -66,7 +70,7 @@ export function MockProvider({ children }) {
     const alCambiar = (e) => {
       if (e.key === CLAVE_DATOS && e.newValue) {
         try {
-          setDatos(JSON.parse(e.newValue));
+          setDatos(completarDatos(JSON.parse(e.newValue)));
         } catch {
           /* ignorar datos corruptos */
         }
@@ -79,7 +83,24 @@ export function MockProvider({ children }) {
     guardarSesion(usuarioId);
   }, [usuarioId]);
 
-  const usuario = datos.usuarios.find((u) => u.id === usuarioId) || null;
+  // Roles con sus permisos efectivos; cada usuario recibe el nombre de su rol y sus permisos (como /auth/yo/)
+  const roles = useMemo(
+    () => [...(datos.roles || [])]
+      .map((r) => ({ ...r, permisos: permisosEfectivos(r), fijo: ROLES_FIJOS.includes(r.codigo), usuarios: datos.usuarios.filter((u) => u.rol === r.codigo).length }))
+      .sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es')),
+    [datos.roles, datos.usuarios]
+  );
+  const rolDe = useCallback((codigo) => roles.find((r) => r.codigo === codigo), [roles]);
+  const usuarios = useMemo(
+    () => datos.usuarios.map((u) => {
+      const rol = rolDe(u.rol);
+      return { ...u, rolNombre: rol?.nombre || u.rol, permisos: u.activo === false ? [] : rol?.permisos || [] };
+    }),
+    [datos.usuarios, rolDe]
+  );
+  const usuario = usuarios.find((u) => u.id === usuarioId) || null;
+  const permisos = usuario?.permisos || [];
+  const puede = crearPuede(permisos);
 
   const votaciones = useMemo(() => {
     const edicionDe = (v) => datos.ediciones.find((e) => e.id === datos.categorias.find((c) => c.id === v.categoriaId)?.edicionId);
@@ -116,7 +137,7 @@ export function MockProvider({ children }) {
     if (!u || u.contrasena !== contrasena) return { ok: false, error: 'Correo o contraseña incorrectos.' };
     setUsuarioId(u.id);
     setDatos((d) => registrarAuditoria(d, 'Inició sesión', u.correo));
-    return { ok: true, usuario: u };
+    return { ok: true, usuario: usuarios.find((x) => x.id === u.id) };
   };
 
   const cerrarSesion = async () => {
@@ -311,15 +332,88 @@ export function MockProvider({ children }) {
     [votaciones, datos.opciones, datos.votos]
   );
 
-  // Hacer administrador a un usuario o devolverlo a votante (mismas reglas que la API)
-  const cambiarRol = async (id, rol) => {
-    const objetivo = datos.usuarios.find((u) => u.id === id);
+  // ---------- Roles y permisos (mismas reglas que app/api/votaciones/cuentas/servicios.py) ----------
+  const sinPermiso = (codigo) => ({ ok: false, codigo: 'permiso', error: `Tu rol no tiene el permiso «${DESCRIPCION_PERMISO[codigo]}».` });
+  // Nadie reparte permisos que no tiene: evita que un rol delegado se dé más acceso del que posee
+  const faltantes = (lista) => [...new Set(lista)].filter((c) => !permisos.includes(c)).sort();
+  const errorFaltan = (accion, faltan) => ({
+    ok: false, codigo: 'permisos_insuficientes', error: `No puedes ${accion}: incluye permisos que tu rol no tiene (${faltan.join(', ')}).`,
+  });
+
+  const cambiarRol = async (id, codigo) => {
+    if (!puede('usuarios.cambiar_rol')) return sinPermiso('usuarios.cambiar_rol');
+    const objetivo = usuarios.find((u) => u.id === id);
     if (!objetivo) return { ok: false, error: 'El usuario no existe.' };
-    if (rol === 'votante') {
-      if (id === usuarioId) return { ok: false, error: 'No puedes quitarte tu propio rol de administrador: pídeselo a otro administrador.' };
-      if (!datos.usuarios.some((u) => u.id !== id && u.rol === 'administrador')) return { ok: false, error: 'Debe quedar al menos un administrador activo.' };
+    const nuevo = rolDe(codigo);
+    if (!nuevo) return { ok: false, error: 'El rol no existe.' };
+    if (objetivo.rol === codigo) return { ok: true, usuario: objetivo };
+    if (id === usuarioId) return { ok: false, error: 'No puedes cambiar tu propio rol: pídeselo a otro administrador.' };
+    let faltan = faltantes(nuevo.permisos);
+    if (faltan.length) return errorFaltan(`asignar el rol «${nuevo.nombre}»`, faltan);
+    const actual = rolDe(objetivo.rol);
+    faltan = actual ? faltantes(actual.permisos) : [];
+    if (faltan.length) return errorFaltan(`quitar el rol «${actual.nombre}»`, faltan);
+    if (objetivo.rol === ADMINISTRADOR && !usuarios.some((u) => u.id !== id && u.rol === ADMINISTRADOR && u.activo !== false)) {
+      return { ok: false, error: 'Debe quedar al menos un administrador activo.' };
     }
-    actualizar((d) => ({ ...d, usuarios: d.usuarios.map((u) => (u.id === id ? { ...u, rol } : u)) }), `Cambió el rol de "${objetivo.correo}" a ${rol}`);
+    if (objetivo.activo === false && nuevo.permisos.includes('panel.ver')) {
+      return { ok: false, error: 'La cuenta está desactivada: actívala antes de darle acceso al panel.' };
+    }
+    actualizar((d) => ({ ...d, usuarios: d.usuarios.map((u) => (u.id === id ? { ...u, rol: codigo } : u)) }), `Cambió el rol de "${objetivo.correo}" a «${nuevo.nombre}»`);
+    return { ok: true, usuario: { ...objetivo, rol: codigo, rolNombre: nuevo.nombre } };
+  };
+
+  // Crea un rol o cambia su nombre, descripción y permisos. Votante y administrador no cambian de permisos.
+  const guardarRol = async (datosRol) => {
+    if (!puede('roles.gestionar')) return sinPermiso('roles.gestionar');
+    const nombre = (datosRol.nombre || '').trim();
+    const errores = {};
+    if (nombre.length < 3) errores.nombre = 'Escribe un nombre de al menos 3 caracteres.';
+    const pedidos = [...new Set(datosRol.permisos || [])].filter((c) => DESCRIPCION_PERMISO[c]).sort();
+    const actual = datosRol.id ? roles.find((r) => r.id === datosRol.id) : null;
+    if (datosRol.id && !actual) return { ok: false, error: 'El rol no existe.' };
+    let codigo = actual?.codigo;
+    if (!actual) {
+      codigo = (datosRol.codigo || slugificar(nombre)).trim().slice(0, 30);
+      if (!PATRON_CODIGO_ROL.test(codigo)) errores.codigo = 'Usa solo minúsculas sin tildes, números, guiones o guion bajo.';
+      else if (roles.some((r) => r.codigo === codigo)) errores.codigo = 'Ya existe un rol con este código.';
+    }
+    if (Object.keys(errores).length) return { ok: false, error: Object.values(errores).join(' '), errores };
+    if (actual) {
+      if (actual.codigo === usuario?.rol) return { ok: false, error: 'No puedes editar tu propio rol: pídeselo a otro administrador.' };
+      if (actual.fijo && !iguales(pedidos, actual.permisos)) return { ok: false, codigo: 'rol_fijo', error: `Los permisos del rol «${actual.nombre}» son fijos.` };
+      // Solo se exigen los permisos que cambian (los que ya estaban no los reparte quien edita)
+      const cambian = [...pedidos.filter((c) => !actual.permisos.includes(c)), ...actual.permisos.filter((c) => !pedidos.includes(c))];
+      const faltan = faltantes(cambian);
+      if (faltan.length) return errorFaltan(`cambiar los permisos de «${actual.nombre}»`, faltan);
+    } else {
+      const faltan = faltantes(pedidos);
+      if (faltan.length) return errorFaltan('crear este rol', faltan);
+    }
+    const guardado = {
+      ...(actual ? datos.roles.find((r) => r.id === actual.id) : { id: siguienteId(datos.roles || []), codigo, sistema: false, orden: roles.length + 1 }),
+      nombre,
+      descripcion: (datosRol.descripcion || '').trim(),
+    };
+    if (!ROLES_FIJOS.includes(codigo)) guardado.permisos = pedidos;
+    actualizar(
+      (d) => ({ ...d, roles: actual ? d.roles.map((r) => (r.id === guardado.id ? guardado : r)) : [...d.roles, guardado] }),
+      `${actual ? 'Actualizó' : 'Creó'} el rol «${nombre}» (${pedidos.length} permisos)`,
+    );
+    return { ok: true, rol: { ...guardado, permisos: permisosEfectivos(guardado) } };
+  };
+
+  const eliminarRol = async (id) => {
+    if (!puede('roles.gestionar')) return sinPermiso('roles.gestionar');
+    const rol = roles.find((r) => r.id === id);
+    if (!rol) return { ok: false, error: 'El rol no existe.' };
+    if (rol.sistema) return { ok: false, codigo: 'rol_sistema', error: `«${rol.nombre}» es un rol del sistema: no se elimina.` };
+    const faltan = faltantes(rol.permisos);
+    if (faltan.length) return errorFaltan(`eliminar el rol «${rol.nombre}»`, faltan);
+    if (rol.usuarios) {
+      return { ok: false, codigo: 'rol_con_usuarios', error: `«${rol.nombre}» tiene ${rol.usuarios} usuario(s): asígnales otro rol antes de eliminarlo.` };
+    }
+    actualizar((d) => ({ ...d, roles: d.roles.filter((r) => r.id !== id) }), `Eliminó el rol «${rol.nombre}»`);
     return { ok: true };
   };
 
@@ -434,6 +528,9 @@ export function MockProvider({ children }) {
   const valor = {
     modo: 'mock',
     ...datos,
+    usuarios,
+    roles,
+    catalogoPermisos: GRUPOS_PERMISOS,
     votaciones,
     misVotos,
     totalVotos: datos.configuracion?.mostrarTotalVotos
@@ -441,7 +538,10 @@ export function MockProvider({ children }) {
       : null,
     publicarResultadosEdicion,
     usuario,
-    esAdmin: usuario?.rol === 'administrador',
+    permisos,
+    puede,
+    // «Accede al panel»: cualquier rol con panel.ver (no solo el administrador)
+    esAdmin: puede('panel.ver'),
     edicionActiva: buscarEdicionActiva(datos.ediciones),
     version,
     iniciarSesion,
@@ -471,6 +571,8 @@ export function MockProvider({ children }) {
     exportarResultados,
     exportar,
     cambiarRol,
+    guardarRol,
+    eliminarRol,
     descargarPlantillaEdicion: sinApi,
     exportarEstructuraEdicion: sinApi,
     importarEdicion: sinApi,

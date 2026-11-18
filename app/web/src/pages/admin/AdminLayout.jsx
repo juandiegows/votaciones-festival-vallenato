@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { EdicionAdminProvider, useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import { useSeo } from '../../hooks/useSeo.js';
 import { API_URL, MODO_API } from '../../config.js';
+import { useApp } from '../../context/AppContext.jsx';
+import { permisoDeRuta } from '../../data/permisos.js';
 
 // Django Admin vive en el servidor de la API (mismo dominio en producción; otro puerto en Docker local)
 const URL_DJANGO_ADMIN = /^https?:\/\//.test(API_URL) ? `${new URL(API_URL).origin}/django-admin/` : '/django-admin/';
@@ -29,6 +31,7 @@ const GRUPOS = [
     enlaces: [
       { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
       { to: '/panel/usuarios', label: 'Usuarios', icono: 'people' },
+      { to: '/panel/roles', label: 'Roles y permisos', icono: 'person-lock' },
     ],
   },
   {
@@ -42,6 +45,23 @@ const GRUPOS = [
     ],
   },
 ];
+
+/** Grupos del menú con solo las secciones que el rol puede ver (cada una exige su permiso `.ver`). */
+function gruposPermitidos(puede) {
+  return GRUPOS
+    .map((g) => ({ ...g, enlaces: g.enlaces.filter((e) => puede(permisoDeRuta(e.to))) }))
+    .filter((g) => g.enlaces.length);
+}
+
+function RolActual() {
+  const { usuario } = useApp();
+  return (
+    <p className="small mb-2 px-2 rol-actual-admin">
+      <span className="text-secondary-flv">Tu rol:</span>{' '}
+      <span className="badge text-bg-dark"><i className="bi bi-person-badge me-1" aria-hidden="true"></i>{usuario?.rolNombre || usuario?.rol}</span>
+    </p>
+  );
+}
 
 function SelectorEdicion() {
   const { edicion, edicionId, ediciones, esActiva, setEdicionId } = useEdicionAdmin();
@@ -78,6 +98,8 @@ function AvisoEdicion() {
 export default function AdminLayout() {
   useSeo({ titulo: 'Panel de administración', indexar: false });
   const { pathname } = useLocation();
+  const { puede } = useApp();
+  const grupos = gruposPermitidos(puede);
   const menuRef = useRef(null);
   // Móvil: el menú es una franja deslizable; se desplaza hasta la sección activa para que siempre se vea
   useEffect(() => {
@@ -92,9 +114,10 @@ export default function AdminLayout() {
         <div className="panel-admin">
           <aside className="panel-admin-menu">
             <nav aria-label="Menú de administración" className="card-flv p-2 admin-nav">
+              <RolActual />
               <SelectorEdicion />
               <ul ref={menuRef} className="nav nav-pills flex-row flex-lg-column flex-nowrap overflow-auto gap-1 admin-nav-lista">
-                {GRUPOS.map((grupo) => (
+                {grupos.map((grupo) => (
                   <Fragment key={grupo.titulo || 'inicio'}>
                     {grupo.titulo && <li className="admin-nav-grupo d-none d-lg-block">{grupo.titulo}</li>}
                     {grupo.enlaces.map((e) => (
@@ -106,8 +129,8 @@ export default function AdminLayout() {
                     ))}
                   </Fragment>
                 ))}
-                {/* Solo con la API: en el modo demostración no hay servidor Django */}
-                {MODO_API && (
+                {/* Solo con la API (en el modo demostración no hay servidor Django) y con el permiso django_admin.acceder */}
+                {MODO_API && puede('django_admin.acceder') && (
                   <li className="nav-item">
                     <a href={URL_DJANGO_ADMIN} className="nav-link" target="_blank" rel="noopener noreferrer" title="Se abre en una pestaña nueva">
                       <i className="bi bi-gear-wide-connected me-2" aria-hidden="true"></i>Django Admin
