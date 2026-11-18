@@ -110,7 +110,7 @@
          data-tapa-dura="{{ revista.tapa_dura|yesno:'1,0' }}" data-sonido="{{ revista.sonido_papel|yesno:'1,0' }}"
          {% if revista.efecto_arrancar %}data-efecto="{% static 'portal/js/arrancar-pagina.min.js' %}"{% endif %}>
       <div class="revista-estado" role="status">
-        <span><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando la revista…</span>
+        <span class="cargando-acordeon">{% include "portal/parciales/acordeon_animado.svg.html" with decorativo=True %}<span class="cargando-acordeon-texto">Cargando la revista…</span></span>
         <noscript><a class="btn btn-outline-light mt-3" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">Abrir la revista (PDF)</a></noscript>
       </div>
       <div class="revista-hojas" aria-hidden="true"></div>

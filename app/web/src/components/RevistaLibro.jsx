@@ -4,6 +4,7 @@ import urlWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PageFlip } from 'page-flip';
 import { urlDelSitio } from '../config.js';
 import { ajustesDe } from '../data/revista.js';
+import Cargando from './Cargando.jsx';
 import { vigilarEstiramiento } from './revista/estirarParaArrancar.js';
 
 GlobalWorkerOptions.workerSrc = urlWorker;
@@ -354,8 +355,8 @@ export default function RevistaLibro({ url, titulo, ajustes: ajustesRevista }) {
       onKeyDown={alPresionar}
     >
       {estado.cargando && (
-        <div className="revista-estado" role="status">
-          <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando la revista…
+        <div className="revista-estado">
+          <Cargando texto="Cargando la revista…" />
         </div>
       )}
       {estado.error && (

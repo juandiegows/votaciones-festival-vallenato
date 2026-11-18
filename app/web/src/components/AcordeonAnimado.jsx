@@ -4,9 +4,11 @@ const PLIEGUES = Array.from({ length: 9 }, (_, i) => i);
 const BOTONES_PITOS = [[20, 32], [32, 32], [20, 44], [32, 44], [20, 56], [32, 56], [20, 68], [32, 68]];
 const BOTONES_BAJOS = [[128, 38], [138, 38], [128, 50], [138, 50], [128, 62], [138, 62]];
 
-export default function AcordeonAnimado({ className = '' }) {
+export default function AcordeonAnimado({ className = '', decorativo = false }) {
+  // `decorativo`: acompaña un texto (p. ej. «Cargando…») y los lectores de pantalla lo omiten
+  const accesible = decorativo ? { 'aria-hidden': true, focusable: 'false' } : { role: 'img', 'aria-label': 'Acordeón vallenato tocando' };
   return (
-    <svg className={`acordeon-animado ${className}`} viewBox="0 0 160 100" role="img" aria-label="Acordeón vallenato tocando">
+    <svg className={`acordeon-animado ${className}`} viewBox="0 0 160 100" {...accesible}>
       <g className="acordeon-notas" fill="var(--flv-dorado)" fontFamily="serif" fontSize="16">
         <text x="56" y="18">♪</text>
         <text x="80" y="16">♫</text>

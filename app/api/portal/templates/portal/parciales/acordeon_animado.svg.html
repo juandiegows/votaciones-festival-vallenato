@@ -1,5 +1,5 @@
-{# Acordeón vallenato animado de las páginas de error (respeta «reducir movimiento», ver styles.css) #}
-<svg class="acordeon-animado" viewBox="0 0 160 100" role="img" aria-label="Acordeón vallenato tocando">
+{# Acordeón vallenato animado (páginas de error y cargas; respeta «reducir movimiento», ver styles.css). decorativo=True lo oculta a lectores de pantalla #}
+<svg class="acordeon-animado" viewBox="0 0 160 100" {% if decorativo %}aria-hidden="true" focusable="false"{% else %}role="img" aria-label="Acordeón vallenato tocando"{% endif %}>
   <g class="acordeon-notas" fill="var(--flv-dorado)" font-family="serif" font-size="16"><text x="56" y="18">♪</text><text x="80" y="16">♫</text><text x="102" y="18">♪</text></g>
   <g class="acordeon-fuelle">
     <rect x="44" y="24" width="8" height="52" fill="#1C1711" stroke="var(--flv-dorado)" stroke-width=".6"/><rect x="52" y="24" width="8" height="52" fill="#2A0B08" stroke="var(--flv-dorado)" stroke-width=".6"/>

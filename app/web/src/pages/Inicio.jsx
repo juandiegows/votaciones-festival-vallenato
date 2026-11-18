@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react';
+import Cargando from '../components/Cargando.jsx';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import HeroAcordeon from '../components/HeroAcordeon.jsx';
@@ -120,7 +121,7 @@ export default function Inicio() {
                 <i className="bi bi-hand-index me-1" aria-hidden="true"></i>Arrastra la esquina de la página o usa las flechas para hojearla.
               </p>
             </div>
-            <Suspense fallback={<div className="revista-estado position-static" role="status">Cargando la revista…</div>}>
+            <Suspense fallback={<div className="revista-estado position-static"><Cargando texto="Cargando la revista…" /></div>}>
               <RevistaLibro key={revista.id} url={revista.archivo} titulo={revista.titulo} ajustes={revista} />
             </Suspense>
           </div>

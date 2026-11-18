@@ -14,6 +14,7 @@ import { formatearFechaHora, resultadosVisibles, visibilidadResultados } from '.
 import { MODO_API } from '../../config.js';
 import { useResultados } from '../../hooks/useResultados.js';
 import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
+import Cargando from '../../components/Cargando.jsx';
 
 export default function AdminResultados() {
   const { guardarEntidad, exportarResultados, obtenerResumen, puede } = useApp();
@@ -99,7 +100,7 @@ export default function AdminResultados() {
         (resumen.error ? (
           <div className="alert alert-danger" role="alert">{resumen.error}</div>
         ) : !resumen.datos ? (
-          <p role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando resumen…</p>
+          <Cargando compacto texto="Cargando resumen…" />
         ) : (
           <>
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
@@ -130,7 +131,7 @@ export default function AdminResultados() {
               {error ? (
                 <div className="alert alert-danger mb-0" role="alert">{error}</div>
               ) : cargando ? (
-                <p className="mb-0" role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando resultados…</p>
+                <Cargando compacto texto="Cargando resultados…" />
               ) : (
                 <ResultadosChart total={total} filas={filas} cerrada={votacion.estado === 'cerrada'} />
               )}

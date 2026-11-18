@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 import { useSeo } from '../hooks/useSeo.js';
+import Cargando from '../components/Cargando.jsx';
 
 // Destino del enlace del correo de confirmación: /confirmar-correo?token=…
 export default function ConfirmarCorreo() {
@@ -25,8 +26,7 @@ export default function ConfirmarCorreo() {
           <section className="card-flv p-4 p-md-5 text-center" aria-live="polite">
             {!resultado && (
               <>
-                <span className="spinner-border text-primary" aria-hidden="true"></span>
-                <p className="mt-3 mb-0">Confirmando tu correo…</p>
+                <Cargando texto="Confirmando tu correo…" />
               </>
             )}
             {resultado?.ok && (

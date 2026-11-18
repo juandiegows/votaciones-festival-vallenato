@@ -1,6 +1,7 @@
 import { useResultados } from '../hooks/useResultados.js';
 import { visibilidadResultados } from '../utils/helpers.js';
 import ResultadosChart from './ResultadosChart.jsx';
+import Cargando from './Cargando.jsx';
 
 // Resultados públicos de una votación: muestra el gráfico o el motivo por el que aún no son públicos.
 export default function ResultadosVotacion({ votacion, nota }) {
@@ -10,9 +11,7 @@ export default function ResultadosVotacion({ votacion, nota }) {
 
   if (cargando && !filas.length && !error) {
     return (
-      <p className="mb-0 text-secondary-flv" role="status">
-        <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando resultados…
-      </p>
+      <Cargando compacto texto="Cargando resultados…" />
     );
   }
   if (error) {

@@ -1,4 +1,5 @@
 import PaginaError from '../pages/errores/PaginaError.jsx';
+import Cargando from './Cargando.jsx';
 
 // Pantalla mientras se cargan los datos de la API; si falla, página de error (sin conexión o servicio caído)
 export default function PantallaCarga({ error, onReintentar }) {
@@ -22,10 +23,7 @@ export default function PantallaCarga({ error, onReintentar }) {
   return (
     <main className="min-vh-100 d-flex align-items-center justify-content-center p-4" style={{ background: 'var(--flv-crema)' }}>
       <div className="card-flv p-4 p-md-5 text-center" style={{ maxWidth: '28rem' }}>
-        <div role="status" aria-live="polite">
-          <span className="spinner-border text-danger" aria-hidden="true"></span>
-          <p className="mt-3 mb-0 fw-semibold">Cargando votaciones…</p>
-        </div>
+        <Cargando texto="Cargando votaciones…" />
       </div>
     </main>
   );

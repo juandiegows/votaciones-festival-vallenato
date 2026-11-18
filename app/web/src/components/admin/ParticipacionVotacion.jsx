@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { useConsultaEnVivo } from '../../hooks/useConsultaEnVivo.js';
 import { formatearFecha } from '../../utils/helpers.js';
 import TablaResponsiva from '../TablaResponsiva.jsx';
+import Cargando from '../Cargando.jsx';
 
 /**
  * Quién votó (nunca por qué opción). Mientras la votación está abierta la lista solo aparece en
@@ -16,7 +17,7 @@ export default function ParticipacionVotacion({ votacionId, intervalo = 0 }) {
 
   if (error) return <div className="alert alert-danger mb-0" role="alert">{error}</div>;
   if (!datos) {
-    return <p className="mb-0" role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando participación…</p>;
+    return <Cargando compacto texto="Cargando participación…" />;
   }
 
   const texto = filtro.trim().toLowerCase();

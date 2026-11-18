@@ -11,6 +11,7 @@ import { INTERVALO_EN_VIVO, useConsultaEnVivo } from '../../hooks/useConsultaEnV
 import { formatearFechaHora } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 import Paginador from '../../components/Paginador.jsx';
+import Cargando from '../../components/Cargando.jsx';
 
 const PESTANAS = [
   // «Quién votó» usa la participación de cada votación: exige además ver votos y resultados
@@ -80,7 +81,7 @@ function Integridad({ intervalo }) {
   const { edicion } = useEdicionAdmin();
   const { datos, error } = useConsultaEnVivo(() => obtenerIntegridad(edicion.id), [edicion?.id], { intervalo, activa: !!edicion });
   if (error) return <div className="alert alert-danger" role="alert">{error}</div>;
-  if (!datos) return <p role="status"><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Verificando votos…</p>;
+  if (!datos) return <Cargando compacto texto="Verificando votos…" />;
   return <IntegridadVotos integridad={datos} />;
 }
 

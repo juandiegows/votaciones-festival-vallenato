@@ -704,6 +704,11 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 .pagina-error-codigo .bi { font-size: 4rem; line-height: 1; }
 .pagina-error-codigo .etiqueta { color: var(--flv-dorado-claro); text-transform: uppercase; letter-spacing: .2em; font-size: .75rem; font-weight: 600; }
 .pagina-error-texto { padding: 2rem; }
+/* Carga: acordeón vallenato tocando (componente Cargando) */
+.cargando-acordeon { display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; font-weight: 600; }
+.cargando-acordeon .acordeon-animado { max-width: 7rem; }
+.cargando-acordeon-compacto { flex-direction: row; justify-content: flex-start; gap: .75rem; font-weight: 500; color: var(--flv-gris-texto); }
+.cargando-acordeon-compacto .acordeon-animado { max-width: 3.25rem; }
 .acordeon-animado { width: 100%; max-width: 11rem; height: auto; overflow: visible; }
 .acordeon-animado .acordeon-fuelle { transform-box: fill-box; transform-origin: center; animation: fuelle 1.4s ease-in-out infinite alternate; }
 .acordeon-animado .acordeon-pitos { animation: pitos 1.4s ease-in-out infinite alternate; }
