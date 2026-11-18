@@ -16,7 +16,8 @@
     <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
     {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
   </div>
-  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública. Déjalo vacío para generarlo desde el título." extra='placeholder="se genera desde el título"' %}</div>
+  <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública. Déjalo vacío para generarlo desde el título." extra='placeholder="se genera desde el título" data-slug-desde="id_titulo" data-slug-ambito="id_categoria" data-slugs-usados="slugs-usados"' %}
+    {% slugs_usados "votacion" form.instance as usados %}{{ usados|json_script:"slugs-usados" }}</div>
   <div class="col-12">{% include "portal/panel/selector_icono.html" with leyenda="Ícono de la votación" %}</div>
 
   <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">2</span>Cuándo se puede votar</h3></div>

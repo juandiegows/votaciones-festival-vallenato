@@ -85,6 +85,15 @@ export function slugUnico(texto, existentes) {
 
 export const PATRON_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * Sugerencia de URL amigable mientras se escribe el nombre o el título. `hermanos` son los elementos del mismo
+ * ámbito (categorías de la edición o votaciones de la categoría); el propio elemento no cuenta como repetido.
+ */
+export function slugSugerido(texto, hermanos = [], idActual = null) {
+  if (!slugificar(texto)) return '';
+  return slugUnico(texto, hermanos.filter((h) => h.id !== idActual && h.slug).map((h) => h.slug));
+}
+
 /** Enlace multimedia válido: URL http(s) absoluta o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/x.mp3). */
 export function validarEnlaceMultimedia(valor) {
   if (!valor) return true;

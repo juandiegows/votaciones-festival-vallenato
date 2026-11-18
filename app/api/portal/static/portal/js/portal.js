@@ -241,4 +241,28 @@
     casilla.addEventListener('change', aplicar);
     aplicar();
   });
+
+  // URL amigable: se sugiere sola mientras se escribe el nombre o el título, hasta que la persona la edite a mano.
+  // Si el elemento ya tenía URL no se cambia (los enlaces publicados seguirían funcionando).
+  const slugificar = (texto) => texto.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '').trim().replace(/[\s-]+/g, '-').replace(/^-+|-+$/g, '');
+  todos('[data-slug-desde]').forEach((campoSlug) => {
+    const origen = document.getElementById(campoSlug.dataset.slugDesde);
+    const ambito = document.getElementById(campoSlug.dataset.slugAmbito);
+    const datos = document.getElementById(campoSlug.dataset.slugsUsados);
+    const usados = datos ? JSON.parse(datos.textContent) : {};
+    if (!origen) return;
+    let automatico = !campoSlug.value;
+    const sugerir = () => {
+      if (!automatico) return;
+      const base = slugificar(origen.value);
+      const repetidos = new Set(usados[ambito?.value] || []);
+      let candidato = base;
+      for (let n = 2; base && repetidos.has(candidato); n += 1) candidato = `${base}-${n}`;
+      campoSlug.value = candidato;
+    };
+    origen.addEventListener('input', sugerir);
+    ambito?.addEventListener('change', sugerir);
+    campoSlug.addEventListener('input', () => { automatico = !campoSlug.value; });
+  });
 })();

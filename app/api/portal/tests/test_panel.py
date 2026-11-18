@@ -65,6 +65,21 @@ class CategoriasPanelTest(BasePortalTest):
         self.assertEqual(categoria.slug, "cancion-inedita")
         self.assertContains(self.client.get("/2027"), "Canción inédita")
 
+    def test_formulario_sugiere_la_url_amigable_sin_repetir(self):
+        import json
+        import re
+
+        respuesta = self.client.get("/panel/categorias/nueva")
+        self.assertContains(respuesta, 'data-slug-desde="id_nombre"')
+        usados = json.loads(re.search(r'<script id="slugs-usados" type="application/json">(.*?)</script>',
+                                      respuesta.content.decode(), re.S).group(1))
+        self.assertIn(self.categoria.slug, usados[str(self.edicion.pk)])
+        # Al editar, la propia categoría no cuenta como repetida
+        respuesta = self.client.get(f"/panel/categorias/{self.categoria.pk}/editar")
+        usados = json.loads(re.search(r'<script id="slugs-usados" type="application/json">(.*?)</script>',
+                                      respuesta.content.decode(), re.S).group(1))
+        self.assertNotIn(self.categoria.slug, usados.get(str(self.edicion.pk), []))
+
     def test_editar_y_desactivar(self):
         datos = {"edicion": self.edicion.pk, "nombre": "Música vallenata", "slug": "musica", "descripcion": "Canciones",
                  "icono": "music-note", "orden": 1, "activa": "on"}

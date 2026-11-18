@@ -7,7 +7,7 @@ import Modal from '../../components/Modal.jsx';
 import IconoEntidad from '../../components/IconoEntidad.jsx';
 import SelectorIcono from '../../components/SelectorIcono.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
-import { PATRON_SLUG } from '../../utils/helpers.js';
+import { PATRON_SLUG, slugSugerido } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -42,9 +42,17 @@ export default function AdminCategorias() {
     setForm(valores);
   };
 
+  // La URL amigable se sugiere sola mientras se escribe el nombre, hasta que la persona la edite a mano.
+  // Al editar una categoría que ya tiene URL no se cambia (los enlaces publicados seguirían funcionando).
+  const cambiarNombre = (nombre, edicionId) => setForm((f) => {
+    const ed = edicionId ?? f.edicionId;
+    const slug = f.slugAuto ? slugSugerido(nombre, categorias.filter((c) => c.edicionId === Number(ed)), f.id) : f.slug;
+    return { ...f, nombre, edicionId: ed, slug };
+  });
+
   const nueva = () => {
     abrirFormulario({
-      edicionId: (edicion?.estado !== 'cerrada' && edicion?.id) || edicionesAbiertas[0]?.id || '', nombre: '', slug: '', descripcion: '', icono: 'music-note-beamed',
+      edicionId: (edicion?.estado !== 'cerrada' && edicion?.id) || edicionesAbiertas[0]?.id || '', nombre: '', slug: '', slugAuto: true, descripcion: '', icono: 'music-note-beamed',
       iconoImagen: '', archivoIcono: null, quitarIcono: false, activa: true, orden: categorias.length + 1,
     });
   };
@@ -60,7 +68,7 @@ export default function AdminCategorias() {
     setErrores(errs);
     if (Object.keys(errs).length) return;
     // eslint-disable-next-line no-unused-vars
-    const { archivoIcono, quitarIcono, iconoImagen, ...resto } = form;
+    const { archivoIcono, quitarIcono, iconoImagen, slugAuto, ...resto } = form;
     const datos = { ...resto, edicionId: Number(form.edicionId), orden: Number(form.orden), slug: form.slug.trim() };
     if (archivoIcono) datos.archivoIcono = archivoIcono;
     else if (quitarIcono) datos.quitarIcono = true;
@@ -93,7 +101,7 @@ export default function AdminCategorias() {
     setEliminar(c);
   };
 
-  const editar = (c) => abrirFormulario({ ...c, slug: c.slug || '', iconoImagen: c.iconoImagen || '', archivoIcono: null, quitarIcono: false });
+  const editar = (c) => abrirFormulario({ ...c, slug: c.slug || '', slugAuto: !c.slug, iconoImagen: c.iconoImagen || '', archivoIcono: null, quitarIcono: false });
 
   const interruptor = (c) => (
     <div className="form-check form-switch mb-0">
@@ -291,7 +299,7 @@ export default function AdminCategorias() {
               <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">1</span>Datos de la categoría</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="cat-edicion">Edición</label>
-                <select id="cat-edicion" className={`form-select ${errores.edicionId ? 'is-invalid' : ''}`} value={form.edicionId} onChange={(e) => setForm({ ...form, edicionId: e.target.value })}>
+                <select id="cat-edicion" className={`form-select ${errores.edicionId ? 'is-invalid' : ''}`} value={form.edicionId} onChange={(e) => cambiarNombre(form.nombre, e.target.value)}>
                   {/* Al editar se conserva la edición actual aunque esté cerrada */}
                   {ediciones.filter((ed) => ed.estado !== 'cerrada' || ed.id === Number(form.edicionId) && form.id).map((ed) => (
                     <option key={ed.id} value={ed.id}>{ed.nombre}{ed.estado === 'cerrada' ? ' (cerrada)' : ''}</option>
@@ -301,12 +309,12 @@ export default function AdminCategorias() {
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="cat-nombre">Nombre</label>
-                <input id="cat-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                <input id="cat-nombre" className={`form-control ${errores.nombre ? 'is-invalid' : ''}`} value={form.nombre} onChange={(e) => cambiarNombre(e.target.value)} />
                 {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
               </div>
               <div className="col-12">
                 <label className="form-label" htmlFor="cat-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
-                <input id="cat-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el nombre" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="cat-slug-ayuda" />
+                <input id="cat-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el nombre" onChange={(e) => setForm({ ...form, slug: e.target.value, slugAuto: !e.target.value })} aria-describedby="cat-slug-ayuda" />
                 {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="cat-slug-ayuda" className="form-text">Aparece en la dirección pública, p. ej. /{ediciones.find((ed) => ed.id === Number(form.edicionId))?.anio}/categorias/{form.slug || 'musica'}. Déjalo vacío para generarlo automáticamente.</div>}
               </div>
               <div className="col-12">

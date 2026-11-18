@@ -165,3 +165,17 @@ def valor_campo(valor):
     if hasattr(valor, "isoformat") and not hasattr(valor, "hour"):
         return valor.isoformat()
     return "" if valor is None else valor
+
+
+@register.simple_tag
+def slugs_usados(modelo, instancia=None):
+    """URL amigables ya usadas por ámbito ({edición: [...]} o {categoría: [...]}) para sugerir una que no se repita."""
+    from votaciones.models import Categoria, Votacion
+
+    consulta, ambito = (Categoria.objects, "edicion_id") if modelo == "categoria" else (Votacion.objects, "categoria_id")
+    if instancia is not None and instancia.pk:
+        consulta = consulta.exclude(pk=instancia.pk)
+    usados = {}
+    for clave, slug in consulta.exclude(slug="").values_list(ambito, "slug"):
+        usados.setdefault(str(clave), []).append(slug)
+    return usados

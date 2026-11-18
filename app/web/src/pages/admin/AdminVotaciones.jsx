@@ -12,7 +12,7 @@ import FormularioOpcion, { opcionNueva } from '../../components/admin/Formulario
 import OpcionesAdmin from '../../components/admin/OpcionesAdmin.jsx';
 import OpcionesVotacion from '../../components/presentaciones/OpcionesVotacion.jsx';
 import { OPCIONES_EJEMPLO, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
-import { AVISO_OPCIONES_BLOQUEADAS, DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, isoALocal, localAIso, opcionesBloqueadas, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
+import { AVISO_OPCIONES_BLOQUEADAS, DESCRIPCION_RESULTADOS, OPCIONES_MOSTRAR_RESULTADOS, PATRON_SLUG, formatearFechaHora, slugSugerido, isoALocal, localAIso, opcionesBloqueadas, visibilidadResultados, votosPermitidos } from '../../utils/helpers.js';
 import { opcionesActivas } from '../../utils/guiaPanel.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 
@@ -114,6 +114,7 @@ export default function AdminVotaciones() {
       categoriaId: cat?.id || '',
       titulo: '',
       slug: '',
+      slugAuto: true,
       descripcion: '',
       fechaApertura: isoALocal(new Date(ahora.getTime() + 86400000).toISOString()),
       fechaCierre: isoALocal(new Date(ahora.getTime() + 8 * 86400000).toISOString()),
@@ -132,11 +133,18 @@ export default function AdminVotaciones() {
     });
   };
 
+  // La URL amigable se sugiere sola mientras se escribe el título, hasta que la persona la edite a mano
+  const cambiarTitulo = (titulo, categoriaId) => setForm((f) => {
+    const cat = categoriaId ?? f.categoriaId;
+    const slug = f.slugAuto ? slugSugerido(titulo, votaciones.filter((v) => v.categoriaId === Number(cat)), f.id) : f.slug;
+    return { ...f, titulo, categoriaId: cat, slug };
+  });
+
   const editar = (v) => {
     setErrores({});
     setMensajeFormulario('');
     setForm({
-      ...v, slug: v.slug || '', fechaApertura: isoALocal(v.fechaApertura), fechaCierre: isoALocal(v.fechaCierre),
+      ...v, slug: v.slug || '', slugAuto: !v.slug, fechaApertura: isoALocal(v.fechaApertura), fechaCierre: isoALocal(v.fechaCierre),
       iconoImagen: v.iconoImagen || '', archivoIcono: null, quitarIcono: false, presentacionOpciones: v.presentacionOpciones || 'tarjetas',
       publicadaOriginal: v.publicada,
     });
@@ -159,7 +167,7 @@ export default function AdminVotaciones() {
     setErrores(errs);
     if (Object.keys(errs).length) return;
     // eslint-disable-next-line no-unused-vars
-    const { estado, archivoIcono, quitarIcono, iconoImagen, publicadaOriginal, ...resto } = form;
+    const { estado, archivoIcono, quitarIcono, iconoImagen, publicadaOriginal, slugAuto, ...resto } = form;
     const datos = {
       ...resto,
       categoriaId: Number(form.categoriaId),
@@ -569,14 +577,14 @@ export default function AdminVotaciones() {
               <div className="col-12 form-seccion"><h3 className="form-seccion-titulo"><span className="form-seccion-num" aria-hidden="true">1</span>Datos de la votación</h3></div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-cat">Categoría</label>
-                <select id="v-cat" className={`form-select ${errores.categoriaId ? 'is-invalid' : ''}`} value={form.categoriaId} onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}>
+                <select id="v-cat" className={`form-select ${errores.categoriaId ? 'is-invalid' : ''}`} value={form.categoriaId} onChange={(e) => cambiarTitulo(form.titulo, e.target.value)}>
                   {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                 </select>
                 {errores.categoriaId && <div className="invalid-feedback">{errores.categoriaId}</div>}
               </div>
               <div className="col-md-6">
                 <label className="form-label" htmlFor="v-titulo">Título</label>
-                <input id="v-titulo" className={`form-control ${errores.titulo ? 'is-invalid' : ''}`} value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
+                <input id="v-titulo" className={`form-control ${errores.titulo ? 'is-invalid' : ''}`} value={form.titulo} onChange={(e) => cambiarTitulo(e.target.value)} />
                 {errores.titulo && <div className="invalid-feedback">{errores.titulo}</div>}
               </div>
               <div className="col-12">
@@ -586,7 +594,7 @@ export default function AdminVotaciones() {
               </div>
               <div className="col-12">
                 <label className="form-label" htmlFor="v-slug">Identificador en la URL <span className="fw-normal text-secondary-flv">(opcional)</span></label>
-                <input id="v-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el título" onChange={(e) => setForm({ ...form, slug: e.target.value })} aria-describedby="v-slug-ayuda" />
+                <input id="v-slug" className={`form-control ${errores.slug ? 'is-invalid' : ''}`} value={form.slug} placeholder="se genera desde el título" onChange={(e) => setForm({ ...form, slug: e.target.value, slugAuto: !e.target.value })} aria-describedby="v-slug-ayuda" />
                 {errores.slug ? <div className="invalid-feedback">{errores.slug}</div> : <div id="v-slug-ayuda" className="form-text">Última parte de la dirección pública de la votación. Déjalo vacío para generarlo automáticamente.</div>}
               </div>
               <div className="col-12">

@@ -17,7 +17,8 @@
     {% if form.descripcion.errors %}<div class="invalid-feedback">{{ form.descripcion.errors|join:" " }}</div>{% endif %}
   </div>
   <div class="col-12">
-    {% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública, p. ej. /2027/categorias/musica. Déjalo vacío para generarlo automáticamente." extra='placeholder="se genera desde el nombre"' %}
+    {% include "portal/parciales/campo.html" with campo=form.slug ayuda="Aparece en la dirección pública, p. ej. /2027/categorias/musica. Déjalo vacío para generarlo automáticamente." extra='placeholder="se genera desde el nombre" data-slug-desde="id_nombre" data-slug-ambito="id_edicion" data-slugs-usados="slugs-usados"' %}
+    {% slugs_usados "categoria" form.instance as usados %}{{ usados|json_script:"slugs-usados" }}
   </div>
 
   <div class="col-12 form-seccion"><h3 class="form-seccion-titulo"><span class="form-seccion-num" aria-hidden="true">2</span>Cómo se ve para el público</h3></div>
