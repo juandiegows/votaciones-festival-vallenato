@@ -30,7 +30,7 @@ const GRUPOS = [
     titulo: 'Control',
     enlaces: [
       { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
-      { to: '/panel/registros', label: 'Registros del sistema', icono: 'bug' },
+      { to: '/panel/registros', label: 'Logs', icono: 'bug' },
       { to: '/panel/usuarios', label: 'Usuarios', icono: 'people' },
       { to: '/panel/roles', label: 'Roles y permisos', icono: 'person-lock' },
     ],

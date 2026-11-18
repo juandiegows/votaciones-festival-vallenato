@@ -195,7 +195,7 @@ export default function AdminRegistros() {
   return (
     <>
       <PageHeader
-        titulo="Registros del sistema"
+        titulo="Logs"
         subtitulo={<>Errores del servidor y de la web: qué falló, en qué archivo y línea, en qué página y a quién le pasó. Para buscar el error que alguien reporta, escribe la <strong>referencia</strong> que le mostró la pantalla de error.</>}
       >
         <button type="button" className="btn btn-sm btn-outline-primary" onClick={probar} disabled={prueba.enviando} aria-describedby="reg-prueba-estado">

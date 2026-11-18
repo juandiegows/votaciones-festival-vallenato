@@ -1649,7 +1649,7 @@ paths:
           type: string
         description: Mensaje, excepción, archivo, ruta, id de la petición o correo
       tags:
-      - Registros del sistema
+      - Logs
       security:
       - tokenAuth: []
       responses:
@@ -1671,7 +1671,7 @@ paths:
         description: Un valor de entero único que identifique este registro del sistema.
         required: true
       tags:
-      - Registros del sistema
+      - Logs
       security:
       - tokenAuth: []
       responses:
@@ -1688,7 +1688,7 @@ paths:
         (X-Request-ID) y el error queda en el registro con su traza, archivo y línea.'
       summary: Provocar un error de prueba
       tags:
-      - Registros del sistema
+      - Logs
       security:
       - tokenAuth: []
       responses:
@@ -1699,7 +1699,7 @@ paths:
       operationId: gestion_registros_resumen_retrieve
       summary: Errores de las últimas 24 horas y 7 días
       tags:
-      - Registros del sistema
+      - Logs
       security:
       - tokenAuth: []
       responses:
@@ -2689,7 +2689,7 @@ paths:
         Sin sesión; limitado por IP.
       summary: Reportar un error de JavaScript de la web
       tags:
-      - Registros del sistema
+      - Logs
       requestBody:
         content:
           application/json:

@@ -33,7 +33,7 @@ class RegistrosPanelTest(BasePortalTest):
         self.assertContains(lista, "ErrorDePrueba")
         self.assertContains(lista, "votaciones/registros/views.py:")
         self.assertContains(lista, "Traceback")
-        self.assertContains(lista, "Registros del sistema")  # enlace del menú
+        self.assertContains(lista, ">Logs</a>")  # enlace del menú
 
     def test_filtros_y_descargas(self):
         RegistroSistema.objects.create(nivel="ERROR", origen="web.cliente", fuente="web", mensaje="Falla en la web")
