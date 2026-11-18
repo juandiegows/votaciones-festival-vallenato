@@ -30,6 +30,7 @@ const GRUPOS = [
     titulo: 'Control',
     enlaces: [
       { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
+      { to: '/panel/registros', label: 'Registros del sistema', icono: 'bug' },
       { to: '/panel/usuarios', label: 'Usuarios', icono: 'people' },
       { to: '/panel/roles', label: 'Roles y permisos', icono: 'person-lock' },
     ],
@@ -42,7 +43,6 @@ const GRUPOS = [
       { to: '/panel/revista', label: 'Revista', icono: 'book' },
       { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
       { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
-      { to: '/panel/registros', label: 'Registros del sistema', icono: 'bug' },
     ],
   },
 ];
