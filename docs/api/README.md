@@ -109,6 +109,10 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | GET | `/api/gestion/votaciones/{id}/resultados/csv/` | Exporta los resultados en CSV (RF-14) |
 | GET | `/api/gestion/votaciones/{id}/resultados/excel/` | Exporta los resultados en Excel `.xlsx` (RF-14) |
 | GET | `/api/gestion/votaciones/{id}/resultados/pdf/` | Exporta los resultados en PDF (RF-14) |
+| GET | `/api/gestion/{votaciones,categorias,ediciones}/{id}/exportar/?formato=` | Resultados de una votación, categoría o edición en `pdf`, `excel`, `csv`, `json` o `sql` (RF-14) |
+| GET | `/api/gestion/ediciones/plantilla/` | Plantilla de Excel para importar una edición |
+| POST | `/api/gestion/ediciones/importar/` | Crea una edición desde la plantilla (multipart: `archivo`, `activar`); 400 con `errores` por hoja y fila |
+| GET | `/api/gestion/ediciones/{id}/exportar-estructura/` | La edición completa en la plantilla de Excel (respaldo o copia) |
 | CRUD | `/api/gestion/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart), `texto_audio` (letra o transcripción) y `foto` (imagen, multipart) |
 | GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
 | GET | `/api/gestion/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |

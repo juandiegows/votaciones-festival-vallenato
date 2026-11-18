@@ -14,10 +14,7 @@
     {% estado_badge votacion.estado %}
   </div>
   <p class="text-secondary-flv mb-0">{{ votacion.categoria.nombre }} · {{ votacion.categoria.edicion.nombre }} · {{ votacion.fecha_apertura|fecha_hora }} a {{ votacion.fecha_cierre|fecha_hora }}</p>
-  <div class="d-flex flex-wrap gap-2 my-2" role="group" aria-label="Exportar resultados">
-    <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-voto-exportar' votacion.pk 'excel' %}"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Exportar Excel</a>
-    <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:panel-voto-exportar' votacion.pk 'pdf' %}"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Exportar PDF</a>
-  </div>
+  <div class="my-2">{% include "portal/parciales/menu_exportar.html" with tipo="votacion" pk=votacion.pk nombre=votacion.titulo %}</div>
   <p class="small mb-0 mt-1"><i class="bi bi-eye me-1" aria-hidden="true"></i>Resultados al público: <strong>{{ votacion.visibilidad_efectiva|visibilidad }}</strong>{% if votacion.personalizar_resultados %} (ajuste propio de esta votación){% else %} (ajuste de la edición){% endif %}.</p>
 </header>
 

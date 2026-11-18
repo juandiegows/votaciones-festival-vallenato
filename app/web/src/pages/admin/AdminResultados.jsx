@@ -8,6 +8,7 @@ import ResultadosChart from '../../components/ResultadosChart.jsx';
 import IndicadorEnVivo from '../../components/admin/IndicadorEnVivo.jsx';
 import ResumenResultados from '../../components/admin/ResumenResultados.jsx';
 import ParticipacionVotacion from '../../components/admin/ParticipacionVotacion.jsx';
+import MenuExportar, { FORMATOS_EXPORTACION } from '../../components/admin/MenuExportar.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { formatearFechaHora, resultadosVisibles, visibilidadResultados } from '../../utils/helpers.js';
 import { MODO_API } from '../../config.js';
@@ -103,8 +104,12 @@ export default function AdminResultados() {
               <p className="small mb-0">
                 <strong>{resumen.datos.totalVotos.toLocaleString('es-CO')}</strong> votos en la edición. Selecciona una votación para ver el gráfico, exportar o consultar quién participó.
               </p>
-              <SelectorVista valor={vista} onCambio={setVista} />
+              <span className="d-flex gap-2 align-items-center">
+                <MenuExportar coleccion="ediciones" id={edicion.id} nombre={edicion.nombre} clase="btn-outline-primary" onResultado={setMensaje} />
+                <SelectorVista valor={vista} onCambio={setVista} />
+              </span>
             </div>
+            {mensaje && <div className={`alert alert-${mensaje.tipo} small py-2`} role="status">{mensaje.texto}</div>}
             <ResumenResultados resumen={resumen.datos} onElegir={elegir} vista={vista} />
           </>
         ))}
@@ -152,15 +157,11 @@ export default function AdminResultados() {
               <h2 id="titulo-acciones" className="h6">Acciones</h2>
               <p className="small fw-semibold mb-2" id="exportar-titulo">Exportar resultados</p>
               <div className="d-grid gap-2 mb-3" role="group" aria-labelledby="exportar-titulo">
-                <button type="button" className="btn btn-primary" onClick={() => exportar('excel')} disabled={procesando}>
-                  <i className="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel
-                </button>
-                <button type="button" className="btn btn-outline-primary" onClick={() => exportar('pdf')} disabled={procesando}>
-                  <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF
-                </button>
-                <button type="button" className="btn btn-outline-secondary" onClick={() => exportar('csv')} disabled={procesando}>
-                  <i className="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
-                </button>
+                {FORMATOS_EXPORTACION.map((f, i) => (
+                  <button key={f.valor} type="button" className={`btn ${i === 0 ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => exportar(f.valor)} disabled={procesando}>
+                    <i className={`bi bi-${f.icono} me-1`} aria-hidden="true"></i>{f.etiqueta}
+                  </button>
+                ))}
               </div>
               <div className="form-check form-switch">
                 <input className="form-check-input" type="checkbox" role="switch" id="publicar-res" checked={!!votacion.resultadosPublicados} disabled={procesando || !votacion.publicada} onChange={alternarPublicacion} aria-describedby="publicar-ayuda" />

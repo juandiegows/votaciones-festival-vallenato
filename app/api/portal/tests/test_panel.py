@@ -300,17 +300,18 @@ class DetalleVotacionesTest(BasePortalTest):
 
     def test_exportar_resultados_en_excel_y_pdf(self):
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get(self.ruta), f"{self.ruta}/exportar/pdf")
-        excel = self.client.get(f"{self.ruta}/exportar/excel")
+        base = f"/panel/exportar/votacion/{self.votacion.pk}"
+        self.assertContains(self.client.get(self.ruta), f"{base}/pdf")
+        excel = self.client.get(f"{base}/excel")
         self.assertEqual(excel.status_code, 200)
         self.assertIn("spreadsheetml", excel["Content-Type"])
-        pdf = self.client.get(f"{self.ruta}/exportar/pdf")
+        pdf = self.client.get(f"{base}/pdf")
         self.assertTrue(pdf.content.startswith(b"%PDF-"))
-        self.assertEqual(self.client.get(f"{self.ruta}/exportar/doc").status_code, 404)
+        self.assertEqual(self.client.get(f"{base}/doc").status_code, 404)
 
     def test_el_votante_no_entra(self):
         self.client.force_login(self.votante)
-        self.assertEqual(self.client.get(f"{self.ruta}/exportar/pdf").status_code, 403)
+        self.assertEqual(self.client.get(f"/panel/exportar/votacion/{self.votacion.pk}/pdf").status_code, 403)
         self.assertEqual(self.client.get("/panel/votos").status_code, 403)
         self.assertEqual(self.client.get(self.ruta).status_code, 403)
 
@@ -349,3 +350,29 @@ class DjangoAdminTest(BasePortalTest):
     def test_votante_no_entra(self):
         self.client.force_login(self.votante)
         self.assertNotEqual(self.client.get("/django-admin/").status_code, 200)
+
+
+class TransferenciaPanelTest(BasePortalTest):
+    def setUp(self):
+        super().setUp()
+        self.entrar_como_admin()
+
+    def test_plantilla_importar_y_exportar_desde_el_panel(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        plantilla = self.client.get("/panel/ediciones/plantilla")
+        self.assertEqual(plantilla.status_code, 200)
+        self.assertContains(self.client.get("/panel/ediciones"), "/panel/ediciones/importar")
+        archivo = SimpleUploadedFile("edicion.xlsx", plantilla.content,
+                                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        respuesta = self.client.post("/panel/ediciones/importar", {"archivo": archivo})
+        self.assertRedirects(respuesta, "/panel/ediciones")
+        self.assertTrue(Edicion.objects.filter(anio=2028).exists())
+        # La misma plantilla otra vez: el año ya existe, se muestra el error y no se crea nada
+        archivo.seek(0)
+        respuesta = self.client.post("/panel/ediciones/importar", {"archivo": archivo})
+        self.assertContains(respuesta, "No se creó nada")
+        for tipo, pk in (("categoria", self.categoria.pk), ("edicion", self.edicion.pk)):
+            for formato in ("pdf", "excel", "csv", "json", "sql"):
+                self.assertEqual(self.client.get(f"/panel/exportar/{tipo}/{pk}/{formato}").status_code, 200)
+        self.assertEqual(self.client.get(f"/panel/ediciones/{self.edicion.pk}/estructura").status_code, 200)

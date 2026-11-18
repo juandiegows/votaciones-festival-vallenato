@@ -377,12 +377,26 @@ export function ApiProvider({ children }) {
     return { ok: true, ...resultadosDesdeApi(r.datos) };
   }, []);
 
-  // formato: csv | excel | pdf (los archivos los genera la API)
-  const exportarResultados = async (votacionId, formato = 'csv') => {
-    const extension = { csv: 'csv', excel: 'xlsx', pdf: 'pdf' }[formato];
-    const r = await descargarArchivo(`/admin/votaciones/${votacionId}/resultados/${formato}/`, `resultados-votacion-${votacionId}.${extension}`);
+  // Resultados de votaciones, categorías o ediciones en pdf | excel | csv | json | sql (los archivos los genera la API)
+  const EXTENSIONES = { pdf: 'pdf', excel: 'xlsx', csv: 'csv', json: 'json', sql: 'sql' };
+  const exportar = async (coleccion, id, formato = 'pdf') => {
+    const r = await descargarArchivo(`/admin/${coleccion}/${id}/exportar/?formato=${formato}`, `resultados-${id}.${EXTENSIONES[formato]}`);
     if (r.ok) recargar();
     return r;
+  };
+  const exportarResultados = (votacionId, formato) => exportar('votaciones', votacionId, formato);
+
+  // Ediciones completas con la plantilla de Excel
+  const descargarPlantillaEdicion = () => descargarArchivo('/admin/ediciones/plantilla/', 'plantilla-edicion.xlsx');
+  const exportarEstructuraEdicion = (id) => descargarArchivo(`/admin/ediciones/${id}/exportar-estructura/`, `edicion-${id}.xlsx`);
+  const importarEdicion = async (archivo, activar = false) => {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo);
+    formulario.append('activar', activar ? 'true' : 'false');
+    const r = await api.post('/admin/ediciones/importar/', formulario);
+    if (!r.ok) return { ok: false, error: r.error, errores: Array.isArray(r.datos?.errores) ? r.datos.errores : [] };
+    await recargar();
+    return { ok: true, resumen: r.datos };
   };
 
   const cargarAuditoria = async (pagina = 1, filtros = {}) => {
@@ -456,6 +470,10 @@ export function ApiProvider({ children }) {
     guardarConfiguracion,
     obtenerResultados,
     exportarResultados,
+    exportar,
+    descargarPlantillaEdicion,
+    exportarEstructuraEdicion,
+    importarEdicion,
     cargarAuditoria,
     obtenerParticipacion,
     obtenerResumen,

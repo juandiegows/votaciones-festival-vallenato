@@ -9,7 +9,7 @@ El panel vive en /panel/… (no /admin: el WAF de producción bloquea esas rutas
 from django.urls import path, register_converter
 
 from .vistas import cuentas, publico, votos
-from .vistas.panel import categorias, configuracion, ediciones, inicio, opciones, votaciones
+from .vistas.panel import categorias, configuracion, ediciones, inicio, opciones, transferencia, votaciones
 from .vistas.panel import votos as votos_panel
 
 app_name = "portal"
@@ -33,6 +33,10 @@ panel = [
     path("panel", inicio.inicio, name="panel"),
     path("panel/ediciones", ediciones.ediciones, name="panel-ediciones"),
     path("panel/ediciones/nueva", ediciones.ediciones, name="panel-edicion-nueva"),
+    path("panel/ediciones/plantilla", transferencia.plantilla, name="panel-edicion-plantilla"),
+    path("panel/ediciones/importar", transferencia.importar, name="panel-edicion-importar"),
+    path("panel/ediciones/<int:pk>/estructura", transferencia.estructura, name="panel-edicion-estructura"),
+    path("panel/exportar/<str:tipo>/<int:pk>/<str:formato>", transferencia.exportar, name="panel-exportar"),
     path("panel/ediciones/<int:pk>/editar", ediciones.ediciones, name="panel-edicion-editar"),
     path("panel/ediciones/<int:pk>/eliminar", ediciones.eliminar_edicion, name="panel-edicion-eliminar"),
     path("panel/categorias", categorias.categorias, name="panel-categorias"),
@@ -44,7 +48,6 @@ panel = [
     path("panel/configuracion/categorias/<int:pk>/voto-unico", configuracion.alternar_voto_unico, name="panel-config-voto-unico"),
     path("panel/votos", votos_panel.votos, name="panel-votos"),
     path("panel/votos/<int:pk>", votos_panel.detalle, name="panel-voto-detalle"),
-    path("panel/votos/<int:pk>/exportar/<str:formato>", votos_panel.exportar, name="panel-voto-exportar"),
     path("panel/votaciones", votaciones.votaciones, name="panel-votaciones"),
     path("panel/votaciones/nueva", votaciones.votaciones, name="panel-votacion-nueva"),
     path("panel/votaciones/<int:pk>/editar", votaciones.votaciones, name="panel-votacion-editar"),

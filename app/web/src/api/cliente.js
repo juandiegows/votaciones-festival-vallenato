@@ -90,7 +90,7 @@ export async function peticion(metodo, ruta, cuerpo) {
     }
   }
   if (respuesta.ok) return { ok: true, status: respuesta.status, datos };
-  return { ok: false, status: respuesta.status, ...interpretarError(datos, respuesta.status) };
+  return { ok: false, status: respuesta.status, datos, ...interpretarError(datos, respuesta.status) };
 }
 
 export const api = {

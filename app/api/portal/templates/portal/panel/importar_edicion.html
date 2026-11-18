@@ -1,0 +1,70 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+<header class="mb-4">
+  <nav aria-label="Ruta de navegación">
+    <ol class="breadcrumb mb-2">
+      <li class="breadcrumb-item"><a href="{% url 'portal:panel-ediciones' %}">Ediciones</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Importar edición</li>
+    </ol>
+  </nav>
+  <h1 class="h2 mb-1">Importar una edición</h1>
+  <p class="text-secondary-flv mb-0">Crea una edición completa —categorías, votaciones y opciones— desde la plantilla de Excel.</p>
+</header>
+
+{% if errores %}
+<section class="card-flv p-3 p-md-4 mb-4 border border-danger" aria-labelledby="titulo-errores" role="alert">
+  <h2 id="titulo-errores" class="h5 text-danger"><i class="bi bi-exclamation-octagon me-1" aria-hidden="true"></i>No se creó nada: corrige {{ errores|length|plural:"error,errores" }}</h2>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <caption class="visually-hidden">Errores de la plantilla</caption>
+      <thead><tr><th scope="col">Hoja</th><th scope="col">Fila</th><th scope="col">Problema</th></tr></thead>
+      <tbody>
+        {% for e in errores %}<tr><td>{{ e.hoja|default:"—" }}</td><td>{{ e.fila|default:"—" }}</td><td>{{ e.mensaje }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <section class="card-flv p-3 p-md-4" aria-labelledby="titulo-pasos">
+      <h2 id="titulo-pasos" class="h5">Cómo hacerlo</h2>
+      <ol class="mb-3">
+        <li>Descarga la plantilla y llena las hojas «Edición», «Categorías», «Votaciones» y «Opciones».</li>
+        <li>Borra la fila de ejemplo de cada hoja.</li>
+        <li>Súbela aquí. Si alguna fila tiene un error no se crea nada y verás la hoja y la fila que debes corregir.</li>
+      </ol>
+      <a class="btn btn-outline-primary mb-4" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Descargar plantilla (.xlsx)</a>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label" for="id_archivo">Plantilla llena <span class="text-danger" aria-hidden="true">*</span></label>
+          <input id="id_archivo" name="archivo" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="form-control" required aria-describedby="archivo-ayuda">
+          <div id="archivo-ayuda" class="form-text">Excel (.xlsx) de hasta 5 MB.</div>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="id_activar" name="activar">
+          <label class="form-check-label" for="id_activar">Activarla al importar <span class="text-secondary-flv">(cierra la edición activa actual)</span></label>
+        </div>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-upload me-1" aria-hidden="true"></i>Importar edición</button>
+      </form>
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="card-flv p-3 p-md-4" aria-labelledby="titulo-reglas">
+      <h2 id="titulo-reglas" class="h6">Qué se crea</h2>
+      <ul class="small mb-0">
+        <li>La edición queda <strong>cerrada</strong> (no visible al público) salvo que marques «Activarla al importar».</li>
+        <li>Las votaciones se crean como <strong>borrador</strong>: revísalas y publícalas desde el panel.</li>
+        <li>Las URL amigables vacías se generan desde el nombre o el título.</li>
+        <li>Imágenes, íconos propios y audios se suben después desde cada formulario.</li>
+        <li>Para copiar una edición, expórtala con «Exportar → Plantilla de Excel con los datos», cambia el año y súbela.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

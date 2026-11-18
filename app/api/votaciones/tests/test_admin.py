@@ -172,7 +172,7 @@ class GestionAdminTests(BaseAPITest):
         self.opcion_a.nombre = "=HYPERLINK(\"http://x\")"
         self.opcion_a.save()
         excel = self.client.get(f"/api/admin/votaciones/{self.abierta.pk}/resultados/excel/")
-        hoja = load_workbook(BytesIO(excel.content)).active
+        hoja = load_workbook(BytesIO(excel.content))["Resultados"]
         tipos = {c.value: c.data_type for fila in hoja.iter_rows() for c in fila if c.value}
         self.assertEqual(tipos[self.opcion_a.nombre], "s")
 

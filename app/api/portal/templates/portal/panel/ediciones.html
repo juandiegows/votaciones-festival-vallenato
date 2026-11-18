@@ -7,7 +7,11 @@
     <h1 class="h2 mb-1">Gestión de ediciones</h1>
     <p class="text-secondary-flv mb-0">Una edición es un año del Festival y agrupa sus categorías y votaciones. El público solo ve la edición activa.</p>
   </div>
-  <a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición</a>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-plantilla' %}"><i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Plantilla de Excel</a>
+    <a class="btn btn-outline-primary" href="{% url 'portal:panel-edicion-importar' %}"><i class="bi bi-upload me-1" aria-hidden="true"></i>Importar edición</a>
+    <a class="btn btn-primary" href="{% url 'portal:panel-edicion-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición</a>
+  </div>
 </header>
 <p class="small text-secondary-flv mb-2">{{ lista|length|plural:"edición,ediciones" }}</p>
 
@@ -27,6 +31,7 @@
           <td class="small text-nowrap" data-etiqueta="Presentación"><i class="bi bi-{{ pres.icono }} me-1 text-rojo" aria-hidden="true"></i>{{ pres.etiqueta }}</td>
           <td><span class="badge badge-estado {% if ed.estado == 'activa' %}estado-abierta{% else %}estado-cerrada{% endif %}">{{ ed.get_estado_display }}</span></td>
           <td class="text-end text-nowrap">
+            {% include "portal/parciales/menu_exportar.html" with tipo="edicion" pk=ed.pk nombre=ed.nombre estructura=True clase="btn-outline-secondary" %}
             <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-edicion-editar' ed.pk %}" aria-label="Editar {{ ed.nombre }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar</a>
             <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-edicion-eliminar' ed.pk %}" data-eliminar-nombre="{{ ed.nombre }}" aria-label="Eliminar {{ ed.nombre }}" title="Eliminar"><i class="bi bi-trash" aria-hidden="true"></i></button>
           </td>

@@ -6,6 +6,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ from .. import correo
 from ..auditoria.mixins import AuditadoMixin, auditar
 from ..comun.api import ErrorReglaSerializer, ip_cliente
 from ..comun.permisos import EsAdministrador
-from . import exportacion, reportes, selectores, servicios
+from . import exportacion, reportes, selectores, servicios, transferencia
 from .models import Edicion
 from .serializers import (
     CategoriaConOpcionesSerializer,
@@ -49,6 +50,38 @@ def valor_publicar(request):
     serializer = PublicarResultadosSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     return serializer.validated_data["publicar"]
+
+
+def descarga(contenido, tipo, nombre):
+    respuesta = HttpResponse(contenido, content_type=tipo)
+    respuesta["Content-Disposition"] = f'attachment; filename="{nombre}"'
+    return respuesta
+
+
+PARAMETRO_FORMATO = OpenApiParameter(
+    "formato", OpenApiTypes.STR, enum=list(exportacion.FORMATOS), default="pdf",
+    description="pdf, excel (.xlsx), csv, json o sql (script para MySQL)",
+)
+
+
+class ExportarResultadosMixin:
+    """`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel, CSV, JSON o SQL (solo conteos)."""
+
+    reporte = None  # función que arma el reporte del objeto (exportacion.reporte_*)
+
+    def exportar_resultados(self, request, formato):
+        if formato not in exportacion.FORMATOS:
+            return Response({"detail": f"Formato no válido. Usa: {', '.join(exportacion.FORMATOS)}."}, status=400)
+        objeto = self.get_object()
+        contenido, tipo, nombre = exportacion.generar(type(self).reporte(objeto), formato)
+        auditar(request, "exportar_resultados", self.entidad, objeto.pk, {"formato": formato})
+        return descarga(contenido, tipo, nombre)
+
+    @extend_schema(summary="Exportar resultados (PDF, Excel, CSV, JSON o SQL) · RF-14", parameters=[PARAMETRO_FORMATO],
+                   responses={(200, "application/octet-stream"): OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo")})
+    @action(detail=True)
+    def exportar(self, request, pk=None):
+        return self.exportar_resultados(request, request.query_params.get("formato", "pdf"))
 
 
 # Consulta pública y votación
@@ -231,13 +264,49 @@ class MisVotosView(generics.ListAPIView):
 
 
 @extend_schema(tags=["Administración"])
-class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
+class AdminEdicionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
     """Solo puede haber una edición activa: al activar una, las demás pasan a cerradas."""
 
     permission_classes = [EsAdministrador]
     serializer_class = EdicionSerializer
     queryset = Edicion.objects.all()
     entidad = "edicion"
+    reporte = staticmethod(exportacion.reporte_edicion)
+
+    @extend_schema(summary="Plantilla de Excel para importar una edición", responses={
+        (200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"): OpenApiResponse(response=OpenApiTypes.BINARY)})
+    @action(detail=False)
+    def plantilla(self, request):
+        return descarga(transferencia.plantilla_excel(), exportacion.FORMATOS["excel"][1], "plantilla-edicion.xlsx")
+
+    @extend_schema(summary="Exportar la edición completa en la plantilla de Excel (para copiarla o respaldarla)", responses={
+        (200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"): OpenApiResponse(response=OpenApiTypes.BINARY)})
+    @action(detail=True, url_path="exportar-estructura")
+    def exportar_estructura(self, request, pk=None):
+        edicion = self.get_object()
+        auditar(request, "exportar_edicion", self.entidad, edicion.pk)
+        return descarga(transferencia.plantilla_excel(edicion), exportacion.FORMATOS["excel"][1], f"edicion-{edicion.anio}.xlsx")
+
+    @extend_schema(
+        summary="Importar una edición desde la plantilla de Excel",
+        request={"multipart/form-data": {"type": "object", "properties": {
+            "archivo": {"type": "string", "format": "binary"}, "activar": {"type": "boolean"}}}},
+        responses={201: OpenApiResponse(description="Edición creada con el número de categorías, votaciones y opciones"),
+                   400: OpenApiResponse(description="Errores por hoja y fila; no se crea nada")},
+    )
+    @action(detail=False, methods=["post"], parser_classes=[MultiPartParser, FormParser])
+    def importar(self, request):
+        archivo = request.FILES.get("archivo")
+        if not archivo:
+            return Response({"detail": "Adjunta la plantilla de Excel.", "errores": []}, status=400)
+        activar = str(request.data.get("activar", "")).lower() in ("true", "1", "on", "sí", "si")
+        try:
+            edicion = transferencia.importar_excel(archivo, activar=activar)
+        except transferencia.ErrorImportacion as e:
+            return Response({"detail": "La plantilla tiene errores: no se creó nada.", "errores": e.errores}, status=400)
+        datos = transferencia.resumen(edicion)
+        auditar(request, "importar_edicion", self.entidad, edicion.pk, datos)
+        return Response(datos, status=201)
 
     def perform_create(self, serializer):
         super().perform_create(serializer)
@@ -265,10 +334,11 @@ class AdminEdicionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
 @extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT)]))
 @extend_schema(tags=["Administración"])
-class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
+class AdminCategoriaViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = CategoriaSerializer
     entidad = "categoria"
+    reporte = staticmethod(exportacion.reporte_categoria)
     campos_archivo = ("icono_imagen",)
 
     def get_queryset(self):
@@ -280,10 +350,11 @@ class AdminCategoriaViewSet(AuditadoMixin, viewsets.ModelViewSet):
     destroy=extend_schema(responses={204: None, 409: ErrorReglaSerializer}, summary="Eliminar (solo sin votos, RN-09)"),
 )
 @extend_schema(tags=["Administración"])
-class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
+class AdminVotacionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = VotacionSerializer
     entidad = "votacion"
+    reporte = staticmethod(exportacion.reporte_votacion)
     campos_archivo = ("icono_imagen",)
 
     def get_queryset(self):
@@ -356,32 +427,18 @@ class AdminVotacionViewSet(AuditadoMixin, viewsets.ModelViewSet):
         auditar(request, "exportar_resultados", self.entidad, votacion.pk)
         return respuesta
 
-    def _exportar(self, request, formato):
-        votacion = self.get_object()
-        datos = reportes.calcular_resultados(votacion)
-        if formato == "xlsx":
-            contenido = exportacion.resultados_excel(votacion, datos)
-            tipo = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        else:
-            contenido = exportacion.resultados_pdf(votacion, datos)
-            tipo = "application/pdf"
-        respuesta = HttpResponse(contenido, content_type=tipo)
-        respuesta["Content-Disposition"] = f'attachment; filename="{exportacion.nombre_archivo(votacion, formato)}"'
-        auditar(request, "exportar_resultados", self.entidad, votacion.pk, {"formato": formato})
-        return respuesta
-
     @extend_schema(summary="Exportar resultados en Excel (RF-14)",
                    responses={(200, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"):
                               OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo de Excel (.xlsx)")})
     @action(detail=True, url_path="resultados/excel")
     def resultados_excel(self, request, pk=None):
-        return self._exportar(request, "xlsx")
+        return self.exportar_resultados(request, "excel")
 
     @extend_schema(summary="Exportar resultados en PDF (RF-14)",
                    responses={(200, "application/pdf"): OpenApiResponse(response=OpenApiTypes.BINARY, description="Archivo PDF")})
     @action(detail=True, url_path="resultados/pdf")
     def resultados_pdf(self, request, pk=None):
-        return self._exportar(request, "pdf")
+        return self.exportar_resultados(request, "pdf")
 
 
 @extend_schema_view(

@@ -9,6 +9,8 @@ import { formatearFecha } from '../../utils/helpers.js';
 import { PRESENTACIONES_CATEGORIAS, presentacionCategorias } from '../../data/presentaciones.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
 import VistaPreviaCategorias from '../../components/presentaciones/VistaPreviaCategorias.jsx';
+import MenuExportar from '../../components/admin/MenuExportar.jsx';
+import ImportarEdicion from '../../components/admin/ImportarEdicion.jsx';
 
 export default function AdminEdiciones() {
   const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
@@ -18,6 +20,7 @@ export default function AdminEdiciones() {
   const [mensaje, setMensaje] = useState(null);
   const [procesando, setProcesando] = useState(false);
   const [mensajeFormulario, setMensajeFormulario] = useState('');
+  const [importando, setImportando] = useState(false);
   const [vista, setVista] = useVistaGuardada('ediciones', 'tabla');
   const siguienteAnio = Math.max(new Date().getFullYear(), ...ediciones.map((ed) => ed.anio)) + 1;
 
@@ -85,6 +88,7 @@ export default function AdminEdiciones() {
   );
   const acciones = (ed) => (
     <span className="text-nowrap">
+      <MenuExportar coleccion="ediciones" id={ed.id} nombre={ed.nombre} estructura onResultado={setMensaje} />
       <button className="btn btn-sm btn-outline-primary me-1" onClick={() => abrirFormulario({ ...ed, presentacionCategorias: ed.presentacionCategorias || 'tarjetas' })} aria-label={`Editar ${ed.nombre}`}><i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar</button>
       <button className="btn btn-sm btn-outline-danger" disabled={procesando} onClick={() => eliminar(ed)} aria-label={`Eliminar ${ed.nombre}`} title="Eliminar"><i className="bi bi-trash" aria-hidden="true"></i></button>
     </span>
@@ -93,10 +97,14 @@ export default function AdminEdiciones() {
   return (
     <>
       <PageHeader titulo="Gestión de ediciones" subtitulo="Una edición es un año del Festival y agrupa sus categorías y votaciones. El público solo ve la edición activa.">
+        <button className="btn btn-outline-primary me-2" onClick={() => setImportando(true)}>
+          <i className="bi bi-upload me-1" aria-hidden="true"></i>Importar desde Excel
+        </button>
         <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: 'tarjetas' })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>
       </PageHeader>
+      <ImportarEdicion abierto={importando} onCerrar={() => setImportando(false)} onImportada={(texto) => setMensaje({ tipo: 'success', texto })} />
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} alert-dismissible`} role="status">
           {mensaje.texto}

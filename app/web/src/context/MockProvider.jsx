@@ -3,7 +3,6 @@ import { CLAVE_DATOS, cargarDatos, cargarSesion, guardarDatos, guardarSesion, re
 import {
   calcularEstado,
   calcularResultados,
-  descargarCSV,
   formatearFechaHora,
   generarCodigoComprobante,
   resultadosVisibles,
@@ -15,7 +14,7 @@ import {
 } from '../utils/helpers.js';
 import { calcularParticipacion, calcularResumen, verificarIntegridad } from '../utils/analisis.js';
 import { AppContext, buscarEdicionActiva } from './contexto.js';
-import { descargarExcel, imprimirPdf } from '../utils/exportar.js';
+import { descargarReporte } from '../utils/exportar.js';
 import { normalizarDocumento } from '../utils/documento.js';
 
 // Archivos que el modo demostración guarda como data URL en este navegador
@@ -312,48 +311,57 @@ export function MockProvider({ children }) {
     [votaciones, datos.opciones, datos.votos]
   );
 
-  const exportarResultados = async (votacionId, formato = 'csv') => {
-    const votacion = votaciones.find((v) => v.id === votacionId);
-    const r = await obtenerResultados(votacionId, { admin: true });
-    if (!votacion || !r.ok) return { ok: false, error: r.error || 'La votación no existe.' };
-    const categoria = datos.categorias.find((c) => c.id === votacion.categoriaId);
-    const edicion = datos.ediciones.find((e) => e.id === categoria?.edicionId);
-    const filasCsv = [
-      ['Edición', edicion?.nombre],
-      ['Categoría', categoria?.nombre],
-      ['Votación', votacion.titulo],
-      ['Estado', votacion.estado],
-      ['Generado', formatearFechaHora(new Date().toISOString())],
-      [],
-      ['Posición', 'Opción', 'Votos', 'Porcentaje'],
-      ...r.filas.map((f, i) => [i + 1, f.nombre, f.cantidad, `${f.porcentaje.toFixed(2)} %`]),
-      [],
-      ['Total', '', r.total, '100 %'],
-    ];
-    const base = `resultados-${votacion.slug || votacion.id}`;
-    const reporte = {
-      encabezado: [
-        ['Edición', edicion?.nombre || ''], ['Categoría', categoria?.nombre || ''], ['Votación', votacion.titulo],
-        ['Estado', votacion.estado.charAt(0).toUpperCase() + votacion.estado.slice(1)], ['Total de votos', r.total], ['Generado', formatearFechaHora(new Date().toISOString())],
-      ],
-      filas: r.filas,
-      total: r.total,
-    };
-    let nombre = `${base}.csv`;
-    if (formato === 'excel') {
-      nombre = `${base}.xlsx`;
-      descargarExcel(nombre, reporte);
-    } else if (formato === 'pdf') {
-      nombre = `${base}.pdf`;
-      if (!imprimirPdf(`Resultados · ${votacion.titulo}`, reporte)) {
-        return { ok: false, error: 'El navegador bloqueó la ventana del reporte: permite las ventanas emergentes e inténtalo de nuevo.' };
-      }
+  // Resultados de una votación, una categoría o una edición en pdf | excel | csv | json | sql (generados en el navegador)
+  const exportar = async (coleccion, id, formato = 'pdf') => {
+    const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+    let lista = [];
+    let titulo = '';
+    let contexto = [];
+    let nombreBase = '';
+    if (coleccion === 'votaciones') {
+      const v = votaciones.find((x) => x.id === id);
+      if (!v) return { ok: false, error: 'La votación no existe.' };
+      const c = datos.categorias.find((x) => x.id === v.categoriaId);
+      lista = [v];
+      titulo = 'Resultados de la votación';
+      contexto = [['Edición', datos.ediciones.find((e) => e.id === c?.edicionId)?.nombre || ''], ['Categoría', c?.nombre || ''], ['Votación', v.titulo]];
+      nombreBase = `resultados-${v.slug || v.id}`;
+    } else if (coleccion === 'categorias') {
+      const c = datos.categorias.find((x) => x.id === id);
+      if (!c) return { ok: false, error: 'La categoría no existe.' };
+      lista = votaciones.filter((v) => v.categoriaId === id);
+      titulo = 'Resultados de la categoría';
+      contexto = [['Edición', datos.ediciones.find((e) => e.id === c.edicionId)?.nombre || ''], ['Categoría', c.nombre]];
+      nombreBase = `resultados-categoria-${c.slug || c.id}`;
     } else {
-      descargarCSV(nombre, filasCsv);
+      const e = datos.ediciones.find((x) => x.id === id);
+      if (!e) return { ok: false, error: 'La edición no existe.' };
+      const ids = new Set(datos.categorias.filter((c) => c.edicionId === id).map((c) => c.id));
+      lista = votaciones.filter((v) => ids.has(v.categoriaId));
+      titulo = 'Resultados de la edición';
+      contexto = [['Edición', e.nombre]];
+      nombreBase = `resultados-edicion-${e.anio}`;
     }
-    actualizar((d) => d, `Exportó los resultados de "${votacion.titulo}"`);
-    return { ok: true, nombre };
+    const secciones = [];
+    for (const v of lista) {
+      const r = await obtenerResultados(v.id, { admin: true });
+      const c = datos.categorias.find((x) => x.id === v.categoriaId);
+      secciones.push({
+        edicion: datos.ediciones.find((e) => e.id === c?.edicionId)?.nombre || '', categoria: c?.nombre || '', votacion: v.titulo,
+        estado: capital(v.estado), total: r.ok ? r.total : 0, filas: r.ok ? r.filas : [],
+      });
+    }
+    const reporte = {
+      titulo, nombreBase, secciones,
+      contexto: [...contexto, ['Votaciones', secciones.length], ['Total de votos', secciones.reduce((s, x) => s + x.total, 0)], ['Generado', formatearFechaHora(new Date().toISOString())]],
+    };
+    const r = descargarReporte(reporte, formato);
+    if (r.ok) actualizar((d) => d, `Exportó los resultados (${formato.toUpperCase()}) de "${contexto[contexto.length - 1][1]}"`);
+    return r;
   };
+  const exportarResultados = (votacionId, formato) => exportar('votaciones', votacionId, formato);
+  // La plantilla de Excel y la importación de ediciones las procesa el servidor
+  const sinApi = async () => ({ ok: false, error: 'Disponible cuando la web está conectada a la API (servidor). En el modo demostración no se procesan plantillas de Excel.' });
 
   const cargarAuditoria = async (pagina = 1, { q = '' } = {}) => {
     const texto = q.trim().toLowerCase();
@@ -449,6 +457,10 @@ export function MockProvider({ children }) {
     guardarConfiguracion,
     obtenerResultados,
     exportarResultados,
+    exportar,
+    descargarPlantillaEdicion: sinApi,
+    exportarEstructuraEdicion: sinApi,
+    importarEdicion: sinApi,
     cargarAuditoria,
     obtenerParticipacion,
     obtenerResumen,

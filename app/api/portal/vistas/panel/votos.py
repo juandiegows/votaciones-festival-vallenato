@@ -1,13 +1,11 @@
 """Votos y resultados: conteos por opción y quién participó. El voto es secreto: nunca se cruzan votante y opción."""
 
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
 from votaciones.models import Categoria, Votacion, Voto
-from votaciones.auditoria.mixins import auditar
-from votaciones.votacion import exportacion, reportes
+from votaciones.votacion import reportes
 
 from .base import edicion_panel, render_panel, solo_administrador
 
@@ -54,22 +52,3 @@ def detalle(request, pk):
         "codigo": codigo,
         "comprobantes": Paginator(comprobantes, COMPROBANTES_POR_PAGINA).get_page(request.GET.get("pagina")),
     })
-
-
-FORMATOS_EXPORTACION = {
-    "excel": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", exportacion.resultados_excel),
-    "pdf": ("pdf", "application/pdf", exportacion.resultados_pdf),
-}
-
-
-@solo_administrador
-def exportar(request, pk, formato):
-    """Descarga los resultados (solo conteos por opción) en Excel o PDF (RF-14)."""
-    if formato not in FORMATOS_EXPORTACION:
-        raise Http404
-    extension, tipo, generar = FORMATOS_EXPORTACION[formato]
-    votacion = get_object_or_404(Votacion.objects.select_related("categoria__edicion"), pk=pk)
-    respuesta = HttpResponse(generar(votacion, reportes.calcular_resultados(votacion)), content_type=tipo)
-    respuesta["Content-Disposition"] = f'attachment; filename="{exportacion.nombre_archivo(votacion, extension)}"'
-    auditar(request, "exportar_resultados", "votacion", votacion.pk, {"formato": extension})
-    return respuesta

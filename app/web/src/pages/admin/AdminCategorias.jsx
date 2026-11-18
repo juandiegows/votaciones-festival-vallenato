@@ -9,6 +9,7 @@ import SelectorIcono from '../../components/SelectorIcono.jsx';
 import SelectorVista, { useVistaGuardada } from '../../components/SelectorVista.jsx';
 import { PATRON_SLUG, slugSugerido } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
+import MenuExportar from '../../components/admin/MenuExportar.jsx';
 
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -112,6 +113,7 @@ export default function AdminCategorias() {
 
   const acciones = (c) => (
     <span className="text-nowrap">
+      <MenuExportar coleccion="categorias" id={c.id} nombre={c.nombre} onResultado={setMensaje} />
       <button className="btn btn-sm btn-outline-primary me-1" onClick={() => editar(c)} aria-label={`Editar ${c.nombre}`}>
         <i className="bi bi-pencil me-1" aria-hidden="true"></i>Editar
       </button>

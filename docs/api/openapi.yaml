@@ -627,8 +627,8 @@ paths:
   /api/gestion/categorias/:
     get:
       operationId: gestion_categorias_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: query
         name: edicion
@@ -649,8 +649,8 @@ paths:
           description: ''
     post:
       operationId: gestion_categorias_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       tags:
       - Administración
       requestBody:
@@ -677,8 +677,8 @@ paths:
   /api/gestion/categorias/{id}/:
     get:
       operationId: gestion_categorias_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -699,8 +699,8 @@ paths:
           description: ''
     put:
       operationId: gestion_categorias_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -733,8 +733,8 @@ paths:
           description: ''
     patch:
       operationId: gestion_categorias_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -766,8 +766,8 @@ paths:
           description: ''
     delete:
       operationId: gestion_categorias_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -782,6 +782,43 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/categorias/{id}/exportar/:
+    get:
+      operationId: gestion_categorias_exportar_retrieve
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
+      summary: Exportar resultados (PDF, Excel, CSV, JSON o SQL) · RF-14
+      parameters:
+      - in: query
+        name: formato
+        schema:
+          type: string
+          enum:
+          - csv
+          - excel
+          - json
+          - pdf
+          - sql
+          default: pdf
+        description: pdf, excel (.xlsx), csv, json o sql (script para MySQL)
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este categoría.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: Archivo
   /api/gestion/configuracion/:
     get:
       operationId: gestion_configuracion_retrieve
@@ -1000,6 +1037,69 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/ediciones/{id}/exportar/:
+    get:
+      operationId: gestion_ediciones_exportar_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Exportar resultados (PDF, Excel, CSV, JSON o SQL) · RF-14
+      parameters:
+      - in: query
+        name: formato
+        schema:
+          type: string
+          enum:
+          - csv
+          - excel
+          - json
+          - pdf
+          - sql
+          default: pdf
+        description: pdf, excel (.xlsx), csv, json o sql (script para MySQL)
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: Archivo
+  /api/gestion/ediciones/{id}/exportar-estructura/:
+    get:
+      operationId: gestion_ediciones_exportar_estructura_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Exportar la edición completa en la plantilla de Excel (para copiarla
+        o respaldarla)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este edición.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/gestion/ediciones/{id}/publicar-resultados/:
     post:
       operationId: gestion_ediciones_publicar_resultados_create
@@ -1055,6 +1155,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResumenEdicion'
+          description: ''
+  /api/gestion/ediciones/importar/:
+    post:
+      operationId: gestion_ediciones_importar_create
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Importar una edición desde la plantilla de Excel
+      tags:
+      - Administración
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                archivo:
+                  type: string
+                  format: binary
+                activar:
+                  type: boolean
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          description: Edición creada con el número de categorías, votaciones y opciones
+        '400':
+          description: Errores por hoja y fila; no se crea nada
+  /api/gestion/ediciones/plantilla/:
+    get:
+      operationId: gestion_ediciones_plantilla_retrieve
+      description: 'Solo puede haber una edición activa: al activar una, las demás
+        pasan a cerradas.'
+      summary: Plantilla de Excel para importar una edición
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/gestion/opciones/:
     get:
@@ -1577,8 +1721,8 @@ paths:
   /api/gestion/votaciones/:
     get:
       operationId: gestion_votaciones_list
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: query
         name: categoria
@@ -1599,8 +1743,8 @@ paths:
           description: ''
     post:
       operationId: gestion_votaciones_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       tags:
       - Administración
       requestBody:
@@ -1627,8 +1771,8 @@ paths:
   /api/gestion/votaciones/{id}/:
     get:
       operationId: gestion_votaciones_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -1649,8 +1793,8 @@ paths:
           description: ''
     put:
       operationId: gestion_votaciones_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -1683,8 +1827,8 @@ paths:
           description: ''
     patch:
       operationId: gestion_votaciones_partial_update
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       parameters:
       - in: path
         name: id
@@ -1716,8 +1860,8 @@ paths:
           description: ''
     delete:
       operationId: gestion_votaciones_destroy
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Eliminar (solo sin votos, RN-09)
       parameters:
       - in: path
@@ -1742,8 +1886,8 @@ paths:
   /api/gestion/votaciones/{id}/cerrar/:
     post:
       operationId: gestion_votaciones_cerrar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Cerrar votación anticipadamente
       parameters:
       - in: path
@@ -1766,8 +1910,8 @@ paths:
   /api/gestion/votaciones/{id}/despublicar/:
     post:
       operationId: gestion_votaciones_despublicar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Despublicar votación (no se permite mientras está abierta)
       parameters:
       - in: path
@@ -1793,6 +1937,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorRegla'
           description: ''
+  /api/gestion/votaciones/{id}/exportar/:
+    get:
+      operationId: gestion_votaciones_exportar_retrieve
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
+      summary: Exportar resultados (PDF, Excel, CSV, JSON o SQL) · RF-14
+      parameters:
+      - in: query
+        name: formato
+        schema:
+          type: string
+          enum:
+          - csv
+          - excel
+          - json
+          - pdf
+          - sql
+          default: pdf
+        description: pdf, excel (.xlsx), csv, json o sql (script para MySQL)
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este votación.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: Archivo
   /api/gestion/votaciones/{id}/participacion/:
     get:
       operationId: gestion_votaciones_participacion_retrieve
@@ -1821,8 +2002,8 @@ paths:
   /api/gestion/votaciones/{id}/publicar/:
     post:
       operationId: gestion_votaciones_publicar_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Publicar votación (RN-06)
       parameters:
       - in: path
@@ -1851,8 +2032,8 @@ paths:
   /api/gestion/votaciones/{id}/publicar-resultados/:
     post:
       operationId: gestion_votaciones_publicar_resultados_create
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Publicar u ocultar resultados (RF-15)
       parameters:
       - in: path
@@ -1886,8 +2067,8 @@ paths:
   /api/gestion/votaciones/{id}/resultados/:
     get:
       operationId: gestion_votaciones_resultados_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Resultados completos (RF-14)
       parameters:
       - in: path
@@ -1910,8 +2091,8 @@ paths:
   /api/gestion/votaciones/{id}/resultados/csv/:
     get:
       operationId: gestion_votaciones_resultados_csv_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Exportar resultados en CSV (RF-14)
       parameters:
       - in: path
@@ -1935,8 +2116,8 @@ paths:
   /api/gestion/votaciones/{id}/resultados/excel/:
     get:
       operationId: gestion_votaciones_resultados_excel_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Exportar resultados en Excel (RF-14)
       parameters:
       - in: path
@@ -1960,8 +2141,8 @@ paths:
   /api/gestion/votaciones/{id}/resultados/pdf/:
     get:
       operationId: gestion_votaciones_resultados_pdf_retrieve
-      description: 'CRUD con registro de auditoría. `campos_archivo`: archivos subidos
-        que se borran al reemplazarlos o eliminarlos.'
+      description: '`GET …/{id}/exportar/?formato=` con los resultados en PDF, Excel,
+        CSV, JSON o SQL (solo conteos).'
       summary: Exportar resultados en PDF (RF-14)
       parameters:
       - in: path
