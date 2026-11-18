@@ -288,4 +288,12 @@
     const conError = contenedor.querySelector('[data-subseccion] .is-invalid');
     mostrar(conError ? conError.closest('[data-subseccion]').dataset.subseccion : botones[0].dataset.subpestana);
   });
+
+  // Menú de secciones de la configuración: en pantallas angostas se cambia la lista por un selector que navega
+  todos('[data-menu-config]').forEach((menu) => {
+    const selector = menu.querySelector('[data-navegar-al-cambiar]');
+    if (!selector) return;
+    selector.addEventListener('change', () => { window.location.href = selector.value; });
+    menu.classList.add('con-selector');
+  });
 })();

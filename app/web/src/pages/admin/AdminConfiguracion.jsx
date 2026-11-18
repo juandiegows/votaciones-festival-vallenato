@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, NavLink, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -133,6 +133,9 @@ export default function AdminConfiguracion() {
   const subPredeterminados = SUB_PREDETERMINADOS.some((p) => p.id === ver) ? ver : SUB_PREDETERMINADOS[0].id;
   const subPresentacion = SUB_PRESENTACION.some((p) => p.id === ver) ? ver : SUB_PRESENTACION[0].id;
   const verSub = (id) => setParametros({ ver: id }, { replace: true });
+  const navegar = useNavigate();
+  // Accesos a otras pantallas del sitio público, solo si el rol puede verlas
+  const enlacesVisibles = (g) => (puede('sitio.ver') ? g.enlaces || [] : []);
   const [votos, setVotos] = useState(String(edicion?.votosPorUsuario ?? 1));
   useEffect(() => setVotos(String(edicion?.votosPorUsuario ?? 1)), [edicion?.votosPorUsuario]);
   const diasGuardados = diasVisibleCerradas(configuracion);
@@ -265,23 +268,35 @@ export default function AdminConfiguracion() {
     <>
       <PageHeader titulo="Configuración" subtitulo={`Cómo se comporta el sitio público · ${edicion.nombre}. Los cambios se guardan automáticamente.`} />
       <div className="configuracion-admin">
-        <nav aria-label="Secciones de configuración">
-          <ul className="nav nav-pills flex-row flex-md-column flex-nowrap gap-1 config-secciones">
-            {GRUPOS.map((g) => (
-              <li key={g.titulo} className="config-grupo">
-                <span className="config-grupo-titulo d-none d-md-block">{g.titulo}</span>
-                <ul className="list-unstyled d-flex flex-row flex-md-column gap-1 mb-0">
+        {/* Escritorio: menú vertical; pantallas angostas: selector encima del contenido */}
+        <nav className="card-flv p-2 config-menu con-selector" aria-label="Secciones de configuración">
+          <div className="config-menu-selector p-1">
+            <label htmlFor="cfg-seccion" className="small fw-semibold text-secondary-flv mb-1 d-block">Sección</label>
+            <select id="cfg-seccion" className="form-select" value={`/panel/configuracion/${seccion}`} onChange={(e) => navegar(e.target.value)}>
+              {GRUPOS.map((g) => (
+                <optgroup key={g.titulo} label={g.titulo}>
+                  {g.secciones.map((s) => <option key={s.id} value={`/panel/configuracion/${s.id}`}>{s.label}</option>)}
+                  {enlacesVisibles(g).map((e) => <option key={e.to} value={e.to}>{e.label} (otra pantalla)</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          <ul className="config-menu-lista">
+            {GRUPOS.map((g, i) => (
+              <li key={g.titulo} className="config-menu-grupo">
+                <span className="config-menu-titulo" id={`cfg-grupo-${i}`}>{g.titulo}</span>
+                <ul aria-labelledby={`cfg-grupo-${i}`}>
                   {g.secciones.map((s) => (
-                    <li className="nav-item" key={s.id}>
-                      <NavLink to={`/panel/configuracion/${s.id}`} className="nav-link">
-                        <i className={`bi bi-${s.icono} me-2`} aria-hidden="true"></i>{s.label}
+                    <li key={s.id}>
+                      <NavLink to={`/panel/configuracion/${s.id}`} className="config-menu-enlace">
+                        <i className={`bi bi-${s.icono}`} aria-hidden="true"></i>{s.label}
                       </NavLink>
                     </li>
                   ))}
-                  {g.enlaces?.filter(() => puede('sitio.ver')).map((e) => (
-                    <li className="nav-item d-none d-md-block" key={e.to}>
-                      <Link to={e.to} className="nav-link config-enlace-externo">
-                        <i className={`bi bi-${e.icono} me-2`} aria-hidden="true"></i>{e.label}<i className="bi bi-arrow-right-short ms-1" aria-hidden="true"></i>
+                  {enlacesVisibles(g).map((e) => (
+                    <li key={e.to}>
+                      <Link to={e.to} className="config-menu-enlace externo">
+                        <i className={`bi bi-${e.icono}`} aria-hidden="true"></i>{e.label}<i className="bi bi-arrow-right-short ms-auto" aria-hidden="true"></i>
                       </Link>
                     </li>
                   ))}

@@ -7,12 +7,30 @@
   <p class="text-secondary-flv mb-0">{{ seccion_config.descripcion }}</p>
 </header>
 
-<nav class="config-pestanas mb-4" aria-label="Secciones de la configuración">
-  {% for s in secciones %}
-    {% ifchanged s.grupo %}<span class="config-pestana-grupo" aria-hidden="true">{{ s.grupo }}</span>{% endifchanged %}
-    <a href="{% url 'portal:panel-configuracion-seccion' s.clave %}" class="config-pestana{% if s.clave == clave %} activa{% endif %}"{% if s.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ s.icono }}" aria-hidden="true"></i>{{ s.titulo }}</a>
-  {% endfor %}
+<div class="configuracion-admin">
+{# Escritorio: menú vertical; pantallas angostas: con JavaScript, un selector encima del contenido (sin él, la lista apilada) #}
+<nav class="card-flv p-2 config-menu" aria-label="Secciones de la configuración" data-menu-config>
+  <div class="config-menu-selector p-1">
+    <label for="cfg-seccion" class="small fw-semibold text-secondary-flv mb-1 d-block">Sección</label>
+    <select id="cfg-seccion" class="form-select" data-navegar-al-cambiar>
+      {% for s in secciones %}
+        {% ifchanged s.grupo %}{% if not forloop.first %}</optgroup>{% endif %}<optgroup label="{{ s.grupo }}">{% endifchanged %}
+        <option value="{% url 'portal:panel-configuracion-seccion' s.clave %}"{% if s.clave == clave %} selected{% endif %}>{{ s.titulo }}</option>
+        {% if forloop.last %}</optgroup>{% endif %}
+      {% endfor %}
+    </select>
+  </div>
+  <ul class="config-menu-lista">
+    {% for s in secciones %}
+      {% ifchanged s.grupo %}{% if not forloop.first %}</ul></li>{% endif %}
+      <li class="config-menu-grupo"><span class="config-menu-titulo" id="cfg-grupo-{{ forloop.counter }}">{{ s.grupo }}</span><ul aria-labelledby="cfg-grupo-{{ forloop.counter }}">{% endifchanged %}
+        <li><a href="{% url 'portal:panel-configuracion-seccion' s.clave %}" class="config-menu-enlace"{% if s.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ s.icono }}" aria-hidden="true"></i>{{ s.titulo }}</a></li>
+      {% if forloop.last %}</ul></li>{% endif %}
+    {% endfor %}
+  </ul>
 </nav>
+
+<div>
 
 {% if form.errors or form_edicion.errors %}<div class="alert alert-danger" role="alert">Revisa los campos marcados.</div>{% endif %}
 {% if 'configuracion.editar' not in permisos %}<div class="alert alert-secondary small py-2" role="note"><i class="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta la configuración: no puede cambiarla.</div>{% endif %}
@@ -236,4 +254,6 @@
 </section>
 {% endif %}
 {% endif %}
+</div>
+</div>
 {% endblock %}
