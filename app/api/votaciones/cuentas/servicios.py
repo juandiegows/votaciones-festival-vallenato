@@ -11,7 +11,8 @@ from rest_framework.authtoken.models import Token
 
 from .. import correo
 from ..comun.errores import ReglaNegocioError
-from .models import Usuario
+from . import permisos as catalogo
+from .models import Rol, Usuario
 
 SAL_CONFIRMACION = "votaciones.confirmar-correo"
 
@@ -94,24 +95,83 @@ def confirmar_correo(token):
     return usuario, True
 
 
-def cambiar_rol(actor, usuario, rol):
+def _exige_permisos_de(actor, permisos, accion):
+    """Nadie reparte permisos que no tiene: evita que un rol delegado se dé más acceso del que posee."""
+    faltan = sorted(set(permisos) - set(actor.permisos))
+    if faltan:
+        raise ReglaNegocioError(
+            f"No puedes {accion}: incluye permisos que tu rol no tiene ({', '.join(faltan)}).", codigo="permisos_insuficientes",
+            status=403,
+        )
+
+
+def rol_o_error(codigo):
+    rol = Rol.objects.filter(codigo=codigo).first()
+    if rol is None:
+        raise ReglaNegocioError(f"Rol no válido: «{codigo}» no existe.", codigo="rol_invalido")
+    return rol
+
+
+def cambiar_rol(actor, usuario, codigo):
     """
-    Hace administrador a un usuario o lo devuelve a votante. Nadie se quita su propio rol (evita quedar fuera del panel)
-    y siempre queda al menos un administrador activo.
+    Asigna un rol a un usuario. Reglas:
+      - nadie cambia su propio rol (evita quedar fuera del panel o subirse de nivel);
+      - solo se asigna (o se quita) un rol cuyos permisos tenga quien hace el cambio;
+      - siempre queda al menos un administrador activo;
+      - una cuenta desactivada no recibe un rol con acceso al panel.
     """
-    if rol not in Usuario.Rol.values:
-        raise ReglaNegocioError("Rol no válido: usa «votante» o «administrador».")
-    if usuario.rol == rol:
+    nuevo = rol_o_error(codigo)
+    if usuario.rol == nuevo.codigo:
         return usuario
-    if rol == Usuario.Rol.VOTANTE:
-        if usuario.pk == actor.pk:
-            raise ReglaNegocioError("No puedes quitarte tu propio rol de administrador: pídeselo a otro administrador.")
+    if usuario.pk == actor.pk:
+        raise ReglaNegocioError("No puedes cambiar tu propio rol: pídeselo a otro administrador.")
+    actual = Rol.objects.filter(codigo=usuario.rol).first()
+    _exige_permisos_de(actor, nuevo.permisos_efectivos, f"asignar el rol «{nuevo.nombre}»")
+    if actual:
+        _exige_permisos_de(actor, actual.permisos_efectivos, f"quitar el rol «{actual.nombre}»")
+    if usuario.rol == Usuario.Rol.ADMINISTRADOR:
         otros = Usuario.objects.filter(rol=Usuario.Rol.ADMINISTRADOR, is_active=True).exclude(pk=usuario.pk)
         if not otros.exists():
             raise ReglaNegocioError("Debe quedar al menos un administrador activo.")
-    elif not usuario.is_active:
-        raise ReglaNegocioError("La cuenta está desactivada: actívala antes de hacerla administradora.")
-    usuario.rol = rol
+    if not usuario.is_active and "panel.ver" in nuevo.permisos_efectivos:
+        raise ReglaNegocioError("La cuenta está desactivada: actívala antes de darle acceso al panel.")
+    usuario.rol = nuevo.codigo
     usuario.save(update_fields=["rol"])
+    usuario.refrescar_permisos()
     return usuario
 
+
+def guardar_rol(actor, datos, rol=None):
+    """
+    Crea un rol o cambia su nombre, descripción y permisos. Votante y administrador no cambian de permisos; nadie
+    edita el rol que tiene ni marca permisos que no posee.
+    """
+    permisos = catalogo.validos(datos.get("permisos", rol.permisos if rol else []))
+    if rol is not None:
+        if rol.codigo == actor.rol:
+            raise ReglaNegocioError("No puedes editar tu propio rol: pídeselo a otro administrador.", status=403)
+        if rol.es_fijo and set(permisos) != set(rol.permisos_efectivos):
+            raise ReglaNegocioError(f"Los permisos del rol «{rol.nombre}» son fijos.", codigo="rol_fijo")
+        # Solo se exigen los permisos que cambian (los que ya estaban no los reparte quien edita)
+        _exige_permisos_de(actor, set(permisos) ^ set(rol.permisos_efectivos), f"cambiar los permisos de «{rol.nombre}»")
+    else:
+        _exige_permisos_de(actor, permisos, "crear este rol")
+        rol = Rol(codigo=datos["codigo"], sistema=False)
+    rol.nombre = datos.get("nombre", rol.nombre)
+    rol.descripcion = datos.get("descripcion", rol.descripcion)
+    rol.orden = datos.get("orden", rol.orden)
+    if not rol.es_fijo:
+        rol.permisos = permisos
+    rol.save()
+    return rol
+
+
+def eliminar_rol(actor, rol):
+    if rol.sistema:
+        raise ReglaNegocioError(f"«{rol.nombre}» es un rol del sistema: no se elimina.", codigo="rol_sistema")
+    _exige_permisos_de(actor, rol.permisos_efectivos, f"eliminar el rol «{rol.nombre}»")
+    usuarios = Usuario.objects.filter(rol=rol.codigo).count()
+    if usuarios:
+        raise ReglaNegocioError(f"«{rol.nombre}» tiene {usuarios} usuario(s): asígnales otro rol antes de eliminarlo.",
+                                codigo="rol_con_usuarios", status=409)
+    rol.delete()

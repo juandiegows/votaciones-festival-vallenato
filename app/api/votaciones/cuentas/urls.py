@@ -4,6 +4,7 @@ from . import views
 
 rutas_gestion = [
     ("usuarios", views.AdminUsuarioViewSet, "admin-usuario"),
+    ("roles", views.AdminRolViewSet, "admin-rol"),
 ]
 
 urlpatterns = [

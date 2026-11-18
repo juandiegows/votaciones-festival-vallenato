@@ -9,11 +9,13 @@ from rest_framework.views import APIView
 
 from ..auditoria.mixins import auditar
 from ..comun.api import ErrorReglaSerializer
-from ..comun.permisos import EsAdministrador
+from ..comun.permisos import TienePermiso, lectura_escritura
+from . import permisos as catalogo
+from .models import Rol
 from . import selectores, servicios
 from .serializers import (
     CompletarDocumentoSerializer, ConfirmarCorreoSerializer, LoginSerializer, RegistroSerializer, TokenRespuestaSerializer,
-    UsuarioAdminSerializer, UsuarioSerializer,
+    RolSerializer, UsuarioAdminSerializer, UsuarioSerializer,
 )
 
 
@@ -115,22 +117,64 @@ class PerfilView(generics.RetrieveAPIView):
 
 @extend_schema_view(
     list=extend_schema(summary="Usuarios registrados (sin contraseñas)", parameters=[
-        OpenApiParameter("rol", OpenApiTypes.STR, enum=["votante", "administrador"])]),
+        OpenApiParameter("rol", OpenApiTypes.STR, description="Código del rol: votante, lectura, editor, administrador…")]),
     retrieve=extend_schema(summary="Detalle de usuario"),
 )
 @extend_schema(tags=["Administración"])
 class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    permisos_accion = {"list": "usuarios.ver", "retrieve": "usuarios.ver", "rol": "usuarios.cambiar_rol"}
     serializer_class = UsuarioAdminSerializer
 
     def get_queryset(self):
         return selectores.usuarios(self.request.query_params.get("rol"))
 
-    @extend_schema(summary="Cambiar el rol (votante o administrador)",
-                   request={"application/json": {"type": "object", "properties": {"rol": {"type": "string", "enum": ["votante", "administrador"]}}}},
-                   responses={200: UsuarioAdminSerializer})
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), "nombres_roles": dict(Rol.objects.values_list("codigo", "nombre"))}
+
+    @extend_schema(summary="Cambiar el rol de un usuario",
+                   request={"application/json": {"type": "object", "properties": {"rol": {"type": "string"}}}},
+                   responses={200: UsuarioAdminSerializer, 400: ErrorReglaSerializer, 403: ErrorReglaSerializer})
     @action(detail=True, methods=["post"])
     def rol(self, request, pk=None):
         usuario = servicios.cambiar_rol(request.user, self.get_object(), request.data.get("rol", ""))
         auditar(request, "cambiar_rol", "usuario", usuario.pk, {"email": usuario.email, "rol": usuario.rol})
-        return Response(UsuarioAdminSerializer(usuario).data)
+        return Response(self.get_serializer(usuario).data)
+
+
+@extend_schema_view(
+    list=extend_schema(summary="Roles con sus permisos y el número de usuarios"),
+    retrieve=extend_schema(summary="Detalle de un rol"),
+    create=extend_schema(summary="Crear un rol (solo con permisos que tenga quien lo crea)"),
+    update=extend_schema(summary="Cambiar nombre, descripción y permisos de un rol"),
+    partial_update=extend_schema(summary="Cambiar nombre, descripción o permisos de un rol"),
+    destroy=extend_schema(summary="Eliminar un rol sin usuarios (los del sistema no se eliminan)",
+                          responses={204: None, 400: ErrorReglaSerializer, 409: ErrorReglaSerializer}),
+)
+@extend_schema(tags=["Administración"])
+class AdminRolViewSet(viewsets.ModelViewSet):
+    permission_classes = [TienePermiso]
+    permisos_accion = lectura_escritura("roles.ver", "roles.gestionar", catalogo="roles.ver")
+    serializer_class = RolSerializer
+    queryset = Rol.objects.all()
+
+    def perform_create(self, serializer):
+        rol = servicios.guardar_rol(self.request.user, serializer.validated_data)
+        serializer.instance = rol
+        auditar(self.request, "crear", "rol", rol.pk, {"codigo": rol.codigo, "permisos": rol.permisos})
+
+    def perform_update(self, serializer):
+        rol = servicios.guardar_rol(self.request.user, serializer.validated_data, serializer.instance)
+        auditar(self.request, "actualizar", "rol", rol.pk, {"codigo": rol.codigo, "permisos": sorted(rol.permisos_efectivos)})
+
+    def perform_destroy(self, rol):
+        pk, codigo = rol.pk, rol.codigo
+        servicios.eliminar_rol(self.request.user, rol)
+        auditar(self.request, "eliminar", "rol", pk, {"codigo": codigo})
+
+    @extend_schema(summary="Catálogo de permisos agrupado (cada funcionalidad del panel es un permiso)",
+                   responses={200: OpenApiTypes.OBJECT})
+    @action(detail=False, pagination_class=None)
+    def catalogo(self, request):
+        return Response([{"grupo": grupo, "permisos": [{"codigo": c, "descripcion": d} for c, d in lista]}
+                         for grupo, lista in catalogo.GRUPOS])

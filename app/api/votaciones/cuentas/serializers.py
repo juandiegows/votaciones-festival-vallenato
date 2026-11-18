@@ -4,27 +4,70 @@ from rest_framework import serializers
 
 from . import selectores
 from .documentos import error_formato_documento, normalizar_documento
-from .models import Usuario
+from . import permisos as catalogo
+from .models import Rol, Usuario
+
+
+def nombre_rol(codigo):
+    return Rol.objects.filter(codigo=codigo).values_list("nombre", flat=True).first() or codigo
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    rol_nombre = serializers.SerializerMethodField()
+    permisos = serializers.SerializerMethodField(help_text="Permisos efectivos del rol (catálogo en /api/gestion/roles/catalogo/).")
+
     class Meta:
         model = Usuario
         fields = [
-            "id", "email", "nombres", "apellidos", "rol", "fecha_registro", "tipo_documento", "numero_documento",
-            "correo_verificado",
-        ]
-        read_only_fields = fields
-
-
-class UsuarioAdminSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Usuario
-        fields = [
-            "id", "email", "nombres", "apellidos", "rol", "is_active", "fecha_registro", "tipo_documento",
+            "id", "email", "nombres", "apellidos", "rol", "rol_nombre", "permisos", "fecha_registro", "tipo_documento",
             "numero_documento", "correo_verificado",
         ]
         read_only_fields = fields
+
+    def get_rol_nombre(self, usuario) -> str:
+        return nombre_rol(usuario.rol)
+
+    def get_permisos(self, usuario) -> list[str]:
+        return sorted(usuario.permisos)
+
+
+class UsuarioAdminSerializer(serializers.ModelSerializer):
+    rol_nombre = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Usuario
+        fields = [
+            "id", "email", "nombres", "apellidos", "rol", "rol_nombre", "is_active", "fecha_registro", "tipo_documento",
+            "numero_documento", "correo_verificado",
+        ]
+        read_only_fields = fields
+
+    def get_rol_nombre(self, usuario) -> str:
+        return self.context.get("nombres_roles", {}).get(usuario.rol) or nombre_rol(usuario.rol)
+
+
+class RolSerializer(serializers.ModelSerializer):
+    permisos = serializers.ListField(child=serializers.ChoiceField(choices=sorted(catalogo.TODOS)), required=False)
+    usuarios = serializers.SerializerMethodField()
+    fijo = serializers.BooleanField(source="es_fijo", read_only=True)
+
+    class Meta:
+        model = Rol
+        fields = ["id", "codigo", "nombre", "descripcion", "permisos", "sistema", "fijo", "orden", "usuarios"]
+        read_only_fields = ["id", "sistema", "fijo", "usuarios"]
+
+    def get_usuarios(self, rol) -> int:
+        return Usuario.objects.filter(rol=rol.codigo).count()
+
+    def to_representation(self, rol):
+        datos = super().to_representation(rol)
+        datos["permisos"] = sorted(rol.permisos_efectivos)
+        return datos
+
+    def validate_codigo(self, valor):
+        if self.instance is not None and valor != self.instance.codigo:
+            raise serializers.ValidationError("El código de un rol no se cambia.")
+        return valor
 
 
 def validar_documento(tipo, numero):

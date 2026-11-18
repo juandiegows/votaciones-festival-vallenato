@@ -15,7 +15,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from .. import correo
 from ..auditoria.mixins import AuditadoMixin, auditar
 from ..comun.api import ErrorReglaSerializer, ip_cliente
-from ..comun.permisos import EsAdministrador
+from ..comun.permisos import TienePermiso
 from . import exportacion, reportes, selectores, servicios, transferencia
 from .models import Edicion
 from .serializers import (
@@ -267,7 +267,12 @@ class MisVotosView(generics.ListAPIView):
 class AdminEdicionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
     """Solo puede haber una edición activa: al activar una, las demás pasan a cerradas."""
 
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    recurso = "ediciones"
+    permisos_accion = {
+        "plantilla": "ediciones.exportar", "exportar_estructura": "ediciones.exportar", "importar": "ediciones.importar",
+        "publicar_resultados": "resultados.publicar", "resumen": "resultados.ver", "exportar": "resultados.exportar",
+    }
     serializer_class = EdicionSerializer
     queryset = Edicion.objects.all()
     entidad = "edicion"
@@ -335,7 +340,9 @@ class AdminEdicionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.Model
 @extend_schema_view(list=extend_schema(parameters=[OpenApiParameter("edicion", OpenApiTypes.INT)]))
 @extend_schema(tags=["Administración"])
 class AdminCategoriaViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    recurso = "categorias"
+    permisos_accion = {"exportar": "resultados.exportar"}
     serializer_class = CategoriaSerializer
     entidad = "categoria"
     reporte = staticmethod(exportacion.reporte_categoria)
@@ -351,7 +358,14 @@ class AdminCategoriaViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.Mod
 )
 @extend_schema(tags=["Administración"])
 class AdminVotacionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.ModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    recurso = "votaciones"
+    permisos_accion = {
+        "publicar": "votaciones.publicar", "despublicar": "votaciones.publicar", "cerrar": "votaciones.publicar",
+        "participacion": "resultados.ver", "resultados": "resultados.ver", "publicar_resultados": "resultados.publicar",
+        "exportar": "resultados.exportar", "resultados_csv": "resultados.exportar",
+        "resultados_excel": "resultados.exportar", "resultados_pdf": "resultados.exportar",
+    }
     serializer_class = VotacionSerializer
     entidad = "votacion"
     reporte = staticmethod(exportacion.reporte_votacion)
@@ -447,7 +461,8 @@ class AdminVotacionViewSet(ExportarResultadosMixin, AuditadoMixin, viewsets.Mode
 )
 @extend_schema(tags=["Administración"])
 class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    recurso = "opciones"
     serializer_class = OpcionSerializer
     entidad = "opcion"
     campos_archivo = ("audio", "foto")
@@ -474,13 +489,14 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
 
 @extend_schema_view(
     list=extend_schema(summary="Votos registrados para indicadores (sin datos del votante)",
-                       description="Consulta administrativa de los votos (requiere rol administrador).", parameters=[
+                       description="Consulta administrativa de los votos (requiere el permiso resultados.ver).", parameters=[
         OpenApiParameter("votacion", OpenApiTypes.INT, description="ID de la votación")]),
     retrieve=extend_schema(summary="Detalle de voto (sin datos del votante)"),
 )
 @extend_schema(tags=["Administración"])
 class AdminVotoViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    permisos_accion = {"list": "resultados.ver", "retrieve": "resultados.ver"}
     serializer_class = VotoAdminSerializer
 
     def get_queryset(self):

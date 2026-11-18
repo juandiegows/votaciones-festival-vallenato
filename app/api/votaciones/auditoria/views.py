@@ -6,7 +6,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from ..comun.permisos import EsAdministrador
+from ..comun.permisos import TienePermiso
 from ..votacion import reportes
 from ..votacion import selectores as selectores_votacion
 from ..votacion.serializers import IntegridadSerializer
@@ -25,7 +25,8 @@ class PaginacionAuditoria(PageNumberPagination):
 ]))
 @extend_schema(tags=["Auditoría"])
 class AdminAuditoriaViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [EsAdministrador]
+    permission_classes = [TienePermiso]
+    permisos_accion = {"list": "auditoria.ver", "retrieve": "auditoria.ver", "integridad": "auditoria.ver", "autoria": "auditoria.ver"}
     serializer_class = RegistroAuditoriaSerializer
     pagination_class = PaginacionAuditoria
 

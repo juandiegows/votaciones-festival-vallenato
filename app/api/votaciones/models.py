@@ -4,7 +4,7 @@ descubre al importarlos aquí y todos comparten la etiqueta «votaciones» (mism
 """
 
 from .auditoria.models import RegistroAuditoria
-from .cuentas.models import Usuario, UsuarioManager
+from .cuentas.models import Rol, Usuario, UsuarioManager
 from .sitio.models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 from .votacion.models import Categoria, Edicion, Opcion, Votacion, Voto
 
@@ -16,6 +16,7 @@ __all__ = [
     "Opcion",
     "RedSocial",
     "RegistroAuditoria",
+    "Rol",
     "Revista",
     "Usuario",
     "UsuarioManager",

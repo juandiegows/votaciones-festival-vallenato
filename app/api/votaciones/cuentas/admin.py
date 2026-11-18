@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Usuario
+from .models import Rol, Usuario
 
 
 @admin.register(Usuario)
@@ -20,3 +20,9 @@ class UsuarioAdmin(UserAdmin):
     add_fieldsets = [
         (None, {"classes": ["wide"], "fields": ["email", "nombres", "apellidos", "rol", "password1", "password2"]}),
     ]
+
+
+@admin.register(Rol)
+class RolAdmin(admin.ModelAdmin):
+    list_display = ["nombre", "codigo", "sistema", "orden"]
+    readonly_fields = ["sistema"]

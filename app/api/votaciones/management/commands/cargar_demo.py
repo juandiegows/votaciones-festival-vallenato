@@ -438,6 +438,14 @@ class Command(BaseCommand):
         votante.set_password(self.claves["votante"])
         votante.save()
 
+        # Una cuenta por cada rol de administración delegada (misma clave que el administrador de demostración)
+        for rol, nombre, documento in ((Usuario.Rol.LECTURA, "Lectura", "1000000003"), (Usuario.Rol.EDITOR, "Editor", "1000000004")):
+            cuenta = Usuario(email=f"{rol}@{DOMINIO_FICTICIOS}", nombres=nombre, apellidos="Demostración", rol=rol,
+                             acepta_tratamiento_datos=True, tipo_documento=Usuario.TipoDocumento.CC,
+                             numero_documento=documento, correo_verificado=True, fecha_registro=relativa(-30))
+            cuenta.set_password(self.claves["admin"])
+            cuenta.save()
+
         # Votantes ficticios: comparten un mismo hash para que la carga sea rápida.
         clave_ficticios = make_password(CLAVE_FICTICIOS)
         ficticios = []
