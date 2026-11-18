@@ -11,6 +11,9 @@ from .base import BaseAPITest
 
 @override_settings(CORREO_URL_SITIO="https://votaciones.ejemplo.test/")
 class SitemapTest(BaseAPITest):
+    def test_sitemap_en_la_raiz_redirige_al_de_la_api(self):
+        self.assertRedirects(self.client.get("/sitemap.xml"), "/api/sitemap.xml", status_code=301)
+
     def obtener(self):
         respuesta = self.client.get("/api/sitemap.xml")
         self.assertEqual(respuesta.status_code, 200)

@@ -7,6 +7,7 @@ from django.contrib.auth.views import redirect_to_login
 from django.http import Http404, JsonResponse
 from django.urls import include, path, re_path, reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.generic import RedirectView
 from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
@@ -60,6 +61,8 @@ urlpatterns = [
     path("api/salud/", salud, name="salud"),
     # Mapa del sitio de la web (SPA); lo declara robots.txt
     path("api/sitemap.xml", sitemap, name="sitemap"),
+    # Muchos rastreadores lo buscan en la raíz (en producción la raíz la atiende este sitio MVT)
+    path("sitemap.xml", RedirectView.as_view(pattern_name="sitemap", permanent=True)),
     path("api/esquema/", documentacion_api(SpectacularAPIView.as_view()), name="esquema"),
     path("api/docs/", documentacion_api(SpectacularSwaggerView.as_view(url_name="esquema")), name="swagger"),
     path("api/redoc/", documentacion_api(SpectacularRedocView.as_view(url_name="esquema")), name="redoc"),
