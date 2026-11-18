@@ -82,6 +82,29 @@ etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_re
 > por correo cuando ocurre un error. Los valores actuales (30 días, solo administrador, sin aviso) son decisiones
 > técnicas del equipo.
 
+### 7. Verificación en dos pasos (2FA) (RF-20, RNF-13)
+
+| | |
+|---|---|
+| Qué hace | Agrega un segundo paso al inicio de sesión: después del correo y la contraseña correctos, la cuenta que tenga la verificación activa debe escribir un código antes de que se abra la sesión (sitio MVT) o se entregue el token (API). Es **opcional** y la activa cada persona en su cuenta, sea cual sea su rol. |
+| Dónde se activa | «Mi cuenta → Seguridad»: `/cuenta/seguridad` en el sitio MVT y en la web React. |
+| Métodos | Uno a la vez. **App autenticadora** (TOTP, RFC 6238: SHA-1, 6 dígitos, periodo de 30 s, tolerancia de ±1 periodo y sin aceptar dos veces el mismo código), compatible con Google Authenticator, Microsoft Authenticator, Authy y similares; se activa escaneando el código QR (o escribiendo la clave) y confirmando un código. **Código por correo**: 6 dígitos enviados al correo verificado; vence en 10 minutos, admite máximo 5 intentos y se puede reenviar cada 60 s. |
+| Códigos de respaldo | Al activar se entregan 10 códigos de un solo uso; se muestran una sola vez y se guardan con hash. Se pueden regenerar escribiendo la contraseña (los anteriores dejan de servir). |
+| Inicio de sesión | El desafío del paso 2 vence en 5 minutos; después hay que volver a escribir correo y contraseña. El paso 2 acepta el código del método activo o un código de respaldo. |
+| Desactivar | Exige la contraseña actual. |
+| Auditoría y avisos | Activar, desactivar y regenerar los códigos de respaldo queda en la auditoría (RF-16) y se avisa por correo al titular de la cuenta. |
+| API | `GET /api/auth/2fa/` (estado) · `POST /api/auth/2fa/totp/iniciar/`, `…/totp/activar/`, `…/correo/iniciar/`, `…/correo/activar/`, `…/desactivar/`, `…/codigos-respaldo/`, `…/verificar/` y `…/reenviar/`. `POST /api/auth/login/` responde `{"requiere_2fa": true, "metodo", "desafio"}` cuando la cuenta tiene la verificación activa. |
+| Modo demostración | Sin API (GitHub Pages) la verificación en dos pasos no está disponible: la pantalla de seguridad muestra un aviso. |
+| Código y pruebas | Modelo `SegundoFactor` (`votaciones/cuentas/models.py`, migración `0018`), reglas en `votaciones/cuentas/servicios_2fa.py` (TOTP propio según RFC 6238, QR con `segno`), API en `votaciones/cuentas/views.py`, portal en `portal/vistas/seguridad.py` (`/verificar-acceso`, `/cuenta/seguridad`), web en `app/web/src/pages/Seguridad.jsx` y el paso 2 de `Login.jsx`; correos `codigo_verificacion` y `aviso_seguridad`. Pruebas: `votaciones/tests/test_dos_pasos.py` (vectores del RFC 6238 incluidos) y `portal/tests/test_dos_pasos.py`. |
+
+> **Decisión del equipo (P-20, P-21, 18 de noviembre de 2026):** la verificación en dos pasos es **opcional** para
+> todos los roles. Cada persona, votante o administrador, la activa desde su propio perfil (Mi cuenta → Seguridad).
+> Se ofrecen dos métodos: **código por correo** y **app autenticadora** (Google Authenticator, Microsoft Authenticator…).
+> No se ofrece SMS. Si alguien pierde el acceso y sus códigos de respaldo (R-11), quien tenga el permiso
+> `usuarios.quitar_2fa` (Usuarios en el panel) puede quitarle la verificación **escribiendo un motivo** (mínimo
+> 20 caracteres): el motivo queda en la auditoría y se le envía por correo a la persona. Nadie la quita de su propia
+> cuenta por esa vía ni de una cuenta cuyo rol tenga permisos que él no tiene.
+
 ## Correcciones
 
 | Problema | Solución |
@@ -102,7 +125,7 @@ etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_re
 ## Cómo verificar
 
 ```bash
-cd app/api && python manage.py test                      # 441 pruebas (votaciones y portal)
+cd app/api && python manage.py test                      # 477 pruebas (votaciones y portal)
 cd app/web && npm run build
 curl -I https://votaciones.juandiegows.com/sitemap.xml    # 301 → /api/sitemap.xml
 ```
@@ -119,6 +142,12 @@ Se agregan a los del informe de la Entrega 1 (RF-01…RF-18, RNF-01…RNF-11, CU
 | P-18 | Pregunta | Imágenes de las opciones: ¿qué imágenes puede publicar la Fundación (derechos de imagen de artistas y participantes)? | Pendiente |
 | P-19 | Pregunta | Registros técnicos: ¿cuántos días se conservan? ¿quién además del administrador puede verlos? ¿se debe avisar por correo cuando ocurre un error? | Pendiente |
 | R-10 | Riesgo | Los registros técnicos guardan datos personales (correo, IP, navegador) y podrían exponerse (Ley 1581, RNF-08). Probabilidad: Baja. Impacto: Medio. Mitigación: acceso solo con `registros.ver`, borrado automático por antigüedad, sin contraseñas ni cuerpo de las peticiones. | — |
+| RF-20 | Funcional | El sistema deberá permitir a cualquier usuario registrado activar en su cuenta la verificación en dos pasos (app autenticadora TOTP o código por correo, uno a la vez), recibir 10 códigos de respaldo, regenerarlos y desactivar la verificación con su contraseña, y deberá pedir el código del segundo paso al iniciar sesión cuando la cuenta la tenga activa. Actor: Votante, Administrador (cualquier rol), desde su propio perfil; opcional, nunca obligatoria. Prioridad: Media. | Validado (P-20, P-21) |
+| RNF-13 | Seguridad | El segundo paso cumplirá RFC 6238 (SHA-1, 6 dígitos, 30 s, tolerancia ±1 periodo, sin reutilizar un código); el código por correo vencerá en 10 minutos con máximo 5 intentos y reenvío cada 60 s; el desafío del inicio de sesión vencerá en 5 minutos; los códigos de respaldo se guardarán con hash y serán de un solo uso; activar, desactivar y regenerar quedarán auditados y se avisarán por correo. Complementa RNF-01. | Validado (P-20, P-21) |
+| CU-15 | Caso de uso | **Gestionar la verificación en dos pasos.** Objetivo: proteger la cuenta con un segundo factor. Actor: usuario registrado (cualquier rol). Precondiciones: sesión iniciada; para el método por correo, correo verificado; sistema con API (no modo demostración). Flujo: 1) entra a «Mi cuenta → Seguridad» (`/cuenta/seguridad`); 2) elige el método (app autenticadora o correo); 3) el sistema muestra el QR y la clave, o envía el código al correo; 4) escribe el código; 5) el sistema lo valida, activa la verificación y muestra los 10 códigos de respaldo una sola vez; 6) el sistema registra la acción en la auditoría y avisa por correo. Alternos: 3a) modo demostración: se muestra el aviso de que no está disponible y termina; 3b) método por correo con el correo sin verificar: no se puede activar hasta verificarlo; 4a) pide otro código por correo: se reenvía si pasaron 60 s; 5a) código incorrecto o vencido: mensaje de error y vuelve al paso 4 (por correo, máximo 5 intentos y 10 minutos); 7a) regenerar los códigos de respaldo: escribe la contraseña, se invalidan los anteriores y se muestran los nuevos; 7b) desactivar: escribe la contraseña actual, se desactiva, se audita y se avisa por correo; 7c) contraseña incorrecta en 7a o 7b: no se hace el cambio. Extiende CU-02: tras correo y contraseña correctos, si la cuenta tiene la verificación activa, se pide el código del método o uno de respaldo antes de abrir la sesión o entregar el token; si el desafío vence (5 minutos) se vuelve a pedir la contraseña. Postcondiciones: la verificación queda activa o inactiva según la acción, con su rastro en la auditoría. Relacionados: RF-02, RF-16, RF-20, RNF-01, RNF-13. | — |
+| P-20 | Pregunta | Verificación en dos pasos: ¿debe ser obligatoria para los roles con acceso al panel de administración, o se mantiene opcional para todos? | Pendiente |
+| P-21 | Pregunta | Verificación en dos pasos: ¿qué método prefiere la Fundación por defecto (app autenticadora o código por correo)? ¿se debe ofrecer también el código por SMS? | Respondida: correo y app autenticadora, a elección de cada persona; sin SMS |
+| R-11 | Riesgo | Una persona pierde el celular o la app autenticadora y no tiene sus códigos de respaldo: la cuenta queda sin acceso. Probabilidad: Media. Impacto: Alto (más si es una cuenta de administración). Mitigación: 10 códigos de respaldo de un solo uso y regenerables (implementado); la administración puede quitar la verificación de otra cuenta con un motivo obligatorio que queda en la auditoría y se le envía a la persona (implementado, permiso `usuarios.quitar_2fa`). | Mitigado |
 
 Matriz actualizada (solo lo que cambió):
 
@@ -126,6 +155,8 @@ Matriz actualizada (solo lo que cambió):
 |---|---|---|---|---|
 | RF-17 | — (complementario) | — | `/panel/usuarios`, `/panel/roles` | Pendiente de validación |
 | RF-19 | CU-14 | RNF-08, RNF-12 | `/panel/registros` | Preliminar (P-19) |
+| RF-02 | CU-02 (extendido por CU-15) | RNF-01, RNF-13 | `/login` (paso 2 del código) | Sin cambio de estado; se agrega el paso 2 |
+| RF-20 | CU-15 | RNF-01, RNF-13, RF-16 (auditoría) | `/cuenta/seguridad` (web y sitio MVT), `/login` (paso 2) | Validado (P-20, P-21) |
 
 ## Pendiente para cerrar la entrega
 
