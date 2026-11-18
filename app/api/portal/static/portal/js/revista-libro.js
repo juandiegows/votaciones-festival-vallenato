@@ -21,13 +21,19 @@ function textoPaginas(pagina, total, vertical) {
 const marcador = (i) => `<span class="revista-hoja-cargando">Página ${i + 1}</span>`;
 
 async function iniciar(marco) {
-  const { url, titulo, pdfjs, worker, recursos } = marco.dataset;
+  const { url, titulo, pdfjs, worker, recursos, efecto } = marco.dataset;
+  // Ajustes de la revista (/panel/revista); sin ellos, los de siempre
+  const duracion = Number(marco.dataset.duracion) || 800;
+  const sombra = marco.dataset.sombra === undefined ? 0.45 : Number(marco.dataset.sombra) / 100;
+  const tapaDura = marco.dataset.tapaDura !== '0';
+  const sonido = marco.dataset.sonido === '1';
   const hojasHost = marco.querySelector('.revista-hojas');
   const estado = marco.querySelector('.revista-estado');
   const controles = marco.querySelector('.revista-controles');
   const btnAnterior = controles.querySelector('[data-accion="anterior"]');
   const btnSiguiente = controles.querySelector('[data-accion="siguiente"]');
   const btnPantalla = controles.querySelector('[data-accion="pantalla"]');
+  const btnArrancar = controles.querySelector('[data-accion="arrancar"]');
   const indicador = controles.querySelector('.revista-indicador');
 
   let flip = null;
@@ -79,7 +85,7 @@ async function iniciar(marco) {
     const hoja = document.createElement('div');
     hoja.className = 'revista-hoja';
     // Portada y contraportada rígidas, como un libro de tapa dura
-    if (i === 0 || i === total - 1) hoja.dataset.density = 'hard';
+    if (tapaDura && (i === 0 || i === total - 1)) hoja.dataset.density = 'hard';
     const contenido = document.createElement('div');
     contenido.className = 'revista-hoja-contenido';
     contenido.innerHTML = marcador(i);
@@ -141,8 +147,8 @@ async function iniciar(marco) {
     showCover: true,
     usePortrait: true,
     mobileScrollSupport: true,
-    maxShadowOpacity: 0.45,
-    flippingTime: reducirMovimiento() ? 250 : 800,
+    maxShadowOpacity: sombra,
+    flippingTime: reducirMovimiento() ? Math.min(250, duracion) : duracion,
   });
   flip.loadFromHTML(hojas);
 
@@ -171,21 +177,145 @@ async function iniciar(marco) {
     pantallaCompleta = modo;
     marco.classList.toggle('revista-pantalla-completa', Boolean(modo));
     document.body.style.overflow = modo === 'ventana' ? 'hidden' : '';
-    btnPantalla.setAttribute('aria-label', modo ? 'Salir de pantalla completa' : 'Ver en pantalla completa');
-    btnPantalla.firstElementChild.className = `bi bi-${modo ? 'fullscreen-exit' : 'arrows-fullscreen'}`;
+    btnPantalla?.setAttribute('aria-label', modo ? 'Salir de pantalla completa' : 'Ver en pantalla completa');
+    if (btnPantalla) btnPantalla.firstElementChild.className = `bi bi-${modo ? 'fullscreen-exit' : 'arrows-fullscreen'}`;
     requestAnimationFrame(() => redibujar());
   };
   document.addEventListener('fullscreenchange', () => {
     if (document.fullscreenElement === marco) aplicarPantalla('nativa');
     else if (pantallaCompleta === 'nativa') aplicarPantalla(null);
   });
-  btnPantalla.addEventListener('click', () => {
+  btnPantalla?.addEventListener('click', () => {
     if (pantallaCompleta === 'ventana') aplicarPantalla(null);
     else if (document.fullscreenElement) document.exitFullscreen();
     else if (marco.requestFullscreen) marco.requestFullscreen().catch(() => aplicarPantalla('ventana'));
     else aplicarPantalla('ventana');
     marco.focus();
   });
+
+  // Al estirar la ventana o cambiar el zoom (densidad de píxeles) las páginas se dibujan de nuevo a la nueva
+  // resolución; si no, el navegador agranda el dibujo anterior y se ve pixelado. Espera a que termine el cambio.
+  if (typeof ResizeObserver !== 'undefined') {
+    let anchoPrevio = 0;
+    let densidad = window.devicePixelRatio || 1;
+    let espera = 0;
+    new ResizeObserver(([entrada]) => {
+      const nuevo = entrada.contentRect.width;
+      const nuevaDensidad = window.devicePixelRatio || 1;
+      if (!anchoPrevio) {
+        anchoPrevio = nuevo;
+        return;
+      }
+      if (Math.abs(nuevo - anchoPrevio) / anchoPrevio < 0.1 && nuevaDensidad === densidad) return;
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        anchoPrevio = nuevo;
+        densidad = nuevaDensidad;
+        redibujar();
+      }, 250);
+    }).observe(hojasHost);
+    window.matchMedia?.(`(resolution: ${densidad}dppx)`).addEventListener?.('change', () => {
+      densidad = window.devicePixelRatio || 1;
+      redibujar();
+    });
+  }
+
+  // Efecto 3D «arrancar la página» (si está activo en /panel/revista): misma lógica que RevistaLibro.jsx
+  let arrancando = false;
+  const arrancar = async (izquierda = false) => {
+    if (arrancando || !efecto) return;
+    const actual = flip.getCurrentPageIndex();
+    let indice = actual;
+    let lomoIzquierda = true;
+    if (!vertical && actual > 0) {
+      // Por defecto la de la derecha; al estirar hacia atrás, la de la izquierda
+      if (!izquierda && actual + 1 < hojas.length) indice = actual + 1;
+      else lomoIzquierda = false;
+    }
+    const contenido = hojas[indice]?.firstChild;
+    const lienzo = contenido?.querySelector('canvas');
+    if (!lienzo) return;
+    arrancando = true;
+    if (btnArrancar) btnArrancar.disabled = true;
+    const debajo = hojas[lomoIzquierda ? indice + 1 : indice - 1]?.querySelector('canvas');
+    let copia = null;
+    const ocultar = () => {
+      if (debajo) {
+        copia = document.createElement('canvas');
+        copia.width = debajo.width;
+        copia.height = debajo.height;
+        copia.getContext('2d').drawImage(debajo, 0, 0);
+        copia.className = 'revista-hoja-debajo';
+        hojas[indice].appendChild(copia);
+      }
+      contenido.style.visibility = 'hidden';
+    };
+    const mostrar = () => {
+      copia?.remove();
+      contenido.style.visibility = '';
+      contenido.classList.add('revista-hoja-vuelve');
+      setTimeout(() => contenido.classList.remove('revista-hoja-vuelve'), 600);
+    };
+    try {
+      if (reducirMovimiento()) {
+        ocultar();
+        await new Promise((listo) => setTimeout(listo, 300));
+        mostrar();
+      } else {
+        const { arrancarPagina } = await import(efecto);
+        await arrancarPagina({
+          lienzo, rect: lienzo.getBoundingClientRect(), lomoIzquierda, ocultar, mostrar, sonido,
+          capaPadre: document.fullscreenElement || document.body,
+        });
+      }
+    } catch {
+      mostrar();
+    } finally {
+      arrancando = false;
+      if (btnArrancar) btnArrancar.disabled = false;
+    }
+  };
+  btnArrancar?.addEventListener('click', () => arrancar());
+
+  // Estirar la esquina fuera del libro arranca la página (misma lógica que estirarParaArrancar.js de la web)
+  if (efecto) {
+    let plegando = false;
+    flip.on('changeState', (e) => {
+      plegando = e.data === 'user_fold';
+    });
+    const soltarDoblez = () => {
+      try {
+        flip.isUserTouch = false;
+        flip.isUserMove = false;
+        const control = flip.getFlipController();
+        const render = flip.getRender();
+        render.finishAnimation();
+        render.setBottomPage(null);
+        render.setFlippingPage(null);
+        render.clearShadow();
+        control.setState('read');
+        control.reset();
+        flip.update();
+      } catch {
+        /* si cambia la librería, el arrastre sigue normal */
+      }
+    };
+    const alMover = (evento) => {
+      if (!plegando || reducirMovimiento()) return;
+      const punto = evento.touches?.[0] || evento;
+      const caja = hojasHost.getBoundingClientRect();
+      const margen = Math.max(40, caja.width * 0.08);
+      const fuera = punto.clientX < caja.left - margen || punto.clientX > caja.right + margen
+        || punto.clientY < caja.top - margen || punto.clientY > caja.bottom + margen;
+      if (!fuera) return;
+      plegando = false;
+      const izquierda = flip.getFlipController().getCalculation()?.getDirection() === 1; // FlipDirection.BACK
+      soltarDoblez();
+      arrancar(izquierda);
+    };
+    window.addEventListener('mousemove', alMover);
+    window.addEventListener('touchmove', alMover, { passive: true });
+  }
 
   btnAnterior.addEventListener('click', () => flip.flipPrev());
   btnSiguiente.addEventListener('click', () => flip.flipNext());

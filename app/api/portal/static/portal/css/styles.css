@@ -564,7 +564,14 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 }
 .revista-hoja { background: var(--flv-blanco); overflow: hidden; }
 .revista-hoja-contenido { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-.revista-hoja-contenido canvas { width: 100%; height: 100%; display: block; }
+/* object-fit: la página conserva su proporción aunque la hoja cambie de forma (nunca se deforma) */
+.revista-hoja-contenido canvas { width: 100%; height: 100%; display: block; object-fit: contain; }
+/* Efecto «arrancar la página»: capa WebGL sobre toda la ventana y la página que vuelve a aparecer */
+.revista-capa-efecto { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2000; pointer-events: none; }
+.revista-hoja-debajo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.revista-hoja-vuelve { animation: revista-vuelve .5s ease-out; }
+@keyframes revista-vuelve { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .revista-hoja-vuelve { animation: none; } }
 .revista-hoja-cargando { color: var(--flv-gris-texto); font-size: .875rem; }
 .revista-estado {
   position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -602,19 +609,29 @@ img.categoria-chip-icono { width: 1.4rem; height: 1.4rem; border-radius: 50%; ob
 }
 .badge-ilustrativo { white-space: normal; text-align: start; }
 
-/* ---------- Configuración del panel ---------- */
+/* ---------- Configuración del panel: menú vertical de secciones (/panel/configuracion/{sección}) ---------- */
 .configuracion-admin { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
-@media (min-width: 768px) { .configuracion-admin { grid-template-columns: 15rem minmax(0, 1fr); gap: 1.5rem; } }
-/* Móvil: franja deslizable sin barra visible; escritorio: columna sin desplazamiento */
-.config-secciones { overflow-x: auto; scrollbar-width: none; }
-.config-secciones::-webkit-scrollbar { display: none; }
-@media (min-width: 768px) {
-  .config-secciones { overflow: visible; }
-  .config-secciones .nav-link { width: 100%; }
+@media (min-width: 992px) {
+  .configuracion-admin { grid-template-columns: 16rem minmax(0, 1fr); gap: 1.5rem; }
+  .config-menu { position: sticky; top: 5.5rem; }
 }
-.config-secciones .nav-link { color: var(--flv-negro); border-radius: .5rem; font-weight: 600; white-space: nowrap; text-align: start; }
-.config-secciones .nav-link:hover:not(.active) { background: var(--flv-crema); }
-.config-secciones .nav-link.active { background: var(--flv-crema); color: var(--flv-rojo-hover); box-shadow: inset 3px 0 0 var(--flv-rojo); }
+.configuracion-admin > * { min-width: 0; }
+.config-menu-lista, .config-menu-lista ul { list-style: none; margin: 0; padding: 0; }
+.config-menu-grupo + .config-menu-grupo { margin-top: .35rem; }
+.config-menu-titulo { display: block; padding: .6rem .75rem .2rem; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--flv-gris-texto); }
+.config-menu a.config-menu-enlace { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-radius: .5rem; font-weight: 600; color: var(--flv-negro); text-decoration: none; line-height: 1.25; }
+.config-menu-enlace .bi { flex: none; }
+.config-menu a.config-menu-enlace:hover { background: var(--flv-crema); color: var(--flv-negro); }
+.config-menu a.config-menu-enlace:focus-visible { outline: 3px solid var(--flv-rojo); outline-offset: 1px; }
+.config-menu a.config-menu-enlace[aria-current="page"] { background: var(--flv-crema); color: var(--flv-rojo-hover); box-shadow: inset 3px 0 0 var(--flv-rojo); }
+.config-menu a.config-menu-enlace.externo { font-size: .9rem; font-weight: 500; color: var(--flv-gris-texto); }
+/* Pantallas angostas: un selector encima del contenido (sin JavaScript, la lista apilada) */
+.config-menu-selector { display: none; }
+@media (max-width: 991.98px) {
+  .config-menu.con-selector .config-menu-lista { display: none; }
+  .config-menu.con-selector .config-menu-selector { display: block; }
+}
+.config-migas { letter-spacing: .06em; font-size: .72rem; }
 .fila-config { padding: 1.1rem 0; border-top: 1px solid var(--flv-gris-borde); }
 .estado-config { min-height: 1.25rem; }
 .opcion-config {
@@ -807,14 +824,6 @@ body { -webkit-tap-highlight-color: rgba(221, 51, 51, .15); overflow-wrap: break
   .table-responsive { -webkit-overflow-scrolling: touch; }
   .table-flv { font-size: .875rem; }
 }
-
-/* Configuración: secciones agrupadas por tema (/panel/configuracion/{sección}) */
-.config-grupo { list-style: none; }
-.config-grupo + .config-grupo { margin-top: .25rem; }
-.config-grupo-titulo { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--flv-gris-texto); padding: .5rem .75rem .25rem; }
-.config-enlace-externo { font-size: .9rem; color: var(--flv-gris-texto); }
-.config-migas { letter-spacing: .06em; font-size: .72rem; }
-@media (max-width: 767.98px) { .config-grupo > ul { flex-wrap: nowrap; } .config-secciones { overflow-x: auto; } }
 
 /* Grupos por categoría que se contraen o expanden */
 .grupo-categoria-toggle { color: inherit; background: none; }

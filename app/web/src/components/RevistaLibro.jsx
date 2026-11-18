@@ -3,6 +3,8 @@ import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import urlWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PageFlip } from 'page-flip';
 import { urlDelSitio } from '../config.js';
+import { ajustesDe } from '../data/revista.js';
+import { vigilarEstiramiento } from './revista/estirarParaArrancar.js';
 
 GlobalWorkerOptions.workerSrc = urlWorker;
 
@@ -27,7 +29,9 @@ function textoPaginas(pagina, total, vertical) {
  * anima el paso de página (arrastrando la esquina, con los botones o con las flechas del teclado).
  * page-flip maneja su propio DOM, por eso las hojas se crean fuera de React dentro de `contenedor`.
  */
-export default function RevistaLibro({ url, titulo }) {
+export default function RevistaLibro({ url, titulo, ajustes: ajustesRevista }) {
+  // Ajustes de /panel/revista; sin ellos, los de siempre
+  const ajustes = ajustesDe(ajustesRevista);
   const marco = useRef(null);
   const contenedor = useRef(null);
   const libro = useRef(null);
@@ -41,10 +45,18 @@ export default function RevistaLibro({ url, titulo }) {
   const [pantallaCompleta, setPantallaCompleta] = useState(null);
   const [proporcion, setProporcion] = useState(1.3);
   const [intento, setIntento] = useState(0);
+  // Hojas del libro (DOM de page-flip) y si el efecto de arrancar una página está en curso
+  const hojasLibro = useRef([]);
+  const [arrancando, setArrancando] = useState(false);
+  // La última versión de arrancar() y de los ajustes, para el arrastre que vigila page-flip fuera de React
+  const arrancarRef = useRef(() => {});
+  const efectoActivo = useRef(false);
+  efectoActivo.current = ajustes.efectoArrancar;
 
   useEffect(() => {
     let cancelado = false;
     let flip = null;
+    let dejarDeVigilar = () => {};
     const host = contenedor.current;
     // Sin estos recursos pdf.js no puede decodificar imágenes JPEG 2000/JBIG2 ni algunas fuentes (ver vite.config.js)
     const recursos = urlDelSitio('/pdfjs/');
@@ -74,7 +86,7 @@ export default function RevistaLibro({ url, titulo }) {
           const hoja = document.createElement('div');
           hoja.className = 'revista-hoja';
           // Portada y contraportada rígidas, como un libro de tapa dura
-          if (i === 0 || i === pdf.numPages - 1) hoja.dataset.density = 'hard';
+          if (ajustes.tapaDura && (i === 0 || i === pdf.numPages - 1)) hoja.dataset.density = 'hard';
           const contenido = document.createElement('div');
           contenido.className = 'revista-hoja-contenido';
           contenido.innerHTML = `<span class="revista-hoja-cargando">Página ${i + 1}</span>`;
@@ -140,9 +152,10 @@ export default function RevistaLibro({ url, titulo }) {
           showCover: true,
           usePortrait: true,
           mobileScrollSupport: true,
-          maxShadowOpacity: 0.45,
-          flippingTime: reducirMovimiento() ? 250 : 800,
+          maxShadowOpacity: ajustes.sombra / 100,
+          flippingTime: reducirMovimiento() ? Math.min(250, ajustes.duracionPaso) : ajustes.duracionPaso,
         });
+        hojasLibro.current = hojas;
         flip.loadFromHTML(hojas);
         flip.on('flip', (e) => {
           setPagina(e.data);
@@ -150,6 +163,11 @@ export default function RevistaLibro({ url, titulo }) {
         });
         flip.on('changeOrientation', (e) => setVertical(e.data === 'portrait'));
         libro.current = flip;
+        // Estirar la esquina fuera del libro arranca la página (si el efecto está activo)
+        dejarDeVigilar = vigilarEstiramiento({
+          flip, contenedor: host, activo: () => efectoActivo.current && !reducirMovimiento(),
+          alArrancar: (opciones) => arrancarRef.current(opciones),
+        });
         setVertical(flip.getOrientation() === 'portrait');
         setTotal(pdf.numPages);
         alrededorDe(0);
@@ -162,6 +180,7 @@ export default function RevistaLibro({ url, titulo }) {
     return () => {
       cancelado = true;
       libro.current = null;
+      dejarDeVigilar();
       redibujar.current = () => {};
       try {
         flip?.destroy();
@@ -171,7 +190,7 @@ export default function RevistaLibro({ url, titulo }) {
       host.replaceChildren();
       tarea.destroy();
     };
-  }, [url, intento]);
+  }, [url, intento, ajustes.tapaDura, ajustes.sombra, ajustes.duracionPaso]);
 
   useEffect(() => {
     const alCambiar = () =>
@@ -193,6 +212,109 @@ export default function RevistaLibro({ url, titulo }) {
     }
     return () => cancelAnimationFrame(id);
   }, [pantallaCompleta]);
+
+  // Al estirar la ventana o cambiar el zoom del navegador (densidad de píxeles) las páginas se vuelven a dibujar a la
+  // nueva resolución; si no, el navegador agranda el dibujo anterior y se ve pixelado. Espera a que termine el cambio.
+  useEffect(() => {
+    const host = contenedor.current;
+    if (!host || typeof ResizeObserver === 'undefined') return undefined;
+    let ancho = 0;
+    let densidad = window.devicePixelRatio || 1;
+    let espera = 0;
+    const observador = new ResizeObserver(([entrada]) => {
+      const nuevo = entrada.contentRect.width;
+      const nuevaDensidad = window.devicePixelRatio || 1;
+      if (!ancho) {
+        ancho = nuevo;
+        return;
+      }
+      if (Math.abs(nuevo - ancho) / ancho < 0.1 && nuevaDensidad === densidad) return;
+      clearTimeout(espera);
+      espera = setTimeout(() => {
+        ancho = nuevo;
+        densidad = nuevaDensidad;
+        redibujar.current();
+      }, 250);
+    });
+    observador.observe(host);
+    // El zoom del navegador cambia la densidad sin cambiar siempre el ancho del contenedor
+    const consulta = window.matchMedia?.(`(resolution: ${densidad}dppx)`);
+    const alCambiarDensidad = () => {
+      densidad = window.devicePixelRatio || 1;
+      redibujar.current();
+    };
+    consulta?.addEventListener?.('change', alCambiarDensidad);
+    return () => {
+      clearTimeout(espera);
+      observador.disconnect();
+      consulta?.removeEventListener?.('change', alCambiarDensidad);
+    };
+  }, []);
+
+  // Efecto 3D: la página visible (la derecha en horizontal) se arranca del libro y vuelve a su sitio
+  const arrancar = async (opciones) => {
+    const flip = libro.current;
+    if (!flip || arrancando) return;
+    const izquierda = opciones?.izquierda === true;
+    const actual = flip.getCurrentPageIndex();
+    const hojas = hojasLibro.current;
+    let indice = actual;
+    let lomoIzquierda = true;
+    if (!vertical && actual > 0) {
+      // Por defecto la de la derecha; al estirar hacia atrás, la de la izquierda
+      if (!izquierda && actual + 1 < hojas.length) indice = actual + 1;
+      else lomoIzquierda = false;
+    }
+    const contenido = hojas[indice]?.firstChild;
+    const lienzo = contenido?.querySelector('canvas');
+    if (!lienzo) return;
+    setArrancando(true);
+    // Debajo de la hoja arrancada aparece la siguiente (o la anterior si se arranca la de la izquierda)
+    const debajo = hojas[lomoIzquierda ? indice + 1 : indice - 1]?.querySelector('canvas');
+    let copia = null;
+    const ocultar = () => {
+      if (debajo) {
+        copia = document.createElement('canvas');
+        copia.width = debajo.width;
+        copia.height = debajo.height;
+        copia.getContext('2d').drawImage(debajo, 0, 0);
+        copia.className = 'revista-hoja-debajo';
+        hojas[indice].appendChild(copia);
+      }
+      contenido.style.visibility = 'hidden';
+    };
+    const mostrar = () => {
+      copia?.remove();
+      contenido.style.visibility = '';
+      contenido.classList.add('revista-hoja-vuelve');
+      setTimeout(() => contenido.classList.remove('revista-hoja-vuelve'), 600);
+    };
+    try {
+      if (reducirMovimiento()) {
+        // Con «reducir movimiento» solo parpadea: la página se oculta y vuelve
+        ocultar();
+        await new Promise((r) => setTimeout(r, 300));
+        mostrar();
+        return;
+      }
+      const { arrancarPagina } = await import('./revista/arrancarPagina.js');
+      await arrancarPagina({
+        lienzo,
+        rect: lienzo.getBoundingClientRect(),
+        lomoIzquierda,
+        ocultar,
+        mostrar,
+        sonido: ajustes.sonidoPapel,
+        capaPadre: document.fullscreenElement || document.body,
+      });
+    } catch {
+      mostrar();
+    } finally {
+      setArrancando(false);
+    }
+  };
+
+  arrancarRef.current = arrancar;
 
   const anterior = () => libro.current?.flipPrev();
   const siguiente = () => libro.current?.flipNext();
@@ -260,13 +382,16 @@ export default function RevistaLibro({ url, titulo }) {
           >
             <i className="bi bi-chevron-right" aria-hidden="true"></i>
           </button>
-          <span className="revista-separador" aria-hidden="true"></span>
-          <button type="button" className="btn btn-revista" onClick={alternarPantallaCompleta} aria-label={pantallaCompleta ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}>
+          {(ajustes.permitirPantallaCompleta || ajustes.efectoArrancar || ajustes.permitirDescarga) && <span className="revista-separador" aria-hidden="true"></span>}
+          {ajustes.permitirPantallaCompleta && <button type="button" className="btn btn-revista" onClick={alternarPantallaCompleta} aria-label={pantallaCompleta ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}>
             <i className={`bi bi-${pantallaCompleta ? 'fullscreen-exit' : 'arrows-fullscreen'}`} aria-hidden="true"></i>
-          </button>
-          <a className="btn btn-revista" href={url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir el PDF de ${titulo} en una pestaña nueva`}>
+          </button>}
+          {ajustes.efectoArrancar && <button type="button" className="btn btn-revista" onClick={() => arrancar()} disabled={arrancando} aria-label="Arrancar esta página (efecto: la página vuelve a su sitio)" title="Arrancar la página">
+            <i className="bi bi-scissors" aria-hidden="true"></i>
+          </button>}
+          {ajustes.permitirDescarga && <a className="btn btn-revista" href={url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir el PDF de ${titulo} en una pestaña nueva`}>
             <i className="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-          </a>
+          </a>}
         </div>
       )}
     </div>

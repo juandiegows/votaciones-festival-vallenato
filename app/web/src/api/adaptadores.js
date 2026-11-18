@@ -45,7 +45,9 @@ const CAMPOS = {
   },
   revistas: {
     id: 'id', titulo: 'titulo', descripcion: 'descripcion', archivo: 'archivo', orden: 'orden', activa: 'activa',
-    publicadaEn: 'publicada_en',
+    publicadaEn: 'publicada_en', duracionPaso: 'duracion_paso', sombra: 'sombra', tapaDura: 'tapa_dura',
+    permitirPantallaCompleta: 'permitir_pantalla_completa', permitirDescarga: 'permitir_descarga',
+    efectoArrancar: 'efecto_arrancar', sonidoPapel: 'sonido_papel',
   },
   redes: { id: 'id', nombre: 'nombre', url: 'url', icono: 'icono', orden: 'orden', activa: 'activa' },
   configuracion: {

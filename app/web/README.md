@@ -149,7 +149,7 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/panel/usuarios` | Usuarios registrados: filtro por rol y asignación de cualquier rol (`usuarios.cambiar_rol`) | Pendiente de validación (RF de roles) |
 | `/panel/roles` | Roles y permisos: lista de roles, crear, editar con casillas por grupo del catálogo y eliminar | Pendiente de validación (RF de roles) |
 | `/panel/banner` | Banner de inicio: imágenes del carrusel, textos, orden y estado | — |
-| `/panel/revista` | Revista institucional (PDF que el inicio muestra como libro) | — |
+| `/panel/revista` | Revista institucional (PDF que el inicio muestra como libro) y cómo se hojea: duración del paso, sombra, tapa dura, botones, efecto «arrancar la página» y sonido | — |
 | `/panel/sitio` | Contacto y redes sociales del pie de página | — |
 | `/panel/configuracion` | Configuración del sitio público: visibilidad de resultados de la edición (cada votación puede personalizarla), días que siguen visibles las votaciones cerradas, presentación de categorías y modo del banner | RF-15, RN-07 |
 | `/panel/marca` | Guía de identidad visual (`/marca` redirige aquí) | — |
@@ -187,3 +187,12 @@ amigable. En GitHub Pages todas las rutas llevan el prefijo `/votaciones-festiva
 - **RN-07** La visibilidad de resultados sigue `mostrarResultados`.
 - **RN-09** Una votación con votos no se elimina, solo se cierra.
 - **RN-10** El registro exige aceptar la política de tratamiento de datos (Ley 1581 de 2012).
+
+## Revista: efecto «arrancar la página»
+
+Cada revista se configura en `/panel/revista`. Por defecto se hojea como siempre: el efecto y el sonido vienen apagados.
+Con el efecto activo, la página visible se arranca con el botón de tijeras o al estirar la esquina fuera del libro;
+es una animación 3D (Three.js, `src/components/revista/arrancarPagina.js`) que se descarga solo al usarla, y la página
+vuelve a su sitio. Con «reducir movimiento» solo parpadea. El sitio Django usa el mismo efecto empaquetado:
+después de cambiar `arrancarPagina.js` ejecuta `npm run build:efecto-revista`
+(genera `app/api/portal/static/portal/js/arrancar-pagina.min.js`).

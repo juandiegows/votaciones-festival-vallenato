@@ -4314,6 +4314,41 @@ components:
           format: int64
         activa:
           type: boolean
+          default: true
+        duracion_paso:
+          type: integer
+          maximum: 2000
+          minimum: 250
+          title: Duración del paso de página (ms)
+          description: 'Cuánto tarda en pasar una página: de 250 (rápido) a 2000 ms
+            (lento).'
+        sombra:
+          type: integer
+          maximum: 100
+          minimum: 0
+          title: Sombra al pasar la página (%)
+          description: 'Intensidad de la sombra de la hoja que se pasa: 0 la quita.'
+        tapa_dura:
+          type: boolean
+          default: true
+          title: Portada y contraportada rígidas
+          description: 'Como un libro de tapa dura: la portada no se dobla al pasarla.'
+        permitir_pantalla_completa:
+          type: boolean
+          default: true
+          title: Botón de pantalla completa
+        permitir_descarga:
+          type: boolean
+          default: true
+          title: Botón para abrir el PDF
+        efecto_arrancar:
+          type: boolean
+          title: Efecto «arrancar la página»
+          description: Botón que arranca la página visible con una animación 3D; la
+            página vuelve a su sitio.
+        sonido_papel:
+          type: boolean
+          title: Sonido de papel al arrancar
     PatchedRolRequest:
       type: object
       properties:
@@ -4729,10 +4764,45 @@ components:
           format: int64
         activa:
           type: boolean
+          default: true
         publicada_en:
           type: string
           format: date-time
           readOnly: true
+        duracion_paso:
+          type: integer
+          maximum: 2000
+          minimum: 250
+          title: Duración del paso de página (ms)
+          description: 'Cuánto tarda en pasar una página: de 250 (rápido) a 2000 ms
+            (lento).'
+        sombra:
+          type: integer
+          maximum: 100
+          minimum: 0
+          title: Sombra al pasar la página (%)
+          description: 'Intensidad de la sombra de la hoja que se pasa: 0 la quita.'
+        tapa_dura:
+          type: boolean
+          default: true
+          title: Portada y contraportada rígidas
+          description: 'Como un libro de tapa dura: la portada no se dobla al pasarla.'
+        permitir_pantalla_completa:
+          type: boolean
+          default: true
+          title: Botón de pantalla completa
+        permitir_descarga:
+          type: boolean
+          default: true
+          title: Botón para abrir el PDF
+        efecto_arrancar:
+          type: boolean
+          title: Efecto «arrancar la página»
+          description: Botón que arranca la página visible con una animación 3D; la
+            página vuelve a su sitio.
+        sonido_papel:
+          type: boolean
+          title: Sonido de papel al arrancar
       required:
       - archivo
       - id
@@ -4757,6 +4827,41 @@ components:
           format: int64
         activa:
           type: boolean
+          default: true
+        duracion_paso:
+          type: integer
+          maximum: 2000
+          minimum: 250
+          title: Duración del paso de página (ms)
+          description: 'Cuánto tarda en pasar una página: de 250 (rápido) a 2000 ms
+            (lento).'
+        sombra:
+          type: integer
+          maximum: 100
+          minimum: 0
+          title: Sombra al pasar la página (%)
+          description: 'Intensidad de la sombra de la hoja que se pasa: 0 la quita.'
+        tapa_dura:
+          type: boolean
+          default: true
+          title: Portada y contraportada rígidas
+          description: 'Como un libro de tapa dura: la portada no se dobla al pasarla.'
+        permitir_pantalla_completa:
+          type: boolean
+          default: true
+          title: Botón de pantalla completa
+        permitir_descarga:
+          type: boolean
+          default: true
+          title: Botón para abrir el PDF
+        efecto_arrancar:
+          type: boolean
+          title: Efecto «arrancar la página»
+          description: Botón que arranca la página visible con una animación 3D; la
+            página vuelve a su sitio.
+        sonido_papel:
+          type: boolean
+          title: Sonido de papel al arrancar
       required:
       - archivo
       - titulo

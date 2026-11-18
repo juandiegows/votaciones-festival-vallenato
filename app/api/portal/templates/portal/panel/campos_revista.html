@@ -14,3 +14,18 @@
   <input id="id_activa" name="activa" class="form-check-input" type="checkbox" role="switch"{% if form.activa.value %} checked{% endif %}>
   <label class="form-check-label" for="id_activa">Mostrar en el inicio</label>
 </div>
+<fieldset class="mt-4">
+  <legend class="h6 mb-1">Cómo se hojea en el inicio</legend>
+  <p class="form-text mt-0 mb-3">Por defecto, la revista se hojea como siempre; el efecto de arrancar y el sonido vienen apagados.</p>
+  <div class="row g-3">
+    <div class="col-sm-6">{% include "portal/parciales/campo.html" with campo=form.duracion_paso tipo="number" ayuda=form.duracion_paso.help_text extra='min="250" max="2000" step="50"' %}</div>
+    <div class="col-sm-6">{% include "portal/parciales/campo.html" with campo=form.sombra tipo="number" ayuda=form.sombra.help_text extra='min="0" max="100" step="5"' %}</div>
+  </div>
+  {% for campo in form %}{% if campo.name in "tapa_dura permitir_pantalla_completa permitir_descarga efecto_arrancar sonido_papel" %}
+  <div class="form-check form-switch mb-2">
+    <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" class="form-check-input" type="checkbox" role="switch"{% if campo.value %} checked{% endif %}{% if campo.help_text %} aria-describedby="ayuda-{{ campo.name }}"{% endif %}>
+    <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    {% if campo.help_text %}<div id="ayuda-{{ campo.name }}" class="form-text mt-0">{{ campo.help_text }}</div>{% endif %}
+  </div>
+  {% endif %}{% endfor %}
+</fieldset>

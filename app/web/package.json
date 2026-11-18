@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "postbuild": "node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:efecto-revista": "vite build --config vite.efecto-revista.config.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
@@ -17,7 +18,8 @@
     "pdfjs-dist": "^6.3.289",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.1",

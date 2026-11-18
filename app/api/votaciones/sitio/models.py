@@ -37,6 +37,21 @@ class Revista(ModeloTrazable):
     orden = models.PositiveSmallIntegerField(default=0)
     activa = models.BooleanField(default=True)
     publicada_en = models.DateTimeField(auto_now_add=True)
+    # Cómo se hojea en el inicio. Por defecto, igual que antes de estos ajustes (sin efecto de arrancar ni sonido).
+    duracion_paso = models.PositiveSmallIntegerField(
+        "duración del paso de página (ms)", default=800, validators=[MinValueValidator(250), MaxValueValidator(2000)],
+        help_text="Cuánto tarda en pasar una página: de 250 (rápido) a 2000 ms (lento).")
+    sombra = models.PositiveSmallIntegerField(
+        "sombra al pasar la página (%)", default=45, validators=[MaxValueValidator(100)],
+        help_text="Intensidad de la sombra de la hoja que se pasa: 0 la quita.")
+    tapa_dura = models.BooleanField("portada y contraportada rígidas", default=True,
+                                    help_text="Como un libro de tapa dura: la portada no se dobla al pasarla.")
+    permitir_pantalla_completa = models.BooleanField("botón de pantalla completa", default=True)
+    permitir_descarga = models.BooleanField("botón para abrir el PDF", default=True)
+    efecto_arrancar = models.BooleanField(
+        "efecto «arrancar la página»", default=False,
+        help_text="Botón que arranca la página visible con una animación 3D; la página vuelve a su sitio.")
+    sonido_papel = models.BooleanField("sonido de papel al arrancar", default=False)
 
     class Meta:
         db_table = "revista"

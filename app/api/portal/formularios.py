@@ -485,8 +485,28 @@ class BannerForm(forms.ModelForm):
 class RevistaForm(forms.ModelForm):
     class Meta:
         model = Revista
-        fields = ["archivo", "titulo", "descripcion", "activa"]
-        labels = {"archivo": "Archivo PDF", "titulo": "Título", "descripcion": "Descripción", "activa": "Mostrar en el inicio"}
+        fields = ["archivo", "titulo", "descripcion", "activa", "duracion_paso", "sombra", "tapa_dura",
+                  "permitir_pantalla_completa", "permitir_descarga", "efecto_arrancar", "sonido_papel"]
+        labels = {"archivo": "Archivo PDF", "titulo": "Título", "descripcion": "Descripción", "activa": "Mostrar en el inicio",
+                  "duracion_paso": "Duración del paso de página (ms)", "sombra": "Sombra al pasar la página (%)",
+                  "tapa_dura": "Portada y contraportada rígidas", "permitir_pantalla_completa": "Botón de pantalla completa",
+                  "permitir_descarga": "Botón para abrir el PDF", "efecto_arrancar": "Efecto «arrancar la página» (3D)",
+                  "sonido_papel": "Sonido de papel al arrancar"}
+
+    # Duración y sombra vacías → los valores de siempre (los del modelo)
+    NUMEROS = ("duracion_paso", "sombra")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in self.NUMEROS:
+            self.fields[campo].required = False
+
+    def clean(self):
+        datos = super().clean()
+        for campo in self.NUMEROS:
+            if datos.get(campo) is None and campo not in self.errors:
+                datos[campo] = Revista._meta.get_field(campo).default
+        return datos
 
     def clean_titulo(self):
         valor = self.cleaned_data.get("titulo", "").strip()

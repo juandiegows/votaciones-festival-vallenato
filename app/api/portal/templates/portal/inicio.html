@@ -105,7 +105,10 @@
          data-url="{{ revista.archivo.url }}?v={{ revista.actualizado_en|date:'U' }}"
          data-pdfjs="{% static 'portal/libs/pdfjs/pdf.min.mjs' %}"
          data-worker="{% static 'portal/libs/pdfjs/pdf.worker.min.mjs' %}"
-         data-recursos="{{ prefijo_estaticos }}portal/libs/pdfjs/">
+         data-recursos="{{ prefijo_estaticos }}portal/libs/pdfjs/"
+         data-duracion="{{ revista.duracion_paso }}" data-sombra="{{ revista.sombra }}"
+         data-tapa-dura="{{ revista.tapa_dura|yesno:'1,0' }}" data-sonido="{{ revista.sonido_papel|yesno:'1,0' }}"
+         {% if revista.efecto_arrancar %}data-efecto="{% static 'portal/js/arrancar-pagina.min.js' %}"{% endif %}>
       <div class="revista-estado" role="status">
         <span><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Cargando la revista…</span>
         <noscript><a class="btn btn-outline-light mt-3" href="{{ revista.archivo.url }}" target="_blank" rel="noopener">Abrir la revista (PDF)</a></noscript>
@@ -115,9 +118,10 @@
         <button type="button" class="btn btn-revista" data-accion="anterior" aria-label="Página anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
         <span class="revista-indicador" aria-live="polite"></span>
         <button type="button" class="btn btn-revista" data-accion="siguiente" aria-label="Página siguiente"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-        <span class="revista-separador" aria-hidden="true"></span>
-        <button type="button" class="btn btn-revista" data-accion="pantalla" aria-label="Ver en pantalla completa"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>
-        <a class="btn btn-revista" href="{{ revista.archivo.url }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir el PDF de {{ revista.titulo }} en una pestaña nueva"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></a>
+        {% if revista.permitir_pantalla_completa or revista.efecto_arrancar or revista.permitir_descarga %}<span class="revista-separador" aria-hidden="true"></span>{% endif %}
+        {% if revista.permitir_pantalla_completa %}<button type="button" class="btn btn-revista" data-accion="pantalla" aria-label="Ver en pantalla completa"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>{% endif %}
+        {% if revista.efecto_arrancar %}<button type="button" class="btn btn-revista" data-accion="arrancar" aria-label="Arrancar esta página (efecto: la página vuelve a su sitio)" title="Arrancar la página"><i class="bi bi-scissors" aria-hidden="true"></i></button>{% endif %}
+        {% if revista.permitir_descarga %}<a class="btn btn-revista" href="{{ revista.archivo.url }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir el PDF de {{ revista.titulo }} en una pestaña nueva"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></a>{% endif %}
       </div>
     </div>
   </div>

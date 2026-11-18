@@ -231,3 +231,23 @@ class CargarDemoSitioYEdicionesPasadasTests(BaseAPITest):
             self.assertEqual([b.titulo for b in banners], [f"{numero} Festival de la Leyenda Vallenata {anio}"])
         self.assertEqual([r["icono"] for r in sitio["redes"]], ["facebook", "twitter-x", "instagram", "youtube"])
         self.assertEqual(self.client.get(sitio["banners"][0]["imagen"]).status_code, 200)
+
+
+class AjustesRevistaTest(BaseAPITest):
+    """Cómo se hojea la revista: por defecto, igual que antes (sin efecto de arrancar ni sonido)."""
+
+    def test_valores_por_defecto_y_limites(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        self.autenticar(self.admin)
+        pdf = SimpleUploadedFile("r.pdf", b"%PDF-1.4\n%%EOF", content_type="application/pdf")
+        datos = self.client.post("/api/gestion/revistas/", {"titulo": "Revista", "archivo": pdf}, format="multipart").data
+        self.assertEqual((datos["duracion_paso"], datos["sombra"], datos["tapa_dura"], datos["permitir_descarga"],
+                          datos["permitir_pantalla_completa"], datos["efecto_arrancar"], datos["sonido_papel"]),
+                         (800, 45, True, True, True, False, False))
+        ruta = f"/api/gestion/revistas/{datos['id']}/"
+        self.assertEqual(self.client.patch(ruta, {"efecto_arrancar": True, "sonido_papel": True}, format="json").status_code, 200)
+        self.assertEqual(self.client.patch(ruta, {"duracion_paso": 100}, format="json").status_code, 400)
+        self.assertEqual(self.client.patch(ruta, {"sombra": 150}, format="json").status_code, 400)
+        publica = self.client.get("/api/sitio/").data["revistas"][0]
+        self.assertTrue(publica["efecto_arrancar"])

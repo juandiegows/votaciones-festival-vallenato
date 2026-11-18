@@ -4,6 +4,7 @@ import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
 import { formatearFecha } from '../../utils/helpers.js';
 import TablaResponsiva from '../../components/TablaResponsiva.jsx';
+import { AJUSTES_REVISTA, INTERRUPTORES_REVISTA, LIMITES_REVISTA } from '../../data/revista.js';
 
 const MAXIMO_MB = 50;
 const esPdf = (archivo) => archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf');
@@ -24,7 +25,7 @@ export default function AdminRevista() {
 
   const abrir = (r) => {
     setErrores({});
-    setForm({ titulo: '', descripcion: '', activa: true, orden: 0, ...r, archivoPdf: null });
+    setForm({ titulo: '', descripcion: '', activa: true, orden: 0, ...AJUSTES_REVISTA, ...r, archivoPdf: null });
   };
 
   const ejecutar = async (accion, exito) => {
@@ -39,12 +40,16 @@ export default function AdminRevista() {
     e.preventDefault();
     const errs = {};
     if (form.titulo.trim().length < 3) errs.titulo = 'Escribe un título de al menos 3 caracteres.';
+    for (const [campo, { min, max }] of Object.entries(LIMITES_REVISTA)) {
+      const valor = Number(form[campo]);
+      if (!Number.isFinite(valor) || valor < min || valor > max) errs[campo] = `Escribe un valor entre ${min} y ${max}.`;
+    }
     if (!form.id && !form.archivoPdf) errs.archivoPdf = 'Selecciona el PDF de la revista.';
     if (form.archivoPdf && !esPdf(form.archivoPdf)) errs.archivoPdf = 'Formato no permitido: sube la revista en PDF.';
     else if (form.archivoPdf && form.archivoPdf.size > MAXIMO_MB * 1024 * 1024) errs.archivoPdf = `El PDF supera el tamaño máximo de ${MAXIMO_MB} MB.`;
     setErrores(errs);
     if (Object.keys(errs).length) return;
-    const datos = { ...form, titulo: form.titulo.trim(), descripcion: form.descripcion.trim(), orden: Number(form.orden) };
+    const datos = { ...form, titulo: form.titulo.trim(), descripcion: form.descripcion.trim(), orden: Number(form.orden), duracionPaso: Number(form.duracionPaso), sombra: Number(form.sombra) };
     if (!datos.archivoPdf) delete datos.archivoPdf;
     const r = await ejecutar(
       () => guardarEntidad('revistas', datos, `${form.id ? 'Actualizó' : 'Publicó'} la revista "${datos.titulo}"`),
@@ -162,6 +167,30 @@ export default function AdminRevista() {
               <input id="r-activa" className="form-check-input" type="checkbox" role="switch" checked={form.activa} onChange={(e) => setForm({ ...form, activa: e.target.checked })} />
               <label className="form-check-label" htmlFor="r-activa">Mostrar en el inicio</label>
             </div>
+            <fieldset className="mt-4">
+              <legend className="h6 mb-1">Cómo se hojea en el inicio</legend>
+              <p className="form-text mt-0 mb-3">Por defecto, la revista se hojea como siempre; el efecto de arrancar y el sonido vienen apagados.</p>
+              <div className="row g-3 mb-2">
+                {[['duracionPaso', 'Duración del paso de página (ms)', 'De 250 (rápido) a 2000 ms (lento).'], ['sombra', 'Sombra al pasar la página (%)', '0 quita la sombra.']].map(([campo, etiqueta, ayuda]) => (
+                  <div className="col-sm-6" key={campo}>
+                    <label className="form-label" htmlFor={`r-${campo}`}>{etiqueta}</label>
+                    <input id={`r-${campo}`} type="number" className={`form-control ${errores[campo] ? 'is-invalid' : ''}`}
+                      min={LIMITES_REVISTA[campo].min} max={LIMITES_REVISTA[campo].max} step={LIMITES_REVISTA[campo].paso}
+                      value={form[campo]} onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
+                      aria-describedby={`r-${campo}-ayuda`} />
+                    {errores[campo] ? <div className="invalid-feedback">{errores[campo]}</div> : <div id={`r-${campo}-ayuda`} className="form-text">{ayuda}</div>}
+                  </div>
+                ))}
+              </div>
+              {INTERRUPTORES_REVISTA.map(({ campo, etiqueta, ayuda }) => (
+                <div className="form-check form-switch mb-2" key={campo}>
+                  <input id={`r-${campo}`} className="form-check-input" type="checkbox" role="switch" checked={!!form[campo]}
+                    onChange={(e) => setForm({ ...form, [campo]: e.target.checked })} aria-describedby={ayuda ? `r-${campo}-ayuda` : undefined} />
+                  <label className="form-check-label" htmlFor={`r-${campo}`}>{etiqueta}</label>
+                  {ayuda && <div id={`r-${campo}-ayuda`} className="form-text mt-0">{ayuda}</div>}
+                </div>
+              ))}
+            </fieldset>
           </form>
         )}
       </Modal>

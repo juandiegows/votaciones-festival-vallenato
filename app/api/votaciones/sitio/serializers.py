@@ -27,8 +27,11 @@ class RevistaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Revista
-        fields = ["id", "titulo", "descripcion", "archivo", "orden", "activa", "publicada_en"]
+        fields = ["id", "titulo", "descripcion", "archivo", "orden", "activa", "publicada_en", "duracion_paso", "sombra",
+                  "tapa_dura", "permitir_pantalla_completa", "permitir_descarga", "efecto_arrancar", "sonido_papel"]
         read_only_fields = ["publicada_en"]
+        # En multipart un booleano ausente llegaría como False: sin enviarlo se usa el valor por defecto del modelo
+        extra_kwargs = {campo: {"default": True} for campo in ("activa", "tapa_dura", "permitir_pantalla_completa", "permitir_descarga")}
 
     def validate_archivo(self, archivo):
         return validar_pdf(archivo)

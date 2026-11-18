@@ -121,7 +121,7 @@ export default function Inicio() {
               </p>
             </div>
             <Suspense fallback={<div className="revista-estado position-static" role="status">Cargando la revista…</div>}>
-              <RevistaLibro key={revista.id} url={revista.archivo} titulo={revista.titulo} />
+              <RevistaLibro key={revista.id} url={revista.archivo} titulo={revista.titulo} ajustes={revista} />
             </Suspense>
           </div>
         </section>
