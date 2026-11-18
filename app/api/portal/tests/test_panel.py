@@ -198,16 +198,18 @@ class ConfiguracionPanelTest(BasePortalTest):
         self.client.force_login(self.admin)
         for seccion, texto in (("votacion", "Pausar todas las votaciones"), ("registro", "cédula o documento"), ("privacidad", "Mínimo de votantes"),
                                ("resultados", "Cuándo se publican"), ("sitio", "Publicar Swagger")):
-            self.assertContains(self.client.get(self.RUTA, {"seccion": seccion}), texto)
+            self.assertContains(self.client.get(f"{self.RUTA}/{seccion}"), texto)
 
     def test_seccion_desconocida_abre_votacion(self):
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get(self.RUTA, {"seccion": "otra"}), "Pausar todas las votaciones")
+        self.assertRedirects(self.client.get(self.RUTA, {"seccion": "otra"}), f"{self.RUTA}/votacion")
+        self.assertRedirects(self.client.get(f"{self.RUTA}/otra"), f"{self.RUTA}/votacion")
+        self.assertRedirects(self.client.get(self.RUTA, {"seccion": "registro"}), f"{self.RUTA}/registro")  # enlaces antiguos
 
     def test_cada_pestana_guarda_solo_sus_campos(self):
         self.client.force_login(self.admin)
-        respuesta = self.client.post(f"{self.RUTA}?seccion=registro", {"pedir_documento": "on"})
-        self.assertRedirects(respuesta, f"{self.RUTA}?seccion=registro")
+        respuesta = self.client.post(f"{self.RUTA}/registro", {"pedir_documento": "on"})
+        self.assertRedirects(respuesta, f"{self.RUTA}/registro")
         sitio = ConfiguracionSitio.obtener()
         self.assertTrue(sitio.pedir_documento)
         # Lo que no está en la pestaña no cambia, aunque el formulario no lo envíe
@@ -217,8 +219,8 @@ class ConfiguracionPanelTest(BasePortalTest):
 
     def test_pausar_y_resultados_aplican_a_la_edicion(self):
         self.client.force_login(self.admin)
-        self.client.post(f"{self.RUTA}?seccion=votacion", {"votaciones_pausadas": "on"})
-        self.client.post(f"{self.RUTA}?seccion=resultados", {"visibilidad_resultados": "tiempo_real", "dias_visible_cerradas": "3"})
+        self.client.post(f"{self.RUTA}/votacion", {"votaciones_pausadas": "on"})
+        self.client.post(f"{self.RUTA}/resultados", {"visibilidad_resultados": "tiempo_real", "dias_visible_cerradas": "3"})
         self.edicion.refresh_from_db()
         self.assertTrue(self.edicion.votaciones_pausadas)
         self.assertEqual(self.edicion.visibilidad_resultados, "tiempo_real")
@@ -226,7 +228,7 @@ class ConfiguracionPanelTest(BasePortalTest):
 
     def test_valida_el_minimo_de_votantes(self):
         self.client.force_login(self.admin)
-        respuesta = self.client.post(f"{self.RUTA}?seccion=privacidad", {"mostrar_participantes": "on", "umbral_participacion": 1})
+        respuesta = self.client.post(f"{self.RUTA}/privacidad", {"mostrar_participantes": "on", "umbral_participacion": 1})
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Revisa los campos marcados")
         self.assertEqual(ConfiguracionSitio.obtener().umbral_participacion, 10)
@@ -400,14 +402,14 @@ class TextosDelProyectoTest(BasePortalTest):
         from votaciones.sitio.models import ConfiguracionSitio
 
         self.entrar_como_admin()
-        respuesta = self.client.get("/panel/configuracion?seccion=sitio")
+        respuesta = self.client.get("/panel/configuracion/sitio")
         self.assertContains(respuesta, 'name="aviso_superior"')
         configuracion = ConfiguracionSitio.obtener()
         datos = {"modo_banner": configuracion.modo_banner, "nombre_organizacion": configuracion.nombre_organizacion,
                  "telefono": configuracion.telefono, "direccion": configuracion.direccion, "correo": configuracion.correo,
                  "texto_pie": "", "aviso_superior": "Sitio oficial de votaciones", "subtitulo_logo": "", "texto_acerca": "",
                  "mostrar_swagger": "on"}
-        self.client.post("/panel/configuracion?seccion=sitio", datos)
+        self.client.post("/panel/configuracion/sitio", datos)
         configuracion.refresh_from_db()
         self.assertEqual(configuracion.aviso_superior, "Sitio oficial de votaciones")
         self.assertEqual(configuracion.subtitulo_logo, "")

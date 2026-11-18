@@ -63,6 +63,7 @@ export default function App() {
           <Route path="revista" element={<AdminRevista />} />
           <Route path="sitio" element={<AdminSitio />} />
           <Route path="configuracion" element={<AdminConfiguracion />} />
+          <Route path="configuracion/:seccion" element={<AdminConfiguracion />} />
           {/* /panel/{sección}/configuracion u otra ruta desconocida del panel → la pantalla correcta */}
           <Route path=":seccion/configuracion" element={<Navigate to="/panel/configuracion" replace />} />
           <Route path="marca" element={<Marca />} />

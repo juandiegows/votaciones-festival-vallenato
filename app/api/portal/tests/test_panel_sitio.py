@@ -161,7 +161,7 @@ class MarcaTest(BasePortalTest):
 
 
 class ValoresPorDefectoPanelTest(BasePortalTest):
-    RUTA = "/panel/configuracion?seccion=predeterminados"
+    RUTA = "/panel/configuracion/predeterminados"
 
     def setUp(self):
         super().setUp()
@@ -190,7 +190,7 @@ class ValoresPorDefectoPanelTest(BasePortalTest):
         self.assertIn("defecto_dias_votacion", respuesta.context["form"].errors)
 
     def test_modo_del_servidor_solo_lectura(self):
-        respuesta = self.client.get("/panel/configuracion?seccion=sitio")
+        respuesta = self.client.get("/panel/configuracion/sitio")
         self.assertContains(respuesta, "Modo del servidor")
         self.assertContains(respuesta, "DJANGO_DEBUG")
         self.assertNotContains(respuesta, 'name="debug"')

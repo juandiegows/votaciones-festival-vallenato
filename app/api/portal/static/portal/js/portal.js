@@ -273,4 +273,19 @@
     ambito?.addEventListener('change', sugerir);
     campoSlug.addEventListener('input', () => { automatico = !campoSlug.value; });
   });
+
+  // Subpestañas de una sección de configuración: muestra un apartado a la vez (sin JavaScript se ven todos)
+  todos('[data-subpestanas]').forEach((barra) => {
+    const botones = todos('[data-subpestana]', barra);
+    const contenedor = barra.parentElement;
+    const mostrar = (id) => {
+      botones.forEach((b) => { const activo = b.dataset.subpestana === id; b.classList.toggle('activa', activo); b.setAttribute('aria-selected', activo); });
+      todos('[data-subseccion]', contenedor).forEach((s) => { s.hidden = s.dataset.subseccion !== id; });
+    };
+    botones.forEach((b) => b.addEventListener('click', () => mostrar(b.dataset.subpestana)));
+    barra.hidden = false;
+    // Si hay un error en un apartado oculto, se abre ese apartado
+    const conError = contenedor.querySelector('[data-subseccion] .is-invalid');
+    mostrar(conError ? conError.closest('[data-subseccion]').dataset.subseccion : botones[0].dataset.subpestana);
+  });
 })();

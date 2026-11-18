@@ -9,7 +9,8 @@
 
 <nav class="config-pestanas mb-4" aria-label="Secciones de la configuración">
   {% for s in secciones %}
-    <a href="?seccion={{ s.clave }}" class="config-pestana{% if s.clave == clave %} activa{% endif %}"{% if s.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ s.icono }}" aria-hidden="true"></i>{{ s.titulo }}</a>
+    {% ifchanged s.grupo %}<span class="config-pestana-grupo" aria-hidden="true">{{ s.grupo }}</span>{% endifchanged %}
+    <a href="{% url 'portal:panel-configuracion-seccion' s.clave %}" class="config-pestana{% if s.clave == clave %} activa{% endif %}"{% if s.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ s.icono }}" aria-hidden="true"></i>{{ s.titulo }}</a>
   {% endfor %}
 </nav>
 
@@ -17,7 +18,7 @@
 
 {% if clave == "votacion" %}
   {% if form_edicion %}
-  <form method="post" action="?seccion=votacion" class="card-flv p-3 p-md-4 mb-4{% if edicion.votaciones_pausadas %} config-en-pausa{% endif %}">
+  <form method="post" action="{% url 'portal:panel-configuracion-seccion' 'votacion' %}" class="card-flv p-3 p-md-4 mb-4{% if edicion.votaciones_pausadas %} config-en-pausa{% endif %}">
     {% csrf_token %}
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
       <h2 class="h5 mb-0">Recepción de votos</h2>
@@ -55,7 +56,7 @@
   <div class="card-flv p-4 text-center"><p class="mb-2">Aún no hay una edición para configurar.</p><a class="btn btn-primary" href="{% url 'portal:panel-ediciones' %}">Crear edición</a></div>
   {% endif %}
 {% else %}
-<form method="post" action="?seccion={{ clave }}" novalidate>
+<form method="post" action="{% url 'portal:panel-configuracion-seccion' clave %}" novalidate>
   {% csrf_token %}
   {% if clave == "demo" %}
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-cuentas-demo">
@@ -102,7 +103,13 @@
       {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_total_votos titulo="Mostrar el total de votos en el inicio" ayuda="El público ve cuántos votos lleva la edición activa." %}
     </section>
   {% elif clave == "predeterminados" %}
-    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-edicion">
+    {# Pestañas: sin JavaScript se ven las tres secciones; con JavaScript, una a la vez (el formulario guarda todo) #}
+    <div class="config-subpestanas mb-3" role="tablist" aria-label="Apartados de valores por defecto" data-subpestanas hidden>
+      <button type="button" role="tab" class="config-subpestana activa" aria-selected="true" data-subpestana="ediciones"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i>Ediciones</button>
+      <button type="button" role="tab" class="config-subpestana" aria-selected="false" data-subpestana="categorias"><i class="bi bi-grid me-1" aria-hidden="true"></i>Categorías</button>
+      <button type="button" role="tab" class="config-subpestana" aria-selected="false" data-subpestana="votaciones"><i class="bi bi-check2-square me-1" aria-hidden="true"></i>Votaciones</button>
+    </div>
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-edicion" data-subseccion="ediciones">
       <h2 id="cfg-def-edicion" class="h5 mb-3"><i class="bi bi-calendar3 me-2 text-rojo" aria-hidden="true"></i>Edición nueva</h2>
       <div class="row">
         <div class="col-md-6 mb-3">
@@ -121,12 +128,12 @@
         </div>
       </div>
     </section>
-    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-categoria">
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-categoria" data-subseccion="categorias">
       <h2 id="cfg-def-categoria" class="h5 mb-3"><i class="bi bi-grid me-2 text-rojo" aria-hidden="true"></i>Categoría nueva</h2>
       {% include "portal/parciales/interruptor_config.html" with campo=form.defecto_voto_unico titulo="Un solo voto en toda la categoría" ayuda="Encendido: un voto en toda la categoría, aunque tenga varias votaciones. Apagado: un voto en cada votación." %}
       {% include "portal/parciales/interruptor_config.html" with campo=form.defecto_categoria_activa titulo="Visible al público al crearla" ayuda="Apagado, la categoría se crea oculta y se activa cuando esté lista." %}
     </section>
-    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-votacion">
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-votacion" data-subseccion="votaciones">
       <h2 id="cfg-def-votacion" class="h5 mb-3"><i class="bi bi-check2-square me-2 text-rojo" aria-hidden="true"></i>Votación nueva</h2>
       <div class="row">
         <div class="col-md-6 mb-3">

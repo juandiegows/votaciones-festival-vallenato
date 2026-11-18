@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, NavLink, useParams, useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -10,15 +10,66 @@ import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
 import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
 import { PREDETERMINADOS_BASE, valoresPorDefecto } from '../../utils/predeterminados.js';
 
-const SECCIONES = [
-  { id: 'votacion', label: 'Votación', icono: 'check2-square', descripcion: 'Votos por usuario y pausa de emergencia de la edición.' },
-  { id: 'resultados', label: 'Resultados', icono: 'bar-chart', descripcion: 'Cuándo ve el público los resultados de la edición.' },
-  { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
-  { id: 'registro', label: 'Registro', icono: 'person-vcard', descripcion: 'Qué datos se piden a quien crea una cuenta para votar.' },
-  { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
-  { id: 'predeterminados', label: 'Valores por defecto', icono: 'ui-checks', descripcion: 'Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.' },
-  { id: 'demo', label: 'Demostración', icono: 'person-badge-fill', descripcion: 'Cuentas y datos de prueba: permitir su ingreso, eliminarlos o volver a cargarlos.' },
+// Secciones agrupadas por tema; cada una tiene su URL: /panel/configuracion/{id}
+const GRUPOS = [
+  {
+    titulo: 'Votación',
+    secciones: [
+      { id: 'votacion', label: 'Votos y pausa', icono: 'check2-square', descripcion: 'Votos por usuario y pausa de emergencia de la edición.' },
+      { id: 'registro', label: 'Registro de votantes', icono: 'person-vcard', descripcion: 'Qué datos se piden a quien crea una cuenta para votar.' },
+    ],
+  },
+  {
+    titulo: 'Resultados',
+    secciones: [
+      { id: 'resultados', label: 'Publicación', icono: 'bar-chart', descripcion: 'Cuándo ve el público los resultados de la edición.' },
+      { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
+    ],
+  },
+  {
+    titulo: 'Sitio público',
+    secciones: [
+      { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
+    ],
+    enlaces: [
+      { to: '/panel/sitio', label: 'Contacto, textos y redes', icono: 'telephone' },
+      { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
+      { to: '/panel/banner', label: 'Banner de inicio', icono: 'images' },
+    ],
+  },
+  {
+    titulo: 'Administración',
+    secciones: [
+      { id: 'predeterminados', label: 'Valores por defecto', icono: 'ui-checks', descripcion: 'Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.' },
+      { id: 'demo', label: 'Demostración', icono: 'person-badge-fill', descripcion: 'Cuentas y datos de prueba: permitir su ingreso, eliminarlos o volver a cargarlos.' },
+    ],
+  },
 ];
+// Subpestañas de las secciones largas (?ver= en la URL)
+const SUB_PREDETERMINADOS = [
+  { id: 'ediciones', label: 'Ediciones', icono: 'calendar3' },
+  { id: 'categorias', label: 'Categorías', icono: 'grid' },
+  { id: 'votaciones', label: 'Votaciones', icono: 'check2-square' },
+];
+const SUB_PRESENTACION = [
+  { id: 'categorias', label: 'Categorías', icono: 'grid' },
+  { id: 'opciones', label: 'Opciones al votar', icono: 'ui-radios-grid' },
+  { id: 'inicio', label: 'Inicio y API', icono: 'house' },
+];
+
+function SubPestanas({ pestanas, activa, onCambio }) {
+  return (
+    <div className="config-subpestanas mb-3" role="tablist" aria-label="Apartados de la sección">
+      {pestanas.map((p) => (
+        <button key={p.id} type="button" role="tab" aria-selected={activa === p.id} className={`config-subpestana ${activa === p.id ? 'activa' : ''}`} onClick={() => onCambio(p.id)}>
+          <i className={`bi bi-${p.icono} me-1`} aria-hidden="true"></i>{p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const SECCIONES = GRUPOS.flatMap((g) => g.secciones.map((s) => ({ ...s, grupo: g.titulo })));
 
 const OPCIONES_RESULTADOS = [
   { valor: 'en tiempo real', etiqueta: 'En tiempo real', icono: 'broadcast' },
@@ -65,7 +116,13 @@ function Fila({ titulo, descripcion, children, id }) {
 export default function AdminConfiguracion() {
   const { configuracion, guardarConfiguracion, guardarEntidad, reemplazarColeccion, publicarResultadosEdicion, votaciones: todasLasVotaciones } = useApp();
   const { edicion, votaciones, categorias } = useEdicionAdmin();
-  const [seccion, setSeccion] = useState('votacion');
+  const { seccion: seccionUrl } = useParams();
+  const seccion = SECCIONES.some((s) => s.id === seccionUrl) ? seccionUrl : null;
+  const [parametros, setParametros] = useSearchParams();
+  const ver = parametros.get('ver');
+  const subPredeterminados = SUB_PREDETERMINADOS.some((p) => p.id === ver) ? ver : SUB_PREDETERMINADOS[0].id;
+  const subPresentacion = SUB_PRESENTACION.some((p) => p.id === ver) ? ver : SUB_PRESENTACION[0].id;
+  const verSub = (id) => setParametros({ ver: id }, { replace: true });
   const [votos, setVotos] = useState(String(edicion?.votosPorUsuario ?? 1));
   useEffect(() => setVotos(String(edicion?.votosPorUsuario ?? 1)), [edicion?.votosPorUsuario]);
   const diasGuardados = diasVisibleCerradas(configuracion);
@@ -162,6 +219,8 @@ export default function AdminConfiguracion() {
     );
   const categoriaDe = (id) => categorias.find((c) => c.id === id)?.nombre;
   const actual = SECCIONES.find((s) => s.id === seccion);
+  // Cambiar de sección borra el aviso de la anterior
+  useEffect(() => setEstado(null), [seccion]);
 
   const restablecer = () => {
     if (seccion === 'votacion') guardarEdicion({ votosPorUsuario: 1, votacionesPausadas: false }, 'Votación restablecida: 1 voto por usuario, sin pausa.', 'Restableció la configuración de votación');
@@ -180,6 +239,9 @@ export default function AdminConfiguracion() {
     }
   };
 
+  // /panel/configuracion o una sección desconocida → la primera sección
+  if (!seccion) return <Navigate to={`/panel/configuracion/${SECCIONES[0].id}`} replace />;
+
   if (!edicion) {
     return (
       <>
@@ -195,11 +257,25 @@ export default function AdminConfiguracion() {
       <div className="configuracion-admin">
         <nav aria-label="Secciones de configuración">
           <ul className="nav nav-pills flex-row flex-md-column flex-nowrap gap-1 config-secciones">
-            {SECCIONES.map((s) => (
-              <li className="nav-item" key={s.id}>
-                <button type="button" className={`nav-link ${seccion === s.id ? 'active' : ''}`} aria-current={seccion === s.id ? 'true' : undefined} onClick={() => { setSeccion(s.id); setEstado(null); }}>
-                  <i className={`bi bi-${s.icono} me-2`} aria-hidden="true"></i>{s.label}
-                </button>
+            {GRUPOS.map((g) => (
+              <li key={g.titulo} className="config-grupo">
+                <span className="config-grupo-titulo d-none d-md-block">{g.titulo}</span>
+                <ul className="list-unstyled d-flex flex-row flex-md-column gap-1 mb-0">
+                  {g.secciones.map((s) => (
+                    <li className="nav-item" key={s.id}>
+                      <NavLink to={`/panel/configuracion/${s.id}`} className="nav-link">
+                        <i className={`bi bi-${s.icono} me-2`} aria-hidden="true"></i>{s.label}
+                      </NavLink>
+                    </li>
+                  ))}
+                  {g.enlaces?.map((e) => (
+                    <li className="nav-item d-none d-md-block" key={e.to}>
+                      <Link to={e.to} className="nav-link config-enlace-externo">
+                        <i className={`bi bi-${e.icono} me-2`} aria-hidden="true"></i>{e.label}<i className="bi bi-arrow-right-short ms-1" aria-hidden="true"></i>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ul>
@@ -208,12 +284,15 @@ export default function AdminConfiguracion() {
         <section className="card-flv p-3 p-md-4" aria-labelledby="titulo-seccion">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
             <div>
+              <p className="small text-uppercase fw-semibold text-secondary-flv mb-1 config-migas">{actual.grupo}</p>
               <h2 id="titulo-seccion" className="h5 mb-0"><i className={`bi bi-${actual.icono} me-2 text-rojo`} aria-hidden="true"></i>{actual.label}</h2>
               <p className="small text-secondary-flv mb-0">{actual.descripcion}</p>
             </div>
-            <button type="button" className="btn btn-sm btn-link text-reset" onClick={restablecer} disabled={procesando}>
-              <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer sección
-            </button>
+            {seccion !== 'demo' && (
+              <button type="button" className="btn btn-sm btn-link text-reset" onClick={restablecer} disabled={procesando}>
+                <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer sección
+              </button>
+            )}
           </div>
           <p className="small mb-0 estado-config" role="status" aria-live="polite">
             {estado && <span className={`text-${estado.tipo === 'info' ? 'secondary' : estado.tipo}`}>{estado.texto}</span>}
@@ -358,151 +437,175 @@ export default function AdminConfiguracion() {
 
           {seccion === 'predeterminados' && (
             <>
-              <Fila titulo="Edición nueva · presentación de las categorías" descripcion="Cómo ve el público las categorías de una edición recién creada.">
-                <Opciones
-                  nombre="cfg-def-categorias"
-                  columnas="col-sm-6 col-xl-4"
-                  opciones={PRESENTACIONES_CATEGORIAS}
-                  valor={defecto.defectoPresentacionCategorias}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ defectoPresentacionCategorias: v }, `Ediciones nuevas: categorías en ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta.toLowerCase()}.`)}
-                />
-              </Fila>
-              <Fila titulo="Edición nueva · cuándo se publican los resultados" descripcion="Aplica a las votaciones de la edición que no tengan un ajuste propio.">
-                <Opciones
-                  nombre="cfg-def-resultados"
-                  opciones={OPCIONES_RESULTADOS.map((o) => ({ ...o, descripcion: DESCRIPCION_RESULTADOS[o.valor] }))}
-                  valor={defecto.defectoResultados}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ defectoResultados: v }, `Ediciones nuevas: resultados ${v}.`)}
-                />
-              </Fila>
-              <Fila titulo="Categoría nueva · votos" descripcion="Si una persona vota una sola vez en toda la categoría o una vez en cada votación.">
-                <Opciones
-                  nombre="cfg-def-voto-unico"
-                  columnas="col-sm-6"
-                  opciones={[
-                    { valor: 'unico', etiqueta: 'Un voto por categoría', icono: '1-circle', descripcion: 'Un solo voto aunque tenga varias votaciones.' },
-                    { valor: 'cada', etiqueta: 'Un voto por votación', icono: 'list-check', descripcion: 'Se vota en cada votación por separado.' },
-                  ]}
-                  valor={defecto.defectoVotoUnico ? 'unico' : 'cada'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ defectoVotoUnico: v === 'unico' }, v === 'unico' ? 'Categorías nuevas: un voto por categoría.' : 'Categorías nuevas: un voto por votación.')}
-                />
-              </Fila>
-              <Fila titulo="Categoría nueva · visibilidad" descripcion="Si se muestra al público desde que se crea o queda oculta hasta activarla.">
-                <Opciones
-                  nombre="cfg-def-activa"
-                  columnas="col-sm-6"
-                  opciones={[
-                    { valor: 'visible', etiqueta: 'Visible', icono: 'eye', descripcion: 'Se muestra al público al crearla.' },
-                    { valor: 'oculta', etiqueta: 'Oculta', icono: 'eye-slash', descripcion: 'Se activa cuando esté lista.' },
-                  ]}
-                  valor={defecto.defectoCategoriaActiva ? 'visible' : 'oculta'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ defectoCategoriaActiva: v === 'visible' }, v === 'visible' ? 'Categorías nuevas: visibles al crearlas.' : 'Categorías nuevas: ocultas al crearlas.')}
-                />
-              </Fila>
-              <Fila titulo="Votación nueva · presentación de las opciones" descripcion="Cómo ve el público las opciones de una votación recién creada.">
-                <Opciones
-                  nombre="cfg-def-opciones"
-                  columnas="col-sm-6 col-xl-4"
-                  opciones={PRESENTACIONES_OPCIONES}
-                  valor={defecto.defectoPresentacionOpciones}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ defectoPresentacionOpciones: v }, `Votaciones nuevas: opciones en ${presentacionOpciones(v).etiqueta.toLowerCase()}.`)}
-                />
-              </Fila>
-              <Fila titulo="Votación nueva · duración" descripcion="Días entre la apertura y el cierre que se proponen al crearla. La votación nueva se crea como borrador.">
-                <div className="input-group" style={{ width: '12rem' }}>
-                  <input id="cfg-def-dias" type="number" min="1" max="365" className="form-control" value={diasVotacion} onChange={(e) => setDiasVotacion(e.target.value)} onBlur={guardarDiasVotacion}
-                    onKeyDown={(e) => e.key === 'Enter' && guardarDiasVotacion()} aria-label="Días que dura una votación nueva" disabled={procesando} />
-                  <span className="input-group-text">{Number(diasVotacion) === 1 ? 'día' : 'días'}</span>
-                </div>
-              </Fila>
+              <SubPestanas pestanas={SUB_PREDETERMINADOS} activa={subPredeterminados} onCambio={(v) => verSub(v)} />
+              {subPredeterminados === 'ediciones' && (
+                <Fila titulo="Edición nueva · presentación de las categorías" descripcion="Cómo ve el público las categorías de una edición recién creada.">
+                  <Opciones
+                    nombre="cfg-def-categorias"
+                    columnas="col-sm-6 col-xl-4"
+                    opciones={PRESENTACIONES_CATEGORIAS}
+                    valor={defecto.defectoPresentacionCategorias}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ defectoPresentacionCategorias: v }, `Ediciones nuevas: categorías en ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta.toLowerCase()}.`)}
+                  />
+                </Fila>
+              )}
+              {subPredeterminados === 'ediciones' && (
+                <Fila titulo="Edición nueva · cuándo se publican los resultados" descripcion="Aplica a las votaciones de la edición que no tengan un ajuste propio.">
+                  <Opciones
+                    nombre="cfg-def-resultados"
+                    opciones={OPCIONES_RESULTADOS.map((o) => ({ ...o, descripcion: DESCRIPCION_RESULTADOS[o.valor] }))}
+                    valor={defecto.defectoResultados}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ defectoResultados: v }, `Ediciones nuevas: resultados ${v}.`)}
+                  />
+                </Fila>
+              )}
+              {subPredeterminados === 'categorias' && (
+                <Fila titulo="Categoría nueva · votos" descripcion="Si una persona vota una sola vez en toda la categoría o una vez en cada votación.">
+                  <Opciones
+                    nombre="cfg-def-voto-unico"
+                    columnas="col-sm-6"
+                    opciones={[
+                      { valor: 'unico', etiqueta: 'Un voto por categoría', icono: '1-circle', descripcion: 'Un solo voto aunque tenga varias votaciones.' },
+                      { valor: 'cada', etiqueta: 'Un voto por votación', icono: 'list-check', descripcion: 'Se vota en cada votación por separado.' },
+                    ]}
+                    valor={defecto.defectoVotoUnico ? 'unico' : 'cada'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ defectoVotoUnico: v === 'unico' }, v === 'unico' ? 'Categorías nuevas: un voto por categoría.' : 'Categorías nuevas: un voto por votación.')}
+                  />
+                </Fila>
+              )}
+              {subPredeterminados === 'categorias' && (
+                <Fila titulo="Categoría nueva · visibilidad" descripcion="Si se muestra al público desde que se crea o queda oculta hasta activarla.">
+                  <Opciones
+                    nombre="cfg-def-activa"
+                    columnas="col-sm-6"
+                    opciones={[
+                      { valor: 'visible', etiqueta: 'Visible', icono: 'eye', descripcion: 'Se muestra al público al crearla.' },
+                      { valor: 'oculta', etiqueta: 'Oculta', icono: 'eye-slash', descripcion: 'Se activa cuando esté lista.' },
+                    ]}
+                    valor={defecto.defectoCategoriaActiva ? 'visible' : 'oculta'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ defectoCategoriaActiva: v === 'visible' }, v === 'visible' ? 'Categorías nuevas: visibles al crearlas.' : 'Categorías nuevas: ocultas al crearlas.')}
+                  />
+                </Fila>
+              )}
+              {subPredeterminados === 'votaciones' && (
+                <Fila titulo="Votación nueva · presentación de las opciones" descripcion="Cómo ve el público las opciones de una votación recién creada.">
+                  <Opciones
+                    nombre="cfg-def-opciones"
+                    columnas="col-sm-6 col-xl-4"
+                    opciones={PRESENTACIONES_OPCIONES}
+                    valor={defecto.defectoPresentacionOpciones}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ defectoPresentacionOpciones: v }, `Votaciones nuevas: opciones en ${presentacionOpciones(v).etiqueta.toLowerCase()}.`)}
+                  />
+                </Fila>
+              )}
+              {subPredeterminados === 'votaciones' && (
+                <Fila titulo="Votación nueva · duración" descripcion="Días entre la apertura y el cierre que se proponen al crearla. La votación nueva se crea como borrador.">
+                  <div className="input-group" style={{ width: '12rem' }}>
+                    <input id="cfg-def-dias" type="number" min="1" max="365" className="form-control" value={diasVotacion} onChange={(e) => setDiasVotacion(e.target.value)} onBlur={guardarDiasVotacion}
+                      onKeyDown={(e) => e.key === 'Enter' && guardarDiasVotacion()} aria-label="Días que dura una votación nueva" disabled={procesando} />
+                    <span className="input-group-text">{Number(diasVotacion) === 1 ? 'día' : 'días'}</span>
+                  </div>
+                </Fila>
+              )}
             </>
           )}
 
           {seccion === 'presentacion' && (
             <>
-              <Fila titulo={`Categorías de la edición ${edicion.anio}`} descripcion="Cómo ve el público la página de categorías de esta edición.">
-                <Opciones
-                  nombre="cfg-presentacion"
-                  columnas="col-sm-6 col-xl-4"
-                  opciones={PRESENTACIONES_CATEGORIAS}
-                  valor={edicion.presentacionCategorias || 'tarjetas'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarEdicion({ presentacionCategorias: v }, `Categorías: ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta}.`, `Cambió la presentación de categorías de "${edicion.nombre}"`)}
-                />
-                <VistaPreviaCategorias edicion={edicion} presentacion={edicion.presentacionCategorias || 'tarjetas'} />
-              </Fila>
-              <Fila titulo={`Opciones de las votaciones de ${edicion.anio}`} descripcion="Cómo ve el público las opciones al votar. Elige una para aplicarla a todas las votaciones de la edición, o cámbiala en cada una más abajo.">
-                {votaciones.length === 0 ? (
-                  <p className="small mb-0">Esta edición aún no tiene votaciones.</p>
-                ) : (
-                  <>
-                    <Opciones
-                      nombre="cfg-opciones"
-                      columnas="col-sm-6 col-xl-4"
-                      opciones={PRESENTACIONES_OPCIONES}
-                      valor={presentacionComun}
-                      deshabilitado={procesando}
-                      onCambio={aplicarATodas}
-                    />
-                    {!presentacionComun && (
-                      <p className="small text-secondary-flv mt-2 mb-0"><i className="bi bi-info-circle me-1" aria-hidden="true"></i>Las votaciones usan presentaciones distintas; elige una para igualarlas todas.</p>
-                    )}
-                    <ul className="list-unstyled lista-compacta mt-3 mb-0" aria-label="Presentación de opciones por votación">
-                      {votaciones.map((v) => (
-                        <li key={v.id}>
-                          <span className="flex-grow-1 text-truncate"><strong>{v.titulo}</strong> <span className="text-secondary-flv">· {categoriaDe(v.categoriaId)}</span></span>
-                          <label className="visually-hidden" htmlFor={`cfg-op-${v.id}`}>Presentación de opciones de {v.titulo}</label>
-                          <select id={`cfg-op-${v.id}`} className="form-select form-select-sm" style={{ width: 'auto' }} value={v.presentacionOpciones || 'tarjetas'}
-                            disabled={procesando} onChange={(e) => cambiarPresentacionVotacion(v, e.target.value)}>
-                            {PRESENTACIONES_OPCIONES.map((o) => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
-                          </select>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </Fila>
-              <Fila titulo="Total de votos en el inicio" descripcion="Muestra al público, en las cifras del inicio, cuántos votos lleva la edición activa. Si se oculta, en su lugar se muestran las votaciones programadas.">
-                <Opciones
-                  nombre="cfg-total"
-                  columnas="col-sm-6"
-                  opciones={[
-                    { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'El público no ve el total de votos.' },
-                    { valor: 'mostrar', etiqueta: 'Mostrar', icono: '123', descripcion: 'El inicio muestra los votos registrados.' },
-                  ]}
-                  valor={configuracion?.mostrarTotalVotos ? 'mostrar' : 'ocultar'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ mostrarTotalVotos: v === 'mostrar' }, v === 'mostrar' ? 'El inicio muestra el total de votos.' : 'El total de votos se oculta en el inicio.')}
-                />
-              </Fila>
-              <Fila titulo="Documentación de la API" descripcion="Swagger, ReDoc y el esquema OpenAPI. Apagada, esas rutas responden 404.">
-                <Opciones
-                  nombre="cfg-swagger"
-                  columnas="col-sm-6"
-                  opciones={[
-                    { valor: 'mostrar', etiqueta: 'Mostrar', icono: 'file-earmark-code', descripcion: 'Cualquiera puede consultar y probar la API.' },
-                    { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'La documentación deja de estar disponible.' },
-                  ]}
-                  valor={configuracion?.mostrarSwagger === false ? 'ocultar' : 'mostrar'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ mostrarSwagger: v === 'mostrar' }, v === 'mostrar' ? 'La documentación de la API está visible.' : 'La documentación de la API se ocultó.')}
-                />
-              </Fila>
-              <Fila titulo="Banner del inicio" descripcion="Aplica a todo el sitio. Los banners se administran en «Banner de inicio».">
-                <Opciones
-                  nombre="cfg-banner"
-                  columnas="col-sm-6"
-                  opciones={MODOS_BANNER}
-                  valor={configuracion?.modoBanner || 'carrusel'}
-                  deshabilitado={procesando}
-                  onCambio={(v) => guardarSitio({ modoBanner: v }, `Banner del inicio: ${v}.`)}
-                />
-              </Fila>
+              <SubPestanas pestanas={SUB_PRESENTACION} activa={subPresentacion} onCambio={(v) => verSub(v)} />
+              {subPresentacion === 'categorias' && (
+                <Fila titulo={`Categorías de la edición ${edicion.anio}`} descripcion="Cómo ve el público la página de categorías de esta edición.">
+                  <Opciones
+                    nombre="cfg-presentacion"
+                    columnas="col-sm-6 col-xl-4"
+                    opciones={PRESENTACIONES_CATEGORIAS}
+                    valor={edicion.presentacionCategorias || 'tarjetas'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarEdicion({ presentacionCategorias: v }, `Categorías: ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta}.`, `Cambió la presentación de categorías de "${edicion.nombre}"`)}
+                  />
+                  <VistaPreviaCategorias edicion={edicion} presentacion={edicion.presentacionCategorias || 'tarjetas'} />
+                </Fila>
+              )}
+              {subPresentacion === 'opciones' && (
+                <Fila titulo={`Opciones de las votaciones de ${edicion.anio}`} descripcion="Cómo ve el público las opciones al votar. Elige una para aplicarla a todas las votaciones de la edición, o cámbiala en cada una más abajo.">
+                  {votaciones.length === 0 ? (
+                    <p className="small mb-0">Esta edición aún no tiene votaciones.</p>
+                  ) : (
+                    <>
+                      <Opciones
+                        nombre="cfg-opciones"
+                        columnas="col-sm-6 col-xl-4"
+                        opciones={PRESENTACIONES_OPCIONES}
+                        valor={presentacionComun}
+                        deshabilitado={procesando}
+                        onCambio={aplicarATodas}
+                      />
+                      {!presentacionComun && (
+                        <p className="small text-secondary-flv mt-2 mb-0"><i className="bi bi-info-circle me-1" aria-hidden="true"></i>Las votaciones usan presentaciones distintas; elige una para igualarlas todas.</p>
+                      )}
+                      <ul className="list-unstyled lista-compacta mt-3 mb-0" aria-label="Presentación de opciones por votación">
+                        {votaciones.map((v) => (
+                          <li key={v.id}>
+                            <span className="flex-grow-1 text-truncate"><strong>{v.titulo}</strong> <span className="text-secondary-flv">· {categoriaDe(v.categoriaId)}</span></span>
+                            <label className="visually-hidden" htmlFor={`cfg-op-${v.id}`}>Presentación de opciones de {v.titulo}</label>
+                            <select id={`cfg-op-${v.id}`} className="form-select form-select-sm" style={{ width: 'auto' }} value={v.presentacionOpciones || 'tarjetas'}
+                              disabled={procesando} onChange={(e) => cambiarPresentacionVotacion(v, e.target.value)}>
+                              {PRESENTACIONES_OPCIONES.map((o) => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
+                            </select>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </Fila>
+              )}
+              {subPresentacion === 'inicio' && (
+                <Fila titulo="Total de votos en el inicio" descripcion="Muestra al público, en las cifras del inicio, cuántos votos lleva la edición activa. Si se oculta, en su lugar se muestran las votaciones programadas.">
+                  <Opciones
+                    nombre="cfg-total"
+                    columnas="col-sm-6"
+                    opciones={[
+                      { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'El público no ve el total de votos.' },
+                      { valor: 'mostrar', etiqueta: 'Mostrar', icono: '123', descripcion: 'El inicio muestra los votos registrados.' },
+                    ]}
+                    valor={configuracion?.mostrarTotalVotos ? 'mostrar' : 'ocultar'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ mostrarTotalVotos: v === 'mostrar' }, v === 'mostrar' ? 'El inicio muestra el total de votos.' : 'El total de votos se oculta en el inicio.')}
+                  />
+                </Fila>
+              )}
+              {subPresentacion === 'inicio' && (
+                <Fila titulo="Documentación de la API" descripcion="Swagger, ReDoc y el esquema OpenAPI. Apagada, esas rutas responden 404.">
+                  <Opciones
+                    nombre="cfg-swagger"
+                    columnas="col-sm-6"
+                    opciones={[
+                      { valor: 'mostrar', etiqueta: 'Mostrar', icono: 'file-earmark-code', descripcion: 'Cualquiera puede consultar y probar la API.' },
+                      { valor: 'ocultar', etiqueta: 'Ocultar', icono: 'eye-slash', descripcion: 'La documentación deja de estar disponible.' },
+                    ]}
+                    valor={configuracion?.mostrarSwagger === false ? 'ocultar' : 'mostrar'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ mostrarSwagger: v === 'mostrar' }, v === 'mostrar' ? 'La documentación de la API está visible.' : 'La documentación de la API se ocultó.')}
+                  />
+                </Fila>
+              )}
+              {subPresentacion === 'inicio' && (
+                <Fila titulo="Banner del inicio" descripcion="Aplica a todo el sitio. Los banners se administran en «Banner de inicio».">
+                  <Opciones
+                    nombre="cfg-banner"
+                    columnas="col-sm-6"
+                    opciones={MODOS_BANNER}
+                    valor={configuracion?.modoBanner || 'carrusel'}
+                    deshabilitado={procesando}
+                    onCambio={(v) => guardarSitio({ modoBanner: v }, `Banner del inicio: ${v}.`)}
+                  />
+                </Fila>
+              )}
             </>
           )}
         </section>

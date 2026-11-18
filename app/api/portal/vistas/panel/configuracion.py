@@ -17,36 +17,41 @@ from votaciones.votacion import servicios
 from ...formularios import ConfiguracionEdicionForm, ConfiguracionForm
 from .base import edicion_panel, render_panel, solo_administrador
 
+# Secciones agrupadas por tema; cada una tiene su URL: /panel/configuracion/{clave}
 SECCIONES = {
-    "votacion": {"titulo": "Votación", "icono": "check2-square", "descripcion": "Abre o pausa la recepción de votos y define cuántas veces se vota en cada categoría.",
+    "votacion": {"grupo": "Votación", "titulo": "Votación", "icono": "check2-square", "descripcion": "Abre o pausa la recepción de votos y define cuántas veces se vota en cada categoría.",
                  "sitio": [], "edicion": ["votaciones_pausadas"]},
-    "registro": {"titulo": "Registro", "icono": "person-badge", "descripcion": "Qué se le pide a una persona para crear su cuenta y poder votar.",
+    "registro": {"grupo": "Votación", "titulo": "Registro", "icono": "person-badge", "descripcion": "Qué se le pide a una persona para crear su cuenta y poder votar.",
                  "sitio": ["pedir_documento"], "edicion": []},
-    "privacidad": {"titulo": "Privacidad", "icono": "shield-lock", "descripcion": "Qué puede ver la administración sobre quién participó. El voto siempre es secreto.",
-                   "sitio": ["mostrar_participantes", "umbral_participacion"], "edicion": []},
-    "resultados": {"titulo": "Resultados", "icono": "bar-chart", "descripcion": "Qué ve el público sobre los resultados y por cuánto tiempo.",
+    "resultados": {"grupo": "Resultados y privacidad", "titulo": "Resultados", "icono": "bar-chart", "descripcion": "Qué ve el público sobre los resultados y por cuánto tiempo.",
                    "sitio": ["mostrar_total_votos", "dias_visible_cerradas"], "edicion": ["visibilidad_resultados"]},
-    "demo": {"titulo": "Demostración", "icono": "person-badge-fill", "descripcion": "Cuentas y datos de prueba que crea cargar_demo: permitir su ingreso, eliminarlos o volver a cargarlos.",
-             "sitio": ["permitir_cuentas_demo"], "edicion": []},
-    "predeterminados": {"titulo": "Valores por defecto", "icono": "ui-checks", "descripcion": "Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.",
-                        "sitio": ["defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
-                                  "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"], "edicion": []},
-    "sitio": {"titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
+    "privacidad": {"grupo": "Resultados y privacidad", "titulo": "Privacidad", "icono": "shield-lock", "descripcion": "Qué puede ver la administración sobre quién participó. El voto siempre es secreto.",
+                   "sitio": ["mostrar_participantes", "umbral_participacion"], "edicion": []},
+    "sitio": {"grupo": "Sitio público", "titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
               "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "aviso_superior",
                         "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
+    "predeterminados": {"grupo": "Administración", "titulo": "Valores por defecto", "icono": "ui-checks", "descripcion": "Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.",
+                        "sitio": ["defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
+                                  "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"], "edicion": []},
+    "demo": {"grupo": "Administración", "titulo": "Demostración", "icono": "person-badge-fill", "descripcion": "Cuentas y datos de prueba que crea cargar_demo: permitir su ingreso, eliminarlos o volver a cargarlos.",
+             "sitio": ["permitir_cuentas_demo"], "edicion": []},
 }
 
 
 def url_seccion(clave):
-    return f"{reverse('portal:panel-configuracion')}?seccion={clave}"
+    return reverse("portal:panel-configuracion-seccion", args=[clave])
 
 
 @solo_administrador
-def configuracion(request):
+def configuracion(request, clave=None):
     edicion = edicion_panel(request)
-    clave = request.GET.get("seccion")
+    # /panel/configuracion y el formato anterior ?seccion=… llevan a /panel/configuracion/{sección}
+    if clave is None:
+        clave = request.GET.get("seccion")
+        if request.method == "GET" or clave not in SECCIONES:
+            return redirect(url_seccion(clave if clave in SECCIONES else "votacion"))
     if clave not in SECCIONES:
-        clave = "votacion"
+        return redirect(url_seccion("votacion"))
     seccion = SECCIONES[clave]
     datos = request.POST if request.method == "POST" else None
     form = ConfiguracionForm(datos, instance=ConfiguracionSitio.obtener(), campos=seccion["sitio"])

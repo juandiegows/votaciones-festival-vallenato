@@ -47,6 +47,7 @@ panel = [
     path("panel/categorias/<int:pk>/alternar", categorias.alternar_categoria, name="panel-categoria-alternar"),
     path("panel/categorias/<int:pk>/eliminar", categorias.eliminar_categoria, name="panel-categoria-eliminar"),
     path("panel/configuracion", configuracion.configuracion, name="panel-configuracion"),
+    path("panel/configuracion/<slug:clave>", configuracion.configuracion, name="panel-configuracion-seccion"),
     path("panel/configuracion/categorias/<int:pk>/voto-unico", configuracion.alternar_voto_unico, name="panel-config-voto-unico"),
     path("panel/configuracion/demo/eliminar", configuracion.eliminar_demo, name="panel-demo-eliminar"),
     path("panel/configuracion/demo/cargar", configuracion.cargar_demo, name="panel-demo-cargar"),
