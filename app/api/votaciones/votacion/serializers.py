@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from ..comun.campos import (
-    RutaArchivoField, RutaImagenField, SlugOpcionalMixin, validar_audio, validar_enlace, validar_icono,
+    RutaArchivoField, RutaImagenField, SlugOpcionalMixin, validar_audio, validar_enlace, validar_icono, validar_imagen,
 )
 from ..comun.errores import ReglaNegocioError
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
@@ -54,11 +54,13 @@ class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
 
 class OpcionSerializer(serializers.ModelSerializer):
     audio = RutaArchivoField(required=False, allow_null=True)
+    foto = RutaImagenField(required=False, allow_null=True)
 
     class Meta:
         model = Opcion
         fields = [
-            "id", "votacion", "nombre", "descripcion", "imagen", "enlace_multimedia", "audio", "texto_audio", "orden", "activa",
+            "id", "votacion", "nombre", "descripcion", "imagen", "foto", "enlace_multimedia", "audio", "texto_audio", "orden",
+            "activa",
         ]
 
     def validate_enlace_multimedia(self, valor):
@@ -66,6 +68,9 @@ class OpcionSerializer(serializers.ModelSerializer):
 
     def validate_audio(self, archivo):
         return validar_audio(archivo)
+
+    def validate_foto(self, archivo):
+        return validar_imagen(archivo, nombre="La imagen de la opción")
 
     def validate(self, datos):
         # Una votación cerrada ya no admite opciones nuevas
@@ -77,10 +82,11 @@ class OpcionSerializer(serializers.ModelSerializer):
 
 class OpcionPublicaSerializer(serializers.ModelSerializer):
     audio = RutaArchivoField(read_only=True)
+    foto = RutaImagenField(read_only=True)
 
     class Meta:
         model = Opcion
-        fields = ["id", "nombre", "descripcion", "imagen", "enlace_multimedia", "audio", "texto_audio", "orden"]
+        fields = ["id", "nombre", "descripcion", "imagen", "foto", "enlace_multimedia", "audio", "texto_audio", "orden"]
 
 
 class OpcionListadoPublicoSerializer(OpcionPublicaSerializer):

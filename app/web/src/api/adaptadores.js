@@ -31,7 +31,7 @@ const CAMPOS = {
     personalizarVotos: 'personalizar_votos',
   },
   opciones: {
-    id: 'id', votacionId: 'votacion', nombre: 'nombre', descripcion: 'descripcion', imagen: 'imagen',
+    id: 'id', votacionId: 'votacion', nombre: 'nombre', descripcion: 'descripcion', imagen: 'imagen', foto: 'foto',
     enlaceMultimedia: 'enlace_multimedia', audio: 'audio', textoAudio: 'texto_audio', orden: 'orden', activa: 'activa',
   },
   votos: {
@@ -62,13 +62,16 @@ const CAMPOS = {
 // Campos que la API calcula o que solo cambian con acciones específicas (publicar, cerrar…)
 const SOLO_LECTURA = new Set(['id', 'resultadosEfectivos', 'votosEfectivos', 'pausada', 'publicadaEn', 'edicionAnio', 'categoriaSlug', 'estadoApi', 'publicada', 'cerradaManualmente', 'resultadosPublicados']);
 
-// Archivos subidos: solo viajan como multipart; la web los recibe como ruta /media/…
+// Archivos subidos (uno o varios por colección): solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {
-  banners: { campo: 'archivo', api: 'imagen', web: 'imagen' },
-  revistas: { campo: 'archivoPdf', api: 'archivo', web: 'archivo' },
-  categorias: { campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' },
-  votaciones: { campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' },
-  opciones: { campo: 'archivoAudio', api: 'audio', web: 'audio', quitar: 'quitarAudio' },
+  banners: [{ campo: 'archivo', api: 'imagen', web: 'imagen' }],
+  revistas: [{ campo: 'archivoPdf', api: 'archivo', web: 'archivo' }],
+  categorias: [{ campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' }],
+  votaciones: [{ campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' }],
+  opciones: [
+    { campo: 'archivoAudio', api: 'audio', web: 'audio', quitar: 'quitarAudio' },
+    { campo: 'archivoFoto', api: 'foto', web: 'foto', quitar: 'quitarFoto' },
+  ],
 };
 
 /** Las rutas /media/… las sirve la API: si está en otro origen, se antepone ese origen. */
@@ -103,8 +106,9 @@ export function desdeApi(coleccion, objeto) {
     if (salida.resultadosPublicados === undefined) salida.resultadosPublicados = false;
   }
   if (coleccion === 'ediciones') salida.mostrarResultados = VISIBILIDAD_DESDE_API[objeto.visibilidad_resultados] || 'al cerrar';
-  const archivo = ARCHIVOS[coleccion];
-  if (archivo) salida[archivo.web] = urlMedia(salida[archivo.web]);
+  (ARCHIVOS[coleccion] || []).forEach((archivo) => {
+    if (salida[archivo.web] !== undefined) salida[archivo.web] = urlMedia(salida[archivo.web]);
+  });
   return salida;
 }
 
@@ -123,11 +127,10 @@ export function haciaApi(coleccion, objeto) {
     if (objeto.mostrarResultados !== undefined) salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';
     if (objeto.imagen !== undefined) salida.imagen = urlDesdeIcono(objeto.imagen);
   }
-  const archivo = ARCHIVOS[coleccion];
-  if (archivo) {
+  (ARCHIVOS[coleccion] || []).forEach((archivo) => {
     delete salida[archivo.api]; // el archivo solo se envía como multipart
     if (archivo.quitar && objeto[archivo.quitar]) salida[archivo.api] = null;
-  }
+  });
   return salida;
 }
 

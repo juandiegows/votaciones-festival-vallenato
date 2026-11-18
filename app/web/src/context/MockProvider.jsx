@@ -23,7 +23,10 @@ const ARCHIVOS = {
   revistas: { campo: 'archivoPdf', web: 'archivo' },
   categorias: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
   votaciones: { campo: 'archivoIcono', web: 'iconoImagen', quitar: 'quitarIcono' },
-  opciones: { campo: 'archivoAudio', web: 'audio', quitar: 'quitarAudio' },
+  opciones: [
+    { campo: 'archivoAudio', web: 'audio', quitar: 'quitarAudio' },
+    { campo: 'archivoFoto', web: 'foto', quitar: 'quitarFoto' },
+  ],
 };
 
 const leerComoDataUrl = (archivo) =>
@@ -193,9 +196,9 @@ export function MockProvider({ children }) {
       return { ok: false, error: 'La votación está cerrada: no se pueden agregar opciones.' };
     }
     // Imagen, ícono o audio subido: en el modo demostración se guarda como data URL en este navegador
-    const conf = ARCHIVOS[coleccion];
+    const confs = [ARCHIVOS[coleccion] || []].flat();
     const entidad = { ...entidadOriginal };
-    if (conf) {
+    for (const conf of confs) {
       const fichero = entidad[conf.campo];
       delete entidad[conf.campo];
       if (conf.quitar && entidad[conf.quitar]) entidad[conf.web] = '';

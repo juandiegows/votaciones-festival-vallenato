@@ -26,8 +26,27 @@ class PresentacionesOpcionesTest(BasePortalTest):
         self.assertContains(respuesta, 'class="opciones-duelo"')
         self.assertContains(respuesta, '<span class="duelo-vs" aria-hidden="true">VS</span>', count=1)
 
+    def test_imagenes_con_texto_usa_la_imagen_subida_o_el_avatar(self):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        contenido = BytesIO()
+        Image.new("RGB", (8, 6), "red").save(contenido, "PNG")
+        self.opcion_a.foto = SimpleUploadedFile("foto.png", contenido.getvalue(), content_type="image/png")
+        self.opcion_a.save()
+        try:
+            respuesta = self.con_presentacion("imagenes")
+            self.assertContains(respuesta, 'opciones-imagenes')
+            self.assertContains(respuesta, 'class="opcion-card opcion-imagen w-100"', count=2)
+            self.assertContains(respuesta, self.opcion_a.foto.url)
+            self.assertContains(respuesta, f"Imagen ilustrativa de {self.opcion_b.nombre}")
+        finally:
+            self.opcion_a.foto.delete(save=False)
+
     def test_las_nuevas_presentaciones_siguen_siendo_radios_del_formulario_de_voto(self):
-        for valor in ("colores", "respuestas", "duelo"):
+        for valor in ("colores", "respuestas", "duelo", "imagenes"):
             with self.subTest(valor):
                 self.assertContains(self.con_presentacion(valor), 'form="form-voto"', count=2)
 

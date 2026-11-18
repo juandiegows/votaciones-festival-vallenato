@@ -396,6 +396,15 @@ img.icono-lista { width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fi
 /* Presentación de opciones: mosaico */
 .opcion-mosaico { flex-direction: column; align-items: center; text-align: center; padding: 1.2rem .9rem; }
 .opcion-mosaico .opcion-check { position: absolute; top: .6rem; right: .6rem; margin: 0; }
+/* Presentación «Imágenes con texto»: imagen grande arriba y el texto debajo */
+.opcion-imagen { flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; position: relative; }
+.opcion-imagen .opcion-check { position: absolute; top: .6rem; right: .6rem; margin: 0; z-index: 1; background: #fff; }
+.opcion-imagen-marco { display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; background: var(--flv-degradado-hero); }
+.opcion-imagen-marco img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.opcion-imagen-texto { padding: .75rem .9rem 1rem; }
+.opcion-input:checked + .opcion-imagen { box-shadow: 0 0 0 2px var(--flv-rojo); }
+.opcion-foto-miniatura { width: 5rem; height: 3.75rem; object-fit: cover; border-radius: .5rem; border: 1px solid var(--flv-gris-borde); }
+@media (max-width: 359.98px) { .opciones-imagenes > [class*="col-"] { flex: 0 0 100%; max-width: 100%; } }
 
 /* Presentación de opciones: compacta (píldoras) */
 .opcion-pill {

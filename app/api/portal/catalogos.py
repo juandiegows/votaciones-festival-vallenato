@@ -52,11 +52,13 @@ PRESENTACIONES_OPCIONES = [
      "descripcion": "Botones a todo el ancho con su letra (A, B, C, D) y color; para preguntas tipo trivia o encuesta."},
     {"valor": "duelo", "etiqueta": "Duelo", "icono": "lightning-charge-fill",
      "descripcion": "Las opciones frente a frente con un «VS» en medio; ideal para una final entre dos."},
+    {"valor": "imagenes", "etiqueta": "Imágenes con texto", "icono": "images",
+     "descripcion": "Cada opción con su imagen grande y el nombre y la descripción debajo; ideal para artistas, carrozas o fotos."},
 ]
 
 # Opciones de ejemplo para la vista previa del panel cuando la votación aún no tiene dos opciones
 OPCIONES_EJEMPLO = [
-    SimpleNamespace(pk=f"ejemplo{i}", nombre=nombre, descripcion=descripcion, audio=None, enlace_multimedia="",
+    SimpleNamespace(pk=f"ejemplo{i}", nombre=nombre, descripcion=descripcion, audio=None, foto=None, enlace_multimedia="",
                     texto_audio="")
     for i, (nombre, descripcion) in enumerate([
         ("Paseo", "El aire más cantado, de ritmo pausado."),

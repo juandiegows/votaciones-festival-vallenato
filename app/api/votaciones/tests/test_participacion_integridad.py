@@ -229,6 +229,32 @@ class ArchivosTests(BaseAPITest):
         self.assertEqual(registro.detalle["nombre"], "Canción A")
 
 
+    def test_imagen_de_opcion_valida_formato_se_quita_y_se_borra(self):
+        from io import BytesIO
+
+        from PIL import Image
+
+        Votacion.objects.filter(pk=self.abierta.pk).update(fecha_apertura=timezone.now() + timedelta(days=1))
+        url = f"/api/admin/opciones/{self.opcion_a.pk}/"
+        contenido = BytesIO()
+        Image.new("RGB", (8, 6), "red").save(contenido, "PNG")
+        foto = SimpleUploadedFile("artista.png", contenido.getvalue(), content_type="image/png")
+        respuesta = self.client.patch(url, {"foto": foto}, format="multipart")
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.assertRegex(respuesta.data["foto"], r"^/media/opciones/artista.*\.png$")
+        publica = self.client.get("/api/opciones/", {"votacion": self.abierta.pk}).data
+        self.assertTrue(any(o["foto"] for o in publica))
+        malo = SimpleUploadedFile("foto.png", b"no es imagen", content_type="image/png")
+        self.assertEqual(self.client.patch(url, {"foto": malo}, format="multipart").status_code, 400)
+        self.opcion_a.refresh_from_db()
+        archivo = self.opcion_a.foto
+        respuesta = self.client.patch(url, {"foto": None}, format="json")
+        self.assertIsNone(respuesta.data["foto"])
+        self.assertFalse(archivo.storage.exists(archivo.name))
+        respuesta = self.client.patch(f"/api/admin/votaciones/{self.abierta.pk}/", {"presentacion_opciones": "imagenes"}, format="json")
+        self.assertEqual(respuesta.data["presentacion_opciones"], "imagenes")
+
+
 class AuditoriaFiltrosTests(BaseAPITest):
     def test_filtra_por_accion_entidad_y_texto(self):
         RegistroAuditoria.objects.create(usuario=self.admin, accion="publicar", entidad="votacion", entidad_id="7")

@@ -393,12 +393,13 @@ class VotacionForm(IconoMixin, FormularioPanel):
 
 class OpcionForm(forms.ModelForm):
     quitar_audio = forms.BooleanField(label="Quitar el audio subido", required=False)
+    quitar_foto = forms.BooleanField(label="Quitar la imagen subida", required=False)
 
     class Meta:
         model = Opcion
-        fields = ["nombre", "descripcion", "enlace_multimedia", "audio", "texto_audio", "orden", "activa"]
+        fields = ["nombre", "descripcion", "foto", "enlace_multimedia", "audio", "texto_audio", "orden", "activa"]
         labels = {
-            "descripcion": "Descripción", "enlace_multimedia": "Enlace multimedia", "audio": "Archivo de audio",
+            "descripcion": "Descripción", "foto": "Imagen", "enlace_multimedia": "Enlace multimedia", "audio": "Archivo de audio",
             "texto_audio": "Letra o transcripción", "activa": "Opción activa",
         }
         widgets = {"descripcion": forms.Textarea(attrs={"rows": 2}), "texto_audio": forms.Textarea(attrs={"rows": 3})}
@@ -418,11 +419,20 @@ class OpcionForm(forms.ModelForm):
             validar_con(campos.validar_audio, archivo)
         return archivo
 
+    def clean_foto(self):
+        archivo = self.cleaned_data.get("foto")
+        if archivo and "foto" in self.files:
+            validar_con(lambda a: campos.validar_imagen(a, nombre="La imagen de la opción"), archivo)
+        return archivo
+
     def save(self, commit=True):
         opcion = super().save(commit=False)
         if self.cleaned_data.get("quitar_audio") and "audio" not in self.files and opcion.audio:
             opcion.audio.delete(save=False)
             opcion.audio = ""
+        if self.cleaned_data.get("quitar_foto") and "foto" not in self.files and opcion.foto:
+            opcion.foto.delete(save=False)
+            opcion.foto = ""
         if commit:
             opcion.save()
         return opcion

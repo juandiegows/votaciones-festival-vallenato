@@ -273,15 +273,20 @@ export function ApiProvider({ children }) {
     const ruta = RUTAS_ADMIN[coleccion];
     const actual = entidad.id ? colecciones[coleccion].find((x) => x.id === entidad.id) : null;
     let cuerpo = haciaApi(coleccion, entidad);
-    const archivo = ARCHIVOS[coleccion];
-    const fichero = archivo && entidad[archivo.campo];
+    const ficheros = (ARCHIVOS[coleccion] || []).filter((a) => entidad[a.campo]);
+    const fichero = ficheros.length > 0;
     if (fichero) {
       // Imagen del banner, ícono o audio: multipart/form-data con el archivo y los demás campos
       // En multipart, DRF toma un booleano ausente como «false»: al crear se envían los activos por defecto
       if (!entidad.id) cuerpo = { ...ACTIVOS_POR_DEFECTO[coleccion], ...cuerpo };
       const formulario = new FormData();
-      Object.entries(cuerpo).forEach(([k, v]) => v !== null && formulario.append(k, v));
-      formulario.append(archivo.api, fichero);
+      // Un archivo que se quita viaja vacío (la API lo interpreta como «sin archivo»)
+      const apisArchivo = new Set((ARCHIVOS[coleccion] || []).map((a) => a.api));
+      Object.entries(cuerpo).forEach(([k, v]) => {
+        if (v !== null) formulario.append(k, v);
+        else if (apisArchivo.has(k)) formulario.append(k, '');
+      });
+      ficheros.forEach((a) => formulario.append(a.api, entidad[a.campo]));
       cuerpo = formulario;
     }
     let id = entidad.id;

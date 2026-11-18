@@ -1,5 +1,5 @@
 {% load portal %}
-{# Opciones en una de las 8 presentaciones que elige el administrador (presentaciones/OpcionesVotacion.jsx). Todas son radios. #}
+{# Opciones en una de las 9 presentaciones que elige el administrador (presentaciones/OpcionesVotacion.jsx). Todas son radios. #}
 {# La vista previa del panel pasa `presentacion` y un `prefijo` para que los id no se repitan #}
 {% firstof presentacion votacion.presentacion_opciones as p %}
 {% if p == "colores" %}
@@ -43,6 +43,23 @@
         {% include "portal/parciales/reproductor.html" %}
       </div>
       {% if not forloop.last %}<span class="duelo-vs" aria-hidden="true">VS</span>{% endif %}
+    {% endfor %}
+  </div>
+{% elif p == "imagenes" %}
+  <div class="row g-3 opciones-imagenes">
+    {% for o in opciones %}
+      <div class="col-6 col-lg-4 {% if o|tiene_medio %}opcion-con-medio{% else %}d-flex{% endif %}">
+        {% include "portal/parciales/opcion_radio.html" %}
+        <label for="{{ prefijo }}opcion-{{ o.pk }}" class="opcion-card opcion-imagen w-100">
+          <span class="opcion-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+          <span class="opcion-imagen-marco">{% if o.foto %}<img src="{{ o.foto.url }}" alt="" loading="lazy">{% else %}{% avatar o.nombre 96 %}{% endif %}</span>
+          <span class="opcion-imagen-texto">
+            <span class="d-block fw-semibold">{{ o.nombre }}</span>
+            {% if o.descripcion %}<span class="d-block small text-secondary-flv">{{ o.descripcion }}</span>{% endif %}
+          </span>
+        </label>
+        {% include "portal/parciales/reproductor.html" %}
+      </div>
     {% endfor %}
   </div>
 {% elif p == "lista" %}

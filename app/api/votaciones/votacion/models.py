@@ -115,6 +115,7 @@ class Votacion(ModeloTrazable):
         COLORES = "colores", "Colores"
         RESPUESTAS = "respuestas", "Respuestas"
         DUELO = "duelo", "Duelo"
+        IMAGENES = "imagenes", "Imágenes con texto"
 
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="votaciones")
     titulo = models.CharField(max_length=150)
@@ -199,6 +200,9 @@ class Opcion(ModeloTrazable):
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     imagen = models.URLField(blank=True)
+    foto = models.ImageField(
+        upload_to="opciones/", blank=True, help_text="Imagen de la opción (JPG, PNG o WebP); la usa la presentación «Imágenes con texto»."
+    )
     enlace_multimedia = models.CharField(
         max_length=300, blank=True, help_text="URL absoluta http(s) o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/x.mp3)."
     )

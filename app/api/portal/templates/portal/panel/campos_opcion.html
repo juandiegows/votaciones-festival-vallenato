@@ -6,6 +6,21 @@
     <label class="form-label" for="id_descripcion">Descripción</label>
     <textarea id="id_descripcion" name="descripcion" rows="2" class="form-control{{ form.descripcion|campo_invalido }}">{{ form.descripcion.value|default_if_none:'' }}</textarea>
   </div>
+  <div class="col-12">
+    <label class="form-label" for="id_foto">Imagen <span class="fw-normal text-secondary-flv">(opcional)</span></label>
+    <input id="id_foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="form-control{{ form.foto|campo_invalido }}">
+    {% if form.foto.errors %}<div class="invalid-feedback">{{ form.foto.errors|join:" " }}</div>
+    {% else %}<div class="form-text">JPG, PNG o WebP de hasta 3 MB. Se muestra con la presentación «Imágenes con texto»; sin imagen se usa el avatar con las iniciales.</div>{% endif %}
+    {% if form.instance.foto %}
+      <div class="d-flex align-items-center gap-2 mt-2">
+        <img src="{{ form.instance.foto.url }}" alt="" class="opcion-foto-miniatura">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="id_quitar_foto" name="quitar_foto">
+          <label class="form-check-label small" for="id_quitar_foto">Quitar la imagen subida</label>
+        </div>
+      </div>
+    {% endif %}
+  </div>
   <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.enlace_multimedia ayuda="URL http(s) o ruta del sitio que empieza por «/» (p. ej. /audio/muestras/cancion.mp3)." %}</div>
   <div class="col-md-6">
     <label class="form-label" for="id_audio">Archivo de audio</label>

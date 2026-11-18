@@ -31,8 +31,8 @@ const Reproductor = ({ o, className = 'reproductor-opcion', textoAbierto = false
 const letra = (i) => (i < 26 ? String.fromCharCode(65 + i) : String(i + 1));
 
 /**
- * Opciones de una votación en una de las 8 presentaciones que elige el administrador: tarjetas, lista, mosaico,
- * compacta, reproductor, colores (tipo Kahoot), respuestas (tipo Quizizz) y duelo. Todas conservan la semántica radio.
+ * Opciones de una votación en una de las 9 presentaciones que elige el administrador: tarjetas, lista, mosaico,
+ * compacta, reproductor, colores (tipo Kahoot), respuestas (tipo Quizizz), duelo e imágenes con texto. Todas conservan la semántica radio.
  */
 export default function OpcionesVotacion({ lista, presentacion = 'tarjetas', estaMarcada, deshabilitada, onElegir }) {
   const props = (o) => ({ o, marcada: estaMarcada(o), deshabilitada, onElegir });
@@ -95,6 +95,29 @@ export default function OpcionesVotacion({ lista, presentacion = 'tarjetas', est
             </div>
             {i < lista.length - 1 && <span className="duelo-vs" aria-hidden="true">VS</span>}
           </Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  if (presentacion === 'imagenes') {
+    return (
+      <div className="row g-3 opciones-imagenes">
+        {lista.map((o) => (
+          <div className={`col-6 col-lg-4 ${tieneMedio(o) ? 'opcion-con-medio' : 'd-flex'}`} key={o.id}>
+            <Radio {...props(o)} />
+            <label htmlFor={`opcion-${o.id}`} className="opcion-card opcion-imagen w-100">
+              <Check marcada={estaMarcada(o)} />
+              <span className="opcion-imagen-marco">
+                {o.foto ? <img src={o.foto} alt="" loading="lazy" /> : <Avatar nombre={o.nombre} tamano={96} />}
+              </span>
+              <span className="opcion-imagen-texto">
+                <span className="d-block fw-semibold">{o.nombre}</span>
+                {o.descripcion && <span className="d-block small text-secondary-flv">{o.descripcion}</span>}
+              </span>
+            </label>
+            <Reproductor o={o} />
+          </div>
         ))}
       </div>
     );

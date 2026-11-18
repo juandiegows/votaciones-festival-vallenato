@@ -87,7 +87,7 @@ class EdicionPublicaViewSet(viewsets.ReadOnlyModelViewSet):
                 "descripcion": "Votación del público entre canciones inéditas.", "estado": "abierta",
                 "fecha_apertura": "2026-09-29T16:00:00-05:00", "fecha_cierre": "2026-11-21T16:00:00-05:00",
                 "opciones": [{"id": 85, "nombre": "'Corazón Sabanero' (ficticia)", "descripcion": "Aire de paseo.",
-                              "imagen": "", "enlace_multimedia": "", "audio": None, "texto_audio": "", "orden": 1}],
+                              "imagen": "", "foto": None, "enlace_multimedia": "", "audio": None, "texto_audio": "", "orden": 1}],
             }],
         }])],
         parameters=[
@@ -366,7 +366,7 @@ class AdminOpcionViewSet(AuditadoMixin, viewsets.ModelViewSet):
     permission_classes = [EsAdministrador]
     serializer_class = OpcionSerializer
     entidad = "opcion"
-    campos_archivo = ("audio",)
+    campos_archivo = ("audio", "foto")
 
     def get_queryset(self):
         return selectores.opciones(self.request.query_params.get("votacion"))
