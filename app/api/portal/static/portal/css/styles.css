@@ -303,8 +303,12 @@ a:hover { color: var(--flv-rojo-hover); }
 /* Imagen panorámica a todo lo ancho (proporción 1920 × 600), como el encabezado del sitio del Festival */
 .hero-banners { position: relative; background: var(--flv-negro); border-bottom: 1px solid rgba(215, 172, 112, .35); }
 .hero-banner-img { display: block; width: 100%; aspect-ratio: 16 / 5; min-height: 240px; max-height: 640px; object-fit: cover; object-position: center top; }
+/* Imagen y textos comparten la misma celda: si el texto no cabe (móvil), el banner crece en vez de recortarlo */
+.hero-banners .carousel-item.active { display: grid; }
+.hero-banners .carousel-item > * { grid-area: 1 / 1; min-width: 0; }
+.hero-banners .carousel-item .hero-banner-img { height: 100%; }
 .hero-banner-texto {
-  position: absolute; inset: 0; display: flex; align-items: flex-end; padding-bottom: 3.5rem; color: #fff;
+  position: relative; display: flex; align-items: flex-end; padding: 2rem 0 3.5rem; color: #fff;
   background: linear-gradient(0deg, rgba(0, 0, 0, .8) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, 0) 75%);
 }
 .hero-banners .carousel-indicators [type="button"] { width: 1.6rem; height: 4px; background-color: var(--flv-dorado); }
@@ -312,6 +316,12 @@ a:hover { color: var(--flv-rojo-hover); }
 .hero-banner-texto .container { padding-left: 3.5rem; padding-right: 3.5rem; max-width: 1140px; }
 .hero-banner-texto .h1 { font-family: var(--flv-fuente-titulos); font-weight: 800; max-width: 40rem; color: #fff; }
 .hero-banner-texto .lead { max-width: 36rem; }
+@media (max-width: 575.98px) {
+  .hero-banner-texto .container { padding-left: 2.25rem; padding-right: 2.25rem; }
+  .hero-banners .carousel-control-prev, .hero-banners .carousel-control-next { width: 2rem; }
+  .hero-banner-texto .h1 { font-size: clamp(1.5rem, 7vw, 2rem); }
+  .hero-banner-texto .lead { font-size: 1.05rem; }
+}
 .hero-banners .carousel-control-prev, .hero-banners .carousel-control-next { width: 3rem; }
 .hero-banner-pausa { position: absolute; right: 1rem; bottom: 1rem; z-index: 3; }
 .hero-banners button:focus-visible { outline: 3px solid var(--flv-dorado); outline-offset: 2px; }
