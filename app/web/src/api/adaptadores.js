@@ -299,3 +299,34 @@ export function integridadDesdeApi(d) {
     })),
   };
 }
+
+/** Registro técnico de /gestion/registros/ (error del servidor o de la web) → forma de la web. */
+export function registroDesdeApi(r) {
+  return {
+    id: r.id,
+    fechaHora: r.fecha_hora,
+    nivel: r.nivel,
+    fuente: r.fuente,
+    origen: r.origen || '',
+    mensaje: r.mensaje || '',
+    excepcion: r.excepcion || '',
+    ubicacion: r.ubicacion || '',
+    archivo: r.archivo || '',
+    linea: r.linea ?? null,
+    funcion: r.funcion || '',
+    traza: r.traza || '',
+    metodo: r.metodo || '',
+    ruta: r.ruta || '',
+    estadoHttp: r.estado_http ?? null,
+    referencia: r.id_solicitud || '',
+    usuario: r.usuario || null,
+    ip: r.ip || '',
+    navegador: r.navegador || '',
+    detalle: r.detalle || {},
+  };
+}
+
+/** Resumen de /gestion/registros/resumen/ → forma de la web. */
+export function resumenRegistrosDesdeApi(r) {
+  return { errores24h: r?.errores_24h ?? 0, errores7d: r?.errores_7d ?? 0, ultimoError: r?.ultimo_error || null };
+}

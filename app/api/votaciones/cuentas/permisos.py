@@ -66,6 +66,7 @@ GRUPOS = [
         ("roles.gestionar", "Crear, editar y eliminar roles y cambiar sus permisos"),
     ]),
     ("Sistema", [
+        ("registros.ver", "Ver los registros técnicos: errores del servidor y de la web, con su traza"),
         ("django_admin.acceder", "Entrar a Django Admin"),
     ]),
 ]
@@ -85,7 +86,9 @@ ROLES_INICIALES = [
      "descripcion": "Se registra en el sitio y vota. No entra al panel.", "permisos": []},
     {"codigo": LECTURA, "nombre": "Solo lectura", "orden": 2,
      "descripcion": "Consulta todo el panel sin cambiar nada.",
-     "permisos": sorted(c for c in TODOS if c.endswith(".ver") or c in ("ediciones.exportar", "resultados.exportar"))},
+     # Los registros técnicos (trazas, IP) quedan para el administrador; se pueden dar desde Roles y permisos
+     "permisos": sorted(c for c in TODOS if (c.endswith(".ver") and c != "registros.ver")
+                        or c in ("ediciones.exportar", "resultados.exportar"))},
     {"codigo": EDITOR, "nombre": "Lectura y escritura", "orden": 3,
      "descripcion": "Lee y escribe solo ediciones, categorías, votaciones y sus opciones.",
      "permisos": sorted({"panel.ver"} | {c for c in TODOS if c.startswith(_ESCRITURA_CONTENIDO)})},

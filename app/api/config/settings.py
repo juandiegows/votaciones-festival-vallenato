@@ -61,6 +61,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Interceptor de registros: id de cada petición (X-Request-ID), línea de acceso y toda excepción no controlada
+    "votaciones.registros.interceptor.InterceptorRegistros",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -192,6 +194,54 @@ ZEPTOMAIL_API_URL = os.getenv("ZEPTOMAIL_API_URL", "https://api.zeptomail.com/v1
 ZEPTOMAIL_BOUNCE_ADDRESS = os.getenv("ZEPTOMAIL_BOUNCE_ADDRESS", "")
 ZEPTOMAIL_TIMEOUT = int(os.getenv("ZEPTOMAIL_TIMEOUT", "15"))
 
+# Registros técnicos (logs). Ver votaciones/registros/.
+#   - Consola (stdout → `docker logs`): una línea por petición y por evento, con el id de la petición (X-Request-ID),
+#     el usuario y la IP. LOG_FORMATO=json (producción) o texto (desarrollo).
+#   - Base de datos (RegistroSistema): los errores desde LOG_NIVEL_BD, con la traza y el archivo y la línea donde
+#     fallaron. Se ven en /panel/registros (permiso registros.ver) y en /api/gestion/registros/.
+#   - Archivos (opcional): con LOG_DIR, app.log y errores.log que rotan cada medianoche (LOG_ARCHIVOS_DIAS copias).
+PRUEBAS = "test" in sys.argv
+LOG_NIVEL = os.getenv("LOG_NIVEL", "INFO").upper()
+LOG_NIVEL_BD = os.getenv("LOG_NIVEL_BD", "ERROR").upper()
+LOG_FORMATO = os.getenv("LOG_FORMATO", "texto" if DEBUG else "json")
+LOG_DIR = os.getenv("LOG_DIR", "")
+LOG_ARCHIVOS_DIAS = int(os.getenv("LOG_ARCHIVOS_DIAS", "14"))
+LOG_DIAS_RETENCION = int(os.getenv("LOG_DIAS_RETENCION", "30"))
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"contexto": {"()": "votaciones.registros.registro.FiltroContexto"}},
+    "formatters": {
+        "texto": {"format": "%(asctime)s %(levelname)-7s [%(id_solicitud)s] %(name)s: %(message)s (%(usuario)s %(ip)s)"},
+        "json": {"()": "votaciones.registros.registro.FormatoJSON"},
+    },
+    "handlers": {
+        # En las pruebas la consola calla (los errores se siguen guardando en la base de datos de prueba)
+        "consola": {"class": "logging.StreamHandler", "stream": "ext://sys.stdout", "formatter": LOG_FORMATO,
+                    "filters": ["contexto"], "level": "CRITICAL" if PRUEBAS else "DEBUG"},
+        "base_datos": {"class": "votaciones.registros.registro.ManejadorBaseDatos", "level": LOG_NIVEL_BD,
+                       "filters": ["contexto"]},
+    },
+    "root": {"handlers": ["consola", "base_datos"], "level": LOG_NIVEL},
+    "loggers": {
+        # Lo de Django sube a la raíz (sin el correo a ADMINS ni la consola solo-DEBUG que trae por defecto)
+        "django": {"handlers": [], "level": LOG_NIVEL, "propagate": True},
+        "django.db.backends": {"level": "WARNING"},
+        # Hosts no permitidos: ruido de bots, solo a la consola
+        "django.security.DisallowedHost": {"handlers": ["consola"], "propagate": False},
+    },
+}
+if LOG_DIR:
+    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
+    for nombre, archivo, nivel in (("archivo", "app.log", "INFO"), ("archivo_errores", "errores.log", "WARNING")):
+        LOGGING["handlers"][nombre] = {
+            "class": "logging.handlers.TimedRotatingFileHandler", "filename": str(Path(LOG_DIR) / archivo),
+            "when": "midnight", "backupCount": LOG_ARCHIVOS_DIAS, "encoding": "utf-8", "formatter": "json",
+            "filters": ["contexto"], "level": nivel,
+        }
+        LOGGING["root"]["handlers"].append(nombre)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -208,6 +258,7 @@ REST_FRAMEWORK = {
         "votar": os.getenv("THROTTLE_VOTAR", "30/min"),
         "registro": os.getenv("THROTTLE_REGISTRO", "10/min"),
         "confirmacion": os.getenv("THROTTLE_CONFIRMACION", "5/min"),
+        "errores_web": os.getenv("THROTTLE_ERRORES_WEB", "20/min"),
     },
 }
 
@@ -217,7 +268,7 @@ CORS_ALLOWED_ORIGINS = env_list(
 )
 
 # La web lee el nombre del archivo CSV exportado (descarga con fetch + token).
-CORS_EXPOSE_HEADERS = ["Content-Disposition"]
+CORS_EXPOSE_HEADERS = ["Content-Disposition", "X-Request-ID"]
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "API – Sistema Web de Votaciones del Festival de la Leyenda Vallenata",

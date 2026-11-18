@@ -10,7 +10,8 @@ from django.urls import path, register_converter
 
 from .vistas import cuentas, publico, votos
 from .vistas.panel import (
-    auditoria, categorias, configuracion, ediciones, inicio, opciones, roles, sitio, transferencia, usuarios, votaciones,
+    auditoria, categorias, configuracion, ediciones, inicio, opciones, registros, roles, sitio, transferencia, usuarios,
+    votaciones,
 )
 from .vistas.panel import votos as votos_panel
 
@@ -67,6 +68,8 @@ panel = [
     path("panel/votaciones/<int:votacion_pk>/opciones/<int:pk>/eliminar", opciones.eliminar_opcion, name="panel-opcion-eliminar"),
     # Seguimiento
     path("panel/auditoria", auditoria.auditoria, name="panel-auditoria"),
+    path("panel/registros", registros.registros, name="panel-registros"),
+    path("panel/registros/probar", registros.probar, name="panel-registros-probar"),
     path("panel/usuarios", usuarios.usuarios, name="panel-usuarios"),
     path("panel/usuarios/<int:pk>/rol", usuarios.cambiar_rol, name="panel-usuario-rol"),
     path("panel/roles", roles.roles, name="panel-roles"),

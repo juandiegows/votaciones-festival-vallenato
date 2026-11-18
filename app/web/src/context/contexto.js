@@ -9,7 +9,8 @@ import { createContext, useContext } from 'react';
  *    guardarRol y eliminarRol (mismas reglas que la API: nadie cambia su rol ni reparte permisos que no tiene).
  *  - Acciones ASÍNCRONAS que devuelven { ok: true, ... } o { ok: false, error, errores? }:
  *    iniciarSesion, cerrarSesion, registrarUsuario, emitirVoto, guardarEntidad, eliminarEntidad,
- *    reemplazarColeccion, obtenerResultados, exportarResultados (csv, excel o pdf), cargarAuditoria, restablecer (solo demostración).
+ *    reemplazarColeccion, obtenerResultados, exportarResultados (csv, excel o pdf), cargarAuditoria, restablecer (solo demostración),
+ *    cargarRegistros, obtenerResumenRegistros y provocarErrorPrueba (registros técnicos, permiso registros.ver).
  *  - `version` cambia con cada escritura (para refrescar consultas como los resultados).
  */
 export const AppContext = createContext(null);

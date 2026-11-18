@@ -64,7 +64,7 @@ function crearZip(archivos) {
   });
 }
 
-function descargarBlob(nombre, blob) {
+export function descargarBlob(nombre, blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

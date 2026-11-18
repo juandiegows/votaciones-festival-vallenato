@@ -2,5 +2,6 @@
 
 from .auditoria import admin as auditoria_admin  # noqa: F401
 from .cuentas import admin as cuentas_admin  # noqa: F401
+from .registros import admin as registros_admin  # noqa: F401
 from .sitio import admin as sitio_admin  # noqa: F401
 from .votacion import admin as votacion_admin  # noqa: F401

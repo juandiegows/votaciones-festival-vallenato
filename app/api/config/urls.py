@@ -56,6 +56,9 @@ admin.site.has_permission = lambda request: request.user.is_active and (
     request.user.is_staff or getattr(request.user, "es_administrador", False)
 )
 
+# Error 500 con la marca y la referencia de la petición (X-Request-ID) para buscarlo en /panel/registros
+handler500 = "portal.vistas.errores.error_servidor"
+
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("api/salud/", salud, name="salud"),

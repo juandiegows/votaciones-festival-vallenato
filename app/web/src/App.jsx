@@ -29,6 +29,7 @@ import AdminSitio from './pages/admin/AdminSitio.jsx';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion.jsx';
 import AdminRevista from './pages/admin/AdminRevista.jsx';
 import AdminRoles from './pages/admin/AdminRoles.jsx';
+import AdminRegistros from './pages/admin/AdminRegistros.jsx';
 
 // Cada sección del panel exige su permiso `.ver` (catálogo en src/data/permisos.js); sin él, página 403
 const con = (permiso, pantalla) => <RequierePermiso permiso={permiso}>{pantalla}</RequierePermiso>;
@@ -72,6 +73,7 @@ export default function App() {
           {/* /panel/{sección}/configuracion u otra ruta desconocida del panel → la pantalla correcta */}
           <Route path=":seccion/configuracion" element={<Navigate to="/panel/configuracion" replace />} />
           <Route path="marca" element={con('sitio.ver', <Marca />)} />
+          <Route path="registros" element={con('registros.ver', <AdminRegistros />)} />
         </Route>
         {/* URL amigables por edición: /{año}/categorias/{categoría}/{votación} */}
         <Route path=":anio" element={<Categorias />} />

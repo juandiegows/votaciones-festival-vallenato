@@ -1612,6 +1612,104 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/registros/:
+    get:
+      operationId: gestion_registros_list
+      summary: Errores del servidor y de la web (50 por página)
+      parameters:
+      - in: query
+        name: dias
+        schema:
+          type: integer
+        description: Solo los de los últimos N días
+      - in: query
+        name: fuente
+        schema:
+          type: string
+          enum:
+          - servidor
+          - web
+      - in: query
+        name: nivel
+        schema:
+          type: string
+          enum:
+          - CRITICAL
+          - ERROR
+          - WARNING
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Mensaje, excepción, archivo, ruta, id de la petición o correo
+      tags:
+      - Registros del sistema
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRegistroSistemaList'
+          description: ''
+  /api/gestion/registros/{id}/:
+    get:
+      operationId: gestion_registros_retrieve
+      summary: Detalle de un registro con su traza
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este registro del sistema.
+        required: true
+      tags:
+      - Registros del sistema
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroSistema'
+          description: ''
+  /api/gestion/registros/probar/:
+    post:
+      operationId: gestion_registros_probar_create
+      description: 'Lanza una excepción sin atrapar: responde 500 con la `referencia`
+        (X-Request-ID) y el error queda en el registro con su traza, archivo y línea.'
+      summary: Provocar un error de prueba
+      tags:
+      - Registros del sistema
+      security:
+      - tokenAuth: []
+      responses:
+        '500':
+          description: Error de prueba registrado
+  /api/gestion/registros/resumen/:
+    get:
+      operationId: gestion_registros_resumen_retrieve
+      summary: Errores de las últimas 24 horas y 7 días
+      tags:
+      - Registros del sistema
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/gestion/revistas/:
     get:
       operationId: gestion_revistas_list
@@ -2584,6 +2682,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/OpcionListadoPublico'
           description: ''
+  /api/registros/web/:
+    post:
+      operationId: registros_web_create
+      description: Lo usa la web React (window.onerror, promesas rechazadas y el ErrorBoundary).
+        Sin sesión; limitado por IP.
+      summary: Reportar un error de JavaScript de la web
+      tags:
+      - Registros del sistema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorClienteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ErrorClienteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ErrorClienteRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
   /api/sitio/:
     get:
       operationId: sitio_retrieve
@@ -3634,6 +3758,47 @@ components:
       - fecha_fin
       - fecha_inicio
       - nombre
+    ErrorClienteRequest:
+      type: object
+      description: Error de JavaScript que reporta la web (window.onerror, promesa
+        rechazada o ErrorBoundary de React).
+      properties:
+        mensaje:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        tipo:
+          type: string
+          description: Error, TypeError…
+          maxLength: 120
+        traza:
+          type: string
+          description: error.stack
+          maxLength: 20000
+        componentes:
+          type: string
+          description: componentStack de React (ErrorBoundary).
+          maxLength: 10000
+        archivo:
+          type: string
+          maxLength: 500
+        linea:
+          type: integer
+          minimum: 0
+          nullable: true
+        columna:
+          type: integer
+          minimum: 0
+          nullable: true
+        url:
+          type: string
+          description: Página donde ocurrió.
+          maxLength: 500
+        version:
+          type: string
+          maxLength: 40
+      required:
+      - mensaje
     ErrorRegla:
       type: object
       properties:
@@ -3686,6 +3851,14 @@ components:
       - opcion_id
       - porcentaje
       - votos
+    FuenteEnum:
+      enum:
+      - servidor
+      - web
+      type: string
+      description: |-
+        * `servidor` - Servidor
+        * `web` - Web (navegador)
     IconoEnum:
       enum:
       - facebook
@@ -4063,6 +4236,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RegistroAuditoria'
+    PaginatedRegistroSistemaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistroSistema'
     Participacion:
       type: object
       properties:
@@ -4618,6 +4814,7 @@ components:
       - opciones.eliminar
       - opciones.ver
       - panel.ver
+      - registros.ver
       - resultados.exportar
       - resultados.publicar
       - resultados.ver
@@ -4654,6 +4851,7 @@ components:
         * `opciones.eliminar` - opciones.eliminar
         * `opciones.ver` - opciones.ver
         * `panel.ver` - panel.ver
+        * `registros.ver` - registros.ver
         * `resultados.exportar` - resultados.exportar
         * `resultados.publicar` - resultados.publicar
         * `resultados.ver` - resultados.ver
@@ -4864,6 +5062,101 @@ components:
       - email
       - nombres
       - password
+    RegistroSistema:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fecha_hora:
+          type: string
+          format: date-time
+          readOnly: true
+        nivel:
+          type: string
+          readOnly: true
+          description: WARNING, ERROR o CRITICAL.
+        fuente:
+          allOf:
+          - $ref: '#/components/schemas/FuenteEnum'
+          readOnly: true
+        origen:
+          type: string
+          readOnly: true
+          description: Logger que lo registró (django.request, votaciones.correo…).
+        mensaje:
+          type: string
+          readOnly: true
+        excepcion:
+          type: string
+          readOnly: true
+          description: Tipo y mensaje de la excepción.
+        ubicacion:
+          type: string
+          readOnly: true
+          description: archivo:línea (función) donde ocurrió el fallo.
+        archivo:
+          type: string
+          readOnly: true
+          description: Archivo donde ocurrió el fallo.
+        linea:
+          type: integer
+          readOnly: true
+          nullable: true
+        funcion:
+          type: string
+          readOnly: true
+        traza:
+          type: string
+          readOnly: true
+          description: Traza completa (traceback o stack del navegador).
+        metodo:
+          type: string
+          readOnly: true
+        ruta:
+          type: string
+          readOnly: true
+        estado_http:
+          type: integer
+          readOnly: true
+          nullable: true
+        id_solicitud:
+          type: string
+          readOnly: true
+          description: X-Request-ID de la petición.
+        usuario:
+          type: string
+          readOnly: true
+        ip:
+          type: string
+          readOnly: true
+          nullable: true
+        navegador:
+          type: string
+          readOnly: true
+        detalle:
+          readOnly: true
+      required:
+      - archivo
+      - detalle
+      - estado_http
+      - excepcion
+      - fecha_hora
+      - fuente
+      - funcion
+      - id
+      - id_solicitud
+      - ip
+      - linea
+      - mensaje
+      - metodo
+      - navegador
+      - nivel
+      - origen
+      - ruta
+      - traza
+      - ubicacion
+      - usuario
     Resultados:
       type: object
       properties:

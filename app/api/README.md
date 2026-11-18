@@ -36,6 +36,7 @@ Una regla de negocio se escribe una sola vez en `servicios.py` y la usan igual e
 | **Decorador** | `portal/vistas/panel/base.py: solo_administrador` | control de acceso del panel en una línea |
 | **Plantilla base + parciales** | `portal/templates/portal/base.html`, `parciales/` | un solo diseño; cada pantalla solo define su contenido |
 | **Middleware + ContextVar** | `votaciones/comun/contexto.py` | auditoría automática de quién crea o modifica cada registro |
+| **Interceptor (middleware)** | `votaciones/registros/interceptor.py` | id de cada petición (`X-Request-ID`), línea de acceso y registro de toda excepción no controlada con su traza, archivo y línea; responde 500 con la referencia |
 | **Mejora progresiva** | `portal/static/portal/js/portal.js` | todo funciona sin JavaScript; el JS solo agrega comodidad (modales, cuenta regresiva) |
 
 ### Conexión con MySQL (adaptador)
@@ -95,6 +96,7 @@ app/api/
 │   │   └── reportes.py      resultados, participación, resumen e integridad (solo lectura)
 │   ├── sitio/               banners, revistas, redes, configuración, sitemap (seo.py)
 │   ├── auditoria/           RegistroAuditoria y AuditadoMixin (CRUD que deja constancia)
+│   ├── registros/           logs técnicos: interceptor, RegistroSistema (errores del servidor y de la web)
 │   ├── correo/              servicio de correo + adaptadores (consola, memoria, SMTP, ZeptoMail)
 │   ├── models.py            registra los modelos de todos los módulos
 │   ├── admin.py             registra el panel /django-admin/ de todos los módulos
@@ -198,6 +200,10 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 | `DB_CONN_MAX_AGE` | `60` | Segundos que se reutiliza una conexión a MySQL |
 | `CORS_ALLOWED_ORIGINS` | web local, GitHub Pages y votaciones.juandiegows.com | Orígenes que pueden llamar a la API |
 | `THROTTLE_LOGIN` · `THROTTLE_REGISTRO` · `THROTTLE_VOTAR` · `THROTTLE_CONFIRMACION` | `10/min` · `10/min` · `30/min` · `5/min` | Límites de uso |
+| `LOG_NIVEL` · `LOG_FORMATO` | `INFO` · `texto` (con DEBUG) o `json` | Nivel y formato de la consola (`docker logs`) |
+| `LOG_NIVEL_BD` · `LOG_DIAS_RETENCION` | `ERROR` · `30` | Desde qué nivel se guardan en la base de datos (`/panel/registros`) y cuántos días se conservan |
+| `LOG_DIR` · `LOG_ARCHIVOS_DIAS` | — · `14` | Si se define, además escribe `app.log` y `errores.log` (JSON, rotan cada medianoche) |
+| `THROTTLE_ERRORES_WEB` | `20/min` | Límite de errores de JavaScript que la web puede reportar por IP |
 | `DEMO_CLAVE_ADMIN` · `DEMO_CLAVE_VOTANTE` | claves documentadas (solo con DEBUG) | Contraseñas de las cuentas de `cargar_demo`; obligatorias sin DEBUG |
 | `CORREO_ADAPTADOR` | `consola` | Proveedor de correo: `consola` (solo imprime), `smtp` o `zeptomail` |
 | `CORREO_REMITENTE` · `CORREO_REMITENTE_NOMBRE` · `CORREO_RESPONDER_A` | `no-responder@votaciones.juandiegows.com` | Remitente de los correos |
@@ -206,6 +212,19 @@ En GitHub Actions corren contra MySQL 8.4 (`.github/workflows/api-tests.yml`) en
 | `CORREO_EN_SEGUNDO_PLANO` | `true` | Entrega los correos del registro y del voto en un hilo aparte (no demora la respuesta) |
 | `EMAIL_HOST` · `EMAIL_PORT` · `EMAIL_HOST_USER` · `EMAIL_HOST_PASSWORD` · `EMAIL_USE_TLS` · `EMAIL_USE_SSL` | `localhost` · `587` | Adaptador `smtp` |
 | `ZEPTOMAIL_TOKEN` · `ZEPTOMAIL_API_URL` · `ZEPTOMAIL_BOUNCE_ADDRESS` | — · `https://api.zeptomail.com/v1.1/email` | Adaptador `zeptomail` (API de Zoho ZeptoMail); la URL debe ser `https://` |
+
+### Registros técnicos (logs)
+
+Distintos de la auditoría (lo que hace la administración): aquí queda **lo que falla en el código**.
+
+- El **interceptor** `votaciones/registros/interceptor.py` envuelve cada petición: le asigna una referencia
+  (`X-Request-ID`), escribe la línea de acceso y, si una vista lanza una excepción que nadie atrapó, la registra
+  y responde 500 con la referencia (JSON en `/api/…`, página con la marca en el sitio).
+- Cada error guarda la traza, el **archivo y la línea de nuestro código** donde ocurrió, la petición, el usuario y
+  la IP. Se consulta en **`/panel/registros`** (permiso `registros.ver`, solo administrador por defecto) o en
+  `GET /api/gestion/registros/`; quien reporta un fallo da la referencia y con ella se encuentra.
+- La web React reporta sus errores de JavaScript a `POST /api/registros/web/` (fuente «web»).
+- Para comprobarlo: botón «Provocar un error de prueba» en `/panel/registros`.
 
 Plantilla: [`.env.example`](.env.example). En desarrollo local, `settings.py` lee `app/api/.env` si existe
 (las variables del sistema o de Docker tienen prioridad).

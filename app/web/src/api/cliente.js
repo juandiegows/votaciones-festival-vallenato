@@ -1,5 +1,8 @@
 // Cliente HTTP de la API REST (Django). Nunca lanza excepciones: siempre devuelve
-// { ok: true, datos, status } o { ok: false, error, status, codigo, errores }.
+// { ok: true, datos, status } o { ok: false, error, status, codigo, errores, referencia? }.
+// Interceptor de errores 5xx: la API responde {"detail", "codigo": "error_interno", "referencia"} y el error ya
+// quedó en los registros del servidor (/panel/registros); aquí solo se muestra la referencia para que la persona
+// la indique a soporte. No se reportan a /registros/web/: sería un duplicado.
 import { API_URL } from '../config.js';
 
 const CLAVE_TOKEN = 'flv_token_v1';
@@ -28,8 +31,24 @@ const MENSAJES_HTTP = {
   429: 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.',
 };
 
+export const MENSAJE_ERROR_INESPERADO = 'Ocurrió un error inesperado.';
+
+/** Mensaje de un error 5xx con la referencia que devolvió el servidor (o genérico si no la trae). */
+export function mensajeConReferencia(referencia) {
+  return referencia ? `${MENSAJE_ERROR_INESPERADO} Referencia: ${referencia}` : `${MENSAJE_ERROR_INESPERADO} Inténtalo de nuevo en unos minutos.`;
+}
+
+/** Error del servidor (5xx): mensaje con la referencia para soporte; nunca el detalle técnico. */
+function interpretarErrorServidor(cuerpo, status) {
+  const referencia = cuerpo && typeof cuerpo === 'object' && typeof cuerpo.referencia === 'string' ? cuerpo.referencia : '';
+  // 502/503/504 sin cuerpo de la API (proxy caído o en mantenimiento): mensaje propio sin referencia
+  if (!referencia && status !== 500) return { error: `El servidor no está disponible en este momento (${status}). Inténtalo de nuevo en unos minutos.`, errores: {} };
+  return { error: mensajeConReferencia(referencia), codigo: cuerpo?.codigo || 'error_interno', referencia: referencia || undefined, errores: {} };
+}
+
 /** Convierte el cuerpo de error de DRF en un mensaje legible y errores por campo. */
 export function interpretarError(cuerpo, status) {
+  if (status >= 500) return interpretarErrorServidor(cuerpo, status);
   if (cuerpo && typeof cuerpo === 'object' && !Array.isArray(cuerpo)) {
     if (typeof cuerpo.detail === 'string') return { error: cuerpo.detail, codigo: cuerpo.codigo, errores: {} };
     const errores = {};
@@ -106,6 +125,8 @@ export async function obtener(ruta) {
   if (!r.ok) {
     const error = new Error(r.error);
     error.status = r.status;
+    if (r.codigo) error.codigo = r.codigo;
+    if (r.referencia) error.referencia = r.referencia;
     throw error;
   }
   return r.datos;

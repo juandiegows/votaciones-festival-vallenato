@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% block titulo %}{% if codigo == 403 %}Acceso restringido{% else %}No encontramos esta página{% endif %} · Votaciones FLV{% endblock %}
+{% block titulo %}{% if codigo == 403 %}Acceso restringido{% elif codigo >= 500 %}Algo salió mal{% else %}No encontramos esta página{% endif %} · Votaciones FLV{% endblock %}
 {% block robots %}noindex{% endblock %}
 
 {% block contenido %}
@@ -15,14 +15,23 @@
       {% if codigo == 403 %}
         <h1 id="titulo-error" class="h3 mb-2">Acceso restringido</h1>
         <p class="mb-3">{{ mensaje|default:"No tienes permiso para ver esta página." }}</p>
+      {% elif codigo >= 500 %}
+        <h1 id="titulo-error" class="h3 mb-2">Algo salió mal</h1>
+        <p class="mb-2">{{ mensaje|default:"Ocurrió un error inesperado." }}</p>
+        {% if referencia %}<p class="small mb-3">Referencia del error: <code class="user-select-all" data-referencia>{{ referencia }}</code></p>{% endif %}
       {% else %}
         <h1 id="titulo-error" class="h3 mb-2">No encontramos esta página</h1>
         <p class="mb-3">{{ mensaje|default:"El recurso que buscas no existe o cambió de dirección." }}</p>
       {% endif %}
       <p class="fw-semibold small mb-1">¿Qué puedes hacer?</p>
       <ul class="small mb-4 ps-3">
+        {% if codigo >= 500 %}
+        <li>Vuelve a intentarlo en unos minutos.</li>
+        <li>Si sigue pasando, escríbenos con la referencia del error.</li>
+        {% else %}
         <li>Revisa que la dirección esté bien escrita.</li>
         <li>Entra desde el inicio o desde las categorías de la edición.</li>
+        {% endif %}
       </ul>
       <div class="d-flex flex-wrap gap-2">
         <a href="{% url 'portal:categorias' %}" class="btn btn-primary"><i class="bi bi-grid me-1" aria-hidden="true"></i>Ver votaciones</a>

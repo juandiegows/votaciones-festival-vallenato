@@ -18,6 +18,7 @@ import { AppContext, buscarEdicionActiva, crearPuede } from './contexto.js';
 import { ADMINISTRADOR, DESCRIPCION_PERMISO, GRUPOS_PERMISOS, ROLES_FIJOS, permisosEfectivos } from '../data/permisos.js';
 import { descargarReporte } from '../utils/exportar.js';
 import { normalizarDocumento } from '../utils/documento.js';
+import { filtrarRegistros, registrosDemo, resumirRegistros } from '../data/registrosDemo.js';
 
 // Archivos que el modo demostración guarda como data URL en este navegador
 const ARCHIVOS = {
@@ -605,6 +606,14 @@ export function MockProvider({ children }) {
     obtenerIntegridad,
     // La autoría sale de las columnas de soporte de la base de datos: no existe en los datos simulados
     obtenerAutoria: async () => ({ ok: false, sinDatos: true, error: 'La autoría de los registros se consulta en la base de datos: conecta la web a la API.' }),
+    // Registros técnicos: sin servidor no hay errores reales; se muestran unos pocos de ejemplo (ilustrativos)
+    cargarRegistros: async (pagina = 1, filtros = {}) => {
+      const lista = filtrarRegistros(registrosDemo(), filtros);
+      const inicio = (pagina - 1) * POR_PAGINA_AUDITORIA;
+      return { ok: true, ilustrativos: true, registros: lista.slice(inicio, inicio + POR_PAGINA_AUDITORIA), total: lista.length, hayMas: inicio + POR_PAGINA_AUDITORIA < lista.length };
+    },
+    obtenerResumenRegistros: async () => ({ ok: true, ...resumirRegistros(registrosDemo()) }),
+    provocarErrorPrueba: async () => ({ ok: false, error: 'El error de prueba lo provoca el servidor: disponible cuando la web está conectada a la API. En el modo demostración los registros son ejemplos ilustrativos.' }),
     recargar,
     restablecer,
   };

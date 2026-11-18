@@ -1,0 +1,103 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+{# Misma pantalla que pages/admin/AdminRegistros.jsx #}
+<header class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Registros del sistema</h1>
+    <p class="text-secondary-flv mb-0">Errores del servidor y de la web: qué falló, en qué archivo y línea, en qué página y a quién le pasó. Para buscar el error que alguien reporta, escribe la <strong>referencia</strong> que le mostró la pantalla de error.</p>
+  </div>
+  <form method="post" action="{% url 'portal:panel-registros-probar' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-bug me-1" aria-hidden="true"></i>Provocar un error de prueba</button>
+  </form>
+</header>
+
+<div class="row g-3 mb-3">
+  <div class="col-sm-4"><div class="card-flv p-3 h-100"><p class="small text-secondary-flv mb-1">Errores en 24 horas</p><p class="h3 mb-0{% if resumen.errores_24h %} text-rojo{% endif %}">{{ resumen.errores_24h|miles }}</p></div></div>
+  <div class="col-sm-4"><div class="card-flv p-3 h-100"><p class="small text-secondary-flv mb-1">Errores en 7 días</p><p class="h3 mb-0">{{ resumen.errores_7d|miles }}</p></div></div>
+  <div class="col-sm-4"><div class="card-flv p-3 h-100"><p class="small text-secondary-flv mb-1">Último error</p><p class="h6 mb-0">{{ resumen.ultimo_error|fecha_hora }}</p></div></div>
+</div>
+
+<form method="get" class="card-flv p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label for="reg-buscar" class="form-label small mb-1">Buscar</label>
+      <input id="reg-buscar" name="q" type="search" class="form-control form-control-sm" placeholder="Referencia, mensaje, archivo, ruta o correo" value="{{ filtros.q }}">
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <label for="reg-nivel" class="form-label small mb-1">Nivel</label>
+      <select id="reg-nivel" name="nivel" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todos</option>
+        {% for valor, etiqueta in niveles.items %}<option value="{{ valor }}"{% if filtros.nivel == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <label for="reg-fuente" class="form-label small mb-1">Dónde</label>
+      <select id="reg-fuente" name="fuente" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todo</option>
+        {% for valor, etiqueta in fuentes.items %}<option value="{{ valor }}"{% if filtros.fuente == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <label for="reg-dias" class="form-label small mb-1">Periodo</label>
+      <select id="reg-dias" name="dias" class="form-select form-select-sm" data-enviar-al-cambiar>
+        <option value="">Todo</option>
+        {% for valor, etiqueta in periodos.items %}<option value="{{ valor }}"{% if filtros.dias == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
+      {% if hay_filtros %}<a class="btn btn-sm btn-link" href="{% url 'portal:panel-registros' %}">Limpiar</a>{% endif %}
+    </div>
+  </div>
+</form>
+
+{% if pagina.object_list %}
+<div class="d-flex flex-wrap gap-2 justify-content-end mb-2">
+  <a class="btn btn-sm btn-outline-secondary" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&amp;{% endif %}descargar=txt"><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>Descargar TXT</a>
+  <a class="btn btn-sm btn-outline-secondary" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&amp;{% endif %}descargar=json"><i class="bi bi-filetype-json me-1" aria-hidden="true"></i>Descargar JSON</a>
+</div>
+{% include "portal/panel/paginacion.html" with pagina=pagina etiqueta="Paginación de los registros" unidad="registro,registros" posicion="arriba" %}
+<ul class="list-unstyled mb-0 registros-lista">
+  {% for r in pagina %}
+  <li class="card-flv p-0 mb-2">
+    <details>
+      <summary class="p-3 d-flex flex-wrap gap-2 align-items-start">
+        <span class="badge {% if r.nivel == 'WARNING' %}text-bg-warning{% elif r.nivel == 'CRITICAL' %}text-bg-dark{% else %}text-bg-danger{% endif %}">{% if r.nivel == 'WARNING' %}Aviso{% elif r.nivel == 'CRITICAL' %}Crítico{% else %}Error{% endif %}</span>
+        <span class="badge text-bg-light border"><i class="bi {% if r.fuente == 'web' %}bi-browser-chrome{% else %}bi-hdd-stack{% endif %} me-1" aria-hidden="true"></i>{{ r.get_fuente_display }}</span>
+        <span class="flex-grow-1" style="min-width: 14rem">
+          <span class="d-block fw-semibold text-break">{{ r.excepcion|default:r.mensaje|truncatechars:180 }}</span>
+          <span class="d-block small text-secondary-flv text-break">{% if r.ubicacion %}<code>{{ r.ubicacion }}</code> · {% endif %}{% if r.ruta %}{{ r.metodo }} {{ r.ruta|truncatechars:80 }}{% endif %}</span>
+        </span>
+        <span class="small text-secondary-flv text-nowrap">{{ r.fecha_hora|fecha_hora }}</span>
+      </summary>
+      <div class="px-3 pb-3 border-top pt-2">
+        <dl class="row small mb-2">
+          <dt class="col-sm-3">Referencia</dt><dd class="col-sm-9"><code class="user-select-all">{{ r.id_solicitud|default:"—" }}</code></dd>
+          <dt class="col-sm-3">Mensaje</dt><dd class="col-sm-9 text-break">{{ r.mensaje }}</dd>
+          <dt class="col-sm-3">Dónde falló</dt><dd class="col-sm-9 text-break">{% if r.ubicacion %}<code>{{ r.ubicacion }}</code>{% else %}—{% endif %}</dd>
+          <dt class="col-sm-3">Petición</dt><dd class="col-sm-9 text-break">{% if r.ruta %}{{ r.metodo }} {{ r.ruta }}{% if r.estado_http %} → {{ r.estado_http }}{% endif %}{% else %}— (fuera de una petición){% endif %}</dd>
+          {% if r.detalle.url %}<dt class="col-sm-3">Página de la web</dt><dd class="col-sm-9 text-break">{{ r.detalle.url }}</dd>{% endif %}
+          <dt class="col-sm-3">Usuario</dt><dd class="col-sm-9 text-break">{{ r.usuario.email|default:"anónimo" }} · IP {{ r.ip|default:"—" }}</dd>
+          {% if r.navegador %}<dt class="col-sm-3">Navegador</dt><dd class="col-sm-9 text-break small">{{ r.navegador }}</dd>{% endif %}
+          <dt class="col-sm-3">Origen</dt><dd class="col-sm-9"><code>{{ r.origen }}</code></dd>
+        </dl>
+        {% if r.traza %}
+        <p class="small fw-semibold mb-1">Traza</p>
+        <pre class="registro-traza small mb-0" tabindex="0" aria-label="Traza del error">{{ r.traza }}</pre>
+        {% endif %}
+      </div>
+    </details>
+  </li>
+  {% endfor %}
+</ul>
+{% include "portal/panel/paginacion.html" with pagina=pagina etiqueta="Paginación de los registros" unidad="registro,registros" posicion="abajo" %}
+<p class="small text-secondary-flv mt-2 mb-0">La descarga incluye hasta {{ max_descarga|miles }} registros con los filtros aplicados. Se conservan los de los últimos días configurados en el servidor (LOG_DIAS_RETENCION).</p>
+{% else %}
+  <div class="card-flv p-4 text-center">
+    {% if hay_filtros %}No hay registros con ese filtro.{% else %}<i class="bi bi-patch-check text-success fs-3 d-block mb-1" aria-hidden="true"></i>Sin errores registrados.{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

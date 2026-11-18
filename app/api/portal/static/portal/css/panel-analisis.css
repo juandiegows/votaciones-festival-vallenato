@@ -41,3 +41,9 @@
 @media (min-width: 992px) {
   .admin-nav .nav-link { white-space: normal; line-height: 1.25; }
 }
+
+/* Registros del sistema: traza del error con desplazamiento propio (no ensancha la página) */
+.registros-lista summary { cursor: pointer; list-style: none; }
+.registros-lista summary::-webkit-details-marker { display: none; }
+.registros-lista details[open] > summary { background: var(--flv-crema); }
+.registro-traza { max-height: 22rem; overflow: auto; white-space: pre; background: #1b1b1b; color: #f2f2f2; padding: .75rem; border-radius: .5rem; }

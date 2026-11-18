@@ -61,6 +61,7 @@ export const GRUPOS_PERMISOS = [
     { codigo: 'roles.gestionar', descripcion: 'Crear, editar y eliminar roles y cambiar sus permisos' },
   ] },
   { grupo: 'Sistema', permisos: [
+    { codigo: 'registros.ver', descripcion: 'Ver los registros técnicos: errores del servidor y de la web, con su traza' },
     { codigo: 'django_admin.acceder', descripcion: 'Entrar a Django Admin' },
   ] },
 ];
@@ -79,7 +80,8 @@ export const ROLES_INICIALES = [
   { codigo: VOTANTE, nombre: 'Votante', orden: 1, descripcion: 'Se registra en el sitio y vota. No entra al panel.', permisos: [] },
   {
     codigo: 'lectura', nombre: 'Solo lectura', orden: 2, descripcion: 'Consulta todo el panel sin cambiar nada.',
-    permisos: TODOS_LOS_PERMISOS.filter((c) => c.endsWith('.ver') || c === 'ediciones.exportar' || c === 'resultados.exportar'),
+    // Los registros técnicos (trazas, IP) quedan para el administrador; se pueden dar desde Roles y permisos
+    permisos: TODOS_LOS_PERMISOS.filter((c) => (c.endsWith('.ver') && c !== 'registros.ver') || c === 'ediciones.exportar' || c === 'resultados.exportar'),
   },
   {
     codigo: 'editor', nombre: 'Lectura y escritura', orden: 3, descripcion: 'Lee y escribe solo ediciones, categorías, votaciones y sus opciones.',
@@ -111,6 +113,7 @@ export const PERMISO_SECCION = {
   '/panel/sitio': 'sitio.ver',
   '/panel/marca': 'sitio.ver',
   '/panel/configuracion': 'configuracion.ver',
+  '/panel/registros': 'registros.ver',
 };
 
 /** Permiso que exige una ruta del panel (las opciones de una votación, `opciones.ver`). */

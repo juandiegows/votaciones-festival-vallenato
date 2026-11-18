@@ -8,10 +8,11 @@ from rest_framework.routers import DefaultRouter
 
 from .auditoria import urls as auditoria
 from .cuentas import urls as cuentas
+from .registros import urls as registros
 from .sitio import urls as sitio
 from .votacion import urls as votacion
 
-MODULOS = [votacion, cuentas, sitio, auditoria]
+MODULOS = [votacion, cuentas, sitio, auditoria, registros]
 
 
 def router(nombre_rutas):
@@ -29,6 +30,7 @@ urlpatterns = [
     *cuentas.urlpatterns,
     *votacion.urlpatterns,
     *sitio.urlpatterns,
+    *registros.urlpatterns,
     # Administración bajo /api/gestion/: el WAF de producción (Cloudflare) bloquea cualquier ruta con /admin.
     # /api/admin/ se conserva como alias (pruebas y clientes antiguos) y no aparece en el esquema OpenAPI.
     path("gestion/", include(gestion.urls)),

@@ -9,7 +9,9 @@ import {
   haciaApi,
   integridadDesdeApi,
   participacionDesdeApi,
+  registroDesdeApi,
   resultadosDesdeApi,
+  resumenRegistrosDesdeApi,
   resumenDesdeApi,
   usuarioDesdeApi,
 } from '../api/adaptadores.js';
@@ -538,6 +540,27 @@ export function ApiProvider({ children }) {
     return r.ok ? { ok: true, ...autoriaDesdeApi(r.datos) } : { ok: false, error: r.error };
   }, []);
 
+  // Registros técnicos (registros.ver): errores del servidor y de la web, 50 por página
+  const cargarRegistros = useCallback(async (pagina = 1, filtros = {}) => {
+    const params = new URLSearchParams({ page: pagina });
+    Object.entries(filtros).forEach(([k, v]) => v && params.set(k, v));
+    const r = await api.get(`/admin/registros/?${params}`);
+    if (!r.ok) return { ok: false, error: r.error };
+    return { ok: true, registros: r.datos.results.map(registroDesdeApi), total: r.datos.count, hayMas: Boolean(r.datos.next) };
+  }, []);
+
+  const obtenerResumenRegistros = useCallback(async () => {
+    const r = await api.get('/admin/registros/resumen/');
+    return r.ok ? { ok: true, ...resumenRegistrosDesdeApi(r.datos) } : { ok: false, error: r.error };
+  }, []);
+
+  // La API responde 500 a propósito: lo esperado es un error con la referencia del registro creado
+  const provocarErrorPrueba = useCallback(async () => {
+    const r = await api.post('/admin/registros/probar/');
+    if (r.status === 500 && r.referencia) return { ok: true, referencia: r.referencia, mensaje: r.error };
+    return { ok: false, error: r.ok ? 'La API no devolvió el error de prueba esperado.' : r.error };
+  }, []);
+
   if (cargaInicial.cargando || cargaInicial.error) {
     return <PantallaCarga error={cargaInicial.error} onReintentar={iniciar} />;
   }
@@ -594,6 +617,9 @@ export function ApiProvider({ children }) {
     obtenerResumen,
     obtenerIntegridad,
     obtenerAutoria,
+    cargarRegistros,
+    obtenerResumenRegistros,
+    provocarErrorPrueba,
     recargar,
     restablecer: null,
   };

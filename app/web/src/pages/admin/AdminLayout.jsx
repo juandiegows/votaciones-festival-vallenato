@@ -42,6 +42,7 @@ const GRUPOS = [
       { to: '/panel/revista', label: 'Revista', icono: 'book' },
       { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
       { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
+      { to: '/panel/registros', label: 'Registros del sistema', icono: 'bug' },
     ],
   },
 ];
