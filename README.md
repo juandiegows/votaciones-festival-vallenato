@@ -25,11 +25,13 @@ votaciones-festival-vallenato/
 │   ├── diagramas/        Todos los diagramas con su fuente (casos de uso, datos, comportamiento, arquitectura)
 │   ├── api/              Documentación de la API (guía y OpenAPI)
 │   ├── entrega-1/        Informe PDF y capturas del prototipo
-│   └── entrega-2/        Informe PDF, capturas de Django Admin y de la web con MySQL, guion del video
+│   ├── entrega-2/        Informe PDF, capturas de Django Admin y de la web con MySQL, guion del video
+│   └── entrega-3/        Informe PDF (APA), capturas del módulo de votaciones y guion del video
 ├── app/
 │   ├── web/              Frontend (React + Vite + Bootstrap; usa la API o, sin ella, datos simulados)
 │   └── api/              Backend Django REST Framework + MySQL (modelos, endpoints y pruebas)
-└── .github/workflows/    GitHub Pages + imagen Docker de la web (ghcr.io)
+├── SECURITY.md           Política de divulgación y controles de seguridad
+└── .github/workflows/    Pruebas de la API, GitHub Pages e imágenes Docker de la web y la API (ghcr.io)
 ```
 
 ## Entregas
@@ -39,7 +41,7 @@ votaciones-festival-vallenato/
 | 1       | Análisis, requerimientos, casos de uso, modelo conceptual, prototipo navegable y panel de administración ([capturas](docs/entrega-1/capturas/))                                                 | ✅ [Informe PDF](docs/entrega-1/Eje1_Entrega1_Votaciones_Festival_Vallenato.pdf)                    |
 | 2       | Desarrollo inicial: proyecto Django (MVT), MySQL con adaptador, modelos y migraciones, autenticación, panel propio y Django Admin, sitio con datos reales ([capturas](docs/entrega-2/capturas/)) | ✅ [Informe PDF](docs/entrega-2/Eje2_Entrega2_Votaciones_Festival_Vallenato.pdf) · video pendiente |
 | 3       | Módulo de votaciones: voto por POST con CSRF, un voto por usuario, categoría y edición (validado en Django y con restricción única en MySQL), «Mis votos», consulta administrativa y API `GET /api/categorias/` ([detalle](#entrega-3-módulo-de-votaciones-validaciones-y-api-get)) | ✅ [Informe PDF](docs/entrega-3/Eje3_Entrega3_Votaciones_Festival_Vallenato.pdf) · [video (7:49)](https://www.youtube.com/watch?v=MXKYMSAz6u0) |
-| 4       | Consolidación, pruebas integrales, correcciones y presentación final                                                                                                                             | Pendiente                                                                                          |
+| 4       | Consolidación, pruebas integrales, correcciones y presentación final ([avances](#avances-de-la-entrega-4))                                                                                      | En curso                                                                                           |
 
 ## Instalación y ejecución (Django + MySQL)
 
@@ -147,6 +149,16 @@ El check **«Un solo voto en toda la categoría»** (`Categoria.voto_unico`, mar
 Django Admin y la API de gestión. Desmarcado, la restricción única de MySQL usa `ambito_votacion` (ID de la votación) y se
 permite un voto por votación. Con votos registrados queda bloqueado.
 
+## Avances de la Entrega 4
+
+| Funcionalidad | Dónde | Detalle |
+| --- | --- | --- |
+| Presentación de opciones **«Imágenes con texto»** | Votaciones (web, sitio MVT y API) | Cada opción admite una imagen JPG, PNG o WebP (hasta 3 MB, `Opcion.foto`); sin imagen se usa el avatar con iniciales. Incluida en la vista previa del panel y en el mapa del sitio. |
+| **Exportar resultados** en Excel, PDF y CSV | `/panel/resultados` (web) · `/panel/votos/{id}` (MVT) · `GET /api/gestion/votaciones/{id}/resultados/{excel,pdf,csv}/` | Solo conteos por opción (voto secreto). Cada descarga queda en la auditoría. En el modo demostración el Excel se genera en el navegador y el PDF se imprime. |
+| **URL amigable sugerida** | Formularios de categoría y votación | El identificador se completa al escribir el nombre o el título, sin repetirse en su edición o categoría, hasta que se edite a mano. |
+| Banner del inicio adaptable | Inicio | En el celular el banner crece con el texto en lugar de recortarlo. |
+| SEO y endurecimiento | `index.html`, portal MVT, `nginx.conf`, `.htaccess`, `robots.txt`, `sitemap.xml` | Canonical y Open Graph en el sitio MVT, imágenes en el mapa del sitio, `/sitemap.xml` → `/api/sitemap.xml`, `noindex` en páginas privadas y bloqueo de respaldos y archivos de configuración. |
+
 ## Web
 
 - **Producción (VPS):** https://votaciones.juandiegows.com
@@ -188,7 +200,7 @@ Arquitectura **desacoplada**: el frontend React consume una API REST construida 
 | Capa                   | Tecnología                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------------- |
 | Frontend (`app/web`) | React + Vite, Bootstrap 5, HTML5, CSS3, JavaScript                                             |
-| Backend (`app/api`)  | Python + Django + Django REST Framework (modelos y reglas de negocio)                          |
+| Backend (`app/api`)  | Python + Django + Django REST Framework (modelos y reglas de negocio); openpyxl y ReportLab para los reportes |
 | Base de datos          | MySQL                                                                                          |
 | Despliegue             | Imagen Docker (nginx) en VPS detrás de Cloudflare · GitHub Pages para la demo                |
 | Integración           | Enlace desde el sitio oficial del Festival (subdominio institucional pendiente de validación) |
