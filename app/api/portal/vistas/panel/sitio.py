@@ -8,9 +8,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from votaciones.auditoria.mixins import auditar
+from votaciones.sitio import identidad
 from votaciones.sitio.models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 
-from ...formularios import BannerForm, ConfiguracionForm, MarcaForm, RedSocialForm, RevistaForm
+from ...formularios import BannerForm, ConfiguracionForm, LogoForm, MarcaForm, RedSocialForm, RevistaForm
 from ...marca import (
     ESTILOS_ALERTA, ESTILOS_BOTON, FORMAS, PESOS_BOTON, ROLES_BOTON, campo_color, compactar_marca, es_hex,
     fichas, normalizar_marca,
@@ -258,8 +259,21 @@ def eliminar_red(request, pk):
 def marca(request):
     edicion = edicion_panel(request)
     configuracion = ConfiguracionSitio.obtener()
-    form = MarcaForm(request.POST or None, marca=configuracion.marca)
-    if request.method == "POST" and form.is_valid():
+    enviado_logo = request.method == "POST" and request.POST.get("formulario") == "logo"
+    form_logo = LogoForm(request.POST if enviado_logo else None, request.FILES if enviado_logo else None,
+                         tiene_logo=bool(configuracion.logo),
+                         initial={"logo_texto_alternativo": configuracion.logo_texto_alternativo})
+    if enviado_logo and form_logo.is_valid():
+        archivo = form_logo.cleaned_data["logo"]
+        if identidad.cambiar_logo(configuracion, archivo, form_logo.cleaned_data["logo_texto_alternativo"]):
+            auditar(request, "actualizar", "configuracion", configuracion.pk,
+                    {"seccion": "logo", "logo": configuracion.logo.name})
+            messages.success(request, "Logo guardado: ya se ve en el menú, los correos y los PDF.")
+        else:
+            messages.info(request, "No había cambios por guardar.")
+        return redirect("portal:panel-marca")
+    form = MarcaForm(request.POST if request.method == "POST" and not enviado_logo else None, marca=configuracion.marca)
+    if request.method == "POST" and not enviado_logo and form.is_valid():
         nueva = compactar_marca(form.marca())
         if nueva != (configuracion.marca or {}):
             configuracion.marca = nueva
@@ -286,7 +300,18 @@ def marca(request):
         "roles": [{"clave": rol, "nombre": nombre, "boton": actual["botones"][rol]} for rol, nombre in ROLES_BOTON.items()],
         "alertas": actual["alertas"], "estilos_boton": ESTILOS_BOTON, "formas": FORMAS, "pesos": PESOS_BOTON,
         "estilos_alerta": ESTILOS_ALERTA, "personalizada": bool(configuracion.marca),
+        "form_logo": form_logo, "configuracion": configuracion,
     })
+
+
+@requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")
+@require_POST
+def quitar_logo(request):
+    configuracion = ConfiguracionSitio.obtener()
+    if identidad.cambiar_logo(configuracion, quitar=True):
+        auditar(request, "actualizar", "configuracion", configuracion.pk, {"seccion": "logo", "quitado": True})
+        messages.success(request, "Se quitó el logo propio: el sitio vuelve a usar el logo por defecto.")
+    return redirect("portal:panel-marca")
 
 
 @requiere_permiso("sitio.ver", crear="sitio.editar", editar="sitio.editar")

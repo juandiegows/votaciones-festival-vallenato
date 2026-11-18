@@ -149,6 +149,16 @@ class ConfiguracionSitio(ModeloTrazable):
         default=7, null=True, blank=True,
         help_text="Días que una votación cerrada sigue visible en el sitio público (0 = se oculta al cerrar; vacío = siempre visible).",
     )
+    # Logo propio del menú, los correos y los PDF (Identidad visual). Vacío = el acordeón por defecto del sitio.
+    # Solo imágenes raster (PNG, JPG o WebP, máx. 1 MB): un SVG podría llevar scripts y reportlab no lo dibuja.
+    logo = models.ImageField(
+        "logo del sitio", upload_to="sitio/", blank=True,
+        help_text="PNG, JPG o WebP de máximo 1 MB. Se muestra con alto fijo sobre el menú negro; vacío = logo por defecto.",
+    )
+    logo_texto_alternativo = models.CharField(
+        "texto alternativo del logo", max_length=150, blank=True,
+        help_text="Describe el logo para lectores de pantalla. Vacío si el logo solo repite el nombre que aparece al lado.",
+    )
     # Tema editable desde /panel/marca: {"colores": {token: hex}, "botones": {"primario": {...}, "secundario": {...}}}.
     # Solo guarda lo que difiere de la marca base (docs/BRANDING.md); vacío = marca base.
     marca = models.JSONField(default=dict, blank=True, help_text="Colores y estilos de botón personalizados del sitio.")

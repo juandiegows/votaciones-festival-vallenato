@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
+from ..sitio import identidad
 from ..sitio.models import ConfiguracionSitio
 from .adaptadores import AdaptadorCorreo, Destinatario, ErrorEnvioCorreo, Mensaje
 
@@ -48,9 +49,19 @@ def url_sitio():
     return settings.CORREO_URL_SITIO.rstrip("/")
 
 
-def url_logo():
-    """Logo publicado en el sitio: algunos clientes de correo no muestran las imágenes incrustadas (cid)."""
-    return f"{url_sitio()}/static/correo/acordeon.png"
+def url_logo(configuracion=None):
+    """Logo publicado en el sitio (el propio o el acordeón): algunos clientes de correo no muestran imágenes cid."""
+    return f"{url_sitio()}{identidad.ruta_logo(configuracion)}"
+
+
+def ancho_logo(configuracion, alto=36):
+    """Ancho del logo con alto fijo (los clientes de correo necesitan width y height explícitos)."""
+    if configuracion.logo:
+        try:
+            return max(1, min(220, round(alto * configuracion.logo.width / configuracion.logo.height)))
+        except (OSError, ValueError, ZeroDivisionError):
+            pass
+    return alto * 2  # acordeón por defecto: 480 × 240
 
 
 def obtener_adaptador() -> AdaptadorCorreo:
@@ -74,7 +85,9 @@ def contexto_base():
         "texto_pie": sitio.texto_pie if sitio.mostrar_texto_pie else "",  # apagado = oculto, sin borrarlo
         "url_sitio": url_sitio(),
         "url_sitio_corta": re.sub(r"^https?://", "", url_sitio()),
-        "logo_src": url_logo(),
+        "logo_src": url_logo(sitio),
+        "logo_ancho": ancho_logo(sitio),
+        "logo_alt": sitio.logo_texto_alternativo if sitio.logo else "",
         "anio_actual": timezone.localdate().year,
     }
 

@@ -884,6 +884,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfiguracionSitio'
           description: ''
+  /api/gestion/configuracion/logo/:
+    post:
+      operationId: gestion_configuracion_logo_create
+      description: Logo propio del sitio (menú, correos y PDF). Aparte de /configuracion/
+        para no mezclar multipart con el resto.
+      summary: Subir o reemplazar el logo del sitio (multipart/form-data)
+      tags:
+      - Administración
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoSitioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoSitioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
+    delete:
+      operationId: gestion_configuracion_logo_destroy
+      description: Logo propio del sitio (menú, correos y PDF). Aparte de /configuracion/
+        para no mezclar multipart con el resto.
+      summary: Quitar el logo propio (vuelve el logo por defecto)
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionSitio'
+          description: ''
   /api/gestion/demo/:
     get:
       operationId: gestion_demo_retrieve
@@ -3193,6 +3235,18 @@ components:
           title: Mostrar las cuentas de demostración en el login
           description: Apagada, las cuentas de demostración siguen funcionando (si
             se permite su ingreso) pero el login no exhibe sus credenciales.
+        logo:
+          type: string
+          format: uri
+          nullable: true
+          readOnly: true
+          description: Ruta del logo propio (/media/…); nulo = logo por defecto.
+        logo_texto_alternativo:
+          type: string
+          title: Texto alternativo del logo
+          description: Describe el logo para lectores de pantalla. Vacío si el logo
+            solo repite el nombre que aparece al lado.
+          maxLength: 150
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
@@ -3247,6 +3301,8 @@ components:
           title: Días que dura una votación
           description: 'Votación nueva: días entre la apertura y el cierre que se
             proponen al crearla.'
+      required:
+      - logo
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -3359,6 +3415,12 @@ components:
           title: Mostrar las cuentas de demostración en el login
           description: Apagada, las cuentas de demostración siguen funcionando (si
             se permite su ingreso) pero el login no exhibe sus credenciales.
+        logo_texto_alternativo:
+          type: string
+          title: Texto alternativo del logo
+          description: Describe el logo para lectores de pantalla. Vacío si el logo
+            solo repite el nombre que aparece al lado.
+          maxLength: 150
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
@@ -3753,6 +3815,20 @@ components:
       required:
       - email
       - password
+    LogoSitioRequest:
+      type: object
+      description: 'Logo propio del sitio: PNG, JPG o WebP de máximo 1 MB (no se acepta
+        SVG: podría llevar scripts).'
+      properties:
+        logo:
+          type: string
+          format: binary
+          description: Imagen PNG, JPG o WebP de máximo 1 MB.
+        logo_texto_alternativo:
+          type: string
+          maxLength: 150
+      required:
+      - logo
     ModoBannerEnum:
       enum:
       - fijo
@@ -4211,6 +4287,12 @@ components:
           title: Mostrar las cuentas de demostración en el login
           description: Apagada, las cuentas de demostración siguen funcionando (si
             se permite su ingreso) pero el login no exhibe sus credenciales.
+        logo_texto_alternativo:
+          type: string
+          title: Texto alternativo del logo
+          description: Describe el logo para lectores de pantalla. Vacío si el logo
+            solo repite el nombre que aparece al lado.
+          maxLength: 150
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'

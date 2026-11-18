@@ -93,6 +93,7 @@ panel = [
     path("panel/sitio/redes/<int:pk>/eliminar", sitio.eliminar_red, name="panel-red-eliminar"),
     path("panel/marca", sitio.marca, name="panel-marca"),
     path("panel/marca/restablecer", sitio.restablecer_marca, name="panel-marca-restablecer"),
+    path("panel/marca/quitar-logo", sitio.quitar_logo, name="panel-marca-quitar-logo"),
 ]
 
 urlpatterns = [

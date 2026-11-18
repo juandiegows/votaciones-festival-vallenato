@@ -354,6 +354,9 @@ export function crearDatosSemilla() {
     // Exhibir en el login las cuentas de demostración (si también se permite su ingreso)
     mostrarCredencialesDemo: true,
     mostrarEquipo: true,
+    // Logo propio (Identidad visual) como data URL; vacío = el acordeón por defecto
+    logo: '',
+    logoTextoAlternativo: '',
     modoBanner: 'carrusel',
     // Pendiente de validación (P-01): por defecto el registro es solo con correo
     pedirDocumento: false,

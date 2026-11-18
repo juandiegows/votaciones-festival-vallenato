@@ -86,6 +86,8 @@ a:hover { color: var(--flv-rojo-hover); }
 .navbar-flv { background: var(--flv-negro); border-bottom: 3px solid var(--flv-rojo); }
 .navbar-flv .navbar-brand { color: #fff; font-family: var(--flv-fuente-titulos); font-weight: 800; font-size: 1.05rem; line-height: 1.1; }
 .navbar-flv .navbar-brand small { display: block; font-family: var(--flv-fuente-texto); font-weight: 400; font-size: .72rem; color: var(--flv-dorado); }
+/* Logo propio (Identidad visual): alto fijo, ancho automático y sin deformarse sobre el menú negro */
+.navbar-flv .navbar-logo { height: 36px; width: auto; max-width: 160px; object-fit: contain; flex-shrink: 0; }
 .navbar-flv .nav-link { color: #fff; font-weight: 600; padding: .5rem .8rem !important; border-radius: .4rem; position: relative; }
 .navbar-flv .nav-link:hover { color: var(--flv-dorado); }
 .navbar-flv .nav-link.active { color: var(--flv-rojo-sobre-oscuro); }

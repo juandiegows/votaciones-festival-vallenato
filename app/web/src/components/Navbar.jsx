@@ -2,6 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
+/** Acordeón estilizado propio (no es el logo oficial): se usa mientras no se suba un logo en Identidad visual */
+export function LogoPorDefecto() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#DD3333" />
+      <rect x="12" y="20" width="10" height="26" rx="2" fill="#000000" />
+      <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000" />
+      <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" strokeWidth="3" fill="none" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const { usuario, esAdmin, cerrarSesion, edicionActiva, configuracion } = useApp();
   // Editables en /panel/sitio: interruptor apagado o texto vacío = no se muestra
@@ -37,12 +49,11 @@ export default function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-flv sticky-top d-print-none" aria-label="Navegación principal">
       <div className={location.pathname.startsWith('/panel') ? 'container-fluid panel-ancho' : 'container'}>
         <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
-          <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
-            <rect width="64" height="64" rx="14" fill="#DD3333" />
-            <rect x="12" y="20" width="10" height="26" rx="2" fill="#000000" />
-            <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000" />
-            <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" strokeWidth="3" fill="none" strokeLinejoin="round" />
-          </svg>
+          {configuracion?.logo ? (
+            <img className="navbar-logo" src={configuracion.logo} alt={configuracion.logoTextoAlternativo || ''} height="36" />
+          ) : (
+            <LogoPorDefecto />
+          )}
           <span>
             Votaciones FLV{edicionActiva ? ` ${edicionActiva.anio}` : ''}
             {subtituloLogo && <small>{subtituloLogo}</small>}

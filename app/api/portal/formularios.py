@@ -540,6 +540,32 @@ class RedSocialForm(forms.ModelForm):
         return valor
 
 
+class LogoForm(forms.Form):
+    """Logo propio del sitio (Identidad visual): PNG, JPG o WebP de máximo 1 MB y su texto alternativo."""
+
+    logo = forms.ImageField(label="Archivo del logo", required=False,
+                            help_text="PNG, JPG o WebP de máximo 1 MB. Mejor con fondo transparente y más ancho que alto.",
+                            widget=forms.ClearableFileInput(attrs={"accept": "image/png,image/jpeg,image/webp"}))
+    logo_texto_alternativo = forms.CharField(
+        label="Texto alternativo", max_length=150, required=False,
+        help_text="Describe el logo para lectores de pantalla. Déjalo vacío si solo repite el nombre que aparece al lado.")
+
+    def __init__(self, *args, tiene_logo=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tiene_logo = tiene_logo
+
+    def clean_logo(self):
+        archivo = self.cleaned_data.get("logo")
+        if archivo:
+            validar_con(lambda a: campos.validar_imagen(a, campos.TAMANO_MAXIMO_ICONO, "El logo"), archivo)
+        elif not self.tiene_logo:
+            raise forms.ValidationError("Selecciona la imagen del logo.")
+        return archivo
+
+    def clean_logo_texto_alternativo(self):
+        return (self.cleaned_data.get("logo_texto_alternativo") or "").strip()
+
+
 class MarcaForm(forms.Form):
     """Colores de la marca y estilo de botones y alertas. Se guarda solo lo que difiere de la marca base."""
 

@@ -2,7 +2,9 @@ import re
 
 from rest_framework import serializers
 
-from ..comun.campos import RutaArchivoField, RutaImagenField, validar_enlace, validar_imagen, validar_pdf
+from ..comun.campos import (
+    TAMANO_MAXIMO_ICONO, RutaArchivoField, RutaImagenField, validar_enlace, validar_imagen, validar_pdf,
+)
 from ..comun.errores import ReglaNegocioError
 from .models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 
@@ -38,12 +40,15 @@ class RevistaSerializer(serializers.ModelSerializer):
 
 
 class ConfiguracionSitioSerializer(serializers.ModelSerializer):
+    # El logo se sube o se quita en /api/gestion/configuracion/logo/ (multipart); aquí solo se lee
+    logo = RutaImagenField(read_only=True, help_text="Ruta del logo propio (/media/…); nulo = logo por defecto.")
+
     class Meta:
         model = ConfiguracionSitio
         fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "mostrar_swagger", "mostrar_participantes", "umbral_participacion", "pedir_documento", "marca",
                   "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_texto_pie", "mostrar_aviso_superior",
                   "mostrar_subtitulo_logo", "mostrar_texto_acerca", "mostrar_equipo", "permitir_cuentas_demo",
-                  "mostrar_credenciales_demo",
+                  "mostrar_credenciales_demo", "logo", "logo_texto_alternativo",
                   "defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
                   "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"]
 
@@ -108,6 +113,19 @@ class ConfiguracionSitioSerializer(serializers.ModelSerializer):
             if valor not in self.OPCIONES_ALERTA.get(campo, ()):
                 raise serializers.ValidationError(f"Valor no válido en las alertas: {campo}.")
         return marca
+
+
+class LogoSitioSerializer(serializers.Serializer):
+    """Logo propio del sitio: PNG, JPG o WebP de máximo 1 MB (no se acepta SVG: podría llevar scripts)."""
+
+    logo = serializers.ImageField(help_text="Imagen PNG, JPG o WebP de máximo 1 MB.")
+    logo_texto_alternativo = serializers.CharField(max_length=150, required=False, allow_blank=True)
+
+    def validate_logo(self, archivo):
+        return validar_imagen(archivo, TAMANO_MAXIMO_ICONO, "El logo")
+
+    def validate_logo_texto_alternativo(self, valor):
+        return valor.strip()
 
 
 class RedSocialSerializer(serializers.ModelSerializer):

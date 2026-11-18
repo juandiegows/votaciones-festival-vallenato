@@ -13,6 +13,8 @@ urlpatterns = [
     # Configuración del sitio (registro único, fuera del router); /api/admin/… es el alias local de /api/gestion/…
     path("gestion/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion"),
     path("admin/configuracion/", views.AdminConfiguracionView.as_view(), name="admin-configuracion-alias"),
+    path("gestion/configuracion/logo/", views.AdminLogoView.as_view(), name="admin-configuracion-logo"),
+    path("admin/configuracion/logo/", views.AdminLogoView.as_view(), name="admin-configuracion-logo-alias"),
     path("gestion/demo/", views.AdminDemoView.as_view(), name="admin-demo"),
     path("gestion/demo/eliminar/", views.AdminDemoAccionView.as_view(accion="eliminar"), name="admin-demo-eliminar"),
     path("gestion/demo/cargar/", views.AdminDemoAccionView.as_view(accion="cargar"), name="admin-demo-cargar"),

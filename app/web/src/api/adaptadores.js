@@ -56,7 +56,7 @@ const CAMPOS = {
     avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca',
     mostrarTextoPie: 'mostrar_texto_pie', mostrarAvisoSuperior: 'mostrar_aviso_superior', mostrarSubtituloLogo: 'mostrar_subtitulo_logo',
     mostrarTextoAcerca: 'mostrar_texto_acerca', mostrarEquipo: 'mostrar_equipo', permitirCuentasDemo: 'permitir_cuentas_demo',
-    mostrarCredencialesDemo: 'mostrar_credenciales_demo',
+    mostrarCredencialesDemo: 'mostrar_credenciales_demo', logo: 'logo', logoTextoAlternativo: 'logo_texto_alternativo',
     defectoPresentacionCategorias: 'defecto_presentacion_categorias', defectoResultados: 'defecto_visibilidad_resultados',
     defectoVotoUnico: 'defecto_voto_unico', defectoCategoriaActiva: 'defecto_categoria_activa',
     defectoPresentacionOpciones: 'defecto_presentacion_opciones', defectoDiasVotacion: 'defecto_dias_votacion',
@@ -78,6 +78,8 @@ const SOLO_LECTURA = new Set(['id', 'sistema', 'fijo', 'usuarios', 'rolNombre', 
 // Archivos subidos (uno o varios por colección): solo viajan como multipart; la web los recibe como ruta /media/…
 export const ARCHIVOS = {
   banners: [{ campo: 'archivo', api: 'imagen', web: 'imagen' }],
+  // El logo del sitio se sube o se quita en /admin/configuracion/logo/ (guardarLogo / quitarLogo)
+  configuracion: [{ campo: 'archivoLogo', api: 'logo', web: 'logo' }],
   revistas: [{ campo: 'archivoPdf', api: 'archivo', web: 'archivo' }],
   categorias: [{ campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' }],
   votaciones: [{ campo: 'archivoIcono', api: 'icono_imagen', web: 'iconoImagen', quitar: 'quitarIcono' }],

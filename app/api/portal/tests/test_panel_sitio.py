@@ -1,6 +1,7 @@
 """Pantallas del panel Django para el sitio público (banner, revista, contacto y redes, identidad visual) y la auditoría."""
 
 import io
+import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
@@ -173,6 +174,63 @@ class MarcaTest(BasePortalTest):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "is-invalid")
         self.assertEqual(ConfiguracionSitio.obtener().marca, {})
+
+
+class LogoPanelTest(BasePortalTest):
+    def setUp(self):
+        super().setUp()
+        self.entrar_como_admin()
+
+    def subir(self, archivo=None, alt="Logo de prueba"):
+        datos = {"formulario": "logo", "logo_texto_alternativo": alt}
+        if archivo is not None:
+            datos["logo"] = archivo
+        return self.client.post("/panel/marca", datos)
+
+    def test_subir_reemplazar_y_quitar_el_logo(self):
+        self.assertContains(self.client.get("/"), 'viewBox="0 0 64 64"')  # logo por defecto
+        self.assertRedirects(self.subir(imagen_png("logo.png")), "/panel/marca")
+        configuracion = ConfiguracionSitio.obtener()
+        primero = configuracion.logo.path
+        inicio = self.client.get("/").content.decode()
+        self.assertIn(f'class="navbar-logo" src="{configuracion.logo.url}" alt="Logo de prueba"', inicio)
+        self.assertIn(f'rel="icon" href="{configuracion.logo.url}"', inicio)
+        self.assertTrue(RegistroAuditoria.objects.filter(entidad="configuracion", detalle__seccion="logo").exists())
+
+        # Solo el texto alternativo: el archivo se conserva
+        self.subir(alt="Acordeón")
+        configuracion.refresh_from_db()
+        self.assertEqual((configuracion.logo.path, configuracion.logo_texto_alternativo), (primero, "Acordeón"))
+
+        self.subir(imagen_png("otro.png"))
+        configuracion.refresh_from_db()
+        self.assertNotEqual(configuracion.logo.path, primero)
+        self.assertFalse(os.path.exists(primero))
+        segundo = configuracion.logo.path
+
+        self.assertRedirects(self.client.post("/panel/marca/quitar-logo"), "/panel/marca")
+        self.assertFalse(ConfiguracionSitio.obtener().logo)
+        self.assertFalse(os.path.exists(segundo))
+        self.assertContains(self.client.get("/"), 'viewBox="0 0 64 64"')
+
+    def test_rechaza_svg_y_exige_archivo_la_primera_vez(self):
+        svg = SimpleUploadedFile("logo.svg", b"<svg xmlns='http://www.w3.org/2000/svg'/>", content_type="image/svg+xml")
+        respuesta = self.subir(svg)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "is-invalid")
+        self.assertContains(self.subir(), "Selecciona la imagen del logo.")
+        self.assertFalse(ConfiguracionSitio.obtener().logo)
+
+    def test_sin_sitio_editar_no_cambia_el_logo(self):
+        from votaciones.models import Usuario
+
+        self.client.force_login(Usuario.objects.create_user(
+            "lectura@festival.test", "Clave2027*segura", nombres="L", apellidos="L", rol=Usuario.Rol.LECTURA,
+            acepta_tratamiento_datos=True, correo_verificado=True))
+        self.assertEqual(self.client.get("/panel/marca").status_code, 200)
+        self.assertEqual(self.subir(imagen_png("logo.png")).status_code, 403)
+        self.assertEqual(self.client.post("/panel/marca/quitar-logo").status_code, 403)
+        self.assertFalse(ConfiguracionSitio.obtener().logo)
 
 
 class ValoresPorDefectoPanelTest(BasePortalTest):

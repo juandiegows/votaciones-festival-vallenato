@@ -1,6 +1,7 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import generics, viewsets
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,10 +10,11 @@ from ..auditoria.mixins import AuditadoMixin, auditar
 from rest_framework.exceptions import PermissionDenied
 
 from ..comun.permisos import TienePermiso, lectura_escritura
-from . import demo, selectores
+from . import demo, identidad, selectores
 from .models import ConfiguracionSitio, RedSocial, Revista
 from .serializers import (
-    BannerInicioSerializer, ConfiguracionSitioSerializer, RedSocialSerializer, RevistaSerializer, SitioSerializer,
+    BannerInicioSerializer, ConfiguracionSitioSerializer, LogoSitioSerializer, RedSocialSerializer, RevistaSerializer,
+    SitioSerializer,
 )
 
 
@@ -20,7 +22,7 @@ from .serializers import (
 CAMPOS_SITIO = {
     "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "marca", "aviso_superior",
     "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_texto_pie", "mostrar_aviso_superior",
-    "mostrar_subtitulo_logo", "mostrar_texto_acerca",
+    "mostrar_subtitulo_logo", "mostrar_texto_acerca", "logo", "logo_texto_alternativo",
 }
 
 
@@ -92,6 +94,35 @@ class AdminConfiguracionView(generics.RetrieveUpdateAPIView):
                 raise PermissionDenied(f"Tu rol no tiene permiso para cambiar «{campo}».")
         serializer.save()
         auditar(self.request, "actualizar", "configuracion", 1, serializer.data)
+
+
+@extend_schema(tags=["Administración"])
+class AdminLogoView(APIView):
+    """Logo propio del sitio (menú, correos y PDF). Aparte de /configuracion/ para no mezclar multipart con el resto."""
+
+    permission_classes = [TienePermiso]
+    permisos_metodo = {"POST": "sitio.editar", "DELETE": "sitio.editar"}
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(summary="Subir o reemplazar el logo del sitio (multipart/form-data)", request=LogoSitioSerializer,
+                   responses={200: ConfiguracionSitioSerializer})
+    def post(self, request):
+        serializer = LogoSitioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        configuracion = ConfiguracionSitio.obtener()
+        identidad.cambiar_logo(configuracion, serializer.validated_data["logo"],
+                               serializer.validated_data.get("logo_texto_alternativo"))
+        auditar(request, "actualizar", "configuracion", configuracion.pk,
+                {"seccion": "logo", "logo": configuracion.logo.name})
+        return Response(ConfiguracionSitioSerializer(configuracion, context={"request": request}).data)
+
+    @extend_schema(summary="Quitar el logo propio (vuelve el logo por defecto)", request=None,
+                   responses={200: ConfiguracionSitioSerializer})
+    def delete(self, request):
+        configuracion = ConfiguracionSitio.obtener()
+        if identidad.cambiar_logo(configuracion, quitar=True):
+            auditar(request, "actualizar", "configuracion", configuracion.pk, {"seccion": "logo", "quitado": True})
+        return Response(ConfiguracionSitioSerializer(configuracion, context={"request": request}).data)
 
 
 @extend_schema(tags=["Administración"])

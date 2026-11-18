@@ -15,6 +15,17 @@ export default function Layout() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+  // Con logo propio, la pestaña del navegador también lo usa; sin él vuelve el ícono por defecto
+  useEffect(() => {
+    const iconos = document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]');
+    iconos.forEach((enlace) => {
+      if (!enlace.dataset.original) enlace.dataset.original = enlace.getAttribute('href');
+      enlace.setAttribute('href', configuracion?.logo || enlace.dataset.original);
+      if (enlace.dataset.tipo === undefined) enlace.dataset.tipo = enlace.getAttribute('type') || '';
+      if (configuracion?.logo) enlace.removeAttribute('type');
+      else if (enlace.dataset.tipo) enlace.setAttribute('type', enlace.dataset.tipo);
+    });
+  }, [configuracion?.logo]);
   return (
     <div className="d-flex flex-column min-vh-100">
       <style id="flv-marca">{estilosMarca}</style>

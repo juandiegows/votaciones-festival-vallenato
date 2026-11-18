@@ -1,12 +1,16 @@
 <nav class="navbar navbar-expand-lg navbar-flv sticky-top d-print-none" aria-label="Navegación principal">
   <div class="{% if menu_activo == 'panel' %}container-fluid panel-ancho{% else %}container{% endif %}">
     <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'portal:inicio' %}">
-      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
-        <rect width="64" height="64" rx="14" fill="#DD3333"/>
-        <rect x="12" y="20" width="10" height="26" rx="2" fill="#000000"/>
-        <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000"/>
-        <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" stroke-width="3" fill="none" stroke-linejoin="round"/>
-      </svg>
+      {% if configuracion.logo %}{# Logo propio (Identidad visual) #}
+      <img class="navbar-logo" src="{{ configuracion.logo.url }}" alt="{{ configuracion.logo_texto_alternativo }}" height="36">
+      {% else %}
+        <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#DD3333"/>
+          <rect x="12" y="20" width="10" height="26" rx="2" fill="#000000"/>
+          <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000"/>
+          <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" stroke-width="3" fill="none" stroke-linejoin="round"/>
+        </svg>
+      {% endif %}
       <span>Votaciones FLV{% if edicion_activa %} {{ edicion_activa.anio }}{% endif %}{% if configuracion.mostrar_subtitulo_logo and configuracion.subtitulo_logo %}<small>{{ configuracion.subtitulo_logo }}</small>{% endif %}</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal"

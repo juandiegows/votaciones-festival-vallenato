@@ -415,6 +415,21 @@ export function ApiProvider({ children }) {
     return r.ok ? { ok: true } : { ok: false, error: r.error, errores: erroresDesdeApi('configuracion', r.errores) };
   };
 
+  // Logo del sitio (Identidad visual): multipart aparte de la configuración (sitio.editar)
+  const guardarLogo = async (archivo, textoAlternativo) => {
+    const formulario = new FormData();
+    formulario.append('logo', archivo);
+    if (textoAlternativo !== undefined) formulario.append('logo_texto_alternativo', textoAlternativo);
+    const r = await api.post('/admin/configuracion/logo/', formulario);
+    await recargar();
+    return r.ok ? { ok: true } : { ok: false, error: r.error, errores: erroresDesdeApi('configuracion', r.errores) };
+  };
+  const quitarLogo = async () => {
+    const r = await api.delete('/admin/configuracion/logo/');
+    await recargar();
+    return r.ok ? { ok: true } : { ok: false, error: r.error };
+  };
+
   // ---------- Resultados, exportación y auditoría ----------
   const obtenerResultados = useCallback(async (votacionId, { admin = false } = {}) => {
     const r = await api.get(admin ? `/admin/votaciones/${votacionId}/resultados/` : `/votaciones/${votacionId}/resultados/`);
@@ -560,6 +575,8 @@ export function ApiProvider({ children }) {
     eliminarEntidad,
     reemplazarColeccion,
     guardarConfiguracion,
+    guardarLogo,
+    quitarLogo,
     obtenerResultados,
     exportarResultados,
     exportar,

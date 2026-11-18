@@ -8,11 +8,11 @@ Vista previa de las plantillas de correo con datos de ejemplo (solo con DEBUG). 
 from datetime import date
 
 from django.http import Http404, HttpResponse
-from django.templatetags.static import static
 from django.utils import timezone
 from django.utils.html import escape
 
 from ..cuentas.models import Usuario
+from ..sitio import identidad
 from ..votacion.models import Categoria, Edicion, Opcion, Votacion, Voto
 from . import servicio
 from .adaptadores.memoria import AdaptadorMemoria
@@ -58,7 +58,7 @@ def vista_previa(request, plantilla=None):
     disponibles[plantilla][1](adaptador=memoria, silencioso=False)
     mensaje = memoria.mensajes[0]
     # En desarrollo el sitio configurado no publica los estáticos: el logo sale de la API
-    mensaje.html = mensaje.html.replace(servicio.url_logo(), request.build_absolute_uri(static("correo/acordeon.png")))
+    mensaje.html = mensaje.html.replace(servicio.url_logo(), request.build_absolute_uri(identidad.ruta_logo()))
     if request.GET.get("formato") == "txt":
         return HttpResponse(f"<!doctype html><meta charset=utf-8><pre>Asunto: {escape(mensaje.asunto)}\n\n"
                             f"{escape(mensaje.texto)}</pre>")

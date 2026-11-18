@@ -519,6 +519,27 @@ export function MockProvider({ children }) {
     return { ok: true };
   };
 
+  // Logo del sitio: en la demostración se guarda como data URL (se valida igual que en la API: PNG, JPG o WebP de 1 MB)
+  const guardarLogo = async (archivo, textoAlternativo = '') => {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(archivo?.type)) {
+      return { ok: false, error: 'Formato no permitido: usa una imagen JPG, PNG o WebP.' };
+    }
+    if (archivo.size > 1024 * 1024) return { ok: false, error: 'El logo supera el tamaño máximo de 1 MB.' };
+    const logo = await new Promise((resolver, rechazar) => {
+      const lector = new FileReader();
+      lector.onload = () => resolver(lector.result);
+      lector.onerror = rechazar;
+      lector.readAsDataURL(archivo);
+    }).catch(() => null);
+    if (!logo) return { ok: false, error: 'No se pudo leer la imagen.' };
+    actualizar((d) => ({ ...d, configuracion: { ...d.configuracion, logo, logoTextoAlternativo: textoAlternativo } }), 'Cambió el logo del sitio');
+    return { ok: true };
+  };
+  const quitarLogo = async () => {
+    actualizar((d) => ({ ...d, configuracion: { ...d.configuracion, logo: '' } }), 'Quitó el logo del sitio (volvió el logo por defecto)');
+    return { ok: true };
+  };
+
   const restablecer = async () => {
     setDatos(restablecerDatos());
     setUsuarioId(null);
@@ -567,6 +588,8 @@ export function MockProvider({ children }) {
     eliminarEntidad,
     reemplazarColeccion,
     guardarConfiguracion,
+    guardarLogo,
+    quitarLogo,
     obtenerResultados,
     exportarResultados,
     exportar,

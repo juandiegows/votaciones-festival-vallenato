@@ -1,6 +1,7 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import EstadoBadge from '../components/EstadoBadge.jsx';
+import { LogoPorDefecto } from '../components/Navbar.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import {
   COLORES_BASE, ESTILOS_ALERTA, ESTILOS_BOTON, FORMAS_BOTON, GRUPOS_COLOR, PESOS_BOTON, ROLES_BOTON, TOKEN_PRIMARIO, TOKEN_SECUNDARIO,
@@ -180,8 +181,133 @@ function EditorBoton({ rol, boton, colores, onCambio }) {
   );
 }
 
+const FORMATOS_LOGO = ['image/png', 'image/jpeg', 'image/webp'];
+
+/** Logo del sitio: subir (PNG, JPG o WebP de 1 MB), vista previa sobre el menú negro, texto alternativo y quitar */
+function SeccionLogo({ configuracion, puedeEditar, guardarLogo, quitarLogo, guardarConfiguracion }) {
+  const [archivo, setArchivo] = useState(null);
+  const [vista, setVista] = useState('');
+  const altGuardado = configuracion?.logoTextoAlternativo || '';
+  const [alt, setAlt] = useState(altGuardado);
+  const [altPrevio, setAltPrevio] = useState(altGuardado);
+  if (altGuardado !== altPrevio) {
+    // La configuración llegó (o cambió) después de montar: se sigue el valor guardado
+    setAltPrevio(altGuardado);
+    setAlt(altGuardado);
+  }
+  const [procesando, setProcesando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+  const [error, setError] = useState('');
+  const logo = vista || configuracion?.logo || '';
+
+  // La URL temporal del archivo elegido se libera al cambiarlo o al salir
+  useEffect(() => () => vista && URL.revokeObjectURL(vista), [vista]);
+
+  const elegir = (e) => {
+    const f = e.target.files?.[0];
+    setMensaje(null);
+    if (!f) return;
+    if (!FORMATOS_LOGO.includes(f.type)) {
+      setError('Formato no permitido: usa una imagen PNG, JPG o WebP (no se acepta SVG).');
+      e.target.value = '';
+      return;
+    }
+    if (f.size > 1024 * 1024) {
+      setError('El logo supera el tamaño máximo de 1 MB.');
+      e.target.value = '';
+      return;
+    }
+    setError('');
+    setArchivo(f);
+    setVista(URL.createObjectURL(f));
+  };
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    if (!archivo && !configuracion?.logo) return setError('Selecciona la imagen del logo.');
+    setProcesando(true);
+    // Sin archivo nuevo solo cambia el texto alternativo del logo actual
+    const r = archivo
+      ? await guardarLogo(archivo, alt.trim())
+      : await guardarConfiguracion({ ...configuracion, logoTextoAlternativo: alt.trim() }, 'Cambió el texto alternativo del logo');
+    setProcesando(false);
+    if (r.ok) {
+      setArchivo(null);
+      setVista('');
+      e.target.reset?.();
+    }
+    if (!r.ok && r.errores?.logo) setError([].concat(r.errores.logo).join(' '));
+    setMensaje(r.ok ? { tipo: 'success', texto: 'Logo guardado: ya se ve en el menú, los correos y los PDF.' } : { tipo: 'danger', texto: r.error });
+  };
+
+  const quitar = async () => {
+    setProcesando(true);
+    const r = await quitarLogo();
+    setProcesando(false);
+    setMensaje(r.ok ? { tipo: 'success', texto: 'Se quitó el logo propio: vuelve el logo por defecto.' } : { tipo: 'danger', texto: r.error });
+  };
+
+  return (
+    <section className="mb-5" aria-labelledby="t-logo">
+      <h2 id="t-logo" className="seccion-titulo mb-2">Logo del sitio</h2>
+      <p className="text-secondary-flv mb-4">
+        Se muestra en el menú, en los correos y en los PDF exportados, con alto fijo sobre fondo negro. Sin logo propio se usa el acordeón por defecto.
+      </p>
+      <div className="card-flv p-3 p-md-4">
+        <div className="row g-4 align-items-start">
+          <div className="col-md-5">
+            <p className="form-label small mb-1" id="vista-logo">Vista previa en el menú</p>
+            <div className="navbar-flv rounded-3 px-3 py-2 d-flex align-items-center gap-2" aria-labelledby="vista-logo">
+              {logo ? <img className="navbar-logo" src={logo} alt={alt || 'Logo elegido'} height="36" /> : <LogoPorDefecto />}
+              <span className="navbar-brand m-0 p-0">Votaciones FLV</span>
+            </div>
+            <p className="small text-secondary-flv mt-2 mb-0">
+              {vista ? 'Vista previa del archivo elegido (aún sin guardar).' : configuracion?.logo ? 'Usando un logo propio.' : 'Usando el logo por defecto.'}
+            </p>
+          </div>
+          <form className="col-md-7" onSubmit={guardar} noValidate>
+            <fieldset disabled={!puedeEditar || procesando}>
+              <div className="mb-3">
+                <label className="form-label" htmlFor="logo-archivo">{configuracion?.logo ? 'Reemplazar el logo' : 'Subir un logo'}</label>
+                <input id="logo-archivo" type="file" accept={FORMATOS_LOGO.join(',')} className={`form-control ${error ? 'is-invalid' : ''}`}
+                  aria-describedby={`logo-ayuda${error ? ' logo-error' : ''}`} aria-invalid={!!error} onChange={elegir} />
+                {error && <div id="logo-error" className="invalid-feedback">{error}</div>}
+                <div id="logo-ayuda" className="form-text">PNG, JPG o WebP de máximo 1 MB. Mejor con fondo transparente y más ancho que alto.</div>
+              </div>
+              <div className="mb-3">
+                <label className="form-label" htmlFor="logo-alt">Texto alternativo</label>
+                <input id="logo-alt" className="form-control" maxLength={150} value={alt} onChange={(e) => setAlt(e.target.value)} aria-describedby="logo-alt-ayuda" />
+                <div id="logo-alt-ayuda" className="form-text">Describe el logo para lectores de pantalla. Déjalo vacío si solo repite el nombre que aparece al lado.</div>
+              </div>
+              {puedeEditar && (
+                <div className="d-flex flex-wrap gap-2">
+                  <button type="submit" className="btn btn-primary" disabled={!archivo && alt.trim() === altGuardado}>
+                    <i className="bi bi-upload me-1" aria-hidden="true"></i>{procesando ? 'Guardando…' : 'Guardar logo'}
+                  </button>
+                  {configuracion?.logo && (
+                    <button type="button" className="btn btn-outline-secondary" onClick={quitar}>
+                      <i className="bi bi-x-circle me-1" aria-hidden="true"></i>Quitar logo
+                    </button>
+                  )}
+                </div>
+              )}
+              {!puedeEditar && <p className="small mb-0"><i className="bi bi-eye me-1" aria-hidden="true"></i>Tu rol solo consulta el logo.</p>}
+            </fieldset>
+          </form>
+        </div>
+        {mensaje && (
+          <div className={`alert alert-${mensaje.tipo} alert-dismissible mt-3 mb-0`} role="status">
+            {mensaje.texto}
+            <button type="button" className="btn-close" aria-label="Cerrar mensaje" onClick={() => setMensaje(null)}></button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function Marca() {
-  const { configuracion, guardarConfiguracion, puede } = useApp();
+  const { configuracion, guardarConfiguracion, guardarLogo, quitarLogo, puede } = useApp();
   // La marca se guarda con sitio.editar o configuracion.editar (como la API); sin ellos los cambios son solo una vista previa
   const puedeGuardar = puede('sitio.editar') || puede('configuracion.editar');
   // null = sin cambios (sigue a lo guardado); objeto = borrador que se previsualiza en todo el sitio
@@ -262,6 +388,8 @@ export default function Marca() {
         2 oct 2026). Este prototipo académico <strong>no usa el logo oficial</strong> ni fotografías del Festival. Los colores
         «funcionales» son derivados para garantizar accesibilidad (WCAG 2.1 AA). Revisa el contraste al cambiar un color.
       </div>
+
+      <SeccionLogo configuracion={configuracion} puedeEditar={puede('sitio.editar')} guardarLogo={guardarLogo} quitarLogo={quitarLogo} guardarConfiguracion={guardarConfiguracion} />
 
       <section className="mb-5" aria-labelledby="t-roles">
         <h2 id="t-roles" className="seccion-titulo mb-4">Colores de acción</h2>

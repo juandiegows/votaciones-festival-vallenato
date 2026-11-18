@@ -21,6 +21,20 @@
     hex.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(hex.value)) selector.value = hex.value.toLowerCase(); });
   });
 
+  // Logo del sitio: vista previa del archivo elegido antes de guardarlo
+  todos('[data-logo-archivo]').forEach((campo) => {
+    const vista = document.querySelector('[data-logo-vista]');
+    const defecto = document.querySelector('[data-logo-defecto]');
+    if (!vista) return;
+    campo.addEventListener('change', () => {
+      const archivo = campo.files && campo.files[0];
+      if (!archivo || !archivo.type.startsWith('image/')) return;
+      vista.src = URL.createObjectURL(archivo);
+      vista.classList.remove('d-none');
+      if (defecto) defecto.classList.add('d-none');
+    });
+  });
+
   // Botones de envío: se deshabilitan y muestran «Guardando…» para evitar dobles envíos
   todos('form').forEach((form) => {
     form.addEventListener('submit', () => {
