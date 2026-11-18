@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { valoresPorDefecto } from '../../utils/predeterminados.js';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -60,7 +61,7 @@ function guardarPreferencia(clave, valor) {
 }
 
 export default function AdminVotaciones() {
-  const { guardarEntidad, eliminarEntidad } = useApp();
+  const { configuracion, guardarEntidad, eliminarEntidad } = useApp();
   const { edicion, categorias, votaciones, opciones, votos } = useEdicionAdmin();
   const location = useLocation();
   const [filtros, setFiltros] = useState({
@@ -110,6 +111,7 @@ export default function AdminVotaciones() {
     setMensajeFormulario('');
     const ahora = new Date();
     const cat = categoriaDe(Number(categoriaId)) || categorias[0];
+    const defecto = valoresPorDefecto(configuracion);
     setForm({
       categoriaId: cat?.id || '',
       titulo: '',
@@ -117,7 +119,7 @@ export default function AdminVotaciones() {
       slugAuto: true,
       descripcion: '',
       fechaApertura: isoALocal(new Date(ahora.getTime() + 86400000).toISOString()),
-      fechaCierre: isoALocal(new Date(ahora.getTime() + 8 * 86400000).toISOString()),
+      fechaCierre: isoALocal(new Date(ahora.getTime() + (1 + defecto.defectoDiasVotacion) * 86400000).toISOString()),
       votosPorUsuario: edicion?.votosPorUsuario ?? 1,
       mostrarResultados: edicion?.mostrarResultados || 'al cerrar',
       personalizarResultados: false,
@@ -126,7 +128,7 @@ export default function AdminVotaciones() {
       iconoImagen: '',
       archivoIcono: null,
       quitarIcono: false,
-      presentacionOpciones: 'tarjetas',
+      presentacionOpciones: defecto.defectoPresentacionOpciones,
       publicada: false,
       cerradaManualmente: false,
       resultadosPublicados: false,

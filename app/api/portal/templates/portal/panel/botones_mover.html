@@ -1,0 +1,6 @@
+{# Subir y bajar un elemento de la lista. Recibe: url_mover (nombre de la ruta), pk, nombre, primero, ultimo #}
+<form method="post" action="{% url url_mover pk %}" class="d-inline">
+  {% csrf_token %}
+  <button class="btn btn-sm btn-outline-secondary" name="direccion" value="subir"{% if primero %} disabled{% endif %} aria-label="Subir {{ nombre }}" title="Subir"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+  <button class="btn btn-sm btn-outline-secondary me-1" name="direccion" value="bajar"{% if ultimo %} disabled{% endif %} aria-label="Bajar {{ nombre }}" title="Bajar"><i class="bi bi-arrow-down" aria-hidden="true"></i></button>
+</form>

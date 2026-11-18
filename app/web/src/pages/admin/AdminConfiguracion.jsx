@@ -8,6 +8,7 @@ import SeccionDemo from '../../components/admin/SeccionDemo.jsx';
 import { PRESENTACIONES_CATEGORIAS, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
 import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
+import { PREDETERMINADOS_BASE, valoresPorDefecto } from '../../utils/predeterminados.js';
 
 const SECCIONES = [
   { id: 'votacion', label: 'Votación', icono: 'check2-square', descripcion: 'Votos por usuario y pausa de emergencia de la edición.' },
@@ -15,6 +16,7 @@ const SECCIONES = [
   { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
   { id: 'registro', label: 'Registro', icono: 'person-vcard', descripcion: 'Qué datos se piden a quien crea una cuenta para votar.' },
   { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
+  { id: 'predeterminados', label: 'Valores por defecto', icono: 'ui-checks', descripcion: 'Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.' },
   { id: 'demo', label: 'Demostración', icono: 'person-badge-fill', descripcion: 'Cuentas y datos de prueba: permitir su ingreso, eliminarlos o volver a cargarlos.' },
 ];
 
@@ -73,6 +75,9 @@ export default function AdminConfiguracion() {
   const [procesando, setProcesando] = useState(false);
 
   useEffect(() => setDias(String(diasGuardados ?? DIAS_VISIBLE_CERRADAS)), [diasGuardados]);
+  const defecto = valoresPorDefecto(configuracion);
+  const [diasVotacion, setDiasVotacion] = useState(String(defecto.defectoDiasVotacion));
+  useEffect(() => setDiasVotacion(String(defecto.defectoDiasVotacion)), [defecto.defectoDiasVotacion]);
 
   // Cada cambio se guarda al momento
   const guardar = async (accion, exito) => {
@@ -96,6 +101,16 @@ export default function AdminConfiguracion() {
     }
     if (n === diasGuardados) return;
     guardarSitio({ diasVisibleCerradas: n }, n === 0 ? 'Las votaciones cerradas se ocultan al cerrar.' : `Las votaciones cerradas se verán ${n} ${n === 1 ? 'día' : 'días'} después del cierre.`);
+  };
+
+  const guardarDiasVotacion = () => {
+    const n = Number(diasVotacion);
+    if (!/^d+$/.test(diasVotacion) || n < 1 || n > 365) {
+      setEstado({ tipo: 'danger', texto: 'Escribe un número de días entre 1 y 365.' });
+      return;
+    }
+    if (n === defecto.defectoDiasVotacion) return;
+    guardarSitio({ defectoDiasVotacion: n }, `Las votaciones nuevas durarán ${n} ${n === 1 ? 'día' : 'días'}.`);
   };
 
   const personalizadas = votaciones.filter((v) => v.personalizarResultados);
@@ -152,6 +167,7 @@ export default function AdminConfiguracion() {
     if (seccion === 'votacion') guardarEdicion({ votosPorUsuario: 1, votacionesPausadas: false }, 'Votación restablecida: 1 voto por usuario, sin pausa.', 'Restableció la configuración de votación');
     if (seccion === 'resultados') guardarEdicion({ mostrarResultados: 'al cerrar' }, 'Resultados restablecidos: al cerrar.', 'Restableció la visibilidad de resultados');
     if (seccion === 'visibilidad') guardarSitio({ diasVisibleCerradas: DIAS_VISIBLE_CERRADAS }, `Restablecido: ${DIAS_VISIBLE_CERRADAS} días.`);
+    if (seccion === 'predeterminados') guardarSitio({ ...PREDETERMINADOS_BASE }, 'Valores por defecto restablecidos.');
     if (seccion === 'registro') guardarSitio({ pedirDocumento: false }, 'Registro restablecido: solo con correo confirmado.');
     if (seccion === 'presentacion') {
       guardar(async () => {
@@ -338,6 +354,73 @@ export default function AdminConfiguracion() {
                 <label className="form-check-label fw-semibold" htmlFor="cfg-pedir-documento">Pedir documento al registrarse</label>
               </div>
             </Fila>
+          )}
+
+          {seccion === 'predeterminados' && (
+            <>
+              <Fila titulo="Edición nueva · presentación de las categorías" descripcion="Cómo ve el público las categorías de una edición recién creada.">
+                <Opciones
+                  nombre="cfg-def-categorias"
+                  columnas="col-sm-6 col-xl-4"
+                  opciones={PRESENTACIONES_CATEGORIAS}
+                  valor={defecto.defectoPresentacionCategorias}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ defectoPresentacionCategorias: v }, `Ediciones nuevas: categorías en ${PRESENTACIONES_CATEGORIAS.find((p) => p.valor === v).etiqueta.toLowerCase()}.`)}
+                />
+              </Fila>
+              <Fila titulo="Edición nueva · cuándo se publican los resultados" descripcion="Aplica a las votaciones de la edición que no tengan un ajuste propio.">
+                <Opciones
+                  nombre="cfg-def-resultados"
+                  opciones={OPCIONES_RESULTADOS.map((o) => ({ ...o, descripcion: DESCRIPCION_RESULTADOS[o.valor] }))}
+                  valor={defecto.defectoResultados}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ defectoResultados: v }, `Ediciones nuevas: resultados ${v}.`)}
+                />
+              </Fila>
+              <Fila titulo="Categoría nueva · votos" descripcion="Si una persona vota una sola vez en toda la categoría o una vez en cada votación.">
+                <Opciones
+                  nombre="cfg-def-voto-unico"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'unico', etiqueta: 'Un voto por categoría', icono: '1-circle', descripcion: 'Un solo voto aunque tenga varias votaciones.' },
+                    { valor: 'cada', etiqueta: 'Un voto por votación', icono: 'list-check', descripcion: 'Se vota en cada votación por separado.' },
+                  ]}
+                  valor={defecto.defectoVotoUnico ? 'unico' : 'cada'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ defectoVotoUnico: v === 'unico' }, v === 'unico' ? 'Categorías nuevas: un voto por categoría.' : 'Categorías nuevas: un voto por votación.')}
+                />
+              </Fila>
+              <Fila titulo="Categoría nueva · visibilidad" descripcion="Si se muestra al público desde que se crea o queda oculta hasta activarla.">
+                <Opciones
+                  nombre="cfg-def-activa"
+                  columnas="col-sm-6"
+                  opciones={[
+                    { valor: 'visible', etiqueta: 'Visible', icono: 'eye', descripcion: 'Se muestra al público al crearla.' },
+                    { valor: 'oculta', etiqueta: 'Oculta', icono: 'eye-slash', descripcion: 'Se activa cuando esté lista.' },
+                  ]}
+                  valor={defecto.defectoCategoriaActiva ? 'visible' : 'oculta'}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ defectoCategoriaActiva: v === 'visible' }, v === 'visible' ? 'Categorías nuevas: visibles al crearlas.' : 'Categorías nuevas: ocultas al crearlas.')}
+                />
+              </Fila>
+              <Fila titulo="Votación nueva · presentación de las opciones" descripcion="Cómo ve el público las opciones de una votación recién creada.">
+                <Opciones
+                  nombre="cfg-def-opciones"
+                  columnas="col-sm-6 col-xl-4"
+                  opciones={PRESENTACIONES_OPCIONES}
+                  valor={defecto.defectoPresentacionOpciones}
+                  deshabilitado={procesando}
+                  onCambio={(v) => guardarSitio({ defectoPresentacionOpciones: v }, `Votaciones nuevas: opciones en ${presentacionOpciones(v).etiqueta.toLowerCase()}.`)}
+                />
+              </Fila>
+              <Fila titulo="Votación nueva · duración" descripcion="Días entre la apertura y el cierre que se proponen al crearla. La votación nueva se crea como borrador.">
+                <div className="input-group" style={{ width: '12rem' }}>
+                  <input id="cfg-def-dias" type="number" min="1" max="365" className="form-control" value={diasVotacion} onChange={(e) => setDiasVotacion(e.target.value)} onBlur={guardarDiasVotacion}
+                    onKeyDown={(e) => e.key === 'Enter' && guardarDiasVotacion()} aria-label="Días que dura una votación nueva" disabled={procesando} />
+                  <span className="input-group-text">{Number(diasVotacion) === 1 ? 'día' : 'días'}</span>
+                </div>
+              </Fila>
+            </>
           )}
 
           {seccion === 'presentacion' && (

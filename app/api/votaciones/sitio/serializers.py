@@ -38,7 +38,9 @@ class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
         fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "mostrar_swagger", "mostrar_participantes", "umbral_participacion", "pedir_documento", "marca",
-                  "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "permitir_cuentas_demo"]
+                  "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "permitir_cuentas_demo",
+                  "defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
+                  "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"]
 
     # Valores permitidos del tema (deben coincidir con app/web/src/data/marca.js)
     TOKENS_COLOR = {

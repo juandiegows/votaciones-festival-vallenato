@@ -1,8 +1,8 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from ..comun.models import ModeloTrazable
-from ..votacion.models import Edicion
+from ..votacion.models import Edicion, Votacion
 
 
 class BannerInicio(ModeloTrazable):
@@ -115,6 +115,30 @@ class ConfiguracionSitio(ModeloTrazable):
     # Tema editable desde /panel/marca: {"colores": {token: hex}, "botones": {"primario": {...}, "secundario": {...}}}.
     # Solo guarda lo que difiere de la marca base (docs/BRANDING.md); vacío = marca base.
     marca = models.JSONField(default=dict, blank=True, help_text="Colores y estilos de botón personalizados del sitio.")
+    # Valores con los que se crea cada edición, categoría o votación nueva (después se cambian en cada una)
+    defecto_presentacion_categorias = models.CharField(
+        "presentación de las categorías", max_length=15, choices=Edicion.PresentacionCategorias.choices,
+        default=Edicion.PresentacionCategorias.TARJETAS, help_text="Edición nueva: cómo ve el público sus categorías.",
+    )
+    defecto_visibilidad_resultados = models.CharField(
+        "cuándo se publican los resultados", max_length=15, choices=Votacion.Visibilidad.choices,
+        default=Votacion.Visibilidad.AL_CIERRE, help_text="Edición nueva: cuándo ve el público los resultados de sus votaciones.",
+    )
+    defecto_voto_unico = models.BooleanField(
+        "un solo voto en toda la categoría", default=True,
+        help_text="Categoría nueva: encendido, un voto en toda la categoría; apagado, un voto en cada votación.",
+    )
+    defecto_categoria_activa = models.BooleanField(
+        "categoría visible al crearla", default=True, help_text="Categoría nueva: se muestra al público desde que se crea.",
+    )
+    defecto_presentacion_opciones = models.CharField(
+        "presentación de las opciones", max_length=15, choices=Votacion.PresentacionOpciones.choices,
+        default=Votacion.PresentacionOpciones.TARJETAS, help_text="Votación nueva: cómo ve el público sus opciones.",
+    )
+    defecto_dias_votacion = models.PositiveSmallIntegerField(
+        "días que dura una votación", default=7, validators=[MinValueValidator(1), MaxValueValidator(365)],
+        help_text="Votación nueva: días entre la apertura y el cierre que se proponen al crearla.",
+    )
 
     class Meta:
         db_table = "configuracion_sitio"

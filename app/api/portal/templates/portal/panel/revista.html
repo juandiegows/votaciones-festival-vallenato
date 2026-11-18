@@ -1,0 +1,57 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+{# Misma pantalla que pages/admin/AdminRevista.jsx #}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Revista institucional</h1>
+    <p class="text-secondary-flv mb-0">PDF que el inicio muestra como un libro que se hojea. Se publica la primera revista activa de la lista; sin revistas activas la sección no aparece.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'portal:panel-revista-nueva' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva revista</a>
+</header>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table table-hover align-middle mb-0 tabla-apilada">
+    <caption class="visually-hidden">Revistas institucionales</caption>
+    <thead><tr><th scope="col">Revista</th><th scope="col">Publicada</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for r in lista %}
+        <tr{% if not r.activa %} class="opacity-75"{% endif %}>
+          <td style="min-width: 11rem">
+            {% if en_inicio and en_inicio.pk == r.pk %}<span class="badge text-bg-dark me-2">En el inicio</span>{% endif %}
+            <strong>{{ r.titulo }}</strong>
+            {% if r.descripcion %}<div class="small text-secondary-flv">{{ r.descripcion }}</div>{% endif %}
+            <a class="small" href="{{ r.archivo.url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Ver PDF</a>
+          </td>
+          <td data-etiqueta="Publicada" class="small text-nowrap">{{ r.publicada_en|fecha }}</td>
+          <td>
+            <form method="post" action="{% url 'portal:panel-revista-alternar' r.pk %}" class="form-check form-switch mb-0">{% csrf_token %}
+              <input class="form-check-input" type="checkbox" role="switch" id="revista-{{ r.pk }}"{% if r.activa %} checked{% endif %} data-enviar-al-cambiar>
+              <label class="form-check-label small" for="revista-{{ r.pk }}">{{ r.activa|yesno:"Activa,Inactiva" }}</label>
+            </form>
+          </td>
+          <td class="text-end text-nowrap">
+            {% include "portal/panel/botones_mover.html" with url_mover="portal:panel-revista-mover" pk=r.pk nombre=r.titulo primero=forloop.first ultimo=forloop.last %}
+            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-revista-editar' r.pk %}" aria-label="Editar {{ r.titulo }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-revista-eliminar' r.pk %}" data-eliminar-nombre="{{ r.titulo }}" aria-label="Eliminar {{ r.titulo }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center">
+  <i class="bi bi-book fs-1 text-secondary" aria-hidden="true"></i>
+  <p class="mb-2">No hay revistas: el inicio no muestra la sección de la revista.</p>
+  <a class="btn btn-primary" href="{% url 'portal:panel-revista-nueva' %}">Subir la primera revista</a>
+</div>
+{% endif %}
+
+{% if form %}
+  {% url 'portal:panel-revista' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar revista,Nueva revista" plantilla_campos="portal/panel/campos_revista.html" tamano="modal-lg" %}
+{% endif %}
+{% endblock %}

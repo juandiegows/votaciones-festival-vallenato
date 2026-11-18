@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from votaciones.models import Edicion
+from votaciones.sitio import predeterminados
 from votaciones.votacion import servicios
 
 from ... import consultas
@@ -20,7 +21,9 @@ from .base import (
 
 def valores_nueva_edicion():
     siguiente = (Edicion.objects.aggregate(m=Max("anio"))["m"] or timezone.localdate().year) + 1
-    return {"nombre": f"Festival de la Leyenda Vallenata {siguiente}", "anio": siguiente, "estado": Edicion.Estado.CERRADA}
+    defecto = predeterminados.para_edicion()
+    return {"nombre": f"Festival de la Leyenda Vallenata {siguiente}", "anio": siguiente, "estado": Edicion.Estado.CERRADA,
+            "presentacion_categorias": defecto["presentacion_categorias"]}
 
 
 def categorias_vista_previa(instancia):
@@ -34,7 +37,9 @@ def ediciones(request, pk=None):
     instancia = get_object_or_404(Edicion, pk=pk) if pk else None
     form = None
     if instancia or es_formulario_nuevo(request, "panel-edicion-nueva"):
-        form = EdicionForm(request.POST or None, instance=instancia, initial=None if instancia else valores_nueva_edicion())
+        # La visibilidad de resultados no está en el formulario: la edición nueva toma la configurada por defecto
+        nueva = None if instancia else Edicion(visibilidad_resultados=predeterminados.para_edicion()["visibilidad_resultados"])
+        form = EdicionForm(request.POST or None, instance=instancia or nueva, initial=None if instancia else valores_nueva_edicion())
         if request.method == "POST" and form.is_valid():
             objeto, nuevo = guardar(request, form, "edicion")
             avisar_guardado(request, "edicion", objeto, nuevo)

@@ -13,6 +13,14 @@
     campo.addEventListener('change', () => campo.form && campo.form.submit());
   });
 
+  // Identidad visual: el selector de color y el campo HEX de cada color se mantienen iguales
+  todos('[data-color-selector]').forEach((selector) => {
+    const hex = selector.parentElement.querySelector('[data-color-hex]');
+    if (!hex) return;
+    selector.addEventListener('input', () => { hex.value = selector.value.toUpperCase(); });
+    hex.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(hex.value)) selector.value = hex.value.toLowerCase(); });
+  });
+
   // Botones de envío: se deshabilitan y muestran «Guardando…» para evitar dobles envíos
   todos('form').forEach((form) => {
     form.addEventListener('submit', () => {

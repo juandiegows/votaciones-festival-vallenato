@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from votaciones.models import Categoria, Edicion, Votacion
+from votaciones.sitio import predeterminados
 
 from ...catalogos import ICONOS_DISPONIBLES
 from ...formularios import CategoriaForm
@@ -18,7 +19,7 @@ from .base import (
 def valores_nueva_categoria(edicion):
     abierta = edicion if edicion and edicion.estado != Edicion.Estado.CERRADA else None
     orden = Categoria.objects.filter(edicion=edicion).count() + 1
-    return {"edicion": abierta, "icono": "music-note-beamed", "activa": True, "voto_unico": True, "orden": orden}
+    return {"edicion": abierta, "icono": "music-note-beamed", "orden": orden, **predeterminados.para_categoria()}
 
 
 def abiertas_por_categoria(edicion):

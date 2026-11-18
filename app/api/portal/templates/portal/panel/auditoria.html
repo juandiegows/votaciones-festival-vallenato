@@ -1,0 +1,157 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+{# Misma pantalla que pages/admin/AdminAuditoria.jsx. «Quién votó» está en el detalle de Votos y resultados. #}
+<header class="mb-3">
+  <h1 class="h2 mb-1">Auditoría</h1>
+  <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Verificación de que los votos cuadren, quién creó y modificó cada registro y todo lo que hace la administración. Para ver quién votó, abre una votación en <a href="{% url 'portal:panel-votos' %}">Votos y resultados</a>.</p>
+</header>
+
+<nav class="config-pestanas mb-4" aria-label="Secciones de la auditoría">
+  {% for p in pestanas %}
+    <a href="?pestana={{ p.clave }}" class="config-pestana{% if p.clave == clave %} activa{% endif %}"{% if p.clave == clave %} aria-current="page"{% endif %}><i class="bi bi-{{ p.icono }}" aria-hidden="true"></i>{{ p.titulo }}</a>
+  {% endfor %}
+</nav>
+
+{% if clave == "acciones" %}
+  <form method="get" class="card-flv p-3 mb-3">
+    <input type="hidden" name="pestana" value="acciones">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <label for="aud-buscar" class="form-label small mb-1">Buscar</label>
+        <input id="aud-buscar" name="q" type="search" class="form-control form-control-sm" placeholder="Correo o nombre del usuario, o ID del registro" value="{{ busqueda }}">
+      </div>
+      <div class="col-sm-6 col-md-3">
+        <label for="aud-accion" class="form-label small mb-1">Acción</label>
+        <select id="aud-accion" name="accion" class="form-select form-select-sm" data-enviar-al-cambiar>
+          <option value="">Todas</option>
+          {% for valor, verbo in verbos.items %}<option value="{{ valor }}"{% if filtro_accion == valor %} selected{% endif %}>{{ verbo }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-md-2">
+        <label for="aud-entidad" class="form-label small mb-1">Sobre</label>
+        <select id="aud-entidad" name="entidad" class="form-select form-select-sm" data-enviar-al-cambiar>
+          <option value="">Todo</option>
+          {% for valor, etiqueta in tipos.items %}<option value="{{ valor }}"{% if filtro_entidad == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
+        {% if busqueda or filtro_accion or filtro_entidad %}<a class="btn btn-sm btn-link" href="?pestana=acciones">Limpiar</a>{% endif %}
+      </div>
+    </div>
+  </form>
+  {% if pagina.object_list %}
+  <div class="card-flv p-0 table-responsive">
+    <table class="table table-hover align-middle mb-0 tabla-apilada">
+      <caption class="visually-hidden">Registro de auditoría, página {{ pagina.number }}</caption>
+      <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">IP</th></tr></thead>
+      <tbody>
+        {% for r in pagina %}
+          <tr>
+            <td data-etiqueta="Fecha y hora" class="small text-nowrap">{{ r.fecha_hora|fecha_hora }}</td>
+            <td data-etiqueta="Usuario" class="small text-break">{{ r.usuario.email|default:"sistema" }}</td>
+            <td class="small" style="min-width: 11rem">{{ r.texto }}</td>
+            <td data-etiqueta="IP" class="small text-secondary-flv">{{ r.ip|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="card-flv p-4 text-center">No hay acciones registradas con ese filtro.</div>
+  {% endif %}
+  <nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="Paginación de la auditoría">
+    <span class="small text-secondary-flv">{{ pagina.paginator.count|miles }} registros · página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    <div class="btn-group">
+      {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-primary" href="?pestana=acciones&amp;q={{ busqueda|urlencode }}&amp;accion={{ filtro_accion }}&amp;entidad={{ filtro_entidad }}&amp;pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Anterior</a>
+      {% else %}<span class="btn btn-sm btn-outline-primary disabled" aria-disabled="true"><i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Anterior</span>{% endif %}
+      {% if pagina.has_next %}<a class="btn btn-sm btn-outline-primary" href="?pestana=acciones&amp;q={{ busqueda|urlencode }}&amp;accion={{ filtro_accion }}&amp;entidad={{ filtro_entidad }}&amp;pagina={{ pagina.next_page_number }}">Siguiente<i class="bi bi-chevron-right ms-1" aria-hidden="true"></i></a>
+      {% else %}<span class="btn btn-sm btn-outline-primary disabled" aria-disabled="true">Siguiente<i class="bi bi-chevron-right ms-1" aria-hidden="true"></i></span>{% endif %}
+    </div>
+  </nav>
+
+{% elif not edicion %}
+  <div class="card-flv p-4 text-center"><p class="mb-2">Aún no hay una edición para auditar.</p><a class="btn btn-primary" href="{% url 'portal:panel-ediciones' %}">Crear edición</a></div>
+
+{% elif clave == "autoria" %}
+  <form method="get" class="card-flv p-3 mb-3">
+    <input type="hidden" name="pestana" value="autoria">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label for="aut-buscar" class="form-label small mb-1">Buscar</label>
+        <input id="aut-buscar" name="q" type="search" class="form-control form-control-sm" placeholder="Registro o usuario" value="{{ busqueda }}">
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <label for="aut-tipo" class="form-label small mb-1">Tipo de registro</label>
+        <select id="aut-tipo" name="tipo" class="form-select form-select-sm" data-enviar-al-cambiar>
+          <option value="">Todos</option>
+          {% for valor, etiqueta in tipos.items %}{% if valor != "voto" %}<option value="{{ valor }}"{% if filtro_tipo == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endif %}{% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-md-2"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button></div>
+    </div>
+  </form>
+  {% if filas %}
+  <div class="card-flv p-0 table-responsive">
+    <table class="table table-hover align-middle mb-0 tabla-apilada">
+      <caption class="visually-hidden">Autoría de los registros: quién los creó y quién los modificó por última vez</caption>
+      <thead><tr><th scope="col">Registro</th><th scope="col">Creado por</th><th scope="col">Última modificación</th></tr></thead>
+      <tbody>
+        {% for f in filas %}
+          <tr>
+            <td class="small" style="min-width: 11rem"><span class="d-block text-secondary-flv">{{ f.tipo }}</span><span class="d-block fw-semibold">{{ f.nombre }}</span></td>
+            <td data-etiqueta="Creado por" class="small"><span class="d-block text-break">{{ f.creado_por|default:"Sistema (carga de datos)" }}</span><span class="d-block text-secondary-flv text-nowrap">{{ f.creado_en|fecha_hora }}</span></td>
+            <td data-etiqueta="Última modificación" class="small"><span class="d-block text-break">{{ f.actualizado_por|default:"Sistema (carga de datos)" }}</span><span class="d-block text-secondary-flv text-nowrap">{{ f.actualizado_en|fecha_hora }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="card-flv p-4 text-center">No hay registros con ese filtro.</div>
+  {% endif %}
+  <p class="small text-secondary-flv mt-2 mb-0">{{ filas|length|miles }} registros · lo modificado más recientemente primero</p>
+
+{% else %}
+  {% with r=integridad.resumen %}
+  <div class="alert {% if integridad.ok %}alert-success{% else %}alert-danger{% endif %} d-flex align-items-center gap-2" role="status">
+    <i class="bi {% if integridad.ok %}bi-patch-check-fill{% else %}bi-exclamation-octagon-fill{% endif %} fs-4" aria-hidden="true"></i>
+    <div>
+      <strong>{% if integridad.ok %}Todo cuadra.{% else %}{{ r.votaciones_con_alertas }} votación(es) con alertas.{% endif %}</strong>
+      {{ r.total_votos|miles }} votos de {{ r.votantes_unicos|miles }} votantes en {{ r.votaciones }} votaciones.
+      <span class="d-block small">Verificado: {{ integridad.generado|fecha_hora }}</span>
+    </div>
+  </div>
+  {% endwith %}
+  {% if integridad.votaciones %}
+  <div class="card-flv p-0 table-responsive">
+    <table class="table table-hover align-middle mb-0 tabla-apilada">
+      <caption class="visually-hidden">Verificación de integridad por votación</caption>
+      <thead><tr><th scope="col">Votación</th><th scope="col" class="text-end">Votos</th><th scope="col" class="text-end">Suma por opción</th><th scope="col" class="text-end">Votantes</th><th scope="col">Controles</th></tr></thead>
+      <tbody>
+        {% for v in integridad.votaciones %}
+          <tr{% if not v.ok %} class="table-danger"{% endif %}>
+            <td style="min-width: 11rem"><a class="fw-semibold text-reset" href="{% url 'portal:panel-voto-detalle' v.votacion_id %}">{{ v.titulo }}</a>
+              <div class="small text-secondary-flv">{{ v.categoria }} · {{ v.votos_por_usuario }} voto(s) por persona</div></td>
+            <td data-etiqueta="Votos" class="text-end">{{ v.total_votos|miles }}</td>
+            <td data-etiqueta="Suma por opción" class="text-end text-nowrap">{{ v.suma_por_opcion|miles }}
+              {% if v.suma_por_opcion == v.total_votos %}<i class="bi bi-check-circle-fill text-success" role="img" aria-label="coincide"></i>
+              {% else %}<i class="bi bi-x-circle-fill text-danger" role="img" aria-label="no coincide"></i>{% endif %}</td>
+            <td data-etiqueta="Votantes" class="text-end">{{ v.votantes_unicos|miles }}</td>
+            <td data-etiqueta="Controles">
+              {% if v.ok %}<span class="small text-success text-nowrap"><i class="bi bi-check2-all me-1" aria-hidden="true"></i>Sin novedades</span>
+              {% else %}<ul class="small mb-0 ps-3 text-danger">{% for a in v.alertas %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="card-flv p-4 text-center">Esta edición no tiene votaciones.</div>
+  {% endif %}
+  <p class="small text-secondary-flv mt-2 mb-0">Se verifica por votación: que el total coincida con la suma por opción, que nadie supere el límite de votos, que no haya votos en opciones de otra votación o desactivadas, ni fuera del horario, y que cada comprobante sea único.</p>
+{% endif %}
+{% endblock %}

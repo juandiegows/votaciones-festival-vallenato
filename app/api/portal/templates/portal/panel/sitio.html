@@ -1,0 +1,98 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+{# Misma pantalla que pages/admin/AdminSitio.jsx #}
+<header class="mb-4">
+  <h1 class="h2 mb-1">Contacto y redes</h1>
+  <p class="text-secondary-flv mb-0">Información que aparece en el pie de página del sitio.</p>
+</header>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <form method="post" class="card-flv p-3 p-md-4 h-100" novalidate aria-labelledby="titulo-contacto">
+      {% csrf_token %}
+      <input type="hidden" name="formulario" value="contacto">
+      <h2 id="titulo-contacto" class="h5">Contacto y textos del sitio</h2>
+      {% if form.errors %}<div class="alert alert-danger py-2" role="alert">Revisa los campos marcados.</div>{% endif %}
+      {% include "portal/parciales/campo.html" with campo=form.nombre_organizacion %}
+      {% include "portal/parciales/campo.html" with campo=form.telefono tipo="tel" %}
+      {% include "portal/parciales/campo.html" with campo=form.direccion %}
+      {% include "portal/parciales/campo.html" with campo=form.correo tipo="email" %}
+      <div class="mb-3">
+        <label class="form-label" for="id_texto_pie">Texto del pie de página</label>
+        <textarea id="id_texto_pie" name="texto_pie" rows="2" class="form-control">{{ form.texto_pie.value|default_if_none:'' }}</textarea>
+      </div>
+      <h3 class="h6 mt-4 mb-1">Textos del proyecto</h3>
+      <p class="small text-secondary-flv">Deja un texto vacío para ocultarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico).</p>
+      {% include "portal/parciales/campo.html" with campo=form.aviso_superior ayuda="Franja destacada encima del pie de página." %}
+      {% include "portal/parciales/campo.html" with campo=form.subtitulo_logo ayuda="Texto pequeño bajo «Votaciones FLV» en el menú." %}
+      {% include "portal/parciales/campo.html" with campo=form.texto_acerca ayuda="Última línea del pie de página." %}
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="id_mostrar_equipo" name="mostrar_equipo"{% if form.mostrar_equipo.value %} checked{% endif %} aria-describedby="equipo-ayuda">
+        <label class="form-check-label" for="id_mostrar_equipo">Mostrar la página del equipo</label>
+        <div id="equipo-ayuda" class="form-text">Apagada, se quitan los enlaces del menú y del pie, y /equipo responde 404.</div>
+      </div>
+      <button type="submit" class="btn btn-primary" data-enviando="Guardando…">Guardar</button>
+    </form>
+  </div>
+
+  <div class="col-lg-7">
+    <section class="card-flv p-3 p-md-4 h-100" aria-labelledby="titulo-redes">
+      <h2 id="titulo-redes" class="h5">Redes sociales</h2>
+      {% if lista %}
+      <ul class="list-group list-group-flush mb-3">
+        {% for x in lista %}
+          <li class="list-group-item px-0 d-flex align-items-center gap-2{% if red_editada and red_editada.pk == x.pk %} bg-light{% endif %}">
+            <i class="bi bi-{{ x.icono }} fs-5 text-rojo" aria-hidden="true"></i>
+            <span class="flex-grow-1" style="min-width: 0">
+              <strong>{{ x.nombre }}</strong>{% if not x.activa %}<span class="badge text-bg-secondary ms-2">Oculta</span>{% endif %}
+              <span class="d-block small text-secondary-flv text-break">{{ x.url }}</span>
+            </span>
+            <span class="flex-shrink-0 text-nowrap">
+              {% include "portal/panel/botones_mover.html" with url_mover="portal:panel-red-mover" pk=x.pk nombre=x.nombre primero=forloop.first ultimo=forloop.last %}
+              <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-red-editar' x.pk %}#form-red" aria-label="Editar {{ x.nombre }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-red-eliminar' x.pk %}" data-eliminar-nombre="{{ x.nombre }}" aria-label="Quitar {{ x.nombre }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p class="text-secondary-flv">Aún no hay redes sociales: el pie de página no muestra íconos de redes.</p>
+      {% endif %}
+
+      <form method="post" id="form-red" action="{% if red_editada %}{% url 'portal:panel-red-editar' red_editada.pk %}{% else %}{% url 'portal:panel-sitio' %}{% endif %}" novalidate aria-labelledby="titulo-form-red">
+        {% csrf_token %}
+        <input type="hidden" name="formulario" value="red">
+        <h3 id="titulo-form-red" class="h6">{% if red_editada %}Editar {{ red_editada.nombre }}{% else %}Agregar red social{% endif %}</h3>
+        <div class="row g-2 align-items-start">
+          <div class="col-sm-4">
+            <label class="form-label small" for="id_icono">Red</label>
+            <select id="id_icono" name="icono" class="form-select">
+              {% for valor, etiqueta in form_red.icono.field.choices %}<option value="{{ valor }}"{% if form_red.icono.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <label class="form-label small" for="id_nombre">Nombre</label>
+            <input id="id_nombre" name="nombre" class="form-control{{ form_red.nombre|campo_invalido }}" value="{{ form_red.nombre.value|valor_campo }}" maxlength="60">
+            {% if form_red.nombre.errors %}<div class="invalid-feedback">{{ form_red.nombre.errors|join:" " }}</div>{% endif %}
+          </div>
+          <div class="col-sm-5">
+            <label class="form-label small" for="id_url">URL</label>
+            <input id="id_url" name="url" type="url" placeholder="https://" class="form-control{{ form_red.url|campo_invalido }}" value="{{ form_red.url.value|valor_campo }}">
+            {% if form_red.url.errors %}<div class="invalid-feedback">{{ form_red.url.errors|join:" " }}</div>{% endif %}
+          </div>
+          <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
+            <div class="form-check form-switch mb-0">
+              <input id="id_activa" name="activa" class="form-check-input" type="checkbox" role="switch"{% if form_red.activa.value %} checked{% endif %}>
+              <label class="form-check-label small" for="id_activa">Visible en el pie de página</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm ms-auto" data-enviando="Guardando…">{% if red_editada %}Guardar cambios{% else %}Agregar red{% endif %}</button>
+            {% if red_editada %}<a class="btn btn-outline-secondary btn-sm" href="{% url 'portal:panel-sitio' %}">Cancelar</a>{% endif %}
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

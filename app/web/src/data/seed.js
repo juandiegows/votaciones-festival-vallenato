@@ -10,6 +10,7 @@
  * y cerradas al navegar el prototipo.
  */
 import { generarCodigoComprobante, slugificar } from '../utils/helpers.js';
+import { PREDETERMINADOS_BASE } from '../utils/predeterminados.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -335,6 +336,8 @@ export function crearDatosSemilla() {
     // Pendiente de validación (P-01): por defecto el registro es solo con correo
     pedirDocumento: false,
     diasVisibleCerradas: 7,
+    // Valores con los que se crea cada edición, categoría o votación nueva (Configuración → Valores por defecto)
+    ...PREDETERMINADOS_BASE,
   };
   const redes = [
     { id: 1, nombre: 'Facebook', url: 'https://www.facebook.com/pages/Festival-de-la-Leyenda-Vallenata/112408762110846', icono: 'facebook', orden: 1, activa: true },

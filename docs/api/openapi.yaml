@@ -1770,6 +1770,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioAdmin'
           description: ''
+  /api/gestion/usuarios/{id}/rol/:
+    post:
+      operationId: gestion_usuarios_rol_create
+      summary: Cambiar el rol (votante o administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rol:
+                  type: string
+                  enum:
+                  - votante
+                  - administrador
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
   /api/gestion/votaciones/:
     get:
       operationId: gestion_votaciones_list
@@ -2675,8 +2708,8 @@ components:
       - ''
     Categoria:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         id:
           type: integer
@@ -2787,8 +2820,8 @@ components:
       - votaciones
     CategoriaRequest:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         edicion:
           type: integer
@@ -2952,6 +2985,60 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        defecto_presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
+          title: Presentación de las categorías
+          description: |-
+            Edición nueva: cómo ve el público sus categorías.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
+        defecto_visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/DefectoVisibilidadResultadosEnum'
+          title: Cuándo se publican los resultados
+          description: |-
+            Edición nueva: cuándo ve el público los resultados de sus votaciones.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
+        defecto_voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Categoría nueva: encendido, un voto en toda la categoría;
+            apagado, un voto en cada votación.'
+        defecto_categoria_activa:
+          type: boolean
+          title: Categoría visible al crearla
+          description: 'Categoría nueva: se muestra al público desde que se crea.'
+        defecto_presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionOpcionesEnum'
+          title: Presentación de las opciones
+          description: |-
+            Votación nueva: cómo ve el público sus opciones.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
+        defecto_dias_votacion:
+          type: integer
+          maximum: 365
+          minimum: 1
+          title: Días que dura una votación
+          description: 'Votación nueva: días entre la apertura y el cierre que se
+            proponen al crearla.'
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -3038,6 +3125,60 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        defecto_presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
+          title: Presentación de las categorías
+          description: |-
+            Edición nueva: cómo ve el público sus categorías.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
+        defecto_visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/DefectoVisibilidadResultadosEnum'
+          title: Cuándo se publican los resultados
+          description: |-
+            Edición nueva: cuándo ve el público los resultados de sus votaciones.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
+        defecto_voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Categoría nueva: encendido, un voto en toda la categoría;
+            apagado, un voto en cada votación.'
+        defecto_categoria_activa:
+          type: boolean
+          title: Categoría visible al crearla
+          description: 'Categoría nueva: se muestra al público desde que se crea.'
+        defecto_presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionOpcionesEnum'
+          title: Presentación de las opciones
+          description: |-
+            Votación nueva: cómo ve el público sus opciones.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
+        defecto_dias_votacion:
+          type: integer
+          maximum: 365
+          minimum: 1
+          title: Días que dura una votación
+          description: 'Votación nueva: días entre la apertura y el cierre que se
+            proponen al crearla.'
     ConfirmarCorreoRequest:
       type: object
       properties:
@@ -3046,8 +3187,56 @@ components:
           minLength: 1
       required:
       - token
+    DefectoPresentacionCategoriasEnum:
+      enum:
+      - tarjetas
+      - lista
+      - mosaico
+      - compacta
+      - destacada
+      type: string
+      description: |-
+        * `tarjetas` - Tarjetas
+        * `lista` - Lista
+        * `mosaico` - Mosaico
+        * `compacta` - Compacta
+        * `destacada` - Destacada
+    DefectoPresentacionOpcionesEnum:
+      enum:
+      - tarjetas
+      - lista
+      - mosaico
+      - compacta
+      - reproductor
+      - colores
+      - respuestas
+      - duelo
+      - imagenes
+      type: string
+      description: |-
+        * `tarjetas` - Tarjetas
+        * `lista` - Lista
+        * `mosaico` - Mosaico
+        * `compacta` - Compacta
+        * `reproductor` - Reproductor
+        * `colores` - Colores
+        * `respuestas` - Respuestas
+        * `duelo` - Duelo
+        * `imagenes` - Imágenes con texto
+    DefectoVisibilidadResultadosEnum:
+      enum:
+      - tiempo_real
+      - al_cierre
+      - no_publicar
+      type: string
+      description: |-
+        * `tiempo_real` - En tiempo real
+        * `al_cierre` - Al cierre
+        * `no_publicar` - No publicar
     Edicion:
       type: object
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         id:
           type: integer
@@ -3100,6 +3289,8 @@ components:
       - nombre
     EdicionRequest:
       type: object
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         nombre:
           type: string
@@ -3633,8 +3824,8 @@ components:
           type: boolean
     PatchedCategoriaRequest:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         edicion:
           type: integer
@@ -3760,8 +3951,64 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        defecto_presentacion_categorias:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
+          title: Presentación de las categorías
+          description: |-
+            Edición nueva: cómo ve el público sus categorías.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `destacada` - Destacada
+        defecto_visibilidad_resultados:
+          allOf:
+          - $ref: '#/components/schemas/DefectoVisibilidadResultadosEnum'
+          title: Cuándo se publican los resultados
+          description: |-
+            Edición nueva: cuándo ve el público los resultados de sus votaciones.
+
+            * `tiempo_real` - En tiempo real
+            * `al_cierre` - Al cierre
+            * `no_publicar` - No publicar
+        defecto_voto_unico:
+          type: boolean
+          title: Un solo voto en toda la categoría
+          description: 'Categoría nueva: encendido, un voto en toda la categoría;
+            apagado, un voto en cada votación.'
+        defecto_categoria_activa:
+          type: boolean
+          title: Categoría visible al crearla
+          description: 'Categoría nueva: se muestra al público desde que se crea.'
+        defecto_presentacion_opciones:
+          allOf:
+          - $ref: '#/components/schemas/DefectoPresentacionOpcionesEnum'
+          title: Presentación de las opciones
+          description: |-
+            Votación nueva: cómo ve el público sus opciones.
+
+            * `tarjetas` - Tarjetas
+            * `lista` - Lista
+            * `mosaico` - Mosaico
+            * `compacta` - Compacta
+            * `reproductor` - Reproductor
+            * `colores` - Colores
+            * `respuestas` - Respuestas
+            * `duelo` - Duelo
+            * `imagenes` - Imágenes con texto
+        defecto_dias_votacion:
+          type: integer
+          maximum: 365
+          minimum: 1
+          title: Días que dura una votación
+          description: 'Votación nueva: días entre la apertura y el cierre que se
+            proponen al crearla.'
     PatchedEdicionRequest:
       type: object
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         nombre:
           type: string
@@ -3887,8 +4134,8 @@ components:
           type: boolean
     PatchedVotacionRequest:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         categoria:
           type: integer
@@ -4407,8 +4654,8 @@ components:
         * `no_publicar` - No publicar
     Votacion:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         id:
           type: integer
@@ -4757,8 +5004,8 @@ components:
       - votos_por_usuario
     VotacionRequest:
       type: object
-      description: El slug es opcional (se genera desde el nombre o título), así que
-        su unicidad se valida aparte.
+      description: 'Serializador de alta: los campos que no llegan en la petición
+        toman el valor por defecto configurado.'
       properties:
         categoria:
           type: integer

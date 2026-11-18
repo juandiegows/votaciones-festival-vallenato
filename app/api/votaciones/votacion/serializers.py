@@ -5,12 +5,16 @@ from ..comun.campos import (
     RutaArchivoField, RutaImagenField, SlugOpcionalMixin, validar_audio, validar_enlace, validar_icono, validar_imagen,
 )
 from ..comun.errores import ReglaNegocioError
+from ..sitio import predeterminados
+from ..sitio.predeterminados import ValoresPorDefectoMixin
 from .models import Categoria, Edicion, Opcion, Votacion, Voto
 from .selectores import voto_que_bloquea
 from .servicios import validar_cambio_voto_unico
 
 
-class EdicionSerializer(serializers.ModelSerializer):
+class EdicionSerializer(ValoresPorDefectoMixin, serializers.ModelSerializer):
+    valores_por_defecto = predeterminados.para_edicion
+
     class Meta:
         model = Edicion
         fields = ["id", "nombre", "anio", "fecha_inicio", "fecha_fin", "estado", "presentacion_categorias", "visibilidad_resultados",
@@ -24,7 +28,8 @@ class EdicionSerializer(serializers.ModelSerializer):
         return datos
 
 
-class CategoriaSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
+class CategoriaSerializer(ValoresPorDefectoMixin, SlugOpcionalMixin, serializers.ModelSerializer):
+    valores_por_defecto = predeterminados.para_categoria
     campo_ambito = "edicion"
     edicion_anio = serializers.IntegerField(source="edicion.anio", read_only=True)
     icono_imagen = RutaImagenField(required=False, allow_null=True)
@@ -94,7 +99,8 @@ class OpcionListadoPublicoSerializer(OpcionPublicaSerializer):
         fields = ["id", "votacion"] + OpcionPublicaSerializer.Meta.fields[1:]
 
 
-class VotacionSerializer(SlugOpcionalMixin, serializers.ModelSerializer):
+class VotacionSerializer(ValoresPorDefectoMixin, SlugOpcionalMixin, serializers.ModelSerializer):
+    valores_por_defecto = predeterminados.para_votacion
     campo_ambito = "categoria"
     estado = serializers.CharField(read_only=True)
     categoria_slug = serializers.CharField(source="categoria.slug", read_only=True)

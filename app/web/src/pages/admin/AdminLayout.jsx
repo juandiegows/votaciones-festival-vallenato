@@ -25,22 +25,22 @@ const GRUPOS = [
     ],
   },
   {
-    titulo: 'Sitio público',
-    enlaces: [
-      { to: '/panel/banner', label: 'Banner de inicio', icono: 'images', porEdicion: true },
-      { to: '/panel/revista', label: 'Revista', icono: 'book' },
-      { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
-      { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
-    ],
-  },
-  {
     titulo: 'Control',
     enlaces: [
       { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
       { to: '/panel/usuarios', label: 'Usuarios', icono: 'people' },
     ],
   },
-  { titulo: 'Ajustes', enlaces: [{ to: '/panel/configuracion', label: 'Configuración', icono: 'gear', porEdicion: true }] },
+  {
+    titulo: 'Ajustes',
+    enlaces: [
+      { to: '/panel/configuracion', label: 'Configuración', icono: 'gear', porEdicion: true },
+      { to: '/panel/banner', label: 'Banner de inicio', icono: 'images', porEdicion: true },
+      { to: '/panel/revista', label: 'Revista', icono: 'book' },
+      { to: '/panel/sitio', label: 'Contacto y redes', icono: 'telephone' },
+      { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
+    ],
+  },
 ];
 
 function SelectorEdicion() {

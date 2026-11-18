@@ -1,0 +1,78 @@
+{% extends "portal/panel/base_panel.html" %}
+{% load portal %}
+
+{% block panel %}
+{# Misma pantalla que pages/admin/AdminBanner.jsx #}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Banner de inicio</h1>
+    <p class="text-secondary-flv mb-0">{% if edicion %}{{ edicion.nombre }} · {% endif %}Imágenes de la cabecera de la página principal. Se muestran los banners de la edición activa; sin banners activos se muestra el inicio ilustrado.</p>
+  </div>
+  {% if edicion %}<a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo banner</a>{% endif %}
+</header>
+
+{% if not edicion %}
+  <div class="alert alert-warning" role="alert">No hay ediciones registradas. <a href="{% url 'portal:panel-ediciones' %}" class="alert-link">Crea una edición</a> para agregar banners.</div>
+{% else %}
+<form method="post" action="{% url 'portal:panel-banner-modo' %}" class="card-flv p-3 mb-3">
+  {% csrf_token %}
+  <fieldset>
+    <legend class="h6 mb-2">¿Cómo se muestra el banner en el inicio?</legend>
+    <div class="d-flex flex-wrap gap-4">
+      {% for valor, etiqueta in modos %}
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="modo_banner" id="modo-{{ valor }}" value="{{ valor }}"{% if modo == valor %} checked{% endif %} data-enviar-al-cambiar aria-describedby="modo-{{ valor }}-ayuda">
+          <label class="form-check-label fw-semibold" for="modo-{{ valor }}">{{ etiqueta }}</label>
+          <div id="modo-{{ valor }}-ayuda" class="small text-secondary-flv">{% if valor == "fijo" %}Solo se muestra el primer banner activo de la lista.{% else %}Los banners activos rotan cada 7 segundos.{% endif %}</div>
+        </div>
+      {% endfor %}
+    </div>
+    <noscript><button class="btn btn-sm btn-outline-primary mt-2" type="submit">Guardar</button></noscript>
+  </fieldset>
+</form>
+
+{% if lista %}
+<div class="card-flv p-0 table-responsive">
+  <table class="table table-hover align-middle mb-0 tabla-apilada">
+    <caption class="visually-hidden">Banners del inicio</caption>
+    <thead><tr><th scope="col">Imagen</th><th scope="col">Texto</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+    <tbody>
+      {% for b in lista %}
+        <tr{% if not b.activo %} class="opacity-75"{% endif %}>
+          <td data-etiqueta="Imagen"><img src="{{ b.imagen.url }}" alt="{{ b.texto_alternativo }}" class="banner-miniatura"></td>
+          <td style="min-width: 10rem">
+            {% if en_inicio and en_inicio.pk == b.pk %}<span class="badge text-bg-dark me-2">En el inicio</span>{% endif %}
+            <strong>{% if b.titulo %}{{ b.titulo }}{% else %}<span class="fw-normal fst-italic">Solo imagen</span>{% endif %}</strong>
+            {% if b.subtitulo %}<div class="small text-secondary-flv">{{ b.subtitulo }}</div>{% endif %}
+            {% if b.enlace_boton %}<div class="small"><code>{{ b.enlace_boton }}</code></div>{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'portal:panel-banner-alternar' b.pk %}" class="form-check form-switch mb-0">{% csrf_token %}
+              <input class="form-check-input" type="checkbox" role="switch" id="banner-{{ b.pk }}"{% if b.activo %} checked{% endif %} data-enviar-al-cambiar>
+              <label class="form-check-label small" for="banner-{{ b.pk }}">{{ b.activo|yesno:"Activo,Inactivo" }}</label>
+            </form>
+          </td>
+          <td class="text-end text-nowrap">
+            {% include "portal/panel/botones_mover.html" with url_mover="portal:panel-banner-mover" pk=b.pk nombre=b.titulo|default:b.texto_alternativo primero=forloop.first ultimo=forloop.last %}
+            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'portal:panel-banner-editar' b.pk %}" aria-label="Editar {{ b.titulo|default:b.texto_alternativo }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-eliminar-url="{% url 'portal:panel-banner-eliminar' b.pk %}" data-eliminar-nombre="{{ b.titulo|default:b.texto_alternativo }}" aria-label="Eliminar {{ b.titulo|default:b.texto_alternativo }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card-flv p-4 text-center">
+  <i class="bi bi-images fs-1 text-secondary" aria-hidden="true"></i>
+  <p class="mb-2">No hay banners: el inicio muestra la ilustración predeterminada.</p>
+  <a class="btn btn-primary" href="{% url 'portal:panel-banner-nuevo' %}">Crear el primer banner</a>
+</div>
+{% endif %}
+{% endif %}
+
+{% if form %}
+  {% url 'portal:panel-banner' as volver %}
+  {% include "portal/panel/modal_formulario.html" with titulo_modal=instancia|yesno:"Editar banner,Nuevo banner" plantilla_campos="portal/panel/campos_banner.html" tamano="modal-lg" %}
+{% endif %}
+{% endblock %}

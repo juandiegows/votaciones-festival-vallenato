@@ -1,0 +1,18 @@
+{% load portal %}
+<div class="mb-3">
+  <label class="form-label" for="id_imagen">Imagen{% if not instancia %} <span class="text-danger" aria-hidden="true">*</span>{% endif %} <span class="fw-normal text-secondary-flv">(JPG, PNG o WebP, máximo 3 MB; recomendado 1920 × 600 px{% if instancia %}; déjalo vacío para conservar la actual{% endif %})</span></label>
+  <input id="id_imagen" name="imagen" type="file" accept="image/jpeg,image/png,image/webp" class="form-control{{ form.imagen|campo_invalido }}"{% if form.imagen.errors %} aria-invalid="true"{% endif %}>
+  {% if form.imagen.errors %}<div class="invalid-feedback">{{ form.imagen.errors|join:" " }}</div>{% endif %}
+  {% if instancia and instancia.imagen %}<img src="{{ instancia.imagen.url }}" alt="Imagen actual del banner" class="banner-vista-previa mt-2">{% endif %}
+</div>
+{% include "portal/parciales/campo.html" with campo=form.titulo ayuda="Opcional: déjalo vacío si la imagen ya trae el texto." %}
+{% include "portal/parciales/campo.html" with campo=form.subtitulo ayuda="Opcional." %}
+{% include "portal/parciales/campo.html" with campo=form.texto_alternativo ayuda="Descripción de la imagen para quienes usan lectores de pantalla." %}
+<div class="row">
+  <div class="col-md-5">{% include "portal/parciales/campo.html" with campo=form.texto_boton ayuda="Opcional." %}</div>
+  <div class="col-md-7">{% include "portal/parciales/campo.html" with campo=form.enlace_boton ayuda="Ruta del sitio (/2027) o URL http(s)." %}</div>
+</div>
+<div class="form-check form-switch">
+  <input id="id_activo" name="activo" class="form-check-input" type="checkbox" role="switch"{% if form.activo.value %} checked{% endif %}>
+  <label class="form-check-label" for="id_activo">Mostrar en el inicio</label>
+</div>

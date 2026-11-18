@@ -9,7 +9,9 @@ El panel vive en /panel/… (no /admin: el WAF de producción bloquea esas rutas
 from django.urls import path, register_converter
 
 from .vistas import cuentas, publico, votos
-from .vistas.panel import categorias, configuracion, ediciones, inicio, opciones, transferencia, usuarios, votaciones
+from .vistas.panel import (
+    auditoria, categorias, configuracion, ediciones, inicio, opciones, sitio, transferencia, usuarios, votaciones,
+)
 from .vistas.panel import votos as votos_panel
 
 app_name = "portal"
@@ -49,8 +51,6 @@ panel = [
     path("panel/configuracion/demo/eliminar", configuracion.eliminar_demo, name="panel-demo-eliminar"),
     path("panel/configuracion/demo/cargar", configuracion.cargar_demo, name="panel-demo-cargar"),
     path("panel/votos", votos_panel.votos, name="panel-votos"),
-    path("panel/usuarios", usuarios.usuarios, name="panel-usuarios"),
-    path("panel/usuarios/<int:pk>/rol", usuarios.cambiar_rol, name="panel-usuario-rol"),
     path("panel/votos/<int:pk>", votos_panel.detalle, name="panel-voto-detalle"),
     path("panel/votaciones", votaciones.votaciones, name="panel-votaciones"),
     path("panel/votaciones/nueva", votaciones.votaciones, name="panel-votacion-nueva"),
@@ -64,6 +64,30 @@ panel = [
     path("panel/votaciones/<int:votacion_pk>/opciones/<int:pk>/editar", opciones.opciones, name="panel-opcion-editar"),
     path("panel/votaciones/<int:votacion_pk>/opciones/<int:pk>/alternar", opciones.alternar_opcion, name="panel-opcion-alternar"),
     path("panel/votaciones/<int:votacion_pk>/opciones/<int:pk>/eliminar", opciones.eliminar_opcion, name="panel-opcion-eliminar"),
+    # Seguimiento
+    path("panel/auditoria", auditoria.auditoria, name="panel-auditoria"),
+    path("panel/usuarios", usuarios.usuarios, name="panel-usuarios"),
+    path("panel/usuarios/<int:pk>/rol", usuarios.cambiar_rol, name="panel-usuario-rol"),
+    # Sitio público
+    path("panel/banner", sitio.banners, name="panel-banner"),
+    path("panel/banner/nuevo", sitio.banners, name="panel-banner-nuevo"),
+    path("panel/banner/modo", sitio.modo_banner, name="panel-banner-modo"),
+    path("panel/banner/<int:pk>/editar", sitio.banners, name="panel-banner-editar"),
+    path("panel/banner/<int:pk>/alternar", sitio.alternar_banner, name="panel-banner-alternar"),
+    path("panel/banner/<int:pk>/mover", sitio.mover_banner, name="panel-banner-mover"),
+    path("panel/banner/<int:pk>/eliminar", sitio.eliminar_banner, name="panel-banner-eliminar"),
+    path("panel/revista", sitio.revistas, name="panel-revista"),
+    path("panel/revista/nueva", sitio.revistas, name="panel-revista-nueva"),
+    path("panel/revista/<int:pk>/editar", sitio.revistas, name="panel-revista-editar"),
+    path("panel/revista/<int:pk>/alternar", sitio.alternar_revista, name="panel-revista-alternar"),
+    path("panel/revista/<int:pk>/mover", sitio.mover_revista, name="panel-revista-mover"),
+    path("panel/revista/<int:pk>/eliminar", sitio.eliminar_revista, name="panel-revista-eliminar"),
+    path("panel/sitio", sitio.sitio, name="panel-sitio"),
+    path("panel/sitio/redes/<int:pk>/editar", sitio.sitio, name="panel-red-editar"),
+    path("panel/sitio/redes/<int:pk>/mover", sitio.mover_red, name="panel-red-mover"),
+    path("panel/sitio/redes/<int:pk>/eliminar", sitio.eliminar_red, name="panel-red-eliminar"),
+    path("panel/marca", sitio.marca, name="panel-marca"),
+    path("panel/marca/restablecer", sitio.restablecer_marca, name="panel-marca-restablecer"),
 ]
 
 urlpatterns = [

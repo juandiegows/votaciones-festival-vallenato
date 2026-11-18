@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { valoresPorDefecto } from '../../utils/predeterminados.js';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -14,7 +15,7 @@ import MenuExportar from '../../components/admin/MenuExportar.jsx';
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export default function AdminCategorias() {
-  const { guardarEntidad, eliminarEntidad } = useApp();
+  const { configuracion, guardarEntidad, eliminarEntidad } = useApp();
   const { edicion, ediciones, categorias, votaciones } = useEdicionAdmin();
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
@@ -54,7 +55,7 @@ export default function AdminCategorias() {
   const nueva = () => {
     abrirFormulario({
       edicionId: (edicion?.estado !== 'cerrada' && edicion?.id) || edicionesAbiertas[0]?.id || '', nombre: '', slug: '', slugAuto: true, descripcion: '', icono: 'music-note-beamed',
-      iconoImagen: '', archivoIcono: null, quitarIcono: false, activa: true, orden: categorias.length + 1,
+      iconoImagen: '', archivoIcono: null, quitarIcono: false, activa: valoresPorDefecto(configuracion).defectoCategoriaActiva, orden: categorias.length + 1,
     });
   };
 

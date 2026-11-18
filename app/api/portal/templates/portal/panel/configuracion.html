@@ -101,7 +101,60 @@
       {% endif %}
       {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_total_votos titulo="Mostrar el total de votos en el inicio" ayuda="El público ve cuántos votos lleva la edición activa." %}
     </section>
+  {% elif clave == "predeterminados" %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-edicion">
+      <h2 id="cfg-def-edicion" class="h5 mb-3"><i class="bi bi-calendar3 me-2 text-rojo" aria-hidden="true"></i>Edición nueva</h2>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="{{ form.defecto_presentacion_categorias.id_for_label }}" class="form-label">Presentación de las categorías</label>
+          <select id="{{ form.defecto_presentacion_categorias.id_for_label }}" name="defecto_presentacion_categorias" class="form-select" aria-describedby="ayuda-defecto_presentacion_categorias">
+            {% for valor, etiqueta in form.defecto_presentacion_categorias.field.choices %}<option value="{{ valor }}"{% if form.defecto_presentacion_categorias.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+          </select>
+          <div id="ayuda-defecto_presentacion_categorias" class="form-text">Cómo ve el público las categorías de la edición.</div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="{{ form.defecto_visibilidad_resultados.id_for_label }}" class="form-label">Cuándo se publican los resultados</label>
+          <select id="{{ form.defecto_visibilidad_resultados.id_for_label }}" name="defecto_visibilidad_resultados" class="form-select" aria-describedby="ayuda-defecto_visibilidad_resultados">
+            {% for valor, etiqueta in form.defecto_visibilidad_resultados.field.choices %}<option value="{{ valor }}"{% if form.defecto_visibilidad_resultados.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+          </select>
+          <div id="ayuda-defecto_visibilidad_resultados" class="form-text">Aplica a las votaciones de la edición que no tengan un ajuste propio.</div>
+        </div>
+      </div>
+    </section>
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-categoria">
+      <h2 id="cfg-def-categoria" class="h5 mb-3"><i class="bi bi-grid me-2 text-rojo" aria-hidden="true"></i>Categoría nueva</h2>
+      {% include "portal/parciales/interruptor_config.html" with campo=form.defecto_voto_unico titulo="Un solo voto en toda la categoría" ayuda="Encendido: un voto en toda la categoría, aunque tenga varias votaciones. Apagado: un voto en cada votación." %}
+      {% include "portal/parciales/interruptor_config.html" with campo=form.defecto_categoria_activa titulo="Visible al público al crearla" ayuda="Apagado, la categoría se crea oculta y se activa cuando esté lista." %}
+    </section>
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-def-votacion">
+      <h2 id="cfg-def-votacion" class="h5 mb-3"><i class="bi bi-check2-square me-2 text-rojo" aria-hidden="true"></i>Votación nueva</h2>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="{{ form.defecto_presentacion_opciones.id_for_label }}" class="form-label">Presentación de las opciones</label>
+          <select id="{{ form.defecto_presentacion_opciones.id_for_label }}" name="defecto_presentacion_opciones" class="form-select" aria-describedby="ayuda-defecto_presentacion_opciones">
+            {% for valor, etiqueta in form.defecto_presentacion_opciones.field.choices %}<option value="{{ valor }}"{% if form.defecto_presentacion_opciones.value == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+          </select>
+          <div id="ayuda-defecto_presentacion_opciones" class="form-text">Cómo ve el público las opciones al votar.</div>
+        </div>
+        <div class="col-md-6">
+          {% include "portal/parciales/campo.html" with campo=form.defecto_dias_votacion tipo="number" ayuda="Días entre la apertura y el cierre que se proponen al crearla (1 a 365)." extra='min=1 max=365' %}
+        </div>
+      </div>
+      <p class="small text-secondary-flv mb-0">La votación nueva se crea como borrador y hereda de su edición cuándo se publican los resultados.</p>
+    </section>
   {% else %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-servidor">
+      <h2 id="cfg-servidor" class="h5 mb-1">Modo del servidor</h2>
+      <div class="fila-config">
+        <div>
+          <p class="fw-semibold mb-0">{% if modo_desarrollo %}Desarrollo (DEBUG encendido){% else %}Producción (DEBUG apagado){% endif %}</p>
+          <p class="small text-secondary-flv mb-0">{% if modo_desarrollo %}Los errores muestran la página técnica de Django con detalles internos. No uses este modo en un servidor público.{% else %}Los errores muestran la página del sitio, sin detalles internos.{% endif %}
+            Se define con la variable <code>DJANGO_DEBUG</code> al arrancar el servidor; por seguridad no se cambia desde el panel.</p>
+        </div>
+        {% if modo_desarrollo %}<span class="badge text-bg-warning"><i class="bi bi-bug-fill" aria-hidden="true"></i> Desarrollo</span>
+        {% else %}<span class="badge badge-estado estado-abierta"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i> Producción</span>{% endif %}
+      </div>
+    </section>
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-banner">
       <h2 id="cfg-banner" class="h5 mb-3">Inicio</h2>
       <div class="row"><div class="col-md-6">

@@ -52,6 +52,9 @@ const CAMPOS = {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
     modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', mostrarSwagger: 'mostrar_swagger', mostrarParticipantes: 'mostrar_participantes', umbralParticipacion: 'umbral_participacion', pedirDocumento: 'pedir_documento', marca: 'marca',
     avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca', mostrarEquipo: 'mostrar_equipo', permitirCuentasDemo: 'permitir_cuentas_demo',
+    defectoPresentacionCategorias: 'defecto_presentacion_categorias', defectoResultados: 'defecto_visibilidad_resultados',
+    defectoVotoUnico: 'defecto_voto_unico', defectoCategoriaActiva: 'defecto_categoria_activa',
+    defectoPresentacionOpciones: 'defecto_presentacion_opciones', defectoDiasVotacion: 'defecto_dias_votacion',
   },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',
@@ -107,6 +110,9 @@ export function desdeApi(coleccion, objeto) {
     if (salida.resultadosPublicados === undefined) salida.resultadosPublicados = false;
   }
   if (coleccion === 'ediciones') salida.mostrarResultados = VISIBILIDAD_DESDE_API[objeto.visibilidad_resultados] || 'al cerrar';
+  if (coleccion === 'configuracion' && objeto.defecto_visibilidad_resultados !== undefined) {
+    salida.defectoResultados = VISIBILIDAD_DESDE_API[objeto.defecto_visibilidad_resultados] || 'al cerrar';
+  }
   (ARCHIVOS[coleccion] || []).forEach((archivo) => {
     if (salida[archivo.web] !== undefined) salida[archivo.web] = urlMedia(salida[archivo.web]);
   });
@@ -123,6 +129,9 @@ export function haciaApi(coleccion, objeto) {
   });
   if (coleccion === 'ediciones' && objeto.mostrarResultados !== undefined) {
     salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';
+  }
+  if (coleccion === 'configuracion' && objeto.defectoResultados !== undefined) {
+    salida.defecto_visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.defectoResultados] || 'al_cierre';
   }
   if (coleccion === 'votaciones') {
     if (objeto.mostrarResultados !== undefined) salida.visibilidad_resultados = VISIBILIDAD_HACIA_API[objeto.mostrarResultados] || 'al_cierre';

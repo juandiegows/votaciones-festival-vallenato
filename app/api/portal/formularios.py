@@ -190,6 +190,8 @@ class ConfiguracionForm(SoloCamposMixin, forms.ModelForm):
             "pedir_documento", "mostrar_total_votos", "mostrar_participantes", "umbral_participacion", "mostrar_swagger",
             "modo_banner", "dias_visible_cerradas", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
             "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "permitir_cuentas_demo",
+            "defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
+            "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion",
         ]
         labels = {
             "umbral_participacion": "Mínimo de votantes",
@@ -197,6 +199,7 @@ class ConfiguracionForm(SoloCamposMixin, forms.ModelForm):
             "nombre_organizacion": "Nombre de la organización", "telefono": "Teléfono", "direccion": "Dirección",
             "correo": "Correo de contacto", "texto_pie": "Texto del pie de página",
             "aviso_superior": "Aviso del pie de página", "subtitulo_logo": "Subtítulo del logo", "texto_acerca": "Texto «Acerca de»",
+            "defecto_dias_votacion": "Días que dura una votación",
         }
 
 

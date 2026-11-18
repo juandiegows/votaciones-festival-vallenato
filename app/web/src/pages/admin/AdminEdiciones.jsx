@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
+import { valoresPorDefecto } from '../../utils/predeterminados.js';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -13,7 +14,8 @@ import MenuExportar from '../../components/admin/MenuExportar.jsx';
 import ImportarEdicion from '../../components/admin/ImportarEdicion.jsx';
 
 export default function AdminEdiciones() {
-  const { ediciones, categorias, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const { ediciones, categorias, configuracion, guardarEntidad, eliminarEntidad, reemplazarColeccion } = useApp();
+  const defecto = valoresPorDefecto(configuracion);
   const { setEdicionId } = useEdicionAdmin();
   const [form, setForm] = useState(null);
   const [errores, setErrores] = useState({});
@@ -100,7 +102,7 @@ export default function AdminEdiciones() {
         <button className="btn btn-outline-primary me-2" onClick={() => setImportando(true)}>
           <i className="bi bi-upload me-1" aria-hidden="true"></i>Importar desde Excel
         </button>
-        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: 'tarjetas' })}>
+        <button className="btn btn-primary" onClick={() => abrirFormulario({ nombre: `Festival de la Leyenda Vallenata ${siguienteAnio}`, anio: siguienteAnio, fechaInicio: '', fechaFin: '', estado: 'cerrada', presentacionCategorias: defecto.defectoPresentacionCategorias, mostrarResultados: defecto.defectoResultados })}>
           <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva edición
         </button>
       </PageHeader>

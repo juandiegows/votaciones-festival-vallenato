@@ -1,5 +1,6 @@
 """Ajustes del sistema en pestañas por tarea; cada pestaña guarda solo sus campos."""
 
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
@@ -27,6 +28,9 @@ SECCIONES = {
                    "sitio": ["mostrar_total_votos", "dias_visible_cerradas"], "edicion": ["visibilidad_resultados"]},
     "demo": {"titulo": "Demostración", "icono": "person-badge-fill", "descripcion": "Cuentas y datos de prueba que crea cargar_demo: permitir su ingreso, eliminarlos o volver a cargarlos.",
              "sitio": ["permitir_cuentas_demo"], "edicion": []},
+    "predeterminados": {"titulo": "Valores por defecto", "icono": "ui-checks", "descripcion": "Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.",
+                        "sitio": ["defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
+                                  "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"], "edicion": []},
     "sitio": {"titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
               "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "aviso_superior",
                         "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
@@ -69,6 +73,8 @@ def configuracion(request):
     return render_panel(request, "portal/panel/configuracion.html", "configuracion", edicion, {
         "form": form, "form_edicion": form_edicion, "categorias": categorias, "clave": clave, "seccion_config": seccion,
         "secciones": [{"clave": k, **v} for k, v in SECCIONES.items()],
+        # Solo lectura: DEBUG se fija con DJANGO_DEBUG al arrancar el servidor y nunca desde el panel
+        "modo_desarrollo": settings.DEBUG,
         **({"demo": demo.resumen(), "demo_anios": ", ".join(map(str, demo.ANIOS_DEMO)),
             "es_cuenta_demo": demo.es_cuenta_demo(request.user.email)} if clave == "demo" else {}),
     })

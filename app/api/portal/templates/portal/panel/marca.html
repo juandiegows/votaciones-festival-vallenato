@@ -1,0 +1,118 @@
+{% extends "portal/panel/base_panel.html" %}
+
+{% block panel %}
+{# Identidad visual (versión Django de pages/Marca.jsx): colores con su contraste WCAG y estilo de botones y alertas #}
+<header class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="h2 mb-1">Identidad visual</h1>
+    <p class="text-secondary-flv mb-0">Colores y estilos del sitio público y del panel. Se guarda solo lo que cambies respecto a la marca base del Festival (docs/BRANDING.md).</p>
+  </div>
+  {% if personalizada %}
+    <form method="post" action="{% url 'portal:panel-marca-restablecer' %}">
+      {% csrf_token %}
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restablecer la marca base</button>
+    </form>
+  {% endif %}
+</header>
+
+<div class="alert alert-info small" role="note">
+  <i class="bi bi-universal-access me-1" aria-hidden="true"></i>Cada color muestra su contraste con el texto que suele llevar encima. Para cumplir WCAG 2.1 AA el texto normal necesita al menos 4,5:1.
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.errors %}<div class="alert alert-danger" role="alert">Revisa los colores marcados: usa el formato HEX de 6 cifras (p. ej. #DD3333).</div>{% endif %}
+
+  {% for g in grupos %}
+  <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="grupo-{{ forloop.counter }}">
+    <h2 id="grupo-{{ forloop.counter }}" class="h5 mb-3">{{ g.grupo }}</h2>
+    <div class="row g-3">
+      {% for c in g.colores %}
+      <div class="col-sm-6 col-xl-4">
+        <article class="border rounded-3 h-100 overflow-hidden">
+          <div class="d-flex align-items-center gap-2 px-3 py-2 fw-semibold" style="background: {{ c.actual }}; color: {{ c.texto }}; border-bottom: 1px solid #E9E9E9">
+            {{ c.actual }}{% if c.modificado %}<span class="badge bg-light text-dark ms-auto">Modificado</span>{% endif %}
+          </div>
+          <div class="p-3">
+            <h3 class="h6 mb-1"><label for="id_{{ c.campo }}">{{ c.nombre }}</label></h3>
+            <p class="small mb-2"><code>{{ c.token }}</code> · base {{ c.hex }}</p>
+            <div class="input-group input-group-sm mb-2">
+              <input type="color" class="form-control form-control-color" value="{{ c.actual|lower }}" aria-label="{{ c.nombre }} (selector)" data-color-selector>
+              <input id="id_{{ c.campo }}" name="{{ c.campo }}" class="form-control font-monospace{% if c.error %} is-invalid{% endif %}" value="{{ c.actual }}" maxlength="7" spellcheck="false" data-color-hex{% if c.error %} aria-invalid="true" aria-describedby="error-{{ c.campo }}"{% endif %}>
+              {% if c.error %}<div id="error-{{ c.campo }}" class="invalid-feedback">{{ c.error }}</div>{% endif %}
+            </div>
+            <p class="small text-secondary-flv mb-2">{{ c.uso }}</p>
+            <p class="small mb-0 d-flex flex-wrap align-items-center gap-2">
+              <span class="px-2 py-1 rounded fw-semibold" style="background: {{ c.actual }}; color: {{ c.par }}; border: 1px solid #ccc">Aa {{ c.par }}</span>
+              <strong>{{ c.contraste }}</strong>
+              <span class="badge badge-estado {% if c.cumple %}estado-abierta{% else %}estado-cerrada{% endif %}">{{ c.nivel }}</span>
+            </p>
+          </div>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="titulo-botones">
+    <h2 id="titulo-botones" class="h5 mb-1">Botones</h2>
+    <p class="small text-secondary-flv mb-3">El primario usa el Rojo Festival y el secundario el Ocre Valledupar. El color propio de cada botón se elige en la web React.</p>
+    <div class="row g-3">
+      {% for r in roles %}
+      <fieldset class="col-lg-6">
+        <div class="border rounded-3 p-3 h-100">
+          <legend class="h6">{{ r.nombre }}</legend>
+          <div class="row g-2">
+            <div class="col-sm-4">
+              <label class="form-label small" for="id_{{ r.clave }}_estilo">Estilo</label>
+              <select id="id_{{ r.clave }}_estilo" name="{{ r.clave }}_estilo" class="form-select form-select-sm">
+                {% for valor, etiqueta in estilos_boton %}<option value="{{ valor }}"{% if r.boton.estilo == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small" for="id_{{ r.clave }}_forma">Forma</label>
+              <select id="id_{{ r.clave }}_forma" name="{{ r.clave }}_forma" class="form-select form-select-sm">
+                {% for valor, etiqueta in formas %}<option value="{{ valor }}"{% if r.boton.forma == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label small" for="id_{{ r.clave }}_peso">Grosor del texto</label>
+              <select id="id_{{ r.clave }}_peso" name="{{ r.clave }}_peso" class="form-select form-select-sm">
+                {% for valor, etiqueta in pesos %}<option value="{{ valor }}"{% if r.boton.peso == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch mb-0">
+                <input id="id_{{ r.clave }}_mayusculas" name="{{ r.clave }}_mayusculas" class="form-check-input" type="checkbox" role="switch"{% if r.boton.mayusculas %} checked{% endif %}>
+                <label class="form-check-label small" for="id_{{ r.clave }}_mayusculas">Texto en mayúsculas</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="titulo-alertas">
+    <h2 id="titulo-alertas" class="h5 mb-3">Avisos y alertas</h2>
+    <div class="row g-2">
+      <div class="col-sm-6 col-lg-4">
+        <label class="form-label small" for="id_alerta_estilo">Estilo</label>
+        <select id="id_alerta_estilo" name="alerta_estilo" class="form-select form-select-sm">
+          {% for valor, etiqueta in estilos_alerta %}<option value="{{ valor }}"{% if alertas.estilo == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <label class="form-label small" for="id_alerta_forma">Forma</label>
+        <select id="id_alerta_forma" name="alerta_forma" class="form-select form-select-sm">
+          {% for valor, etiqueta in formas %}<option value="{{ valor }}"{% if alertas.forma == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div class="text-end"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar la identidad visual</button></div>
+</form>
+{% endblock %}
