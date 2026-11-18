@@ -1,0 +1,10 @@
+{% autoescape off %}{% if activar %}Activa la verificación en dos pasos{% else %}Tu código para entrar{% endif %}
+
+Hola, {{ usuario.nombres }}. Tu código de verificación es:
+
+    {{ codigo }}
+
+Vence en {{ minutos_validez }} minutos. Nunca lo compartas: nadie del Festival te lo pedirá.
+{% if not activar %}
+¿No fuiste tú? Alguien conoce tu contraseña: cámbiala cuanto antes.
+{% endif %}{% include "correo/pie.txt" %}{% endautoescape %}

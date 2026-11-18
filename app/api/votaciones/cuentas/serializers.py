@@ -20,12 +20,19 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             "id", "email", "nombres", "apellidos", "rol", "rol_nombre", "permisos", "fecha_registro", "tipo_documento",
-            "numero_documento", "correo_verificado",
+            "numero_documento", "correo_verificado", "verificacion_dos_pasos",
         ]
         read_only_fields = fields
 
+    verificacion_dos_pasos = serializers.SerializerMethodField(help_text="Método activo: totp, correo o vacío.")
+
     def get_rol_nombre(self, usuario) -> str:
         return nombre_rol(usuario.rol)
+
+    def get_verificacion_dos_pasos(self, usuario) -> str:
+        from . import servicios_2fa
+
+        return servicios_2fa.metodo(usuario)
 
     def get_permisos(self, usuario) -> list[str]:
         return sorted(usuario.permisos)
@@ -38,12 +45,22 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             "id", "email", "nombres", "apellidos", "rol", "rol_nombre", "is_active", "fecha_registro", "tipo_documento",
-            "numero_documento", "correo_verificado",
+            "numero_documento", "correo_verificado", "verificacion_dos_pasos",
         ]
         read_only_fields = fields
 
+    verificacion_dos_pasos = serializers.SerializerMethodField(help_text="Método activo: totp, correo o vacío.")
+
     def get_rol_nombre(self, usuario) -> str:
         return self.context.get("nombres_roles", {}).get(usuario.rol) or nombre_rol(usuario.rol)
+
+    def get_verificacion_dos_pasos(self, usuario) -> str:
+        from .models import SegundoFactor
+
+        try:
+            return usuario.segundo_factor.metodo
+        except SegundoFactor.DoesNotExist:
+            return ""
 
 
 class RolSerializer(serializers.ModelSerializer):
@@ -159,3 +176,52 @@ class LoginSerializer(serializers.Serializer):
 class TokenRespuestaSerializer(serializers.Serializer):
     token = serializers.CharField(help_text="Usar como encabezado `Authorization: Token <token>`.")
     usuario = UsuarioSerializer()
+
+
+# Verificación en dos pasos (RF-20)
+
+
+class DesafioDosPasosSerializer(serializers.Serializer):
+    requiere_2fa = serializers.BooleanField(help_text="Siempre true: falta el código del paso 2.")
+    metodo = serializers.ChoiceField(choices=["totp", "correo"])
+    desafio = serializers.CharField(help_text="Enviar a /api/auth/2fa/verificar/ junto con el código (vence en 5 minutos).")
+
+
+class VerificarDosPasosSerializer(serializers.Serializer):
+    desafio = serializers.CharField()
+    codigo = serializers.CharField(max_length=20, help_text="6 dígitos de la app o del correo, o un código de respaldo.")
+
+
+class DesafioSerializer(serializers.Serializer):
+    desafio = serializers.CharField()
+
+
+class CodigoSerializer(serializers.Serializer):
+    codigo = serializers.CharField(max_length=20)
+
+
+class ContrasenaSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+
+
+class EstadoDosPasosSerializer(serializers.Serializer):
+    activo = serializers.BooleanField()
+    metodo = serializers.CharField(help_text="totp, correo o vacío.")
+    metodo_nombre = serializers.CharField()
+    activado_en = serializers.DateTimeField(allow_null=True)
+    codigos_respaldo_restantes = serializers.IntegerField()
+    correo = serializers.EmailField()
+    correo_verificado = serializers.BooleanField()
+
+
+class ConfigurarTotpSerializer(serializers.Serializer):
+    clave = serializers.CharField(help_text="Clave Base32 para escribirla a mano en la app.")
+    clave_agrupada = serializers.CharField()
+    uri = serializers.CharField(help_text="otpauth://… (lo que contiene el QR).")
+    qr = serializers.CharField(help_text="Imagen SVG del QR como data URI.")
+    emisor = serializers.CharField()
+
+
+class CodigosRespaldoSerializer(serializers.Serializer):
+    codigos_respaldo = serializers.ListField(child=serializers.CharField(), help_text="Se muestran una sola vez.")
+    estado = EstadoDosPasosSerializer()

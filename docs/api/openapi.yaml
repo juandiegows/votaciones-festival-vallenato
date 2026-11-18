@@ -32,6 +32,281 @@ info:
 
     Errores de negocio: siempre `{"detail": "…", "codigo": "…"}`.
 paths:
+  /api/auth/2fa/:
+    get:
+      operationId: auth_2fa_retrieve
+      summary: Estado de la verificación en dos pasos de mi cuenta
+      tags:
+      - Verificación en dos pasos
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoDosPasos'
+          description: ''
+  /api/auth/2fa/codigos-respaldo/:
+    post:
+      operationId: auth_2fa_codigos_respaldo_create
+      summary: Generar nuevos códigos de respaldo (pide la contraseña)
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodigosRespaldo'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/correo/activar/:
+    post:
+      operationId: auth_2fa_correo_activar_create
+      summary: Activar el código por correo
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodigosRespaldo'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/correo/iniciar/:
+    post:
+      operationId: auth_2fa_correo_iniciar_create
+      summary: Enviar el código al correo para activar ese método
+      tags:
+      - Verificación en dos pasos
+      security:
+      - tokenAuth: []
+      responses:
+        '202':
+          description: Código enviado
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/desactivar/:
+    post:
+      operationId: auth_2fa_desactivar_create
+      summary: Desactivar la verificación en dos pasos (pide la contraseña)
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContrasenaRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoDosPasos'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/reenviar/:
+    post:
+      operationId: auth_2fa_reenviar_create
+      summary: Reenviar el código del paso 2 al correo
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DesafioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DesafioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DesafioRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '202':
+          description: Código enviado
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/totp/activar/:
+    post:
+      operationId: auth_2fa_totp_activar_create
+      summary: Activar la app autenticadora con un código
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CodigoRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodigosRespaldo'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/totp/iniciar/:
+    post:
+      operationId: auth_2fa_totp_iniciar_create
+      description: Google Authenticator, Microsoft Authenticator, Authy… No activa
+        nada hasta confirmar un código.
+      summary: Empezar a configurar la app autenticadora (QR y clave)
+      tags:
+      - Verificación en dos pasos
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurarTotp'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/auth/2fa/verificar/:
+    post:
+      operationId: auth_2fa_verificar_create
+      summary: 'Paso 2 del inicio de sesión: verificar el código'
+      tags:
+      - Verificación en dos pasos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificarDosPasosRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VerificarDosPasosRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VerificarDosPasosRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
   /api/auth/confirmar-correo/:
     post:
       operationId: auth_confirmar_correo_create
@@ -107,7 +382,11 @@ paths:
   /api/auth/login/:
     post:
       operationId: auth_login_create
-      summary: Iniciar sesión (RF-02)
+      description: 'Si la cuenta tiene la verificación en dos pasos no entrega el
+        token: responde `{requiere_2fa: true, metodo, desafio}` y el token sale de
+        `/api/auth/2fa/verificar/`. Con el método por correo, el código se envía en
+        este momento.'
+      summary: Iniciar sesión (RF-02, RF-20)
       tags:
       - Autenticación
       requestBody:
@@ -131,7 +410,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenRespuesta'
-          description: ''
+          description: Token, o DesafioDosPasos si falta el paso 2
         '400':
           description: Credenciales incorrectas
   /api/auth/logout/:
@@ -2083,6 +2362,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsuarioAdmin'
           description: ''
+  /api/gestion/usuarios/{id}/quitar-2fa/:
+    post:
+      operationId: gestion_usuarios_quitar_2fa_create
+      description: 'Para quien perdió el celular y los códigos de respaldo. Exige
+        motivo (mínimo 20 caracteres): queda en la auditoría y se le envía por correo
+        a la persona.'
+      summary: Quitar la verificación en dos pasos de una cuenta (R-11)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motivo:
+                  type: string
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
   /api/gestion/usuarios/{id}/rol/:
     post:
       operationId: gestion_usuarios_rol_create
@@ -3237,6 +3567,28 @@ components:
       - nombre
       - total_votos
       - votaciones
+    CodigoRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          maxLength: 20
+      required:
+      - codigo
+    CodigosRespaldo:
+      type: object
+      properties:
+        codigos_respaldo:
+          type: array
+          items:
+            type: string
+          description: Se muestran una sola vez.
+        estado:
+          $ref: '#/components/schemas/EstadoDosPasos'
+      required:
+      - codigos_respaldo
+      - estado
     CompletarDocumentoRequest:
       type: object
       description: Para quien se registró sin documento y la administración luego
@@ -3599,6 +3951,28 @@ components:
           title: Días que dura una votación
           description: 'Votación nueva: días entre la apertura y el cierre que se
             proponen al crearla.'
+    ConfigurarTotp:
+      type: object
+      properties:
+        clave:
+          type: string
+          description: Clave Base32 para escribirla a mano en la app.
+        clave_agrupada:
+          type: string
+        uri:
+          type: string
+          description: otpauth://… (lo que contiene el QR).
+        qr:
+          type: string
+          description: Imagen SVG del QR como data URI.
+        emisor:
+          type: string
+      required:
+      - clave
+      - clave_agrupada
+      - emisor
+      - qr
+      - uri
     ConfirmarCorreoRequest:
       type: object
       properties:
@@ -3607,6 +3981,15 @@ components:
           minLength: 1
       required:
       - token
+    ContrasenaRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
     DefectoPresentacionCategoriasEnum:
       enum:
       - tarjetas
@@ -3653,6 +4036,14 @@ components:
         * `tiempo_real` - En tiempo real
         * `al_cierre` - Al cierre
         * `no_publicar` - No publicar
+    DesafioRequest:
+      type: object
+      properties:
+        desafio:
+          type: string
+          minLength: 1
+      required:
+      - desafio
     Edicion:
       type: object
       description: 'Serializador de alta: los campos que no llegan en la petición
@@ -3814,6 +4205,35 @@ components:
       required:
       - codigo
       - detail
+    EstadoDosPasos:
+      type: object
+      properties:
+        activo:
+          type: boolean
+        metodo:
+          type: string
+          description: totp, correo o vacío.
+        metodo_nombre:
+          type: string
+        activado_en:
+          type: string
+          format: date-time
+          nullable: true
+        codigos_respaldo_restantes:
+          type: integer
+        correo:
+          type: string
+          format: email
+        correo_verificado:
+          type: boolean
+      required:
+      - activado_en
+      - activo
+      - codigos_respaldo_restantes
+      - correo
+      - correo_verificado
+      - metodo
+      - metodo_nombre
     EstadoEdicionEnum:
       enum:
       - activa
@@ -4823,6 +5243,7 @@ components:
       - sitio.editar
       - sitio.ver
       - usuarios.cambiar_rol
+      - usuarios.quitar_2fa
       - usuarios.ver
       - votaciones.crear
       - votaciones.editar
@@ -4860,6 +5281,7 @@ components:
         * `sitio.editar` - sitio.editar
         * `sitio.ver` - sitio.ver
         * `usuarios.cambiar_rol` - usuarios.cambiar_rol
+        * `usuarios.quitar_2fa` - usuarios.quitar_2fa
         * `usuarios.ver` - usuarios.ver
         * `votaciones.crear` - votaciones.crear
         * `votaciones.editar` - votaciones.editar
@@ -5489,6 +5911,10 @@ components:
         correo_verificado:
           type: boolean
           readOnly: true
+        verificacion_dos_pasos:
+          type: string
+          readOnly: true
+          description: 'Método activo: totp, correo o vacío.'
       required:
       - apellidos
       - correo_verificado
@@ -5501,6 +5927,7 @@ components:
       - rol
       - rol_nombre
       - tipo_documento
+      - verificacion_dos_pasos
     UsuarioAdmin:
       type: object
       properties:
@@ -5546,6 +5973,10 @@ components:
         correo_verificado:
           type: boolean
           readOnly: true
+        verificacion_dos_pasos:
+          type: string
+          readOnly: true
+          description: 'Método activo: totp, correo o vacío.'
       required:
       - apellidos
       - correo_verificado
@@ -5558,6 +5989,21 @@ components:
       - rol
       - rol_nombre
       - tipo_documento
+      - verificacion_dos_pasos
+    VerificarDosPasosRequest:
+      type: object
+      properties:
+        desafio:
+          type: string
+          minLength: 1
+        codigo:
+          type: string
+          minLength: 1
+          description: 6 dígitos de la app o del correo, o un código de respaldo.
+          maxLength: 20
+      required:
+      - codigo
+      - desafio
     VisibilidadResultadosEnum:
       enum:
       - tiempo_real

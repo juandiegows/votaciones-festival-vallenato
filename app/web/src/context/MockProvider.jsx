@@ -572,6 +572,9 @@ export function MockProvider({ children }) {
     // Sin correos en la demostración: confirmar y reenviar no tienen nada que hacer
     confirmarCorreo: async () => ({ ok: true, usuario }),
     reenviarConfirmacion: async () => ({ ok: true, mensaje: 'En la demostración la cuenta ya está confirmada.' }),
+    // La verificación en dos pasos necesita la API (envío de correos y claves en el servidor)
+    dosPasos: null,
+    quitarDosPasos: async () => ({ ok: false, error: 'La verificación en dos pasos necesita la API.' }),
     completarDocumento: async (tipoDocumento, numero) => {
       if (!usuario) return { ok: false, error: 'Debes iniciar sesión.' };
       if (usuario.numeroDocumento) return { ok: false, codigo: 'documento_ya_registrado', error: 'Tu documento ya está registrado.' };

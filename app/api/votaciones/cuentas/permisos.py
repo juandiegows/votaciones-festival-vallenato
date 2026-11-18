@@ -60,6 +60,7 @@ GRUPOS = [
     ("Usuarios", [
         ("usuarios.ver", "Ver los usuarios registrados"),
         ("usuarios.cambiar_rol", "Cambiar el rol de un usuario"),
+        ("usuarios.quitar_2fa", "Quitar la verificación en dos pasos de una cuenta (con motivo)"),
     ]),
     ("Roles y permisos", [
         ("roles.ver", "Ver los roles y sus permisos"),

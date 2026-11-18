@@ -1,0 +1,12 @@
+{% autoescape off %}{{ titulo_cambio }}
+
+Hola, {{ usuario.nombres }}. {% if cambio == "activo" %}Desde ahora, además de tu contraseña, te pediremos un código al iniciar sesión.{% elif cambio == "inactivo" %}Tu cuenta vuelve a entrar solo con la contraseña.{% elif cambio == "quitado" %}Lo hizo la administración del sistema a tu solicitud: tu cuenta vuelve a entrar solo con la contraseña. Puedes activarla de nuevo en Seguridad.{% else %}Los códigos de respaldo anteriores dejaron de servir.{% endif %}
+
+Cuenta: {{ usuario.email }}{% if metodo %}
+Método: {{ metodo }}{% endif %}
+{% if motivo %}Motivo: {{ motivo }}
+{% endif %}Fecha: {{ fecha_hora|date:"j \d\e F \d\e Y, g:i a" }}
+
+¿No fuiste tú? Cambia tu contraseña de inmediato y revisa la seguridad de tu cuenta:
+{{ enlace }}
+{% include "correo/pie.txt" %}{% endautoescape %}

@@ -104,6 +104,7 @@ export default function Navbar() {
                 </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li><Link className="dropdown-item" to="/mis-votos"><i className="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</Link></li>
+                <li><Link className="dropdown-item" to="/cuenta/seguridad"><i className="bi bi-shield-lock me-2" aria-hidden="true"></i>Seguridad de la cuenta</Link></li>
                 {esAdmin && <li><Link className="dropdown-item" to="/panel"><i className="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel de administración</Link></li>}
                 <li><button className="dropdown-item" type="button" onClick={salir} disabled={saliendo}><i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{saliendo ? 'Cerrando sesión…' : 'Cerrar sesión'}</button></li>
               </ul>

@@ -40,6 +40,10 @@ def plantillas():
         "comprobante_voto": ("Comprobante de voto", lambda **o: servicio.enviar_comprobante_voto(voto, **o)),
         "restablecer_clave": ("Restablecer contraseña", lambda **o: servicio.enviar_restablecer_clave(
             usuario, f"{base}/restablecer-clave?token=demo", **o)),
+        "codigo_verificacion": ("Código de verificación (2FA)", lambda **o: servicio.enviar_codigo_verificacion(
+            usuario, "482915", **o)),
+        "aviso_seguridad": ("Aviso de seguridad (2FA)", lambda **o: servicio.enviar_aviso_seguridad(
+            usuario, "activo", metodo="App autenticadora", **o)),
     }
 
 

@@ -70,7 +70,13 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | POST | `/api/auth/registro/` | Público | Registra un votante; exige `acepta_tratamiento_datos=true` y envía el enlace de confirmación (RF-01, RN-10). `tipo_documento` y `numero_documento` son obligatorios solo si la configuración tiene `pedir_documento=true` (por defecto no); si se envían, se validan y deben ser únicos (RN-13) |
 | POST | `/api/auth/confirmar-correo/` | Público | Confirma el correo con el `token` del enlace (vence en 48 h) y envía la bienvenida (RN-14) |
 | POST | `/api/auth/reenviar-confirmacion/` | Token | Envía un nuevo enlace de confirmación; `409 correo_ya_confirmado` si ya lo está |
-| POST | `/api/auth/login/` | Público | Devuelve `token` y datos del usuario (RF-02) |
+| POST | `/api/auth/login/` | Público | Devuelve `token` y datos del usuario (RF-02). Si la cuenta tiene la verificación en dos pasos responde `{requiere_2fa: true, metodo, desafio}` sin token (RF-20); con el método `correo` envía el código en ese momento |
+| POST | `/api/auth/2fa/verificar/` | Público | Paso 2: `{desafio, codigo}` (6 dígitos de la app o del correo, o un código de respaldo) → `token`. El desafío vence en 5 min (`400 desafio_vencido`); 5 fallos seguidos bloquean 15 min (`429 2fa_bloqueada`) |
+| POST | `/api/auth/2fa/reenviar/` | Público | `{desafio}`: reenvía el código al correo (cada 60 s); `409 metodo_sin_reenvio` con app autenticadora |
+| GET | `/api/auth/2fa/` | Token | Estado de la verificación en dos pasos: `activo`, `metodo` (`totp`, `correo` o vacío), códigos de respaldo restantes |
+| POST | `/api/auth/2fa/totp/iniciar/` · `/totp/activar/` | Token | App autenticadora (Google/Microsoft Authenticator, Authy…): `iniciar` devuelve `qr` (SVG), `clave` y `uri` `otpauth://`; `activar` con `{codigo}` la deja activa y devuelve 10 `codigos_respaldo` (se muestran una vez) |
+| POST | `/api/auth/2fa/correo/iniciar/` · `/correo/activar/` | Token | Código por correo: `iniciar` envía 6 dígitos (vencen en 10 min, 5 intentos; exige correo confirmado); `activar` con `{codigo}` → `codigos_respaldo` |
+| POST | `/api/auth/2fa/codigos-respaldo/` · `/desactivar/` | Token | Con `{password}`: genera códigos nuevos (los anteriores dejan de servir) o desactiva la verificación. Las cuentas de demostración no la admiten (`403 cuenta_demo`) |
 | POST | `/api/auth/logout/` | Token | Invalida el token |
 | GET | `/api/auth/yo/` | Token | Usuario autenticado |
 | POST | `/api/auth/documento/` | Token | Registra una sola vez el documento de una cuenta creada sin él (cuando la administración empieza a pedirlo); mismas validaciones del registro; `409 documento_ya_registrado` si ya lo tiene |
@@ -122,6 +128,7 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
 | GET | `/api/gestion/usuarios/?rol={código}` | Usuarios registrados (sin contraseñas) con `rol_nombre` (`usuarios.ver`) |
 | POST | `/api/gestion/usuarios/{id}/rol/` | `{ "rol": "<código>" }` (`usuarios.cambiar_rol`); queda al menos un administrador |
+| POST | `/api/gestion/usuarios/{id}/quitar-2fa/` | `{ "motivo": "…" }` (`usuarios.quitar_2fa`, R-11): quita la verificación en dos pasos de quien perdió el acceso. Motivo obligatorio de 20 caracteres o más (`400 motivo_requerido`); queda en la auditoría y se le envía a la persona. No sobre la cuenta propia (`403 cuenta_propia`) ni sobre un rol con permisos que no tienes; `409 2fa_inactiva` si no la tiene. El listado de usuarios incluye `verificacion_dos_pasos` |
 | CRUD | `/api/gestion/roles/` | Roles con sus `permisos` y número de `usuarios` (`roles.ver` / `roles.gestionar`); votante y administrador son fijos |
 | GET | `/api/gestion/roles/catalogo/` | Catálogo de permisos agrupado |
 | CRUD | `/api/gestion/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |

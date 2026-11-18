@@ -12,6 +12,7 @@ import CategoriaVotaciones from './pages/CategoriaVotaciones.jsx';
 import VotacionDetalle from './pages/VotacionDetalle.jsx';
 import Comprobante from './pages/Comprobante.jsx';
 import MisVotos from './pages/MisVotos.jsx';
+import Seguridad from './pages/Seguridad.jsx';
 import NoEncontrado from './pages/NoEncontrado.jsx';
 import { RutaError } from './pages/errores/PaginaError.jsx';
 import Marca from './pages/Marca.jsx';
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="votaciones/:id/comprobante" element={<RedireccionVotacion comprobante />} />
         {/* Votante autenticado */}
         <Route path="mis-votos" element={<RequiereSesion><MisVotos /></RequiereSesion>} />
+        <Route path="cuenta/seguridad" element={<RequiereSesion><Seguridad /></RequiereSesion>} />
         {/* Administración */}
         <Route path="panel" element={<RequiereAdmin><AdminLayout /></RequiereAdmin>}>
           <Route index element={<AdminPanel />} />

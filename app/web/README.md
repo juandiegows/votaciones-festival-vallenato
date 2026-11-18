@@ -145,6 +145,7 @@ URL amigables sin `#` ni IDs; el año identifica la edición, así que sirven pa
 | `/{año}/categorias/{categoría}/{votación}/comprobante` | Comprobante y resultados | RF-09, RN-07 |
 | `/categorias` | Redirige a `/{año de la edición activa}` | — |
 | `/mis-votos` | Mis votos | — |
+| `/cuenta/seguridad` | Mi cuenta → Seguridad: verificación en dos pasos (app autenticadora o código por correo), códigos de respaldo y desactivación con contraseña. En el modo demostración, aviso de que no está disponible | RF-20, CU-15, RNF-13 |
 | `/panel` | Panel principal (KPI + actividad reciente) | RF-16 |
 | `/panel/ediciones` | Gestión de ediciones | RF-10 |
 | `/panel/categorias` | Gestión de categorías | RF-11 |

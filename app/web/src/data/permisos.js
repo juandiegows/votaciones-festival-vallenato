@@ -55,6 +55,7 @@ export const GRUPOS_PERMISOS = [
   { grupo: 'Usuarios', permisos: [
     { codigo: 'usuarios.ver', descripcion: 'Ver los usuarios registrados' },
     { codigo: 'usuarios.cambiar_rol', descripcion: 'Cambiar el rol de un usuario' },
+    { codigo: 'usuarios.quitar_2fa', descripcion: 'Quitar la verificación en dos pasos de una cuenta (con motivo)' },
   ] },
   { grupo: 'Roles y permisos', permisos: [
     { codigo: 'roles.ver', descripcion: 'Ver los roles y sus permisos' },

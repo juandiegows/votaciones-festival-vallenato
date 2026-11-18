@@ -8,7 +8,7 @@ El panel vive en /panel/… (no /admin: el WAF de producción bloquea esas rutas
 
 from django.urls import path, register_converter
 
-from .vistas import cuentas, publico, votos
+from .vistas import cuentas, publico, seguridad, votos
 from .vistas.panel import (
     auditoria, categorias, configuracion, ediciones, inicio, opciones, registros, roles, sitio, transferencia, usuarios,
     votaciones,
@@ -72,6 +72,7 @@ panel = [
     path("panel/registros/probar", registros.probar, name="panel-registros-probar"),
     path("panel/usuarios", usuarios.usuarios, name="panel-usuarios"),
     path("panel/usuarios/<int:pk>/rol", usuarios.cambiar_rol, name="panel-usuario-rol"),
+    path("panel/usuarios/<int:pk>/quitar-2fa", usuarios.quitar_2fa, name="panel-usuario-quitar-2fa"),
     path("panel/roles", roles.roles, name="panel-roles"),
     path("panel/roles/nuevo", roles.roles, name="panel-rol-nuevo"),
     path("panel/roles/<int:pk>/editar", roles.roles, name="panel-rol-editar"),
@@ -112,6 +113,9 @@ urlpatterns = [
     path("revisa-tu-correo", cuentas.revisa_tu_correo, name="revisa-tu-correo"),
     path("recuperar-clave", cuentas.recuperar_clave, name="recuperar-clave"),
     path("restablecer-clave/<uidb64>/<token>", cuentas.RestablecerClave.as_view(), name="restablecer-clave"),
+    # Verificación en dos pasos (RF-20)
+    path("verificar-acceso", seguridad.verificar_acceso, name="verificar-acceso"),
+    path("cuenta/seguridad", seguridad.seguridad, name="seguridad"),
     # Voto (mismas rutas que la web React y que los enlaces del correo del comprobante)
     path("mis-votos", votos.mis_votos, name="mis-votos"),
     path("completar-documento", votos.completar_documento, name="completar-documento"),

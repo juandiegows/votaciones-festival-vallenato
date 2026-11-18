@@ -1,0 +1,120 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Seguridad de la cuenta · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+      <h1 class="h3 mb-1">Seguridad de la cuenta</h1>
+      <p class="text-secondary-flv">Protege tu cuenta con la verificación en dos pasos: además de la contraseña, te pediremos un código al iniciar sesión.</p>
+      {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+
+      {% if codigos %}
+      <section class="card-flv p-4 mb-4 border-warning" aria-labelledby="tituloCodigos">
+        <h2 id="tituloCodigos" class="h5"><i class="bi bi-key me-2" aria-hidden="true"></i>Guarda tus códigos de respaldo</h2>
+        <p class="small mb-2">Úsalos si pierdes el celular o el acceso al correo. Cada código sirve <strong>una sola vez</strong> y <strong>no se volverán a mostrar</strong>: cópialos o imprímelos ahora.</p>
+        <ul class="list-unstyled row row-cols-2 row-cols-sm-5 g-2 font-monospace mb-3">
+          {% for c in codigos %}<li class="col"><span class="d-block border rounded text-center py-1">{{ c }}</span></li>{% endfor %}
+        </ul>
+        <button type="button" class="btn btn-outline-primary btn-sm" data-imprimir><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button>
+      </section>
+      {% endif %}
+
+      <section class="card-flv p-4" aria-labelledby="tituloDosPasos">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <h2 id="tituloDosPasos" class="h5 mb-0">Verificación en dos pasos</h2>
+          {% if estado.activo %}<span class="badge text-bg-success">Activa · {{ estado.metodo_nombre }}</span>{% else %}<span class="badge text-bg-secondary">Desactivada</span>{% endif %}
+        </div>
+
+        {% if es_demo %}
+          <div class="alert alert-info small mb-0" role="status"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Las cuentas de demostración no usan la verificación en dos pasos: las comparte todo el que prueba el sistema. Crea tu propia cuenta para probarla.</div>
+
+        {% elif estado.activo %}
+          <p class="small mb-1">Activa desde el {{ estado.activado_en|date:"j \d\e F \d\e Y" }}.
+            {% if estado.metodo == "totp" %}Al entrar, escribe el código de tu app autenticadora.{% else %}Al entrar, te enviaremos un código a <strong>{{ estado.correo }}</strong>.{% endif %}</p>
+          <p class="small">Códigos de respaldo sin usar: <strong>{{ estado.codigos_respaldo_restantes }}</strong>.</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <form method="post" class="border rounded-3 p-3 h-100">
+                {% csrf_token %}<input type="hidden" name="accion" value="regenerar">
+                <h3 class="h6">Nuevos códigos de respaldo</h3>
+                <label for="claveRegenerar" class="form-label small">Contraseña actual</label>
+                <input id="claveRegenerar" name="password" type="password" class="form-control mb-2" autocomplete="current-password" required>
+                <button type="submit" class="btn btn-outline-primary w-100">Generar códigos</button>
+              </form>
+            </div>
+            <div class="col-md-6">
+              <form method="post" class="border rounded-3 p-3 h-100">
+                {% csrf_token %}<input type="hidden" name="accion" value="desactivar">
+                <h3 class="h6">Desactivar</h3>
+                <label for="claveDesactivar" class="form-label small">Contraseña actual</label>
+                <input id="claveDesactivar" name="password" type="password" class="form-control mb-2" autocomplete="current-password" required>
+                <button type="submit" class="btn btn-outline-danger w-100">Desactivar la verificación</button>
+              </form>
+            </div>
+          </div>
+
+        {% elif configurando == "totp" %}
+          <ol class="small ps-3">
+            <li>Instala una app autenticadora: Google Authenticator, Microsoft Authenticator, Authy…</li>
+            <li>En la app, agrega una cuenta y escanea este código QR.</li>
+            <li>Escribe el código de 6 dígitos que muestra la app.</li>
+          </ol>
+          <div class="row g-3 align-items-center">
+            <div class="col-sm-5 text-center">
+              <img src="{{ totp.qr }}" width="200" height="200" class="img-fluid border rounded bg-white p-1" alt="Código QR para agregar la cuenta a la app autenticadora">
+            </div>
+            <div class="col-sm-7">
+              <p class="small mb-1">¿No puedes escanearlo? Escribe esta clave en la app (tipo «basada en tiempo»):</p>
+              <p class="font-monospace fw-semibold user-select-all text-break">{{ totp.clave_agrupada }}</p>
+              <form method="post" novalidate>
+                {% csrf_token %}<input type="hidden" name="accion" value="activar_totp">
+                <label for="codigoTotp" class="form-label">Código de la app</label>
+                <input id="codigoTotp" name="codigo" type="text" class="form-control mb-2 text-center fw-semibold" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+                <button type="submit" class="btn btn-primary w-100" data-enviando="Activando…">Activar</button>
+              </form>
+            </div>
+          </div>
+          <form method="post" class="mt-3">{% csrf_token %}<button type="submit" name="accion" value="cancelar" class="btn btn-link p-0">Cancelar</button></form>
+
+        {% elif configurando == "correo" %}
+          <p class="small">Te enviamos un código de 6 dígitos a <strong>{{ estado.correo }}</strong> (vence en {{ minutos }} minutos). Escríbelo para activar este método.</p>
+          <form method="post" novalidate class="col-md-6 px-0">
+            {% csrf_token %}<input type="hidden" name="accion" value="activar_correo">
+            <label for="codigoCorreo" class="form-label">Código del correo</label>
+            <input id="codigoCorreo" name="codigo" type="text" class="form-control mb-2 text-center fw-semibold" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+            <button type="submit" class="btn btn-primary w-100" data-enviando="Activando…">Activar</button>
+          </form>
+          <form method="post" class="mt-3 d-flex gap-3">{% csrf_token %}
+            <button type="submit" name="accion" value="iniciar_correo" class="btn btn-link p-0">Enviar otro código</button>
+            <button type="submit" name="accion" value="cancelar" class="btn btn-link p-0">Cancelar</button>
+          </form>
+
+        {% else %}
+          <p class="small">Elige cómo quieres recibir el código:</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <form method="post" class="border rounded-3 p-3 h-100 d-flex flex-column">
+                {% csrf_token %}<input type="hidden" name="accion" value="iniciar_totp">
+                <h3 class="h6"><i class="bi bi-phone me-2" aria-hidden="true"></i>App autenticadora <span class="badge text-bg-light border">Recomendado</span></h3>
+                <p class="small flex-grow-1">Google Authenticator, Microsoft Authenticator, Authy u otra compatible. Funciona sin internet en el celular.</p>
+                <button type="submit" class="btn btn-primary w-100">Configurar app</button>
+              </form>
+            </div>
+            <div class="col-md-6">
+              <form method="post" class="border rounded-3 p-3 h-100 d-flex flex-column">
+                {% csrf_token %}<input type="hidden" name="accion" value="iniciar_correo">
+                <h3 class="h6"><i class="bi bi-envelope me-2" aria-hidden="true"></i>Código por correo</h3>
+                <p class="small flex-grow-1">Te enviamos un código a {{ estado.correo }} cada vez que inicies sesión.</p>
+                <button type="submit" class="btn btn-outline-primary w-100"{% if not estado.correo_verificado %} disabled aria-disabled="true"{% endif %}>Usar mi correo</button>
+                {% if not estado.correo_verificado %}<p class="small text-danger mt-2 mb-0">Primero confirma tu correo.</p>{% endif %}
+              </form>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

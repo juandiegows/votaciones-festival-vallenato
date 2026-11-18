@@ -3,14 +3,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Paginador from '../../components/Paginador.jsx';
+import Modal from '../../components/Modal.jsx';
 
 const esDemo = (correo) => /^(admin|votante)@festival\.test$|@demo\.festival\.test$/i.test(correo || '');
 const POR_PAGINA = 25;
+const MOTIVO_MINIMO = 20;
+const METODOS_2FA = { totp: 'App autenticadora', correo: 'Código por correo' };
 const normalizar = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /** Usuarios registrados: filtrar por rol y asignar cualquier rol a una cuenta (permiso usuarios.cambiar_rol). */
 export default function AdminUsuarios() {
-  const { usuarios = [], usuario: yo, roles = [], permisos = [], puede, cambiarRol } = useApp();
+  const { usuarios = [], usuario: yo, roles = [], permisos = [], puede, cambiarRol, quitarDosPasos } = useApp();
   const { state } = useLocation();
   const [busqueda, setBusqueda] = useState('');
   // Desde «Roles y permisos» se llega con el rol ya filtrado
@@ -21,6 +24,37 @@ export default function AdminUsuarios() {
   // Rol elegido en el selector de cada fila, antes de aplicarlo
   const [elegidos, setElegidos] = useState({});
   const puedeCambiar = puede('usuarios.cambiar_rol');
+  const puedeQuitar2fa = puede('usuarios.quitar_2fa');
+  // Cuenta a la que se le quitará la verificación en dos pasos (R-11) y el motivo que lo justifica
+  const [quitar, setQuitar] = useState(null);
+  const [motivo, setMotivo] = useState('');
+  const [errorQuitar, setErrorQuitar] = useState('');
+
+  const confirmarQuitar = async () => {
+    setProcesando(quitar.id);
+    setErrorQuitar('');
+    const r = await quitarDosPasos(quitar.id, motivo);
+    setProcesando(null);
+    if (!r.ok) return setErrorQuitar(r.error);
+    setMensaje({ tipo: 'success', texto: `Quitaste la verificación en dos pasos de ${quitar.correo}. Le enviamos un aviso con el motivo.` });
+    setQuitar(null);
+    return undefined;
+  };
+
+  const celdaDosPasos = (u) => {
+    if (!u.verificacionDosPasos) return <span className="text-secondary-flv">No</span>;
+    return (
+      <>
+        <span className="badge text-bg-success"><i className="bi bi-shield-check me-1" aria-hidden="true"></i>{METODOS_2FA[u.verificacionDosPasos] || u.verificacionDosPasos}</span>
+        {puedeQuitar2fa && u.id !== yo?.id && (
+          <button type="button" className="btn btn-link btn-sm text-danger p-0 d-block mt-1"
+            onClick={() => { setQuitar(u); setMotivo(''); setErrorQuitar(''); }}>
+            Quitar (perdió el acceso)
+          </button>
+        )}
+      </>
+    );
+  };
 
   const nombreRol = (codigo) => roles.find((r) => r.codigo === codigo)?.nombre || usuarios.find((u) => u.rol === codigo)?.rolNombre || codigo;
   const ordenRol = (codigo) => roles.find((r) => r.codigo === codigo)?.orden ?? 99;
@@ -126,6 +160,7 @@ export default function AdminUsuarios() {
                   <th scope="col">Usuario</th>
                   <th scope="col">Rol</th>
                   <th scope="col">Estado</th>
+                  <th scope="col">Verificación en dos pasos</th>
                   {puedeCambiar && <th scope="col" className="text-md-end">Asignar rol</th>}
                 </tr>
               </thead>
@@ -146,6 +181,7 @@ export default function AdminUsuarios() {
                       )}
                     </td>
                     <td data-etiqueta="Estado" className="small">{u.activo === false ? 'Desactivada' : u.correoVerificado === false ? 'Correo sin confirmar' : 'Correo confirmado'}</td>
+                    <td data-etiqueta="Verificación en dos pasos" className="small">{celdaDosPasos(u)}</td>
                     {puedeCambiar && <td data-etiqueta="Asignar rol" className="text-md-end">{accion(u)}</td>}
                   </tr>
                 ))}
@@ -161,6 +197,34 @@ export default function AdminUsuarios() {
         <i className="bi bi-info-circle me-1" aria-hidden="true"></i>Para darle acceso al panel a alguien, la persona se registra en el sitio y luego le asignas un rol aquí.
         Nadie cambia su propio rol, solo se asignan roles cuyos permisos tienes y siempre queda al menos un administrador activo.
       </p>
+
+      <Modal
+        abierto={!!quitar}
+        titulo="Quitar la verificación en dos pasos"
+        onCerrar={() => setQuitar(null)}
+        pie={
+          <>
+            <button type="button" className="btn btn-outline-secondary" onClick={() => setQuitar(null)}>Cancelar</button>
+            <button type="button" className="btn btn-danger" disabled={motivo.trim().length < MOTIVO_MINIMO || procesando === quitar?.id} onClick={confirmarQuitar}>
+              {procesando === quitar?.id ? 'Quitando…' : 'Quitar la verificación'}
+            </button>
+          </>
+        }
+      >
+        {quitar && (
+          <>
+            <p className="small">
+              Úsalo solo si <strong>{quitar.correo}</strong> perdió el celular o el correo y también sus códigos de respaldo, y ya comprobaste que es la persona.
+              La cuenta volverá a entrar solo con la contraseña; el motivo queda en la auditoría y se le envía por correo.
+            </p>
+            {errorQuitar && <div className="alert alert-danger small" role="alert">{errorQuitar}</div>}
+            <label htmlFor="motivoQuitar" className="form-label">Motivo (mínimo {MOTIVO_MINIMO} caracteres)</label>
+            <textarea id="motivoQuitar" className="form-control" rows={3} maxLength={500} value={motivo} onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ej.: perdió el celular; se verificó su identidad por llamada al número registrado." aria-describedby="ayudaMotivo" />
+            <div id="ayudaMotivo" className="form-text">{motivo.trim().length}/{MOTIVO_MINIMO} caracteres mínimos.</div>
+          </>
+        )}
+      </Modal>
     </>
   );
 }

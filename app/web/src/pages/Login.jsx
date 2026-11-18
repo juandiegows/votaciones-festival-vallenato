@@ -7,7 +7,7 @@ import { CREDENCIALES_DEMO } from '../data/credencialesDemo.js';
 import { useSeo } from '../hooks/useSeo.js';
 
 export default function Login() {
-  const { iniciarSesion, configuracion } = useApp();
+  const { iniciarSesion, verificarDosPasos, reenviarCodigoDosPasos, configuracion } = useApp();
   useSeo({ titulo: 'Iniciar sesión', indexar: false });
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -16,6 +16,10 @@ export default function Login() {
   const [recuperar, setRecuperar] = useState(false);
   const [correoRecuperar, setCorreoRecuperar] = useState('');
   const [recuperado, setRecuperado] = useState(false);
+  // Paso 2 (verificación en dos pasos): { desafio, metodo } cuando la contraseña fue correcta
+  const [paso2, setPaso2] = useState(null);
+  const [codigo, setCodigo] = useState('');
+  const [aviso2, setAviso2] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const aviso = location.state?.aviso;
@@ -29,10 +33,87 @@ export default function Login() {
     const r = await iniciarSesion(correo, contrasena);
     setEnviando(false);
     if (!r.ok) return setError(r.error);
-    // Cualquier rol con acceso al panel (panel.ver) entra al panel; los votantes, a las categorías
-    const destino = location.state?.desde || (r.usuario.permisos?.includes('panel.ver') ? '/panel' : '/categorias');
+    if (r.requiere2fa) {
+      setPaso2({ desafio: r.desafio, metodo: r.metodo });
+      setCodigo('');
+      setAviso2('');
+      return undefined;
+    }
+    return entrar(r.usuario);
+  };
+
+  // Cualquier rol con acceso al panel (panel.ver) entra al panel; los votantes, a las categorías
+  const entrar = (u) => {
+    const destino = location.state?.desde || (u.permisos?.includes('panel.ver') ? '/panel' : '/categorias');
     navigate(destino, { replace: true });
   };
+
+  const verificar = async (e) => {
+    e.preventDefault();
+    if (enviando) return;
+    if (!codigo.trim()) return setError('Escribe el código de verificación.');
+    setEnviando(true);
+    setError('');
+    const r = await verificarDosPasos(paso2.desafio, codigo);
+    setEnviando(false);
+    if (r.ok) return entrar(r.usuario);
+    // Desafío vencido o inválido: hay que volver a escribir la contraseña
+    if (r.codigo === 'desafio_vencido' || r.codigo === 'desafio_invalido') {
+      setPaso2(null);
+      setContrasena('');
+    }
+    return setError(r.error);
+  };
+
+  const reenviar = async () => {
+    setError('');
+    const r = await reenviarCodigoDosPasos(paso2.desafio);
+    if (r.ok) setAviso2(r.mensaje || 'Te enviamos un código nuevo.');
+    else setError(r.error);
+  };
+
+  if (paso2) {
+    return (
+      <div className="container py-4 py-md-5">
+        <div className="row justify-content-center">
+          <div className="col-md-8 col-lg-6 col-xl-5">
+            <div className="card-flv p-4 p-md-5">
+              <p className="small text-uppercase fw-semibold text-secondary-flv mb-1"><i className="bi bi-shield-lock me-1" aria-hidden="true"></i>Paso 2 de 2</p>
+              <h1 className="h3 mb-1">Verificación en dos pasos</h1>
+              {paso2.metodo === 'totp' ? (
+                <p className="text-secondary-flv">Abre tu app autenticadora (Google Authenticator, Microsoft Authenticator…) y escribe el código de 6 dígitos de <strong>Votaciones Festival Vallenato</strong>.</p>
+              ) : (
+                <p className="text-secondary-flv">Te enviamos un código de 6 dígitos a <strong>{correo.trim().toLowerCase()}</strong>. Vence en 10 minutos.</p>
+              )}
+              {aviso2 && <div className="alert alert-success small" role="status">{aviso2}</div>}
+              {error && <div className="alert alert-danger" role="alert">{error}</div>}
+              <form noValidate onSubmit={verificar}>
+                <div className="mb-3">
+                  <label htmlFor="codigo" className="form-label">Código de verificación</label>
+                  <input id="codigo" type="text" className="form-control form-control-lg text-center fw-semibold" inputMode="numeric" autoComplete="one-time-code"
+                    maxLength={11} autoFocus aria-describedby="ayudaCodigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} required />
+                  <div id="ayudaCodigo" className="form-text">¿No tienes acceso? Escribe uno de tus códigos de respaldo (por ejemplo, ABCDE-FGHJK).</div>
+                </div>
+                <button type="submit" className="btn btn-primary btn-lg w-100" disabled={enviando}>
+                  {enviando ? (
+                    <><span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Verificando…</>
+                  ) : (
+                    <><i className="bi bi-check2-circle me-2" aria-hidden="true"></i>Verificar y entrar</>
+                  )}
+                </button>
+              </form>
+              {paso2.metodo === 'correo' && (
+                <p className="text-center mt-3 mb-0"><button type="button" className="btn btn-link p-0" onClick={reenviar}>¿No te llegó? Enviar otro código</button></p>
+              )}
+              <p className="text-center mt-3 mb-0">
+                <button type="button" className="btn btn-link p-0" onClick={() => { setPaso2(null); setError(''); setContrasena(''); }}>Volver a iniciar sesión</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const usarDemo = (c, p) => {
     setCorreo(c);

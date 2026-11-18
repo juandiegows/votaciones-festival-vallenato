@@ -189,3 +189,31 @@ def enviar_restablecer_clave(usuario, enlace, minutos_validez=60, **opciones):
         "restablecer_clave", usuario, "Restablece tu contraseña",
         {"enlace": enlace, "minutos_validez": minutos_validez}, **opciones,
     )
+
+
+def enviar_codigo_verificacion(usuario, codigo, proposito="iniciar", minutos_validez=10, **opciones):
+    """Código de 6 dígitos de la verificación en dos pasos (para iniciar sesión o para activar el método)."""
+    activar = proposito == "activar"
+    return enviar_plantilla(
+        "codigo_verificacion", usuario,
+        f"{codigo} es tu código para {'activar la verificación en dos pasos' if activar else 'iniciar sesión'}",
+        {"codigo": codigo, "activar": activar, "minutos_validez": minutos_validez}, **opciones,
+    )
+
+
+AVISOS_SEGURIDAD = {
+    "activo": "Activaste la verificación en dos pasos",
+    "inactivo": "Desactivaste la verificación en dos pasos",
+    "codigos": "Generaste nuevos códigos de respaldo",
+    "quitado": "La administración quitó tu verificación en dos pasos",
+}
+
+
+def enviar_aviso_seguridad(usuario, cambio, metodo="", motivo="", **opciones):
+    """Aviso de un cambio en la verificación en dos pasos: si no lo hizo la persona, sabe que debe actuar."""
+    return enviar_plantilla(
+        "aviso_seguridad", usuario, AVISOS_SEGURIDAD[cambio],
+        {"cambio": cambio, "titulo_cambio": AVISOS_SEGURIDAD[cambio], "metodo": metodo, "motivo": motivo,
+         "fecha_hora": timezone.localtime(), "enlace": f"{url_sitio()}/cuenta/seguridad"},
+        **opciones,
+    )

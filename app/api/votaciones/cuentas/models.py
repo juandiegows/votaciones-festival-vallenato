@@ -152,3 +152,45 @@ class Usuario(AbstractUser):
 
     def has_module_perms(self, app_label):
         return self.tiene_permiso("django_admin.acceder") or super().has_module_perms(app_label)
+
+
+class SegundoFactor(models.Model):
+    """
+    Verificación en dos pasos de una cuenta (RF-20): app autenticadora (TOTP, RFC 6238) o código por correo.
+    Los códigos (de correo y de respaldo) se guardan con HMAC, nunca en claro. Reglas en servicios_2fa.py.
+    """
+
+    class Metodo(models.TextChoices):
+        TOTP = "totp", "App autenticadora"
+        CORREO = "correo", "Código por correo"
+
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="segundo_factor")
+    metodo = models.CharField("método", max_length=10, choices=Metodo.choices, blank=True,
+                              help_text="Vacío = verificación en dos pasos desactivada.")
+    clave_totp = models.CharField(max_length=64, blank=True)
+    # Clave generada al empezar la activación con app: solo pasa a clave_totp cuando se confirma un código
+    clave_pendiente = models.CharField(max_length=64, blank=True)
+    # Último periodo TOTP aceptado: el mismo código no sirve dos veces
+    ultimo_paso = models.BigIntegerField(default=0)
+    codigos_respaldo = models.JSONField(default=list, blank=True)
+    activado_en = models.DateTimeField(null=True, blank=True)
+    # Código enviado al correo (para activar el método o para iniciar sesión)
+    codigo_correo = models.CharField(max_length=64, blank=True)
+    codigo_vence = models.DateTimeField(null=True, blank=True)
+    codigo_enviado_en = models.DateTimeField(null=True, blank=True)
+    codigo_intentos = models.PositiveSmallIntegerField(default=0)
+    # Intentos fallidos seguidos al iniciar sesión: al llegar al límite se bloquea un rato
+    fallos = models.PositiveSmallIntegerField(default=0)
+    bloqueado_hasta = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "segundo_factor"
+        verbose_name = "verificación en dos pasos"
+        verbose_name_plural = "verificaciones en dos pasos"
+
+    def __str__(self):
+        return f"{self.usuario.email}: {self.get_metodo_display() or 'desactivada'}"
+
+    @property
+    def activo(self):
+        return bool(self.metodo)

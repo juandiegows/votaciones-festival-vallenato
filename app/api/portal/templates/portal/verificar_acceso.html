@@ -1,0 +1,41 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Verificación en dos pasos · Votaciones FLV{% endblock %}
+{% block robots %}noindex{% endblock %}
+
+{% block contenido %}
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card-flv p-4 p-md-5">
+        <p class="small text-uppercase fw-semibold text-secondary-flv mb-1"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Paso 2 de 2</p>
+        <h1 class="h3 mb-1">Verificación en dos pasos</h1>
+        {% if metodo == "totp" %}
+          <p class="text-secondary-flv">Abre tu app autenticadora (Google Authenticator, Microsoft Authenticator…) y escribe el código de 6 dígitos de <strong>Votaciones Festival Vallenato</strong>.</p>
+        {% else %}
+          <p class="text-secondary-flv">Te enviamos un código de 6 dígitos a <strong>{{ correo }}</strong>. Vence en {{ minutos }} minutos.</p>
+        {% endif %}
+        {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="codigo" class="form-label">Código de verificación</label>
+            <input id="codigo" name="codigo" type="text" class="form-control form-control-lg text-center fw-semibold" inputmode="numeric"
+                   autocomplete="one-time-code" maxlength="11" required autofocus aria-describedby="ayudaCodigo">
+            <div id="ayudaCodigo" class="form-text">¿No tienes acceso? Escribe uno de tus códigos de respaldo (por ejemplo, ABCDE-FGHJK).</div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg w-100" data-enviando="Verificando…">
+            <i class="bi bi-check2-circle me-2" aria-hidden="true"></i>Verificar y entrar
+          </button>
+        </form>
+        {% if metodo == "correo" %}
+          <form method="post" class="text-center mt-3">
+            {% csrf_token %}
+            <button type="submit" name="reenviar" value="1" class="btn btn-link p-0">¿No te llegó? Enviar otro código</button>
+          </form>
+        {% endif %}
+        <p class="text-center mt-3 mb-0"><a href="{% url 'portal:login' %}">Volver a iniciar sesión</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -238,8 +238,39 @@ export function ApiProvider({ children }) {
   const iniciarSesion = async (correo, contrasena) => {
     const r = await api.post('/auth/login/', { email: correo.trim().toLowerCase(), password: contrasena });
     if (!r.ok) return { ok: false, error: r.error };
+    // Verificación en dos pasos (RF-20): aún no hay token; Login pide el código con el desafío
+    if (r.datos?.requiere_2fa) return { ok: true, requiere2fa: true, metodo: r.datos.metodo, desafio: r.datos.desafio };
     return abrirSesion(r);
   };
+
+  /** Paso 2 del inicio de sesión: código de la app, del correo o de respaldo. */
+  const verificarDosPasos = async (desafio, codigo) => {
+    const r = await api.post('/auth/2fa/verificar/', { desafio, codigo: codigo.trim() });
+    if (!r.ok) return { ok: false, error: r.error, codigo: r.codigo };
+    return abrirSesion(r);
+  };
+
+  const reenviarCodigoDosPasos = async (desafio) => {
+    const r = await api.post('/auth/2fa/reenviar/', { desafio });
+    return r.ok ? { ok: true, mensaje: r.datos?.detail } : { ok: false, error: r.error, codigo: r.codigo };
+  };
+
+  /** Mi cuenta → Seguridad: cada acción devuelve { ok, datos } o { ok: false, error, codigo }. */
+  const dosPasos = useMemo(() => {
+    const llamar = async (ruta, cuerpo) => {
+      const r = cuerpo === undefined ? await api.get(ruta) : await api.post(ruta, cuerpo);
+      return r.ok ? { ok: true, datos: r.datos } : { ok: false, error: r.error, codigo: r.codigo };
+    };
+    return {
+      estado: () => llamar('/auth/2fa/'),
+      iniciarTotp: () => llamar('/auth/2fa/totp/iniciar/', {}),
+      activarTotp: (codigo) => llamar('/auth/2fa/totp/activar/', { codigo: codigo.trim() }),
+      iniciarCorreo: () => llamar('/auth/2fa/correo/iniciar/', {}),
+      activarCorreo: (codigo) => llamar('/auth/2fa/correo/activar/', { codigo: codigo.trim() }),
+      regenerarCodigos: (password) => llamar('/auth/2fa/codigos-respaldo/', { password }),
+      desactivar: (password) => llamar('/auth/2fa/desactivar/', { password }),
+    };
+  }, []);
 
   const registrarUsuario = async (form) => {
     const r = await api.post('/auth/registro/', {
@@ -456,6 +487,14 @@ export function ApiProvider({ children }) {
     return { ok: true, usuario: usuarioDesdeApi(r.datos) };
   };
 
+  /** Quita la verificación en dos pasos de otra cuenta (R-11); el motivo queda en la auditoría. */
+  const quitarDosPasos = async (id, motivo) => {
+    const r = await api.post(`/admin/usuarios/${id}/quitar-2fa/`, { motivo: motivo.trim() });
+    if (!r.ok) return { ok: false, error: r.error, codigo: r.codigo };
+    await recargar();
+    return { ok: true, usuario: usuarioDesdeApi(r.datos) };
+  };
+
   // Roles: crear o cambiar nombre, descripción y permisos (el código solo se envía al crear)
   const guardarRol = async (rol) => {
     const cuerpo = haciaApi('roles', rol);
@@ -587,6 +626,9 @@ export function ApiProvider({ children }) {
     edicionActiva: buscarEdicionActiva(colecciones.ediciones),
     version,
     iniciarSesion,
+    verificarDosPasos,
+    reenviarCodigoDosPasos,
+    dosPasos,
     cerrarSesion,
     registrarUsuario,
     confirmarCorreo,
@@ -605,6 +647,7 @@ export function ApiProvider({ children }) {
     exportar,
     obtenerDemo,
     cambiarRol,
+    quitarDosPasos,
     guardarRol,
     eliminarRol,
     eliminarDemo,

@@ -1,0 +1,17 @@
+{% extends "correo/base.html" %}
+{% block preheader %}{{ titulo_cambio }} en tu cuenta de votaciones.{% endblock %}
+{% block icono %}{% if cambio == "inactivo" or cambio == "quitado" %}&#9888;&#65039;{% else %}&#128737;&#65039;{% endif %}{% endblock %}
+{% block etiqueta %}Seguridad de tu cuenta{% endblock %}
+{% block titulo %}{{ titulo_cambio }}{% endblock %}
+{% block intro %}Hola, {{ usuario.nombres }}. {% if cambio == "activo" %}Desde ahora, además de tu contraseña, te pediremos un código al iniciar sesión.{% elif cambio == "inactivo" %}Tu cuenta vuelve a entrar solo con la contraseña.{% elif cambio == "quitado" %}Lo hizo la administración del sistema a tu solicitud: tu cuenta vuelve a entrar solo con la contraseña. Puedes activarla de nuevo en Seguridad.{% else %}Los códigos de respaldo anteriores dejaron de servir.{% endif %}{% endblock %}
+{% block contenido %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E9E9E9;border-radius:12px;">
+  <tr><td style="padding:14px 18px;font-size:14px;color:#222222;"><strong style="color:#000000;">Cuenta:</strong> {{ usuario.email }}</td></tr>
+  {% if metodo %}<tr><td style="padding:0 18px 14px;font-size:14px;color:#222222;"><strong style="color:#000000;">Método:</strong> {{ metodo }}</td></tr>{% endif %}
+  {% if motivo %}<tr><td style="padding:0 18px 14px;font-size:14px;color:#222222;"><strong style="color:#000000;">Motivo:</strong> {{ motivo }}</td></tr>{% endif %}
+  <tr><td style="padding:0 18px 14px;font-size:14px;color:#222222;"><strong style="color:#000000;">Fecha:</strong> {{ fecha_hora|date:"j \d\e F \d\e Y, g:i a" }}</td></tr>
+</table>
+<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#222222;">¿No fuiste tú? Cambia tu contraseña de inmediato y revisa la seguridad de tu cuenta.</p>
+{% endblock %}
+{% block boton %}Revisar mi seguridad{% endblock %}
+{% block motivo %}Recibes este correo porque cambió la verificación en dos pasos de tu cuenta.{% endblock %}

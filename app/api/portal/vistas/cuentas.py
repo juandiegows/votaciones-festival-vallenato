@@ -19,12 +19,13 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from votaciones import correo
 from votaciones.comun.errores import ReglaNegocioError
-from votaciones.cuentas import servicios
+from votaciones.cuentas import servicios, servicios_2fa
 from votaciones.models import Usuario
 from votaciones.sitio.models import ConfiguracionSitio
 
 from ..catalogos import CREDENCIALES_DEMO
 from ..formularios import LoginForm, NuevaClaveForm, RecuperarClaveForm, RegistroForm
+from .seguridad import pedir_segundo_paso
 
 SESION_CORREO_PENDIENTE = "correo_pendiente"
 SESION_ULTIMO_REENVIO = "ultimo_reenvio_confirmacion"
@@ -63,6 +64,9 @@ def iniciar_sesion(request):
         if not form.usuario.correo_verificado and not form.usuario.accede_panel:
             request.session[SESION_CORREO_PENDIENTE] = form.usuario.pk
             return redirect("portal:revisa-tu-correo")
+        # Verificación en dos pasos (RF-20): la sesión se abre solo después de validar el código
+        if servicios_2fa.activo(form.usuario):
+            return pedir_segundo_paso(request, form.usuario, destino_seguro(request, ""))
         login(request, form.usuario)
         por_defecto = reverse("portal:panel") if form.usuario.accede_panel else reverse("portal:categorias")
         return redirect(destino_seguro(request, por_defecto))

@@ -10,5 +10,5 @@ def documento_registrado(tipo, numero):
 
 
 def usuarios(rol=None):
-    consulta = Usuario.objects.order_by("id")
+    consulta = Usuario.objects.select_related("segundo_factor").order_by("id")
     return consulta.filter(rol=rol) if rol else consulta

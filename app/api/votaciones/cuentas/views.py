@@ -12,8 +12,10 @@ from ..comun.api import ErrorReglaSerializer
 from ..comun.permisos import TienePermiso, lectura_escritura
 from . import permisos as catalogo
 from .models import Rol
-from . import selectores, servicios
+from . import selectores, servicios, servicios_2fa
 from .serializers import (
+    CodigoSerializer, CodigosRespaldoSerializer, ConfigurarTotpSerializer, ContrasenaSerializer, DesafioDosPasosSerializer,
+    DesafioSerializer, EstadoDosPasosSerializer, VerificarDosPasosSerializer,
     CompletarDocumentoSerializer, ConfirmarCorreoSerializer, LoginSerializer, RegistroSerializer, TokenRespuestaSerializer,
     RolSerializer, UsuarioAdminSerializer, UsuarioSerializer,
 )
@@ -84,8 +86,14 @@ class ReenviarConfirmacionView(APIView):
         return Response({"detail": f"Te enviamos un nuevo enlace a {request.user.email}."}, status=status.HTTP_202_ACCEPTED)
 
 
-@extend_schema(tags=["Autenticación"], summary="Iniciar sesión (RF-02)", request=LoginSerializer,
-               responses={200: TokenRespuestaSerializer, 400: OpenApiResponse(description="Credenciales incorrectas")})
+@extend_schema(
+    tags=["Autenticación"], summary="Iniciar sesión (RF-02, RF-20)", request=LoginSerializer,
+    description="Si la cuenta tiene la verificación en dos pasos no entrega el token: responde "
+                "`{requiere_2fa: true, metodo, desafio}` y el token sale de `/api/auth/2fa/verificar/`. "
+                "Con el método por correo, el código se envía en este momento.",
+    responses={200: OpenApiResponse(TokenRespuestaSerializer, description="Token, o DesafioDosPasos si falta el paso 2"),
+               400: OpenApiResponse(description="Credenciales incorrectas")},
+)
 class LoginView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
@@ -94,7 +102,132 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        return respuesta_sesion(serializer.validated_data["usuario"])
+        usuario = serializer.validated_data["usuario"]
+        if servicios_2fa.activo(usuario):
+            return Response(DesafioDosPasosSerializer({
+                "requiere_2fa": True, "metodo": servicios_2fa.metodo(usuario), "desafio": servicios_2fa.crear_desafio(usuario),
+            }).data)
+        return respuesta_sesion(usuario)
+
+
+# ---------- Verificación en dos pasos (RF-20, CU-15) ----------
+
+
+class DosPasosBase(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "dos_pasos"
+
+    def estado(self):
+        return EstadoDosPasosSerializer(servicios_2fa.estado(self.request.user)).data
+
+    def con_codigos(self, codigos):
+        return Response(CodigosRespaldoSerializer(
+            {"codigos_respaldo": codigos, "estado": servicios_2fa.estado(self.request.user)}).data)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Estado de la verificación en dos pasos de mi cuenta",
+               responses={200: EstadoDosPasosSerializer})
+class EstadoDosPasosView(DosPasosBase):
+    throttle_classes = []
+
+    def get(self, request):
+        return Response(self.estado())
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Empezar a configurar la app autenticadora (QR y clave)",
+               description="Google Authenticator, Microsoft Authenticator, Authy… No activa nada hasta confirmar un código.",
+               request=None, responses={200: ConfigurarTotpSerializer, 409: ErrorReglaSerializer})
+class IniciarTotpView(DosPasosBase):
+    def post(self, request):
+        return Response(ConfigurarTotpSerializer(servicios_2fa.iniciar_totp(request.user)).data)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Activar la app autenticadora con un código",
+               request=CodigoSerializer, responses={200: CodigosRespaldoSerializer, 400: ErrorReglaSerializer})
+class ActivarTotpView(DosPasosBase):
+    def post(self, request):
+        serializer = CodigoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        codigos = servicios_2fa.activar_totp(request.user, serializer.validated_data["codigo"])
+        auditar(request, "activar_2fa", "usuario", request.user.pk, {"metodo": "totp"})
+        return self.con_codigos(codigos)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Enviar el código al correo para activar ese método",
+               request=None, responses={202: OpenApiResponse(description="Código enviado"), 409: ErrorReglaSerializer,
+                                        429: ErrorReglaSerializer})
+class IniciarCorreoView(DosPasosBase):
+    def post(self, request):
+        servicios_2fa.iniciar_correo(request.user)
+        return Response({"detail": f"Te enviamos un código a {request.user.email}."}, status=status.HTTP_202_ACCEPTED)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Activar el código por correo",
+               request=CodigoSerializer, responses={200: CodigosRespaldoSerializer, 400: ErrorReglaSerializer})
+class ActivarCorreoView(DosPasosBase):
+    def post(self, request):
+        serializer = CodigoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        codigos = servicios_2fa.activar_correo(request.user, serializer.validated_data["codigo"])
+        auditar(request, "activar_2fa", "usuario", request.user.pk, {"metodo": "correo"})
+        return self.con_codigos(codigos)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Desactivar la verificación en dos pasos (pide la contraseña)",
+               request=ContrasenaSerializer, responses={200: EstadoDosPasosSerializer, 400: ErrorReglaSerializer})
+class DesactivarDosPasosView(DosPasosBase):
+    def post(self, request):
+        serializer = ContrasenaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        servicios_2fa.desactivar(request.user, serializer.validated_data["password"])
+        auditar(request, "desactivar_2fa", "usuario", request.user.pk)
+        return Response(self.estado())
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Generar nuevos códigos de respaldo (pide la contraseña)",
+               request=ContrasenaSerializer, responses={200: CodigosRespaldoSerializer, 400: ErrorReglaSerializer})
+class RegenerarCodigosView(DosPasosBase):
+    def post(self, request):
+        serializer = ContrasenaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        codigos = servicios_2fa.regenerar_codigos(request.user, serializer.validated_data["password"])
+        auditar(request, "regenerar_codigos_2fa", "usuario", request.user.pk)
+        return self.con_codigos(codigos)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Paso 2 del inicio de sesión: verificar el código",
+               request=VerificarDosPasosSerializer,
+               responses={200: TokenRespuestaSerializer, 400: ErrorReglaSerializer, 429: ErrorReglaSerializer})
+class VerificarDosPasosView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "dos_pasos"
+
+    def post(self, request):
+        serializer = VerificarDosPasosSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = servicios_2fa.usuario_del_desafio(serializer.validated_data["desafio"])
+        if servicios_2fa.verificar(usuario, serializer.validated_data["codigo"]):
+            auditar(request, "usar_codigo_respaldo_2fa", "usuario", usuario.pk)
+        return respuesta_sesion(usuario)
+
+
+@extend_schema(tags=["Verificación en dos pasos"], summary="Reenviar el código del paso 2 al correo",
+               request=DesafioSerializer,
+               responses={202: OpenApiResponse(description="Código enviado"), 400: ErrorReglaSerializer,
+                          409: ErrorReglaSerializer, 429: ErrorReglaSerializer})
+class ReenviarCodigoDosPasosView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "confirmacion"
+
+    def post(self, request):
+        serializer = DesafioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = servicios_2fa.usuario_del_desafio(serializer.validated_data["desafio"])
+        servicios_2fa.reenviar_codigo(usuario)
+        return Response({"detail": "Te enviamos un código nuevo."}, status=status.HTTP_202_ACCEPTED)
 
 
 @extend_schema(tags=["Autenticación"], summary="Cerrar sesión (invalida el token)", request=None, responses={204: None})
@@ -123,7 +256,8 @@ class PerfilView(generics.RetrieveAPIView):
 @extend_schema(tags=["Administración"])
 class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [TienePermiso]
-    permisos_accion = {"list": "usuarios.ver", "retrieve": "usuarios.ver", "rol": "usuarios.cambiar_rol"}
+    permisos_accion = {"list": "usuarios.ver", "retrieve": "usuarios.ver", "rol": "usuarios.cambiar_rol",
+                       "quitar_2fa": "usuarios.quitar_2fa"}
     serializer_class = UsuarioAdminSerializer
 
     def get_queryset(self):
@@ -140,6 +274,19 @@ class AdminUsuarioViewSet(viewsets.ReadOnlyModelViewSet):
         usuario = servicios.cambiar_rol(request.user, self.get_object(), request.data.get("rol", ""))
         auditar(request, "cambiar_rol", "usuario", usuario.pk, {"email": usuario.email, "rol": usuario.rol})
         return Response(self.get_serializer(usuario).data)
+
+    @extend_schema(summary="Quitar la verificación en dos pasos de una cuenta (R-11)",
+                   description="Para quien perdió el celular y los códigos de respaldo. Exige motivo (mínimo 20 "
+                               "caracteres): queda en la auditoría y se le envía por correo a la persona.",
+                   request={"application/json": {"type": "object", "properties": {"motivo": {"type": "string"}}}},
+                   responses={200: UsuarioAdminSerializer, 400: ErrorReglaSerializer, 403: ErrorReglaSerializer,
+                              409: ErrorReglaSerializer})
+    @action(detail=True, methods=["post"], url_path="quitar-2fa")
+    def quitar_2fa(self, request, pk=None):
+        usuario = self.get_object()
+        metodo, motivo = servicios_2fa.quitar_por_administracion(request.user, usuario, request.data.get("motivo", ""))
+        auditar(request, "quitar_2fa", "usuario", usuario.pk, {"email": usuario.email, "metodo": metodo, "motivo": motivo})
+        return Response(self.get_serializer(selectores.usuarios().get(pk=usuario.pk)).data)
 
 
 @extend_schema_view(

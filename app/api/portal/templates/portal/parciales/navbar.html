@@ -38,6 +38,7 @@
             <li class="px-3 py-2 small text-secondary-flv">{{ user.email }}<br>Rol: <strong>{{ user.rol_nombre }}</strong></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'portal:mis-votos' %}"><i class="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</a></li>
+            <li><a class="dropdown-item" href="{% url 'portal:seguridad' %}"><i class="bi bi-shield-lock me-2" aria-hidden="true"></i>Seguridad de la cuenta</a></li>
             {% if es_admin %}<li><a class="dropdown-item" href="{% url 'portal:panel' %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel de administración</a></li>{% endif %}
             <li>
               <form method="post" action="{% url 'portal:logout' %}">{% csrf_token %}

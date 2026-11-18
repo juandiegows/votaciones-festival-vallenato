@@ -27,7 +27,7 @@
 <div class="card-flv p-0 table-responsive">
   <table class="table align-middle mb-0 tabla-apilada">
     <caption class="visually-hidden">Usuarios registrados</caption>
-    <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Estado</th>{% if 'usuarios.cambiar_rol' in permisos %}<th scope="col" class="text-end">Cambiar rol</th>{% endif %}</tr></thead>
+    <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Estado</th><th scope="col">Verificación en dos pasos</th>{% if 'usuarios.cambiar_rol' in permisos %}<th scope="col" class="text-end">Cambiar rol</th>{% endif %}</tr></thead>
     <tbody>
       {% for u in pagina %}
       <tr>
@@ -37,6 +37,24 @@
         </td>
         <td data-etiqueta="Rol">{% if u.rol == "administrador" %}<span class="badge text-bg-dark"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>{{ u.rol_nombre }}</span>{% elif u.rol == "votante" %}{{ u.rol_nombre }}{% else %}<span class="badge text-bg-light border">{{ u.rol_nombre }}</span>{% endif %}</td>
         <td data-etiqueta="Estado" class="small">{% if not u.is_active %}Desactivada{% elif u.correo_verificado %}Correo confirmado{% else %}Correo sin confirmar{% endif %}</td>
+        <td data-etiqueta="Verificación en dos pasos" class="small">
+          {% if u.dos_pasos %}
+            <span class="badge text-bg-success"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>{{ u.dos_pasos }}</span>
+            {% if 'usuarios.quitar_2fa' in permisos and u.pk != user.pk %}
+            <details class="mt-2">
+              <summary class="text-danger">Quitar (perdió el acceso)</summary>
+              <form method="post" action="{% url 'portal:panel-usuario-quitar-2fa' u.pk %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+                <label class="form-label small" for="motivo-{{ u.pk }}">Motivo (mínimo {{ motivo_minimo }} caracteres)</label>
+                <textarea id="motivo-{{ u.pk }}" name="motivo" class="form-control form-control-sm mb-2" rows="2" minlength="{{ motivo_minimo }}" maxlength="500" required
+                  placeholder="Ej.: perdió el celular; se verificó su identidad por llamada al número registrado."></textarea>
+                <button class="btn btn-sm btn-outline-danger" type="submit">Quitar la verificación de {{ u.email }}</button>
+              </form>
+            </details>
+            {% endif %}
+          {% else %}<span class="text-secondary-flv">No</span>{% endif %}
+        </td>
         {% if 'usuarios.cambiar_rol' in permisos %}
         <td class="text-end">
           {% if u.pk == user.pk %}

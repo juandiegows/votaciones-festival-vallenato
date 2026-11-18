@@ -258,6 +258,7 @@ REST_FRAMEWORK = {
         "votar": os.getenv("THROTTLE_VOTAR", "30/min"),
         "registro": os.getenv("THROTTLE_REGISTRO", "10/min"),
         "confirmacion": os.getenv("THROTTLE_CONFIRMACION", "5/min"),
+        "dos_pasos": os.getenv("THROTTLE_DOS_PASOS", "10/min"),
         "errores_web": os.getenv("THROTTLE_ERRORES_WEB", "20/min"),
     },
 }

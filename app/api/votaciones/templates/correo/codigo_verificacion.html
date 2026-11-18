@@ -1,0 +1,24 @@
+{% extends "correo/base.html" %}
+{% block preheader %}Tu código de verificación es {{ codigo }}. Vence en {{ minutos_validez }} minutos.{% endblock %}
+{% block icono %}&#128272;{% endblock %}
+{% block etiqueta %}Verificación en dos pasos{% endblock %}
+{% block titulo %}{% if activar %}Activa la verificación{% else %}Tu código para entrar{% endif %}{% endblock %}
+{% block intro %}Hola, {{ usuario.nombres }}. {% if activar %}Escribe este código en la página de seguridad de tu cuenta para activar la verificación en dos pasos por correo.{% else %}Escribe este código para terminar de iniciar sesión con <strong style="color:#000000;">{{ usuario.email }}</strong>.{% endif %}{% endblock %}
+{% block contenido %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E9E9E9;border-radius:12px;">
+  <tr>
+    <td align="center" style="padding:22px 18px;">
+      <p style="margin:0;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#222222;">Código de verificación</p>
+      <p style="margin:8px 0 0;font-family:Raleway,Poppins,Arial,Helvetica,sans-serif;font-size:36px;font-weight:800;letter-spacing:10px;color:#000000;">{{ codigo }}</p>
+    </td>
+  </tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;background:#FFFFFF;border:1px solid #E9E9E9;border-radius:12px;">
+  <tr>
+    <td align="center" style="padding:16px 18px;font-size:14px;color:#222222;">
+      <span style="font-size:18px;">&#9201;&#65039;</span>&nbsp; Vence en <strong style="color:#000000;">{{ minutos_validez }} minutos</strong>. Nunca lo compartas: nadie del Festival te lo pedirá.
+    </td>
+  </tr>
+</table>
+{% endblock %}
+{% block motivo %}Recibes este correo porque {% if activar %}pediste activar{% else %}alguien escribió tu contraseña y tu cuenta tiene activa{% endif %} la verificación en dos pasos. Si no fuiste tú, cambia tu contraseña.{% endblock %}
