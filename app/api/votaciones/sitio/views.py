@@ -19,7 +19,8 @@ from .serializers import (
 # Contenido del sitio público (pie, banner, textos, marca): se cambia con sitio.editar o configuracion.editar
 CAMPOS_SITIO = {
     "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "marca", "aviso_superior",
-    "subtitulo_logo", "texto_acerca", "mostrar_equipo",
+    "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_texto_pie", "mostrar_aviso_superior",
+    "mostrar_subtitulo_logo", "mostrar_texto_acerca",
 }
 
 

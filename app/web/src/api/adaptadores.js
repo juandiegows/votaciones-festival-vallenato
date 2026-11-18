@@ -53,7 +53,10 @@ const CAMPOS = {
   configuracion: {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
     modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', mostrarSwagger: 'mostrar_swagger', mostrarParticipantes: 'mostrar_participantes', umbralParticipacion: 'umbral_participacion', pedirDocumento: 'pedir_documento', marca: 'marca',
-    avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca', mostrarEquipo: 'mostrar_equipo', permitirCuentasDemo: 'permitir_cuentas_demo',
+    avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca',
+    mostrarTextoPie: 'mostrar_texto_pie', mostrarAvisoSuperior: 'mostrar_aviso_superior', mostrarSubtituloLogo: 'mostrar_subtitulo_logo',
+    mostrarTextoAcerca: 'mostrar_texto_acerca', mostrarEquipo: 'mostrar_equipo', permitirCuentasDemo: 'permitir_cuentas_demo',
+    mostrarCredencialesDemo: 'mostrar_credenciales_demo',
     defectoPresentacionCategorias: 'defecto_presentacion_categorias', defectoResultados: 'defecto_visibilidad_resultados',
     defectoVotoUnico: 'defecto_voto_unico', defectoCategoriaActiva: 'defecto_categoria_activa',
     defectoPresentacionOpciones: 'defecto_presentacion_opciones', defectoDiasVotacion: 'defecto_dias_votacion',

@@ -1,0 +1,26 @@
+{% load portal %}
+{# Texto del sitio con su interruptor «Mostrar»: apagado, el texto se conserva y sigue editable, pero no se ve en el sitio. #}
+{# Recibe: campo (texto), interruptor (booleano), ayuda, multilinea #}
+<div class="mb-3" data-texto-interruptor>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+    <label for="{{ campo.id_for_label }}" class="form-label mb-0">{{ campo.label }}</label>
+    <div class="form-check form-switch mb-0">
+      <input id="{{ interruptor.id_for_label }}" name="{{ interruptor.html_name }}" class="form-check-input" type="checkbox" role="switch"
+             aria-describedby="{{ campo.id_for_label }}-estado"{% if interruptor.value %} checked{% endif %}>
+      <label class="form-check-label small" for="{{ interruptor.id_for_label }}">Mostrar<span class="visually-hidden"> {{ campo.label|lower }}</span></label>
+    </div>
+  </div>
+  {% if multilinea %}
+  <textarea id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" rows="2" class="form-control{{ campo|campo_invalido }}"
+            aria-describedby="{{ campo.id_for_label }}-estado{% if campo.errors %} {{ campo.id_for_label }}-error{% elif ayuda %} {{ campo.id_for_label }}-ayuda{% endif %}"{% if campo.errors %} aria-invalid="true"{% endif %}>{{ campo.value|default_if_none:"" }}</textarea>
+  {% else %}
+  <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="text" class="form-control{{ campo|campo_invalido }}" value="{{ campo.value|valor_campo }}"
+         aria-describedby="{{ campo.id_for_label }}-estado{% if campo.errors %} {{ campo.id_for_label }}-error{% elif ayuda %} {{ campo.id_for_label }}-ayuda{% endif %}"{% if campo.errors %} aria-invalid="true"{% endif %}>
+  {% endif %}
+  {# Siempre presente (lo leen los lectores de pantalla); portal.js lo cambia al mover el interruptor #}
+  <div id="{{ campo.id_for_label }}-estado" class="form-text{% if not interruptor.value %} fw-semibold{% endif %}" data-estado-oculto>
+    {% if interruptor.value %}<i class="bi bi-eye me-1" aria-hidden="true"></i>Visible en el sitio.{% else %}<i class="bi bi-eye-slash me-1" aria-hidden="true"></i>Oculto en el sitio: el texto se conserva.{% endif %}
+  </div>
+  {% if ayuda and not campo.errors %}<div id="{{ campo.id_for_label }}-ayuda" class="form-text">{{ ayuda }}</div>{% endif %}
+  {% if campo.errors %}<div id="{{ campo.id_for_label }}-error" class="invalid-feedback">{{ campo.errors|join:" " }}</div>{% endif %}
+</div>

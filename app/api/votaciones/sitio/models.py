@@ -78,25 +78,47 @@ class ConfiguracionSitio(ModeloTrazable):
         blank=True,
         default="Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.",
     )
-    # Textos de identificación del proyecto: vacíos, no se muestran (p. ej. cuando el sitio deje de ser un prototipo)
+    # Textos de identificación del proyecto: se ocultan con su interruptor mostrar_… o si quedan vacíos (p. ej. cuando el sitio deje de ser un prototipo)
     aviso_superior = models.CharField(
         "aviso del pie de página", max_length=250, blank=True,
         default="Prototipo académico – Areandina · Desarrollo Web 2026 · Datos ilustrativos de demostración",
-        help_text="Franja destacada encima del pie de página. Vacío = no se muestra.",
+        help_text="Franja destacada encima del pie de página. Se oculta con su interruptor o si queda vacío.",
     )
     subtitulo_logo = models.CharField(
         "subtítulo del logo", max_length=60, blank=True, default="Prototipo académico",
-        help_text="Texto pequeño bajo el nombre del sitio en el menú. Vacío = no se muestra.",
+        help_text="Texto pequeño bajo el nombre del sitio en el menú. Se oculta con su interruptor o si queda vacío.",
     )
     texto_acerca = models.CharField(
         "texto «Acerca de»", max_length=250, blank=True,
         default="Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina",
-        help_text="Línea final del pie de página. Vacío = no se muestra.",
+        help_text="Línea final del pie de página. Se oculta con su interruptor o si queda vacío.",
+    )
+    # Interruptores para ocultar cada texto sin borrarlo: se muestra solo si está activo y no vacío
+    mostrar_texto_pie = models.BooleanField(
+        "mostrar el texto del pie de página", default=True,
+        help_text="Apagado, el texto del pie se conserva pero no se muestra en el sitio ni en los correos.",
+    )
+    mostrar_aviso_superior = models.BooleanField(
+        "mostrar el aviso del pie de página", default=True,
+        help_text="Apagado, la franja encima del pie se conserva pero no se muestra.",
+    )
+    mostrar_subtitulo_logo = models.BooleanField(
+        "mostrar el subtítulo del logo", default=True,
+        help_text="Apagado, el subtítulo se conserva pero no se muestra en el menú.",
+    )
+    mostrar_texto_acerca = models.BooleanField(
+        "mostrar el texto «Acerca de»", default=True,
+        help_text="Apagado, la línea «Acerca de» se conserva pero no se muestra en el pie.",
     )
     permitir_cuentas_demo = models.BooleanField(
         "permitir el ingreso con las cuentas de demostración", default=True,
         help_text="Apagada, las cuentas que crea cargar_demo (admin@festival.test, votante@festival.test y "
                   "@demo.festival.test) no pueden iniciar sesión y el login no muestra sus credenciales.",
+    )
+    mostrar_credenciales_demo = models.BooleanField(
+        "mostrar las cuentas de demostración en el login", default=True,
+        help_text="Apagada, las cuentas de demostración siguen funcionando (si se permite su ingreso) pero el login no "
+                  "exhibe sus credenciales.",
     )
     mostrar_equipo = models.BooleanField(
         "mostrar la página del equipo", default=True,

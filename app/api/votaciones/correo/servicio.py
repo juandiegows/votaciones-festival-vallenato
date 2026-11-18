@@ -71,7 +71,7 @@ def contexto_base():
         "correo_contacto": sitio.correo,
         "telefono_contacto": sitio.telefono,
         "direccion": sitio.direccion,
-        "texto_pie": sitio.texto_pie,
+        "texto_pie": sitio.texto_pie if sitio.mostrar_texto_pie else "",  # apagado = oculto, sin borrarlo
         "url_sitio": url_sitio(),
         "url_sitio_corta": re.sub(r"^https?://", "", url_sitio()),
         "logo_src": url_logo(),

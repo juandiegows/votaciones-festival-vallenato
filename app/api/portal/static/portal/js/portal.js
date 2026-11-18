@@ -289,6 +289,19 @@
     mostrar(conError ? conError.closest('[data-subseccion]').dataset.subseccion : botones[0].dataset.subpestana);
   });
 
+  // Textos del sitio con interruptor «Mostrar»: el aviso bajo el campo dice si el texto se ve o queda oculto
+  todos('[data-texto-interruptor]').forEach((bloque) => {
+    const casilla = bloque.querySelector('input[role="switch"]');
+    const estado = bloque.querySelector('[data-estado-oculto]');
+    if (!casilla || !estado) return;
+    casilla.addEventListener('change', () => {
+      estado.classList.toggle('fw-semibold', !casilla.checked);
+      estado.innerHTML = casilla.checked
+        ? '<i class="bi bi-eye me-1" aria-hidden="true"></i>Visible en el sitio.'
+        : '<i class="bi bi-eye-slash me-1" aria-hidden="true"></i>Oculto en el sitio: el texto se conserva.';
+    });
+  });
+
   // Menú de secciones de la configuración: en pantallas angostas se cambia la lista por un selector que navega
   todos('[data-menu-config]').forEach((menu) => {
     const selector = menu.querySelector('[data-navegar-al-cambiar]');

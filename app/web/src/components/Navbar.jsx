@@ -3,9 +3,9 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Navbar() {
-  const { usuario, cerrarSesion, edicionActiva, configuracion } = useApp();
-  // Editables en /panel/sitio: vacío = no se muestra
-  const subtituloLogo = configuracion?.subtituloLogo ?? 'Prototipo académico';
+  const { usuario, esAdmin, cerrarSesion, edicionActiva, configuracion } = useApp();
+  // Editables en /panel/sitio: interruptor apagado o texto vacío = no se muestra
+  const subtituloLogo = configuracion?.mostrarSubtituloLogo === false ? '' : (configuracion?.subtituloLogo ?? 'Prototipo académico');
   const mostrarEquipo = configuracion?.mostrarEquipo ?? true;
   const [saliendo, setSaliendo] = useState(false);
   const [abierto, setAbierto] = useState(false);
@@ -93,6 +93,7 @@ export default function Navbar() {
                 </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li><Link className="dropdown-item" to="/mis-votos"><i className="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</Link></li>
+                {esAdmin && <li><Link className="dropdown-item" to="/panel"><i className="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel de administración</Link></li>}
                 <li><button className="dropdown-item" type="button" onClick={salir} disabled={saliendo}><i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{saliendo ? 'Cerrando sesión…' : 'Cerrar sesión'}</button></li>
               </ul>
             </div>

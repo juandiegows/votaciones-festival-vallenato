@@ -1,5 +1,5 @@
 <footer class="footer-flv mt-5 d-print-none">
-  {% if configuracion.aviso_superior %}
+  {% if configuracion.mostrar_aviso_superior and configuracion.aviso_superior %}
   <div class="aviso-prototipo text-center py-2 px-3">
     <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
     {{ configuracion.aviso_superior }}
@@ -9,7 +9,7 @@
     <div class="row g-4">
       <div class="col-lg-4">
         <p class="font-titulo fw-bold text-white mb-1">Sistema Web de Votaciones</p>
-        <p class="small mb-0">{{ edicion_activa.nombre|default:"Festival de la Leyenda Vallenata" }} · Valledupar, Cesar (Colombia). {{ configuracion.texto_pie }}</p>
+        <p class="small mb-0">{{ edicion_activa.nombre|default:"Festival de la Leyenda Vallenata" }} · Valledupar, Cesar (Colombia).{% if configuracion.mostrar_texto_pie and configuracion.texto_pie %} {{ configuracion.texto_pie }}{% endif %}</p>
       </div>
       <div class="col-sm-6 col-lg-2">
         <p class="fw-semibold text-white mb-2">Navegación</p>
@@ -40,10 +40,10 @@
       </div>
       {% endif %}
     </div>
-    {% if configuracion.texto_acerca or configuracion.mostrar_equipo %}
+    {% if configuracion.mostrar_texto_acerca and configuracion.texto_acerca or configuracion.mostrar_equipo %}
     <hr class="border-secondary">
     <p class="small mb-0">
-      {% if configuracion.texto_acerca %}<strong>Acerca de:</strong> {{ configuracion.texto_acerca }}{% if configuracion.mostrar_equipo %} ·{% endif %}{% endif %}
+      {% if configuracion.mostrar_texto_acerca and configuracion.texto_acerca %}<strong>Acerca de:</strong> {{ configuracion.texto_acerca }}{% if configuracion.mostrar_equipo %} ·{% endif %}{% endif %}
       {% if configuracion.mostrar_equipo %}<a href="{% url 'portal:equipo' %}">Conoce al equipo</a>.{% endif %}
     </p>
     {% endif %}

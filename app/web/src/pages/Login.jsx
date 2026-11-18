@@ -79,7 +79,8 @@ export default function Login() {
               ¿No tienes cuenta? <Link to="/registro" state={location.state}>Regístrate</Link>
             </p>
 
-            {(configuracion?.permitirCuentasDemo ?? true) && (
+            {/* Solo si se permite el ingreso con las cuentas demo y no se apagó su exhibición (falta = activo) */}
+            {configuracion?.permitirCuentasDemo !== false && configuracion?.mostrarCredencialesDemo !== false && (
             <div className="border rounded-3 p-3 bg-light small" aria-label="Credenciales de demostración">
               <p className="fw-semibold mb-2"><i className="bi bi-key me-1" aria-hidden="true"></i>Credenciales de demostración</p>
               <div className="d-flex flex-column gap-2">

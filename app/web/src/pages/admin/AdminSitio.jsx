@@ -7,6 +7,8 @@ const ICONOS_REDES = [
   ['tiktok', 'TikTok'], ['whatsapp', 'WhatsApp'], ['spotify', 'Spotify'], ['globe', 'Sitio web'],
 ];
 const NUEVA_RED = { nombre: '', url: '', icono: 'facebook', activa: true };
+// Interruptores «Mostrar» de los textos del sitio (apagado = oculto sin borrar el texto)
+const INTERRUPTORES = ['mostrarTextoPie', 'mostrarAvisoSuperior', 'mostrarSubtituloLogo', 'mostrarTextoAcerca'];
 
 // Datos de contacto y redes sociales del pie de página
 export default function AdminSitio() {
@@ -53,21 +55,42 @@ export default function AdminSitio() {
     ejecutar(() => reemplazarColeccion('redes', nueva.map((x, j) => ({ ...x, orden: j + 1 })), 'Reordenó las redes sociales'), 'Orden actualizado.');
   };
 
-  // Campo del formulario con ayuda debajo; `vacioOculta` avisa que dejarlo vacío lo quita del sitio
-  const campo = (nombre, etiqueta, { tipo = 'text', ayuda = '', vacioOculta = false, placeholder = '' } = {}) => {
+  // Un texto con interruptor se muestra en el sitio solo si «Mostrar» está activo (falta = activo) y no está vacío
+  const visible = (interruptor) => contacto[interruptor] !== false;
+
+  // Campo del formulario con ayuda debajo; `interruptor` agrega el «Mostrar» que lo oculta del sitio sin borrarlo
+  const campo = (nombre, etiqueta, { tipo = 'text', ayuda = '', interruptor = '', placeholder = '' } = {}) => {
     const idAyuda = `s-${nombre}-ayuda`;
-    const textoAyuda = [ayuda, vacioOculta ? 'Déjalo vacío para no mostrarlo.' : ''].filter(Boolean).join(' ');
+    const idEstado = `s-${nombre}-estado`;
+    const activo = interruptor ? visible(interruptor) : true;
+    const describe = [interruptor && idEstado, ayuda && !errores[nombre] && idAyuda].filter(Boolean).join(' ');
     const comun = {
       id: `s-${nombre}`, value: contacto[nombre] ?? '', placeholder,
       className: `form-control ${errores[nombre] ? 'is-invalid' : ''}`,
-      'aria-describedby': textoAyuda ? idAyuda : undefined,
+      'aria-describedby': describe || undefined,
       onChange: (e) => setContacto({ ...contacto, [nombre]: e.target.value }),
     };
     return (
       <div className="mb-3">
-        <label className="form-label" htmlFor={`s-${nombre}`}>{etiqueta}</label>
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+          <label className="form-label mb-0" htmlFor={`s-${nombre}`}>{etiqueta}</label>
+          {interruptor && (
+            <div className="form-check form-switch mb-0">
+              <input className="form-check-input" type="checkbox" role="switch" id={`s-${interruptor}`} checked={activo}
+                onChange={(e) => setContacto({ ...contacto, [interruptor]: e.target.checked })} aria-describedby={idEstado} />
+              <label className="form-check-label small" htmlFor={`s-${interruptor}`}>Mostrar<span className="visually-hidden"> {etiqueta}</span></label>
+            </div>
+          )}
+        </div>
         {tipo === 'textarea' ? <textarea rows="2" {...comun}></textarea> : <input type={tipo} {...comun} />}
-        {errores[nombre] ? <div className="invalid-feedback">{errores[nombre]}</div> : textoAyuda && <div id={idAyuda} className="form-text">{textoAyuda}</div>}
+        {interruptor && (
+          <div id={idEstado} className={`form-text ${activo ? '' : 'fw-semibold'}`}>
+            {activo
+              ? <><i className="bi bi-eye me-1" aria-hidden="true"></i>Visible en el sitio.</>
+              : <><i className="bi bi-eye-slash me-1" aria-hidden="true"></i>Oculto en el sitio: el texto se conserva.</>}
+          </div>
+        )}
+        {errores[nombre] ? <div className="invalid-feedback">{errores[nombre]}</div> : ayuda && <div id={idAyuda} className="form-text">{ayuda}</div>}
       </div>
     );
   };
@@ -80,7 +103,8 @@ export default function AdminSitio() {
   );
 
   const hayCambios = ['nombreOrganizacion', 'telefono', 'direccion', 'correo', 'textoPie', 'avisoSuperior', 'subtituloLogo', 'textoAcerca', 'mostrarEquipo']
-    .some((k) => (contacto[k] ?? '') !== (configuracion?.[k] ?? ''));
+    .some((k) => (contacto[k] ?? '') !== (configuracion?.[k] ?? ''))
+    || INTERRUPTORES.some((k) => (contacto[k] !== false) !== (configuracion?.[k] !== false));
 
   return (
     <>
@@ -112,20 +136,20 @@ export default function AdminSitio() {
             </section>
 
             <section aria-labelledby="sec-pie">
-              {seccion(2, 'sec-pie', 'Pie de página', 'Textos que acompañan a todas las páginas, de arriba abajo.')}
-              {campo('avisoSuperior', 'Franja destacada', { tipo: 'textarea', ayuda: 'Se ve sobre el pie, en dorado sobre fondo oscuro.', vacioOculta: true })}
-              {contacto.avisoSuperior?.trim() && (
+              {seccion(2, 'sec-pie', 'Pie de página', 'Textos que acompañan a todas las páginas, de arriba abajo. Apaga «Mostrar» para ocultar un texto sin borrarlo; un texto vacío tampoco se muestra.')}
+              {campo('avisoSuperior', 'Franja destacada', { tipo: 'textarea', ayuda: 'Se ve sobre el pie, en dorado sobre fondo oscuro.', interruptor: 'mostrarAvisoSuperior' })}
+              {visible('mostrarAvisoSuperior') && contacto.avisoSuperior?.trim() && (
                 <div className="aviso-prototipo text-center py-2 px-3 rounded-2 mb-3" aria-label="Vista previa de la franja">
                   <i className="bi bi-info-circle-fill me-1" aria-hidden="true"></i>{contacto.avisoSuperior}
                 </div>
               )}
-              {campo('textoPie', 'Descripción bajo «Sistema Web de Votaciones»', { tipo: 'textarea', vacioOculta: true })}
-              {campo('textoAcerca', 'Texto «Acerca de»', { ayuda: 'Última línea del pie de página.', vacioOculta: true })}
+              {campo('textoPie', 'Descripción bajo «Sistema Web de Votaciones»', { tipo: 'textarea', interruptor: 'mostrarTextoPie' })}
+              {campo('textoAcerca', 'Texto «Acerca de»', { ayuda: 'Última línea del pie de página.', interruptor: 'mostrarTextoAcerca' })}
             </section>
 
             <section aria-labelledby="sec-encabezado">
               {seccion(3, 'sec-encabezado', 'Encabezado y páginas', 'Cómo se presenta el sitio en el menú superior.')}
-              {campo('subtituloLogo', 'Subtítulo del logo', { ayuda: 'Texto pequeño bajo «Votaciones FLV».', vacioOculta: true, placeholder: 'Prototipo académico' })}
+              {campo('subtituloLogo', 'Subtítulo del logo', { ayuda: 'Texto pequeño bajo «Votaciones FLV».', interruptor: 'mostrarSubtituloLogo', placeholder: 'Prototipo académico' })}
               <div className="form-check form-switch mb-3">
                 <input className="form-check-input" type="checkbox" role="switch" id="s-mostrarEquipo" checked={contacto.mostrarEquipo ?? true} onChange={(e) => setContacto({ ...contacto, mostrarEquipo: e.target.checked })} aria-describedby="s-equipo-ayuda" />
                 <label className="form-check-label fw-semibold" htmlFor="s-mostrarEquipo">Mostrar la página del equipo</label>

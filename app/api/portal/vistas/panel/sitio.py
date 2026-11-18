@@ -18,7 +18,8 @@ from ...marca import (
 from .base import edicion_panel, es_formulario_nuevo, render_panel, requiere_permiso
 
 CAMPOS_CONTACTO = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
-                   "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo"]
+                   "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_texto_pie",
+                   "mostrar_aviso_superior", "mostrar_subtitulo_logo", "mostrar_texto_acerca"]
 
 
 def nombre_banner(banner):

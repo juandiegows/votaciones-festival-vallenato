@@ -124,6 +124,21 @@ class SitioTest(BasePortalTest):
         self.client.post(f"/panel/sitio/redes/{red.pk}/eliminar")
         self.assertFalse(RedSocial.objects.exists())
 
+    def test_interruptor_oculta_el_texto_sin_borrarlo(self):
+        respuesta = self.client.get("/panel/sitio")
+        self.assertContains(respuesta, 'name="mostrar_aviso_superior"')
+        self.assertContains(respuesta, "Visible en el sitio.")
+        datos = {"formulario": "contacto", "nombre_organizacion": "Fundación", "telefono": "300", "direccion": "Valledupar",
+                 "correo": "contacto@festival.test", "texto_pie": "Pie", "aviso_superior": "Aviso oculto", "subtitulo_logo": "Sub",
+                 "texto_acerca": "Acerca", "mostrar_texto_pie": "on", "mostrar_subtitulo_logo": "on", "mostrar_texto_acerca": "on"}
+        self.client.post("/panel/sitio", datos)
+        configuracion = ConfiguracionSitio.obtener()
+        self.assertEqual(configuracion.aviso_superior, "Aviso oculto")
+        self.assertFalse(configuracion.mostrar_aviso_superior)
+        self.assertTrue(configuracion.mostrar_texto_pie)
+        self.assertContains(self.client.get("/panel/sitio"), "Oculto en el sitio")
+        self.assertNotContains(self.client.get("/"), "Aviso oculto")
+
     def test_url_invalida(self):
         respuesta = self.client.post("/panel/sitio", {"formulario": "red", "icono": "globe", "nombre": "Web", "url": "festival"})
         self.assertIn("url", respuesta.context["form_red"].errors)

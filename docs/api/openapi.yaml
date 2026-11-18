@@ -3143,19 +3143,40 @@ components:
         aviso_superior:
           type: string
           title: Aviso del pie de página
-          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          description: Franja destacada encima del pie de página. Se oculta con su
+            interruptor o si queda vacío.
           maxLength: 250
         subtitulo_logo:
           type: string
           title: Subtítulo del logo
-          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
-            no se muestra.
+          description: Texto pequeño bajo el nombre del sitio en el menú. Se oculta
+            con su interruptor o si queda vacío.
           maxLength: 60
         texto_acerca:
           type: string
           title: Texto «Acerca de»
-          description: Línea final del pie de página. Vacío = no se muestra.
+          description: Línea final del pie de página. Se oculta con su interruptor
+            o si queda vacío.
           maxLength: 250
+        mostrar_texto_pie:
+          type: boolean
+          title: Mostrar el texto del pie de página
+          description: Apagado, el texto del pie se conserva pero no se muestra en
+            el sitio ni en los correos.
+        mostrar_aviso_superior:
+          type: boolean
+          title: Mostrar el aviso del pie de página
+          description: Apagado, la franja encima del pie se conserva pero no se muestra.
+        mostrar_subtitulo_logo:
+          type: boolean
+          title: Mostrar el subtítulo del logo
+          description: Apagado, el subtítulo se conserva pero no se muestra en el
+            menú.
+        mostrar_texto_acerca:
+          type: boolean
+          title: Mostrar el texto «Acerca de»
+          description: Apagado, la línea «Acerca de» se conserva pero no se muestra
+            en el pie.
         mostrar_equipo:
           type: boolean
           title: Mostrar la página del equipo
@@ -3167,6 +3188,11 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        mostrar_credenciales_demo:
+          type: boolean
+          title: Mostrar las cuentas de demostración en el login
+          description: Apagada, las cuentas de demostración siguen funcionando (si
+            se permite su ingreso) pero el login no exhibe sus credenciales.
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
@@ -3283,19 +3309,40 @@ components:
         aviso_superior:
           type: string
           title: Aviso del pie de página
-          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          description: Franja destacada encima del pie de página. Se oculta con su
+            interruptor o si queda vacío.
           maxLength: 250
         subtitulo_logo:
           type: string
           title: Subtítulo del logo
-          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
-            no se muestra.
+          description: Texto pequeño bajo el nombre del sitio en el menú. Se oculta
+            con su interruptor o si queda vacío.
           maxLength: 60
         texto_acerca:
           type: string
           title: Texto «Acerca de»
-          description: Línea final del pie de página. Vacío = no se muestra.
+          description: Línea final del pie de página. Se oculta con su interruptor
+            o si queda vacío.
           maxLength: 250
+        mostrar_texto_pie:
+          type: boolean
+          title: Mostrar el texto del pie de página
+          description: Apagado, el texto del pie se conserva pero no se muestra en
+            el sitio ni en los correos.
+        mostrar_aviso_superior:
+          type: boolean
+          title: Mostrar el aviso del pie de página
+          description: Apagado, la franja encima del pie se conserva pero no se muestra.
+        mostrar_subtitulo_logo:
+          type: boolean
+          title: Mostrar el subtítulo del logo
+          description: Apagado, el subtítulo se conserva pero no se muestra en el
+            menú.
+        mostrar_texto_acerca:
+          type: boolean
+          title: Mostrar el texto «Acerca de»
+          description: Apagado, la línea «Acerca de» se conserva pero no se muestra
+            en el pie.
         mostrar_equipo:
           type: boolean
           title: Mostrar la página del equipo
@@ -3307,6 +3354,11 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        mostrar_credenciales_demo:
+          type: boolean
+          title: Mostrar las cuentas de demostración en el login
+          description: Apagada, las cuentas de demostración siguen funcionando (si
+            se permite su ingreso) pero el login no exhibe sus credenciales.
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'
@@ -4109,19 +4161,40 @@ components:
         aviso_superior:
           type: string
           title: Aviso del pie de página
-          description: Franja destacada encima del pie de página. Vacío = no se muestra.
+          description: Franja destacada encima del pie de página. Se oculta con su
+            interruptor o si queda vacío.
           maxLength: 250
         subtitulo_logo:
           type: string
           title: Subtítulo del logo
-          description: Texto pequeño bajo el nombre del sitio en el menú. Vacío =
-            no se muestra.
+          description: Texto pequeño bajo el nombre del sitio en el menú. Se oculta
+            con su interruptor o si queda vacío.
           maxLength: 60
         texto_acerca:
           type: string
           title: Texto «Acerca de»
-          description: Línea final del pie de página. Vacío = no se muestra.
+          description: Línea final del pie de página. Se oculta con su interruptor
+            o si queda vacío.
           maxLength: 250
+        mostrar_texto_pie:
+          type: boolean
+          title: Mostrar el texto del pie de página
+          description: Apagado, el texto del pie se conserva pero no se muestra en
+            el sitio ni en los correos.
+        mostrar_aviso_superior:
+          type: boolean
+          title: Mostrar el aviso del pie de página
+          description: Apagado, la franja encima del pie se conserva pero no se muestra.
+        mostrar_subtitulo_logo:
+          type: boolean
+          title: Mostrar el subtítulo del logo
+          description: Apagado, el subtítulo se conserva pero no se muestra en el
+            menú.
+        mostrar_texto_acerca:
+          type: boolean
+          title: Mostrar el texto «Acerca de»
+          description: Apagado, la línea «Acerca de» se conserva pero no se muestra
+            en el pie.
         mostrar_equipo:
           type: boolean
           title: Mostrar la página del equipo
@@ -4133,6 +4206,11 @@ components:
           description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
             votante@festival.test y @demo.festival.test) no pueden iniciar sesión
             y el login no muestra sus credenciales.
+        mostrar_credenciales_demo:
+          type: boolean
+          title: Mostrar las cuentas de demostración en el login
+          description: Apagada, las cuentas de demostración siguen funcionando (si
+            se permite su ingreso) pero el login no exhibe sus credenciales.
         defecto_presentacion_categorias:
           allOf:
           - $ref: '#/components/schemas/DefectoPresentacionCategoriasEnum'

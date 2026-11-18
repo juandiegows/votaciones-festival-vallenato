@@ -40,6 +40,8 @@ def sitio(request):
         # Acceso al panel (cualquier rol con panel.ver) y permisos del rol para mostrar u ocultar acciones
         "es_admin": usuario.is_authenticated and usuario.accede_panel,
         "permisos": usuario.permisos if usuario.is_authenticated else frozenset(),
-        "mostrar_credenciales_demo": settings.MOSTRAR_CREDENCIALES_DEMO and configuracion.permitir_cuentas_demo,
+        # El login exhibe las cuentas demo solo si el setting lo deja, se permite su ingreso y no se apagó su exhibición
+        "mostrar_credenciales_demo": (settings.MOSTRAR_CREDENCIALES_DEMO and configuracion.permitir_cuentas_demo
+                                      and configuracion.mostrar_credenciales_demo),
         "menu_activo": menu_activo(request),
     }

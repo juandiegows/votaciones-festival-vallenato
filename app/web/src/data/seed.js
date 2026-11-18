@@ -343,10 +343,16 @@ export function crearDatosSemilla() {
     direccion: 'Carrera 19 No. 6N-39, Valledupar, Colombia',
     correo: 'presidencia@festivalvallenato.com',
     textoPie: 'Diseño académico original: no representa la marca oficial del Festival ni de la Fundación.',
-    // Textos del proyecto: vacíos, no se muestran
+    // Textos del proyecto: se ocultan con su interruptor mostrar… (sin borrarlos) o si quedan vacíos
     avisoSuperior: 'Prototipo académico – Areandina · Desarrollo Web 2026 · Datos simulados',
     subtituloLogo: 'Prototipo académico',
     textoAcerca: 'Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina',
+    mostrarTextoPie: true,
+    mostrarAvisoSuperior: true,
+    mostrarSubtituloLogo: true,
+    mostrarTextoAcerca: true,
+    // Exhibir en el login las cuentas de demostración (si también se permite su ingreso)
+    mostrarCredencialesDemo: true,
     mostrarEquipo: true,
     modoBanner: 'carrusel',
     // Pendiente de validación (P-01): por defecto el registro es solo con correo

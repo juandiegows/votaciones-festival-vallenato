@@ -121,6 +121,11 @@ class Usuario(AbstractUser):
         return self.rol == self.Rol.ADMINISTRADOR
 
     @cached_property
+    def rol_nombre(self):
+        """Nombre visible del rol (el código si el rol ya no existe)."""
+        return Rol.objects.filter(codigo=self.rol).values_list("nombre", flat=True).first() or self.rol
+
+    @cached_property
     def permisos(self):
         """Permisos efectivos del rol (vacío si la cuenta está desactivada o el rol no existe)."""
         if not self.is_active:

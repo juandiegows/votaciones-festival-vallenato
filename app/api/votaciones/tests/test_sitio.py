@@ -160,6 +160,28 @@ class ConfiguracionYRedesTests(BaseAPITest):
         self.assertTrue(RegistroAuditoria.objects.filter(accion="actualizar", entidad="configuracion").exists())
         self.assertEqual(self.client.patch("/api/admin/configuracion/", {"correo": "no-es-correo"}, format="json").status_code, 400)
 
+    def test_apagar_un_texto_lo_oculta_en_el_sitio_sin_borrarlo(self):
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={
+            "texto_pie": "Pie de prueba", "aviso_superior": "Aviso de prueba", "subtitulo_logo": "Subtítulo de prueba",
+            "texto_acerca": "Acerca de prueba",
+        })
+        inicio = self.client.get("/").content.decode()
+        for texto in ("Pie de prueba", "Aviso de prueba", "Subtítulo de prueba", "Acerca de prueba"):
+            self.assertIn(texto, inicio)
+        interruptores = {"mostrar_texto_pie": False, "mostrar_aviso_superior": False, "mostrar_subtitulo_logo": False,
+                         "mostrar_texto_acerca": False}
+        respuesta = self.client.patch("/api/gestion/configuracion/", interruptores, format="json")
+        self.assertEqual(respuesta.status_code, 200)
+        inicio = self.client.get("/").content.decode()
+        for texto in ("Pie de prueba", "Aviso de prueba", "Subtítulo de prueba", "Acerca de prueba", "aviso-prototipo", "Acerca de:"):
+            self.assertNotIn(texto, inicio)
+        # El texto se conserva y la API pública informa el interruptor
+        configuracion = self.client.get("/api/sitio/").data["configuracion"]
+        self.assertEqual(configuracion["texto_pie"], "Pie de prueba")
+        self.assertFalse(configuracion["mostrar_aviso_superior"])
+        self.client.patch("/api/gestion/configuracion/", {"mostrar_aviso_superior": True}, format="json")
+        self.assertIn("Aviso de prueba", self.client.get("/").content.decode())
+
     def test_la_administracion_apaga_y_enciende_la_documentacion_de_la_api(self):
         rutas = ("/api/docs/", "/api/redoc/", "/api/esquema/")
         for ruta in rutas:

@@ -84,6 +84,8 @@
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-cuentas-demo">
       <h2 id="cfg-cuentas-demo" class="h5 mb-3">Cuentas de demostración</h2>
       {% include "portal/parciales/interruptor_config.html" with campo=form.permitir_cuentas_demo titulo="Permitir el ingreso con las cuentas de demostración" ayuda="admin@festival.test, votante@festival.test y las cuentas @demo.festival.test. Apagada, no pueden iniciar sesión y el login no muestra sus credenciales. Para apagarla necesitas una cuenta de administrador propia." %}
+      {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_credenciales_demo titulo="Mostrar las cuentas de demostración en el login" ayuda="Apagada, las cuentas siguen funcionando pero el login no exhibe sus correos ni contraseñas." %}
+      {% if not form.instance.permitir_cuentas_demo %}<p class="small text-secondary-flv mb-0 mt-2" role="note"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Mientras el ingreso con las cuentas de demostración esté apagado, el login no las muestra aunque este interruptor esté activo.</p>{% endif %}
     </section>
   {% elif clave == "registro" %}
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-identidad">
@@ -195,11 +197,11 @@
     </section>
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-proyecto">
       <h2 id="cfg-proyecto" class="h5 mb-1">Textos del proyecto</h2>
-      <p class="small text-secondary-flv mb-3">Deja un texto vacío para ocultarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico).</p>
+      <p class="small text-secondary-flv mb-3">Apaga «Mostrar» para ocultar un texto sin borrarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico). Un texto vacío tampoco se muestra.</p>
       <div class="row">
-        <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.aviso_superior ayuda="Franja destacada encima del pie de página." %}</div>
-        <div class="col-md-5">{% include "portal/parciales/campo.html" with campo=form.subtitulo_logo ayuda="Texto pequeño bajo «Votaciones FLV» en el menú." %}</div>
-        <div class="col-md-7">{% include "portal/parciales/campo.html" with campo=form.texto_acerca ayuda="Última línea del pie de página." %}</div>
+        <div class="col-12">{% include "portal/parciales/texto_con_interruptor.html" with campo=form.aviso_superior interruptor=form.mostrar_aviso_superior ayuda="Franja destacada encima del pie de página." %}</div>
+        <div class="col-md-5">{% include "portal/parciales/texto_con_interruptor.html" with campo=form.subtitulo_logo interruptor=form.mostrar_subtitulo_logo ayuda="Texto pequeño bajo «Votaciones FLV» en el menú." %}</div>
+        <div class="col-md-7">{% include "portal/parciales/texto_con_interruptor.html" with campo=form.texto_acerca interruptor=form.mostrar_texto_acerca ayuda="Última línea del pie de página." %}</div>
       </div>
       {% include "portal/parciales/interruptor_config.html" with campo=form.mostrar_equipo titulo="Mostrar la página del equipo" ayuda="Publica /equipo y sus enlaces en el menú y el pie. Apagada, la página responde 404." %}
     </section>
@@ -210,7 +212,7 @@
         <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.correo tipo="email" %}</div>
         <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.telefono %}</div>
         <div class="col-md-6">{% include "portal/parciales/campo.html" with campo=form.direccion %}</div>
-        <div class="col-12">{% include "portal/parciales/campo.html" with campo=form.texto_pie %}</div>
+        <div class="col-12">{% include "portal/parciales/texto_con_interruptor.html" with campo=form.texto_pie interruptor=form.mostrar_texto_pie multilinea=True %}</div>
       </div>
     </section>
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-api">

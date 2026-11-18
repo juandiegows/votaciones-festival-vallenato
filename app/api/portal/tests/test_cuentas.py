@@ -107,3 +107,13 @@ class CredencialesDemoTest(BasePortalTest):
     @override_settings(MOSTRAR_CREDENCIALES_DEMO=False)
     def test_login_oculta_credenciales_demo_si_se_apagan(self):
         self.assertNotContains(self.client.get("/login"), "Credenciales de demostración")
+
+    def test_login_oculta_credenciales_demo_sin_impedir_su_ingreso(self):
+        from votaciones.sitio.models import ConfiguracionSitio
+
+        ConfiguracionSitio.objects.update_or_create(pk=1, defaults={"mostrar_credenciales_demo": False})
+        self.assertNotContains(self.client.get("/login"), "Credenciales de demostración")
+        self.assertTrue(ConfiguracionSitio.obtener().permitir_cuentas_demo)
+        # Con la exhibición activa pero el ingreso apagado, tampoco se muestran
+        ConfiguracionSitio.objects.filter(pk=1).update(mostrar_credenciales_demo=True, permitir_cuentas_demo=False)
+        self.assertNotContains(self.client.get("/login"), "Credenciales de demostración")

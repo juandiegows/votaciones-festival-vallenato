@@ -7,7 +7,7 @@
         <rect x="42" y="20" width="10" height="26" rx="2" fill="#000000"/>
         <path d="M22 22 L26 44 L30 22 L34 44 L38 22 L42 44" stroke="#D7AC70" stroke-width="3" fill="none" stroke-linejoin="round"/>
       </svg>
-      <span>Votaciones FLV{% if edicion_activa %} {{ edicion_activa.anio }}{% endif %}{% if configuracion.subtitulo_logo %}<small>{{ configuracion.subtitulo_logo }}</small>{% endif %}</span>
+      <span>Votaciones FLV{% if edicion_activa %} {{ edicion_activa.anio }}{% endif %}{% if configuracion.mostrar_subtitulo_logo and configuracion.subtitulo_logo %}<small>{{ configuracion.subtitulo_logo }}</small>{% endif %}</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal"
             aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir menú">
@@ -31,7 +31,7 @@
             <i class="bi bi-person-circle me-1" aria-hidden="true"></i>{{ user.nombres }}<span class="visually-hidden"> – menú de usuario</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-lg-end">
-            <li class="px-3 py-2 small text-secondary-flv">{{ user.email }}<br>Rol: <strong>{{ user.get_rol_display|lower }}</strong></li>
+            <li class="px-3 py-2 small text-secondary-flv">{{ user.email }}<br>Rol: <strong>{{ user.rol_nombre }}</strong></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'portal:mis-votos' %}"><i class="bi bi-receipt me-2" aria-hidden="true"></i>Mis votos</a></li>
             {% if es_admin %}<li><a class="dropdown-item" href="{% url 'portal:panel' %}"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Panel de administración</a></li>{% endif %}

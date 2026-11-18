@@ -5,9 +5,12 @@ import Modal from './Modal.jsx';
 
 export default function Footer() {
   const { usuario, esAdmin, restablecer, edicionActiva, configuracion: contacto, redes } = useApp();
-  // Textos del proyecto editables en /panel/sitio; un texto vacío no se muestra (datos guardados antes: valores de siempre)
-  const aviso = contacto?.avisoSuperior ?? 'Prototipo académico – Areandina · Desarrollo Web 2026';
-  const acerca = contacto?.textoAcerca ?? 'Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina';
+  // Textos del proyecto editables en /panel/sitio: se muestran si su interruptor está activo (falta = activo) y no están vacíos
+  // (datos guardados antes: valores de siempre)
+  const visible = (interruptor) => contacto?.[interruptor] !== false;
+  const aviso = visible('mostrarAvisoSuperior') ? (contacto?.avisoSuperior ?? 'Prototipo académico – Areandina · Desarrollo Web 2026') : '';
+  const acerca = visible('mostrarTextoAcerca') ? (contacto?.textoAcerca ?? 'Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina') : '';
+  const textoPie = visible('mostrarTextoPie') ? contacto?.textoPie : '';
   const mostrarEquipo = contacto?.mostrarEquipo ?? true;
   // Contacto y redes editables en /panel/sitio
   const redesActivas = [...redes].filter((r) => r.activa).sort((a, b) => a.orden - b.orden);
@@ -35,7 +38,7 @@ export default function Footer() {
           <div className="col-lg-4">
             <p className="font-titulo fw-bold text-white mb-1">Sistema Web de Votaciones</p>
             <p className="small mb-0">
-              {edicionActiva?.nombre || 'Festival de la Leyenda Vallenata'} · Valledupar, Cesar (Colombia). {contacto?.textoPie}
+              {edicionActiva?.nombre || 'Festival de la Leyenda Vallenata'} · Valledupar, Cesar (Colombia).{textoPie ? ` ${textoPie}` : ''}
             </p>
           </div>
           <div className="col-sm-6 col-lg-2">

@@ -21,15 +21,12 @@
       {% include "portal/parciales/campo.html" with campo=form.telefono tipo="tel" %}
       {% include "portal/parciales/campo.html" with campo=form.direccion %}
       {% include "portal/parciales/campo.html" with campo=form.correo tipo="email" %}
-      <div class="mb-3">
-        <label class="form-label" for="id_texto_pie">Texto del pie de página</label>
-        <textarea id="id_texto_pie" name="texto_pie" rows="2" class="form-control">{{ form.texto_pie.value|default_if_none:'' }}</textarea>
-      </div>
+      {% include "portal/parciales/texto_con_interruptor.html" with campo=form.texto_pie interruptor=form.mostrar_texto_pie multilinea=True %}
       <h3 class="h6 mt-4 mb-1">Textos del proyecto</h3>
-      <p class="small text-secondary-flv">Deja un texto vacío para ocultarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico).</p>
-      {% include "portal/parciales/campo.html" with campo=form.aviso_superior ayuda="Franja destacada encima del pie de página." %}
-      {% include "portal/parciales/campo.html" with campo=form.subtitulo_logo ayuda="Texto pequeño bajo «Votaciones FLV» en el menú." %}
-      {% include "portal/parciales/campo.html" with campo=form.texto_acerca ayuda="Última línea del pie de página." %}
+      <p class="small text-secondary-flv">Apaga «Mostrar» para ocultar un texto sin borrarlo (por ejemplo, cuando el sitio deje de ser un prototipo académico). Un texto vacío tampoco se muestra.</p>
+      {% include "portal/parciales/texto_con_interruptor.html" with campo=form.aviso_superior interruptor=form.mostrar_aviso_superior ayuda="Franja destacada encima del pie de página." %}
+      {% include "portal/parciales/texto_con_interruptor.html" with campo=form.subtitulo_logo interruptor=form.mostrar_subtitulo_logo ayuda="Texto pequeño bajo «Votaciones FLV» en el menú." %}
+      {% include "portal/parciales/texto_con_interruptor.html" with campo=form.texto_acerca interruptor=form.mostrar_texto_acerca ayuda="Última línea del pie de página." %}
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" role="switch" id="id_mostrar_equipo" name="mostrar_equipo"{% if form.mostrar_equipo.value %} checked{% endif %} aria-describedby="equipo-ayuda">
         <label class="form-check-label" for="id_mostrar_equipo">Mostrar la página del equipo</label>

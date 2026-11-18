@@ -16,6 +16,7 @@ export default function SeccionDemo() {
   const [procesando, setProcesando] = useState(false);
   const [confirmacion, setConfirmacion] = useState({ eliminar: '', cargar: '' });
   const permitidas = configuracion?.permitirCuentasDemo ?? true;
+  const exhibidas = configuracion?.mostrarCredencialesDemo ?? true;
 
   const consultar = useCallback(async () => {
     if (!obtenerDemo) return;
@@ -44,6 +45,11 @@ export default function SeccionDemo() {
     valor ? 'Las cuentas de demostración pueden volver a iniciar sesión.' : 'Las cuentas de demostración ya no pueden iniciar sesión.',
   );
 
+  const alternarExhibir = (valor) => ejecutar(
+    () => guardarConfiguracion({ ...configuracion, mostrarCredencialesDemo: valor }),
+    valor ? 'El login vuelve a mostrar las cuentas de demostración.' : 'El login ya no muestra las cuentas de demostración; siguen funcionando.',
+  );
+
   const bloqueado = procesando || demo?.esCuentaDemo || !puedeDemo;
 
   return (
@@ -58,6 +64,16 @@ export default function SeccionDemo() {
         <p id="cfg-permitir-demo-ayuda" className="small text-secondary-flv mb-0 mt-1">
           admin@festival.test, votante@festival.test y las cuentas @demo.festival.test. Apagada, no pueden iniciar sesión y el login no muestra sus
           credenciales. Para apagarla necesitas una cuenta de administrador propia.
+        </p>
+        <div className="form-check form-switch mt-3">
+          <input className="form-check-input" type="checkbox" role="switch" id="cfg-mostrar-credenciales" checked={exhibidas}
+            disabled={procesando || !puedeEditar || !permitidas} onChange={(e) => alternarExhibir(e.target.checked)} aria-describedby="cfg-mostrar-credenciales-ayuda" />
+          <label className="form-check-label fw-semibold" htmlFor="cfg-mostrar-credenciales">Mostrar las cuentas de demostración en el login</label>
+        </div>
+        <p id="cfg-mostrar-credenciales-ayuda" className="small text-secondary-flv mb-0 mt-1">
+          {permitidas
+            ? 'Apagada, las cuentas siguen funcionando pero el login no exhibe sus correos ni contraseñas.'
+            : 'Sin efecto mientras el ingreso con las cuentas de demostración esté apagado: el login no las muestra.'}
         </p>
       </section>
 

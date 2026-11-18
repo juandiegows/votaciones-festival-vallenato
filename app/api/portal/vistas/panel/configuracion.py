@@ -29,12 +29,13 @@ SECCIONES = {
                    "sitio": ["mostrar_participantes", "umbral_participacion"], "edicion": []},
     "sitio": {"grupo": "Sitio público", "titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
               "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "aviso_superior",
-                        "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
+                        "subtitulo_logo", "texto_acerca", "mostrar_texto_pie", "mostrar_aviso_superior",
+                        "mostrar_subtitulo_logo", "mostrar_texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
     "predeterminados": {"grupo": "Administración", "titulo": "Valores por defecto", "icono": "ui-checks", "descripcion": "Cómo se crea cada edición, categoría o votación nueva. Después se puede cambiar en cada una.",
                         "sitio": ["defecto_presentacion_categorias", "defecto_visibilidad_resultados", "defecto_voto_unico",
                                   "defecto_categoria_activa", "defecto_presentacion_opciones", "defecto_dias_votacion"], "edicion": []},
     "demo": {"grupo": "Administración", "titulo": "Demostración", "icono": "person-badge-fill", "descripcion": "Cuentas y datos de prueba que crea cargar_demo: permitir su ingreso, eliminarlos o volver a cargarlos.",
-             "sitio": ["permitir_cuentas_demo"], "edicion": []},
+             "sitio": ["permitir_cuentas_demo", "mostrar_credenciales_demo"], "edicion": []},
 }
 
 
