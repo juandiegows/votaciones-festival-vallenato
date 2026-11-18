@@ -24,8 +24,13 @@ La documentación se apaga desde Django Admin (*Configuración del sitio → mos
 - **Base:** `/api/`. Formato JSON en UTF-8; fechas en ISO 8601 con zona horaria (`America/Bogota`).
 - **Autenticación:** token. Se obtiene en `POST /api/auth/registro/` o `POST /api/auth/login/` y se envía en
   cada petición protegida con el encabezado `Authorization: Token <token>`.
-- **Roles:** `votante` (por defecto al registrarse) y `administrador`. Las rutas `/api/gestion/…` exigen
-  administrador; un votante recibe `403`.
+- **Roles y permisos:** cada funcionalidad de la administración es un permiso (`modulo.accion`, catálogo en
+  `GET /api/gestion/roles/catalogo/` y en `app/api/votaciones/cuentas/permisos.py`) y un rol es un conjunto de
+  permisos. Roles del sistema: `votante` (por defecto al registrarse, sin permisos de administración), `lectura`
+  (consulta todo el panel sin cambiar nada), `editor` (lee y escribe solo ediciones, categorías, votaciones y opciones)
+  y `administrador` (acceso total: cambia roles, usuarios y permisos). Cada ruta `/api/gestion/…` exige su permiso
+  (p. ej. `GET` → `ediciones.ver`, `POST` → `ediciones.crear`); sin él responde `403`. `auth/login` y `auth/yo`
+  devuelven `rol`, `rol_nombre` y `permisos` del usuario. Nadie cambia su propio rol ni reparte permisos que no tiene.
 - **Límites de uso (throttling):** login y registro 10/min; votar 30/min por usuario; confirmar o reenviar el
   correo 5/min. La IP del cliente sale de `REMOTE_ADDR` o, detrás de proxies declarados en `DJANGO_NUM_PROXIES`,
   de la entrada de `X-Forwarded-For` que agregó el proxy (la que escribe el cliente se ignora).
@@ -92,7 +97,7 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | POST | `/api/votaciones/{id}/votar/` | Token | Emite un voto `{ "opcion": <id> }` y devuelve el comprobante (RF-07, RF-08) |
 | GET | `/api/mis-votos/` | Token | Votos y comprobantes del usuario (RF-09) |
 
-### Administración (rol administrador)
+### Administración (cada ruta exige su permiso)
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -115,7 +120,10 @@ Códigos posibles: `correo_sin_confirmar`, `documento_requerido`, `votacion_inex
 | GET | `/api/gestion/ediciones/{id}/exportar-estructura/` | La edición completa en la plantilla de Excel (respaldo o copia) |
 | CRUD | `/api/gestion/opciones/?votacion={id}` | Gestión de opciones (RF-13); `audio` (archivo, multipart), `texto_audio` (letra o transcripción) y `foto` (imagen, multipart) |
 | GET | `/api/gestion/votos/?votacion={id}` | Votos anónimos (id, votación, opción y fecha; sin votante ni comprobante) para gráficos e indicadores |
-| GET | `/api/gestion/usuarios/?rol={votante\|administrador}` | Usuarios registrados (sin contraseñas) |
+| GET | `/api/gestion/usuarios/?rol={código}` | Usuarios registrados (sin contraseñas) con `rol_nombre` (`usuarios.ver`) |
+| POST | `/api/gestion/usuarios/{id}/rol/` | `{ "rol": "<código>" }` (`usuarios.cambiar_rol`); queda al menos un administrador |
+| CRUD | `/api/gestion/roles/` | Roles con sus `permisos` y número de `usuarios` (`roles.ver` / `roles.gestionar`); votante y administrador son fijos |
+| GET | `/api/gestion/roles/catalogo/` | Catálogo de permisos agrupado |
 | CRUD | `/api/gestion/banners/?edicion={id}` | Banners del inicio; cada banner pertenece a una edición (`edicion`, imagen en multipart) |
 | CRUD | `/api/gestion/revistas/` | Revista institucional en PDF (`archivo` en multipart, máximo 50 MB); el inicio la muestra como libro que se hojea |
 | GET | `/api/gestion/auditoria/?accion=&entidad=&q=` | Registro de auditoría paginado, 50 por página (RF-16, RN-12); `q` busca por usuario o ID |
@@ -144,6 +152,7 @@ Toda creación, modificación, eliminación, publicación, despublicación, cier
 | RN-13 Si se pide documento: una persona, una cuenta (tipo + número único) | `pedir_documento` en `/api/gestion/configuracion/` (por defecto `false`); restricción `usuario_documento_unico`; el número se guarda sin puntos ni espacios. Con el ajuste activo, quien no tenga documento recibe `403 documento_requerido` en `POST /votar/` hasta completarlo en `/api/auth/documento/` |
 | RN-14 Solo vota quien confirmó su correo | `403 correo_sin_confirmar` en `POST /votar/` |
 | RN-19 Opciones congeladas desde la apertura: con la votación abierta, cerrada o con votos no se crean, editan, reordenan, desactivan ni eliminan opciones | `409 opciones_bloqueadas` en `/api/gestion/opciones/`; el panel y Django Admin las muestran de solo lectura |
+| RN-20 Cada funcionalidad de la administración es un permiso; un rol agrupa permisos. Nadie cambia su propio rol ni reparte permisos que no tiene; siempre queda un administrador activo | `403` sin el permiso (`comun/permisos.TienePermiso`); reglas en `cuentas/servicios.cambiar_rol` y `guardar_rol` |
 
 Una votación **abierta** no se puede despublicar (`409 votacion_abierta`): se espera al cierre o se cierra primero;
 programadas y cerradas sí se pueden retirar del sitio con `/despublicar/`. Al activar una edición, las demás

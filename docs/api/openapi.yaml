@@ -1723,6 +1723,181 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/gestion/roles/:
+    get:
+      operationId: gestion_roles_list
+      summary: Roles con sus permisos y el número de usuarios
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rol'
+          description: ''
+    post:
+      operationId: gestion_roles_create
+      summary: Crear un rol (solo con permisos que tenga quien lo crea)
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rol'
+          description: ''
+  /api/gestion/roles/{id}/:
+    get:
+      operationId: gestion_roles_retrieve
+      summary: Detalle de un rol
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este rol.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rol'
+          description: ''
+    put:
+      operationId: gestion_roles_update
+      summary: Cambiar nombre, descripción y permisos de un rol
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este rol.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rol'
+          description: ''
+    patch:
+      operationId: gestion_roles_partial_update
+      summary: Cambiar nombre, descripción o permisos de un rol
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este rol.
+        required: true
+      tags:
+      - Administración
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRolRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRolRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRolRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rol'
+          description: ''
+    delete:
+      operationId: gestion_roles_destroy
+      summary: Eliminar un rol sin usuarios (los del sistema no se eliminan)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este rol.
+        required: true
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+  /api/gestion/roles/catalogo/:
+    get:
+      operationId: gestion_roles_catalogo_retrieve
+      summary: Catálogo de permisos agrupado (cada funcionalidad del panel es un permiso)
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/gestion/usuarios/:
     get:
       operationId: gestion_usuarios_list
@@ -1732,9 +1907,7 @@ paths:
         name: rol
         schema:
           type: string
-          enum:
-          - administrador
-          - votante
+        description: 'Código del rol: votante, lectura, editor, administrador…'
       tags:
       - Administración
       security:
@@ -1773,7 +1946,7 @@ paths:
   /api/gestion/usuarios/{id}/rol/:
     post:
       operationId: gestion_usuarios_rol_create
-      summary: Cambiar el rol (votante o administrador)
+      summary: Cambiar el rol de un usuario
       parameters:
       - in: path
         name: id
@@ -1791,9 +1964,6 @@ paths:
               properties:
                 rol:
                   type: string
-                  enum:
-                  - votante
-                  - administrador
       security:
       - tokenAuth: []
       responses:
@@ -1802,6 +1972,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UsuarioAdmin'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRegla'
           description: ''
   /api/gestion/votaciones/:
     get:
@@ -2251,7 +2433,7 @@ paths:
   /api/gestion/votos/:
     get:
       operationId: gestion_votos_list
-      description: Consulta administrativa de los votos (requiere rol administrador).
+      description: Consulta administrativa de los votos (requiere el permiso resultados.ver).
       summary: Votos registrados para indicadores (sin datos del votante)
       parameters:
       - in: query
@@ -4132,6 +4314,32 @@ components:
           format: int64
         activa:
           type: boolean
+    PatchedRolRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          title: Código
+          maxLength: 30
+          pattern: ^[-a-zA-Z0-9_]+$
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 60
+        descripcion:
+          type: string
+          title: Descripción
+          maxLength: 200
+        permisos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermisosEnum'
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
     PatchedVotacionRequest:
       type: object
       description: 'Serializador de alta: los campos que no llegan en la petición
@@ -4193,6 +4401,78 @@ components:
           type: boolean
           description: Usar la visibilidad de resultados propia en lugar de la de
             la edición.
+    PermisosEnum:
+      enum:
+      - auditoria.ver
+      - categorias.crear
+      - categorias.editar
+      - categorias.eliminar
+      - categorias.ver
+      - configuracion.demo
+      - configuracion.editar
+      - configuracion.ver
+      - django_admin.acceder
+      - ediciones.crear
+      - ediciones.editar
+      - ediciones.eliminar
+      - ediciones.exportar
+      - ediciones.importar
+      - ediciones.ver
+      - opciones.crear
+      - opciones.editar
+      - opciones.eliminar
+      - opciones.ver
+      - panel.ver
+      - resultados.exportar
+      - resultados.publicar
+      - resultados.ver
+      - roles.gestionar
+      - roles.ver
+      - sitio.editar
+      - sitio.ver
+      - usuarios.cambiar_rol
+      - usuarios.ver
+      - votaciones.crear
+      - votaciones.editar
+      - votaciones.eliminar
+      - votaciones.publicar
+      - votaciones.ver
+      type: string
+      description: |-
+        * `auditoria.ver` - auditoria.ver
+        * `categorias.crear` - categorias.crear
+        * `categorias.editar` - categorias.editar
+        * `categorias.eliminar` - categorias.eliminar
+        * `categorias.ver` - categorias.ver
+        * `configuracion.demo` - configuracion.demo
+        * `configuracion.editar` - configuracion.editar
+        * `configuracion.ver` - configuracion.ver
+        * `django_admin.acceder` - django_admin.acceder
+        * `ediciones.crear` - ediciones.crear
+        * `ediciones.editar` - ediciones.editar
+        * `ediciones.eliminar` - ediciones.eliminar
+        * `ediciones.exportar` - ediciones.exportar
+        * `ediciones.importar` - ediciones.importar
+        * `ediciones.ver` - ediciones.ver
+        * `opciones.crear` - opciones.crear
+        * `opciones.editar` - opciones.editar
+        * `opciones.eliminar` - opciones.eliminar
+        * `opciones.ver` - opciones.ver
+        * `panel.ver` - panel.ver
+        * `resultados.exportar` - resultados.exportar
+        * `resultados.publicar` - resultados.publicar
+        * `resultados.ver` - resultados.ver
+        * `roles.gestionar` - roles.gestionar
+        * `roles.ver` - roles.ver
+        * `sitio.editar` - sitio.editar
+        * `sitio.ver` - sitio.ver
+        * `usuarios.cambiar_rol` - usuarios.cambiar_rol
+        * `usuarios.ver` - usuarios.ver
+        * `votaciones.crear` - votaciones.crear
+        * `votaciones.editar` - votaciones.editar
+        * `votaciones.eliminar` - votaciones.eliminar
+        * `votaciones.publicar` - votaciones.publicar
+        * `votaciones.ver` - votaciones.ver
     PresentacionCategoriasEnum:
       enum:
       - tarjetas
@@ -4480,14 +4760,79 @@ components:
       required:
       - archivo
       - titulo
-    RolEnum:
-      enum:
-      - votante
-      - administrador
-      type: string
-      description: |-
-        * `votante` - Votante
-        * `administrador` - Administrador
+    Rol:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          title: Código
+          maxLength: 30
+          pattern: ^[-a-zA-Z0-9_]+$
+        nombre:
+          type: string
+          maxLength: 60
+        descripcion:
+          type: string
+          title: Descripción
+          maxLength: 200
+        permisos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermisosEnum'
+        sistema:
+          type: boolean
+          readOnly: true
+          description: 'Rol del sistema: no se elimina ni cambia de código.'
+        fijo:
+          type: boolean
+          readOnly: true
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        usuarios:
+          type: integer
+          readOnly: true
+      required:
+      - codigo
+      - fijo
+      - id
+      - nombre
+      - sistema
+      - usuarios
+    RolRequest:
+      type: object
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          title: Código
+          maxLength: 30
+          pattern: ^[-a-zA-Z0-9_]+$
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 60
+        descripcion:
+          type: string
+          title: Descripción
+          maxLength: 200
+        permisos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermisosEnum'
+        orden:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - codigo
+      - nombre
     Sitio:
       type: object
       properties:
@@ -4559,9 +4904,17 @@ components:
           type: string
           readOnly: true
         rol:
-          allOf:
-          - $ref: '#/components/schemas/RolEnum'
+          type: string
           readOnly: true
+        rol_nombre:
+          type: string
+          readOnly: true
+        permisos:
+          type: array
+          items:
+            type: string
+          readOnly: true
+          description: Permisos efectivos del rol (catálogo en /api/gestion/roles/catalogo/).
         fecha_registro:
           type: string
           format: date-time
@@ -4586,7 +4939,9 @@ components:
       - id
       - nombres
       - numero_documento
+      - permisos
       - rol
+      - rol_nombre
       - tipo_documento
     UsuarioAdmin:
       type: object
@@ -4606,8 +4961,10 @@ components:
           type: string
           readOnly: true
         rol:
-          allOf:
-          - $ref: '#/components/schemas/RolEnum'
+          type: string
+          readOnly: true
+        rol_nombre:
+          type: string
           readOnly: true
         is_active:
           type: boolean
@@ -4641,6 +4998,7 @@ components:
       - nombres
       - numero_documento
       - rol
+      - rol_nombre
       - tipo_documento
     VisibilidadResultadosEnum:
       enum:
