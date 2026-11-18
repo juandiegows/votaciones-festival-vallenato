@@ -9,6 +9,9 @@ Allow: /
 Disallow: /login
 Disallow: /mis-votos
 Disallow: /confirmar-correo
+Disallow: /completar-documento
+Disallow: /recuperar-clave
+Disallow: /restablecer-clave
 Disallow: /panel
 Disallow: /error/
 Disallow: /*/comprobante

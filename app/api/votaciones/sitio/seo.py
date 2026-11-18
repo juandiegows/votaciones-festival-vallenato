@@ -33,13 +33,13 @@ def _cerrada_visible(votacion, dias, ahora):
 
 
 def entradas_sitemap():
-    """(ruta, lastmod, changefreq, priority) de cada página pública."""
+    """(ruta, lastmod, changefreq, priority, imágenes) de cada página pública; imágenes = [(ruta, título)]."""
     ahora = timezone.now()
-    entradas = [(ruta, None, frecuencia, prioridad) for ruta, frecuencia, prioridad in PAGINAS_FIJAS]
+    entradas = [(ruta, None, frecuencia, prioridad, []) for ruta, frecuencia, prioridad in PAGINAS_FIJAS]
     dias = ConfiguracionSitio.obtener().dias_visible_cerradas
     # RN-14: solo la edición activa se muestra en el sitio público
     for edicion in Edicion.objects.filter(estado=Edicion.Estado.ACTIVA).order_by("-anio"):
-        entradas.append((f"/{edicion.anio}", None, "daily", "0.9"))
+        entradas.append((f"/{edicion.anio}", None, "daily", "0.9", []))
         categorias = Categoria.objects.filter(edicion=edicion, activa=True).order_by("orden", "nombre")
         for categoria in categorias:
             ruta_categoria = f"/{edicion.anio}/categorias/{categoria.slug}"
@@ -48,10 +48,12 @@ def entradas_sitemap():
                 if _cerrada_visible(v, dias, ahora)
             ]
             ultima = max((v.actualizado_en for v in votaciones), default=None)
-            entradas.append((ruta_categoria, ultima, "daily", "0.8"))
+            entradas.append((ruta_categoria, ultima, "daily", "0.8", []))
             for votacion in votaciones:
                 frecuencia = "hourly" if votacion.estado_en(ahora) == Votacion.Estado.ABIERTA else "weekly"
-                entradas.append((f"{ruta_categoria}/{votacion.slug}", votacion.actualizado_en, frecuencia, "0.7"))
+                # Imágenes subidas de las opciones activas (presentación «Imágenes con texto»)
+                imagenes = [(o.foto.url, o.nombre) for o in votacion.opciones.filter(activa=True).exclude(foto="")]
+                entradas.append((f"{ruta_categoria}/{votacion.slug}", votacion.actualizado_en, frecuencia, "0.7", imagenes))
     return entradas
 
 
@@ -59,14 +61,21 @@ def entradas_sitemap():
 @cache_page(60 * 15)
 def sitemap(request):
     base = url_sitio()
-    lineas = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
-    for ruta, lastmod, frecuencia, prioridad in entradas_sitemap():
+    lineas = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+    ]
+    for ruta, lastmod, frecuencia, prioridad, imagenes in entradas_sitemap():
         lineas.append("  <url>")
         lineas.append(f"    <loc>{escape(base + ruta)}</loc>")
         if lastmod:
             lineas.append(f"    <lastmod>{lastmod.date().isoformat()}</lastmod>")
         lineas.append(f"    <changefreq>{frecuencia}</changefreq>")
         lineas.append(f"    <priority>{prioridad}</priority>")
+        for imagen, _nombre in imagenes:
+            url = imagen if imagen.startswith("http") else base + imagen
+            lineas.append(f"    <image:image><image:loc>{escape(url)}</image:loc></image:image>")
         lineas.append("  </url>")
     lineas.append("</urlset>")
     return HttpResponse("\n".join(lineas) + "\n", content_type="application/xml; charset=utf-8")

@@ -179,3 +179,19 @@ def slugs_usados(modelo, instancia=None):
     for clave, slug in consulta.exclude(slug="").values_list(ambito, "slug"):
         usados.setdefault(str(clave), []).append(slug)
     return usados
+
+
+@register.simple_tag
+def url_sitio():
+    """Dominio público de la web (el mismo de los correos), sin barra final."""
+    from django.conf import settings
+
+    return settings.CORREO_URL_SITIO.rstrip("/")
+
+
+@register.simple_tag(takes_context=True)
+def url_canonica(context):
+    """URL canónica de la página: el sitio MVT y la web comparten las rutas, así que apunta al dominio público."""
+    request = context.get("request")
+    ruta = request.path if request else "/"
+    return url_sitio() + (ruta if ruta == "/" else ruta.rstrip("/"))

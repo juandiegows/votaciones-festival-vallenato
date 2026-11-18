@@ -40,6 +40,12 @@ AddDefaultCharset utf-8
   # Archivos ocultos y de sistema (.git, .env…): 404, salvo /.well-known/ (security.txt, ACME)
   RewriteRule (^|/)\.(?!well-known/) - [R=404,L]
 
+  # Respaldos, volcados y configuración: nunca se sirven
+  RewriteRule \.(bak|old|orig|sql|sqlite3?|log|ini|env|sh|swp|map)$ - [R=404,NC,L]
+
+  # Mapa del sitio en la raíz → el que genera la API (ajustar el dominio si la API está en otro)
+  RewriteRule ^sitemap\.xml$ /api/sitemap.xml [L,R=301]
+
   # Sin barra final (evita URL duplicadas): /2027/categorias/ → /2027/categorias
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.+)/$ /$1 [L,R=301]
@@ -73,7 +79,7 @@ ErrorDocument 504 /50x.html
   Header unset ETag
 
   # Páginas privadas: fuera de los buscadores aunque alguien las enlace
-  <If "%{REQUEST_URI} =~ m#^/(login|mis-votos|confirmar-correo|panel|error)(/|$)# || %{REQUEST_URI} =~ m#/comprobante$#">
+  <If "%{REQUEST_URI} =~ m#^/(login|mis-votos|confirmar-correo|completar-documento|recuperar-clave|restablecer-clave|panel|error)(/|$)# || %{REQUEST_URI} =~ m#/comprobante$#">
     Header always set X-Robots-Tag "noindex, nofollow"
   </If>
 
