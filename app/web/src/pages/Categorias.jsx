@@ -34,10 +34,6 @@ export default function Categorias() {
           <p className="mb-0">Esta edición aún no tiene categorías publicadas.</p>
         </div>
       )}
-      <div className="alert aviso-crema d-flex align-items-center gap-2 py-2" role="note">
-        <i className="bi bi-exclamation-diamond-fill" aria-hidden="true"></i>
-        <span>Categorías ilustrativas – pendientes de validación con la Fundación.</span>
-      </div>
       <CategoriasEdicion
         presentacion={edicion.presentacionCategorias}
         items={lista.map((c) => {
