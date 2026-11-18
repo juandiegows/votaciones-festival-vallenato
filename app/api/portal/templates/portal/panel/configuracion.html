@@ -57,7 +57,12 @@
 {% else %}
 <form method="post" action="?seccion={{ clave }}" novalidate>
   {% csrf_token %}
-  {% if clave == "registro" %}
+  {% if clave == "demo" %}
+    <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-cuentas-demo">
+      <h2 id="cfg-cuentas-demo" class="h5 mb-3">Cuentas de demostración</h2>
+      {% include "portal/parciales/interruptor_config.html" with campo=form.permitir_cuentas_demo titulo="Permitir el ingreso con las cuentas de demostración" ayuda="admin@festival.test, votante@festival.test y las cuentas @demo.festival.test. Apagada, no pueden iniciar sesión y el login no muestra sus credenciales. Para apagarla necesitas una cuenta de administrador propia." %}
+    </section>
+  {% elif clave == "registro" %}
     <section class="card-flv p-3 p-md-4 mb-3" aria-labelledby="cfg-identidad">
       <h2 id="cfg-identidad" class="h5 mb-3">Identidad del votante</h2>
       {% include "portal/parciales/interruptor_config.html" with campo=form.pedir_documento titulo="Hacer obligatoria la cédula o documento" ayuda="Se pide al registrarse y solo se permite una cuenta por documento. Quien ya tiene cuenta sin documento debe completarlo antes de votar." %}
@@ -133,5 +138,37 @@
   {% endif %}
   <div class="text-end"><button class="btn btn-primary" type="submit" data-enviando="Guardando…">Guardar cambios</button></div>
 </form>
+{% if clave == "demo" %}
+<section class="card-flv p-3 p-md-4 mt-3" aria-labelledby="cfg-datos-demo">
+  <h2 id="cfg-datos-demo" class="h5 mb-1">Datos de demostración</h2>
+  <p class="small text-secondary-flv">Ahora hay {{ demo.ediciones }} edición(es) de demostración ({{ demo_anios }}), {{ demo.usuarios }} cuenta(s) y {{ demo.votos }} voto(s).
+    El contacto, las redes, la marca y esta configuración se conservan en ambos casos. Las ediciones y cuentas creadas por la administración no se tocan.</p>
+  {% if es_cuenta_demo %}
+    <div class="alert alert-warning small" role="note"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Estás usando una cuenta de demostración: para eliminar o recargar los datos inicia sesión con una cuenta de administrador propia.</div>
+  {% endif %}
+  <div class="row g-3">
+    <div class="col-md-6">
+      <form method="post" action="{% url 'portal:panel-demo-eliminar' %}" class="border rounded-3 p-3 h-100">
+        {% csrf_token %}
+        <p class="fw-semibold mb-1"><i class="bi bi-trash me-1 text-danger" aria-hidden="true"></i>Eliminar los datos de demostración</p>
+        <p class="small text-secondary-flv">Borra las ediciones {{ demo_anios }} con sus categorías, votaciones, opciones, banners y votos, y las cuentas de demostración.</p>
+        <label class="form-label small" for="confirmar-eliminar">Escribe <strong>ELIMINAR</strong> para confirmar</label>
+        <input id="confirmar-eliminar" name="confirmacion" class="form-control form-control-sm mb-2" autocomplete="off" required>
+        <button class="btn btn-outline-danger btn-sm" type="submit"{% if es_cuenta_demo %} disabled{% endif %}>Eliminar datos de demostración</button>
+      </form>
+    </div>
+    <div class="col-md-6">
+      <form method="post" action="{% url 'portal:panel-demo-cargar' %}" class="border rounded-3 p-3 h-100">
+        {% csrf_token %}
+        <p class="fw-semibold mb-1"><i class="bi bi-arrow-repeat me-1 text-rojo" aria-hidden="true"></i>Volver a cargar los datos de demostración</p>
+        <p class="small text-secondary-flv">Borra los datos de demostración que haya y los crea de nuevo con fechas al día (votaciones abiertas, programadas y cerradas). La edición 2027 de demostración queda activa.</p>
+        <label class="form-label small" for="confirmar-cargar">Escribe <strong>CARGAR</strong> para confirmar</label>
+        <input id="confirmar-cargar" name="confirmacion" class="form-control form-control-sm mb-2" autocomplete="off" required>
+        <button class="btn btn-primary btn-sm" type="submit"{% if es_cuenta_demo %} disabled{% endif %}>Volver a cargar</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endif %}
 {% endif %}
 {% endblock %}

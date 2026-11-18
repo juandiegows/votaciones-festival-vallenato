@@ -100,6 +100,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": base_datos.configurar(os.getenv("DB_ENGINE", "sqlite"), BASE_DIR)}
 
 AUTH_USER_MODEL = "votaciones.Usuario"
+# Como el de Django, pero las cuentas de demostración no entran si la configuración del sitio lo apaga
+AUTHENTICATION_BACKENDS = ["votaciones.sitio.demo.AutenticacionConCuentasDemo"]
 
 # Autenticación del portal: sesión de Django (la API sigue usando token)
 LOGIN_URL = "portal:login"

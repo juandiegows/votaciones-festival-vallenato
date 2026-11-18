@@ -18,7 +18,6 @@ const GRUPOS = [
     titulo: 'Seguimiento',
     enlaces: [
       { to: '/panel/resultados', label: 'Votos y resultados', icono: 'bar-chart', porEdicion: true },
-      { to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true },
     ],
   },
   {
@@ -30,6 +29,7 @@ const GRUPOS = [
       { to: '/panel/marca', label: 'Identidad visual', icono: 'palette' },
     ],
   },
+  { titulo: 'Control', enlaces: [{ to: '/panel/auditoria', label: 'Auditoría', icono: 'shield-check', porEdicion: true }] },
   { titulo: 'Ajustes', enlaces: [{ to: '/panel/configuracion', label: 'Configuración', icono: 'gear', porEdicion: true }] },
 ];
 

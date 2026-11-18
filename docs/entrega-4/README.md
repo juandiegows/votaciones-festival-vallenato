@@ -55,6 +55,17 @@ Si la persona escribe su propio identificador, la sugerencia se detiene; al edit
 cambia, para no romper enlaces publicados. Web: `slugSugerido` en `utils/helpers.js`; panel MVT: `portal.js` con la
 etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_repetir`.
 
+### 5. Textos del proyecto y datos de demostración configurables
+
+| | |
+|---|---|
+| Textos del proyecto | El aviso «Prototipo académico…» del pie, el subtítulo del logo y el texto «Acerca de» se editan (o se ocultan dejándolos vacíos) en Configuración → Sitio; la página del equipo se puede ocultar (responde 404). Migración `0010`. |
+| Cuentas de demostración | Configuración → Demostración: «Permitir el ingreso con las cuentas de demostración». Apagado, `admin@festival.test`, `votante@festival.test` y `@demo.festival.test` no inician sesión (backend `AutenticacionConCuentasDemo`, también cierra sus sesiones abiertas) y el login no muestra credenciales. Migración `0011`. |
+| Datos de demostración | Botones «Eliminar datos de demostración» (escribir ELIMINAR) y «Volver a cargar» (escribir CARGAR): borran o recrean lo que crea `cargar_demo`, conservando contacto, redes, marca y configuración. API: `GET /api/gestion/demo/`, `POST /api/gestion/demo/{eliminar,cargar}/`. |
+| Protección | Apagar las cuentas demo, eliminar o recargar exige una cuenta de administrador **propia** (no de demostración) y que exista al menos una activa: así nadie queda fuera del panel. |
+| Plantilla de Excel | Ícono y votación (hoja «Opciones») se eligen de listas desplegables. |
+| Pruebas | `test_demo.py` (5), `TextosDelProyectoTest` (2), `test_icono_y_votacion_se_eligen_de_listas`. |
+
 ## Correcciones
 
 | Problema | Solución |
@@ -75,7 +86,7 @@ etiqueta `slugs_usados`. Prueba: `test_formulario_sugiere_la_url_amigable_sin_re
 ## Cómo verificar
 
 ```bash
-cd app/api && python manage.py test                      # 323 pruebas (votaciones y portal)
+cd app/api && python manage.py test                      # 331 pruebas (votaciones y portal)
 cd app/web && npm run build
 curl -I https://votaciones.juandiegows.com/sitemap.xml    # 301 → /api/sitemap.xml
 ```

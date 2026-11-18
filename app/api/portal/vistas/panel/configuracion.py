@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from votaciones.auditoria.mixins import auditar
 from votaciones.comun.errores import ReglaNegocioError
 from votaciones.models import Categoria
+from votaciones.sitio import demo
 from votaciones.sitio.models import ConfiguracionSitio
 from votaciones.votacion import servicios
 
@@ -24,6 +25,8 @@ SECCIONES = {
                    "sitio": ["mostrar_participantes", "umbral_participacion"], "edicion": []},
     "resultados": {"titulo": "Resultados", "icono": "bar-chart", "descripcion": "Qué ve el público sobre los resultados y por cuánto tiempo.",
                    "sitio": ["mostrar_total_votos", "dias_visible_cerradas"], "edicion": ["visibilidad_resultados"]},
+    "demo": {"titulo": "Demostración", "icono": "person-badge-fill", "descripcion": "Cuentas y datos de prueba que crea cargar_demo: permitir su ingreso, eliminarlos o volver a cargarlos.",
+             "sitio": ["permitir_cuentas_demo"], "edicion": []},
     "sitio": {"titulo": "Sitio", "icono": "window", "descripcion": "Banner del inicio, textos del proyecto, datos de contacto y documentación de la API.",
               "sitio": ["modo_banner", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "aviso_superior",
                         "subtitulo_logo", "texto_acerca", "mostrar_equipo", "mostrar_swagger"], "edicion": []},
@@ -45,6 +48,12 @@ def configuracion(request):
     form = ConfiguracionForm(datos, instance=ConfiguracionSitio.obtener(), campos=seccion["sitio"])
     form_edicion = ConfiguracionEdicionForm(datos, instance=edicion, campos=seccion["edicion"]) if edicion else None
     if request.method == "POST" and form.is_valid() and (form_edicion is None or form_edicion.is_valid()):
+        if "permitir_cuentas_demo" in form.changed_data and not form.cleaned_data["permitir_cuentas_demo"]:
+            try:
+                demo.validar_administrador_propio(request.user, "apagar las cuentas de demostración")
+            except ReglaNegocioError as error:
+                messages.warning(request, error.mensaje)
+                return redirect(url_seccion(clave))
         form.save()
         cambios = list(form.changed_data)
         if form_edicion:
@@ -60,7 +69,36 @@ def configuracion(request):
     return render_panel(request, "portal/panel/configuracion.html", "configuracion", edicion, {
         "form": form, "form_edicion": form_edicion, "categorias": categorias, "clave": clave, "seccion_config": seccion,
         "secciones": [{"clave": k, **v} for k, v in SECCIONES.items()],
+        **({"demo": demo.resumen(), "demo_anios": ", ".join(map(str, demo.ANIOS_DEMO)),
+            "es_cuenta_demo": demo.es_cuenta_demo(request.user.email)} if clave == "demo" else {}),
     })
+
+
+def accion_demo(request, palabra, funcion, exito):
+    if request.POST.get("confirmacion", "").strip().upper() != palabra:
+        messages.warning(request, f"Escribe {palabra} para confirmar.")
+        return redirect(url_seccion("demo"))
+    try:
+        resultado = funcion(request.user)
+    except ReglaNegocioError as error:
+        messages.warning(request, error.mensaje)
+        return redirect(url_seccion("demo"))
+    auditar(request, f"{palabra.lower()}_demo", "configuracion", 1, {"resultado": resultado})
+    messages.success(request, exito(resultado))
+    return redirect(url_seccion("demo"))
+
+
+@solo_administrador
+@require_POST
+def eliminar_demo(request):
+    return accion_demo(request, "ELIMINAR", demo.eliminar, lambda r: (
+        f"Datos de demostración eliminados: {r['ediciones']} edición(es), {r['usuarios']} cuenta(s) y {r['votos']} voto(s)."))
+
+
+@solo_administrador
+@require_POST
+def cargar_demo(request):
+    return accion_demo(request, "CARGAR", demo.cargar, lambda r: r or "Datos de demostración cargados.")
 
 
 @solo_administrador

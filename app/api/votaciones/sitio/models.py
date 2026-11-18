@@ -78,6 +78,11 @@ class ConfiguracionSitio(ModeloTrazable):
         default="Proyecto académico de Desarrollo Web · Fundación Universitaria del Área Andina",
         help_text="Línea final del pie de página. Vacío = no se muestra.",
     )
+    permitir_cuentas_demo = models.BooleanField(
+        "permitir el ingreso con las cuentas de demostración", default=True,
+        help_text="Apagada, las cuentas que crea cargar_demo (admin@festival.test, votante@festival.test y "
+                  "@demo.festival.test) no pueden iniciar sesión y el login no muestra sus credenciales.",
+    )
     mostrar_equipo = models.BooleanField(
         "mostrar la página del equipo", default=True,
         help_text="Publica /equipo y sus enlaces en el menú y el pie. Apagada, la página responde 404.",

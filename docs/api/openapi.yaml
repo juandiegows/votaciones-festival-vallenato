@@ -884,6 +884,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfiguracionSitio'
           description: ''
+  /api/gestion/demo/:
+    get:
+      operationId: gestion_demo_retrieve
+      description: 'Datos de demostración (cargar_demo): resumen y acciones para eliminarlos
+        o volver a cargarlos.'
+      summary: Resumen de los datos de demostración
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gestion/demo/cargar/:
+    post:
+      operationId: gestion_demo_cargar_create
+      summary: Eliminar o volver a cargar los datos de demostración (exige un administrador
+        propio)
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/gestion/demo/eliminar/:
+    post:
+      operationId: gestion_demo_eliminar_create
+      summary: Eliminar o volver a cargar los datos de demostración (exige un administrador
+        propio)
+      tags:
+      - Administración
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/gestion/ediciones/:
     get:
       operationId: gestion_ediciones_list
@@ -2894,6 +2946,12 @@ components:
           title: Mostrar la página del equipo
           description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
             la página responde 404.
+        permitir_cuentas_demo:
+          type: boolean
+          title: Permitir el ingreso con las cuentas de demostración
+          description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
+            votante@festival.test y @demo.festival.test) no pueden iniciar sesión
+            y el login no muestra sus credenciales.
     ConfiguracionSitioRequest:
       type: object
       properties:
@@ -2974,6 +3032,12 @@ components:
           title: Mostrar la página del equipo
           description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
             la página responde 404.
+        permitir_cuentas_demo:
+          type: boolean
+          title: Permitir el ingreso con las cuentas de demostración
+          description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
+            votante@festival.test y @demo.festival.test) no pueden iniciar sesión
+            y el login no muestra sus credenciales.
     ConfirmarCorreoRequest:
       type: object
       properties:
@@ -3690,6 +3754,12 @@ components:
           title: Mostrar la página del equipo
           description: Publica /equipo y sus enlaces en el menú y el pie. Apagada,
             la página responde 404.
+        permitir_cuentas_demo:
+          type: boolean
+          title: Permitir el ingreso con las cuentas de demostración
+          description: Apagada, las cuentas que crea cargar_demo (admin@festival.test,
+            votante@festival.test y @demo.festival.test) no pueden iniciar sesión
+            y el login no muestra sus credenciales.
     PatchedEdicionRequest:
       type: object
       properties:

@@ -3,6 +3,7 @@ import re
 from rest_framework import serializers
 
 from ..comun.campos import RutaArchivoField, RutaImagenField, validar_enlace, validar_imagen, validar_pdf
+from ..comun.errores import ReglaNegocioError
 from .models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 
 
@@ -37,7 +38,7 @@ class ConfiguracionSitioSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionSitio
         fields = ["nombre_organizacion", "telefono", "direccion", "correo", "texto_pie", "modo_banner", "dias_visible_cerradas", "mostrar_total_votos", "mostrar_swagger", "mostrar_participantes", "umbral_participacion", "pedir_documento", "marca",
-                  "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo"]
+                  "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "permitir_cuentas_demo"]
 
     # Valores permitidos del tema (deben coincidir con app/web/src/data/marca.js)
     TOKENS_COLOR = {
@@ -55,6 +56,17 @@ class ConfiguracionSitioSerializer(serializers.ModelSerializer):
         "forma": {"recta", "suave", "redondeada", "pildora"},
     }
     HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+    def validate_permitir_cuentas_demo(self, valor):
+        from .demo import validar_administrador_propio
+
+        solicitud = self.context.get("request")
+        if valor is False and self.instance and self.instance.permitir_cuentas_demo and solicitud:
+            try:
+                validar_administrador_propio(solicitud.user, "apagar las cuentas de demostración")
+            except ReglaNegocioError as error:
+                raise serializers.ValidationError(error.mensaje) from None
+        return valor
 
     def validate_marca(self, marca):
         if not isinstance(marca, dict) or set(marca) - {"colores", "botones", "alertas"}:

@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext.jsx';
 import { useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import VistaPreviaCategorias from '../../components/presentaciones/VistaPreviaCategorias.jsx';
+import SeccionDemo from '../../components/admin/SeccionDemo.jsx';
 import { PRESENTACIONES_CATEGORIAS, PRESENTACIONES_OPCIONES, presentacionOpciones } from '../../data/presentaciones.js';
 import { DESCRIPCION_RESULTADOS } from '../../utils/helpers.js';
 import { DIAS_VISIBLE_CERRADAS, diasVisibleCerradas } from '../../utils/visibilidad.js';
@@ -14,6 +15,7 @@ const SECCIONES = [
   { id: 'visibilidad', label: 'Votaciones cerradas', icono: 'eye', descripcion: 'Cuánto tiempo siguen en el sitio después de cerrar.' },
   { id: 'registro', label: 'Registro', icono: 'person-vcard', descripcion: 'Qué datos se piden a quien crea una cuenta para votar.' },
   { id: 'presentacion', label: 'Presentación', icono: 'grid', descripcion: 'Cómo ve el público las categorías, las opciones de cada votación y el inicio.' },
+  { id: 'demo', label: 'Demostración', icono: 'person-badge-fill', descripcion: 'Cuentas y datos de prueba: permitir su ingreso, eliminarlos o volver a cargarlos.' },
 ];
 
 const OPCIONES_RESULTADOS = [
@@ -308,6 +310,8 @@ export default function AdminConfiguracion() {
               )}
             </Fila>
           )}
+
+          {seccion === 'demo' && <SeccionDemo />}
 
           {seccion === 'registro' && (
             <Fila

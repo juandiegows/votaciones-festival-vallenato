@@ -51,7 +51,7 @@ const CAMPOS = {
   configuracion: {
     nombreOrganizacion: 'nombre_organizacion', telefono: 'telefono', direccion: 'direccion', correo: 'correo', textoPie: 'texto_pie',
     modoBanner: 'modo_banner', diasVisibleCerradas: 'dias_visible_cerradas', mostrarTotalVotos: 'mostrar_total_votos', mostrarSwagger: 'mostrar_swagger', mostrarParticipantes: 'mostrar_participantes', umbralParticipacion: 'umbral_participacion', pedirDocumento: 'pedir_documento', marca: 'marca',
-    avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca', mostrarEquipo: 'mostrar_equipo',
+    avisoSuperior: 'aviso_superior', subtituloLogo: 'subtitulo_logo', textoAcerca: 'texto_acerca', mostrarEquipo: 'mostrar_equipo', permitirCuentasDemo: 'permitir_cuentas_demo',
   },
   usuarios: {
     id: 'id', correo: 'email', nombres: 'nombres', apellidos: 'apellidos', rol: 'rol', activo: 'is_active',

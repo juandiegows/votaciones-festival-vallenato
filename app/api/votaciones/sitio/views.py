@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from ..auditoria.mixins import AuditadoMixin, auditar
 from ..comun.permisos import EsAdministrador
-from . import selectores
+from . import demo, selectores
 from .models import ConfiguracionSitio, RedSocial, Revista
 from .serializers import (
     BannerInicioSerializer, ConfiguracionSitioSerializer, RedSocialSerializer, RevistaSerializer, SitioSerializer,
@@ -72,3 +72,28 @@ class AdminConfiguracionView(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         serializer.save()
         auditar(self.request, "actualizar", "configuracion", 1, serializer.data)
+
+
+@extend_schema(tags=["Administración"])
+class AdminDemoView(APIView):
+    """Datos de demostración (cargar_demo): resumen y acciones para eliminarlos o volver a cargarlos."""
+
+    permission_classes = [EsAdministrador]
+
+    @extend_schema(summary="Resumen de los datos de demostración", responses={200: OpenApiTypes.OBJECT})
+    def get(self, request):
+        return Response({**demo.resumen(), "anios": list(demo.ANIOS_DEMO), "es_cuenta_demo": demo.es_cuenta_demo(request.user.email)})
+
+
+@extend_schema(tags=["Administración"], request=None, responses={200: OpenApiTypes.OBJECT})
+class AdminDemoAccionView(APIView):
+    permission_classes = [EsAdministrador]
+    accion = ""
+
+    @extend_schema(summary="Eliminar o volver a cargar los datos de demostración (exige un administrador propio)")
+    def post(self, request):
+        funcion = demo.eliminar if self.accion == "eliminar" else demo.cargar
+        resultado = funcion(request.user)  # ReglaNegocioError → 400 con {"detail"}
+        auditar(request, f"{self.accion}_demo", "configuracion", 1, {"resultado": resultado})
+        return Response({"resultado": resultado, **demo.resumen()})
+

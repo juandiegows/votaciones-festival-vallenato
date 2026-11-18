@@ -386,6 +386,22 @@ export function ApiProvider({ children }) {
   };
   const exportarResultados = (votacionId, formato) => exportar('votaciones', votacionId, formato);
 
+  // Datos de demostración (cargar_demo): resumen, eliminar y volver a cargar
+  const obtenerDemo = useCallback(async () => {
+    const r = await api.get('/admin/demo/');
+    if (!r.ok) return { ok: false, error: r.error };
+    const d = r.datos;
+    return { ok: true, datos: { ediciones: d.ediciones, usuarios: d.usuarios, votos: d.votos, anios: d.anios, esCuentaDemo: d.es_cuenta_demo } };
+  }, []);
+  const accionDemo = async (accion) => {
+    const r = await api.post(`/admin/demo/${accion}/`);
+    if (!r.ok) return { ok: false, error: r.error };
+    await recargar();
+    return { ok: true, resultado: r.datos.resultado };
+  };
+  const eliminarDemo = () => accionDemo('eliminar');
+  const cargarDemo = () => accionDemo('cargar');
+
   // Ediciones completas con la plantilla de Excel
   const descargarPlantillaEdicion = () => descargarArchivo('/admin/ediciones/plantilla/', 'plantilla-edicion.xlsx');
   const exportarEstructuraEdicion = (id) => descargarArchivo(`/admin/ediciones/${id}/exportar-estructura/`, `edicion-${id}.xlsx`);
@@ -471,6 +487,9 @@ export function ApiProvider({ children }) {
     obtenerResultados,
     exportarResultados,
     exportar,
+    obtenerDemo,
+    eliminarDemo,
+    cargarDemo,
     descargarPlantillaEdicion,
     exportarEstructuraEdicion,
     importarEdicion,

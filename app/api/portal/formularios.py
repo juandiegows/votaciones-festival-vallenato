@@ -1,6 +1,6 @@
 """
 Formularios de Django: registro, inicio de sesión, documento, recuperación de contraseña y administración de
-ediciones, categorías, votaciones y opciones.
+ediciones, categorías, votaciones, opciones y del sitio público (banner, revista, redes e identidad visual).
 """
 
 import re
@@ -17,10 +17,13 @@ from votaciones.comun.errores import ReglaNegocioError
 from votaciones.cuentas import selectores as selectores_cuentas
 from votaciones.cuentas.documentos import error_formato_documento, normalizar_documento
 from votaciones.models import Categoria, Edicion, Opcion, Usuario, Votacion
-from votaciones.sitio.models import ConfiguracionSitio
+from votaciones.sitio.models import BannerInicio, ConfiguracionSitio, RedSocial, Revista
 from votaciones.votacion.servicios import validar_cambio_voto_unico
 
 from .catalogos import ICONOS_DISPONIBLES
+from .marca import (
+    ESTILOS_ALERTA, ESTILOS_BOTON, FORMAS, PESOS_BOTON, ROLES_BOTON, TODOS_LOS_COLORES, campo_color, normalizar_marca,
+)
 from .templatetags.portal import URL_ICONO, icono_desde_url
 
 FORMATO_FECHA_HORA = "%Y-%m-%dT%H:%M"
@@ -186,7 +189,7 @@ class ConfiguracionForm(SoloCamposMixin, forms.ModelForm):
         fields = [
             "pedir_documento", "mostrar_total_votos", "mostrar_participantes", "umbral_participacion", "mostrar_swagger",
             "modo_banner", "dias_visible_cerradas", "nombre_organizacion", "telefono", "direccion", "correo", "texto_pie",
-            "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo",
+            "aviso_superior", "subtitulo_logo", "texto_acerca", "mostrar_equipo", "permitir_cuentas_demo",
         ]
         labels = {
             "umbral_participacion": "Mínimo de votantes",
@@ -438,3 +441,109 @@ class OpcionForm(forms.ModelForm):
         if commit:
             opcion.save()
         return opcion
+
+
+# Sitio público: banner, revista, redes sociales e identidad visual
+
+
+class BannerForm(forms.ModelForm):
+    class Meta:
+        model = BannerInicio
+        fields = ["imagen", "titulo", "subtitulo", "texto_alternativo", "texto_boton", "enlace_boton", "activo"]
+        labels = {
+            "imagen": "Imagen", "titulo": "Título", "subtitulo": "Subtítulo", "texto_alternativo": "Texto alternativo de la imagen",
+            "texto_boton": "Texto del botón", "enlace_boton": "Enlace del botón", "activo": "Mostrar en el inicio",
+        }
+
+    def clean_titulo(self):
+        valor = self.cleaned_data.get("titulo", "").strip()
+        if valor and len(valor) < 3:
+            raise forms.ValidationError("Escribe un título de al menos 3 caracteres o déjalo vacío.")
+        return valor
+
+    def clean_texto_alternativo(self):
+        valor = self.cleaned_data.get("texto_alternativo", "").strip()
+        if not valor:
+            raise forms.ValidationError("Describe la imagen para quienes usan lectores de pantalla.")
+        return valor
+
+    def clean_imagen(self):
+        archivo = self.cleaned_data.get("imagen")
+        if archivo and "imagen" in self.files:
+            validar_con(campos.validar_imagen, archivo)
+        return archivo
+
+    def clean_enlace_boton(self):
+        return validar_con(campos.validar_enlace, self.cleaned_data.get("enlace_boton"))
+
+
+class RevistaForm(forms.ModelForm):
+    class Meta:
+        model = Revista
+        fields = ["archivo", "titulo", "descripcion", "activa"]
+        labels = {"archivo": "Archivo PDF", "titulo": "Título", "descripcion": "Descripción", "activa": "Mostrar en el inicio"}
+
+    def clean_titulo(self):
+        valor = self.cleaned_data.get("titulo", "").strip()
+        if len(valor) < 3:
+            raise forms.ValidationError("Escribe un título de al menos 3 caracteres.")
+        return valor
+
+    def clean_descripcion(self):
+        return self.cleaned_data.get("descripcion", "").strip()
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get("archivo")
+        if archivo and "archivo" in self.files:
+            validar_con(campos.validar_pdf, archivo)
+        return archivo
+
+
+class RedSocialForm(forms.ModelForm):
+    class Meta:
+        model = RedSocial
+        fields = ["icono", "nombre", "url", "activa"]
+        labels = {"icono": "Red", "nombre": "Nombre", "url": "URL", "activa": "Visible en el pie de página"}
+        error_messages = {"url": {"invalid": "Escribe una URL que empiece por http:// o https://."}}
+
+    def clean_nombre(self):
+        valor = self.cleaned_data.get("nombre", "").strip()
+        if not valor:
+            raise forms.ValidationError("Escribe el nombre de la red.")
+        return valor
+
+
+class MarcaForm(forms.Form):
+    """Colores de la marca y estilo de botones y alertas. Se guarda solo lo que difiere de la marca base."""
+
+    def __init__(self, *args, marca=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        actual = normalizar_marca(marca)
+        # El color propio de cada botón se elige en la web React; aquí se conserva tal cual
+        self.botones_conservados = {rol: {k: actual["botones"][rol][k] for k in ("color", "colorTexto")} for rol in ROLES_BOTON}
+        for color in TODOS_LOS_COLORES:
+            self.fields[campo_color(color["token"])] = forms.RegexField(
+                label=color["nombre"], regex=r"^#[0-9a-fA-F]{6}$", initial=actual["colores"][color["token"]],
+                error_messages={"invalid": "Usa un color HEX de 6 cifras, p. ej. #DD3333."},
+            )
+        for rol in ROLES_BOTON:
+            boton = actual["botones"][rol]
+            self.fields[f"{rol}_estilo"] = forms.ChoiceField(label="Estilo", choices=ESTILOS_BOTON, initial=boton["estilo"])
+            self.fields[f"{rol}_forma"] = forms.ChoiceField(label="Forma", choices=FORMAS, initial=boton["forma"])
+            self.fields[f"{rol}_peso"] = forms.ChoiceField(label="Grosor del texto", choices=PESOS_BOTON, initial=boton["peso"])
+            self.fields[f"{rol}_mayusculas"] = forms.BooleanField(label="Texto en mayúsculas", required=False, initial=boton["mayusculas"])
+        self.fields["alerta_estilo"] = forms.ChoiceField(label="Estilo", choices=ESTILOS_ALERTA, initial=actual["alertas"]["estilo"])
+        self.fields["alerta_forma"] = forms.ChoiceField(label="Forma", choices=FORMAS, initial=actual["alertas"]["forma"])
+
+    def marca(self):
+        """Marca completa a partir de los datos limpios."""
+        datos = self.cleaned_data
+        return {
+            "colores": {c["token"]: datos[campo_color(c["token"])].upper() for c in TODOS_LOS_COLORES},
+            "botones": {
+                rol: {"estilo": datos[f"{rol}_estilo"], "forma": datos[f"{rol}_forma"], "peso": datos[f"{rol}_peso"],
+                      "mayusculas": datos[f"{rol}_mayusculas"], **self.botones_conservados[rol]}
+                for rol in ROLES_BOTON
+            },
+            "alertas": {"estilo": datos["alerta_estilo"], "forma": datos["alerta_forma"]},
+        }
