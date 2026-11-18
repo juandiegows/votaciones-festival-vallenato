@@ -2,6 +2,10 @@ import { Fragment, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { EdicionAdminProvider, useEdicionAdmin } from '../../context/EdicionAdmin.jsx';
 import { useSeo } from '../../hooks/useSeo.js';
+import { API_URL, MODO_API } from '../../config.js';
+
+// Django Admin vive en el servidor de la API (mismo dominio en producción; otro puerto en Docker local)
+const URL_DJANGO_ADMIN = /^https?:\/\//.test(API_URL) ? `${new URL(API_URL).origin}/django-admin/` : '/django-admin/';
 
 // `porEdicion`: la pantalla muestra solo los datos de la edición elegida en el selector
 const GRUPOS = [
@@ -102,6 +106,15 @@ export default function AdminLayout() {
                     ))}
                   </Fragment>
                 ))}
+                {/* Solo con la API: en el modo demostración no hay servidor Django */}
+                {MODO_API && (
+                  <li className="nav-item">
+                    <a href={URL_DJANGO_ADMIN} className="nav-link" target="_blank" rel="noopener noreferrer" title="Se abre en una pestaña nueva">
+                      <i className="bi bi-gear-wide-connected me-2" aria-hidden="true"></i>Django Admin
+                      <i className="bi bi-box-arrow-up-right small ms-1" aria-hidden="true"></i>
+                    </a>
+                  </li>
+                )}
               </ul>
             </nav>
           </aside>
